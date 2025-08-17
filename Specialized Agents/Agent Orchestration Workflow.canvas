@@ -1,0 +1,24 @@
+{
+	"nodes":[
+		{"id":"ea2858a751c8b7b8","type":"text","text":"\n![[icon-2.png]]\n![[Project Manager Prompt]]\n\n![[Project Manager Description]]","x":-613,"y":-2,"width":540,"height":1102,"color":"#bfa1a1"},
+		{"id":"1f89aba261b33ca9","type":"text","text":"![[Icon-5.png]]\n\n![[Business Analyst Prompt]]\n\n![[Business Analyst Descrtiption]]","x":-1200,"y":-2,"width":540,"height":1102,"color":"6"},
+		{"id":"a81c0548ef356102","type":"text","text":"![[Icon-3.png]]\n\n![[UX Engineer Prompt]]\n\n![[UX Engineer Description]]","x":0,"y":-2,"width":540,"height":1102,"color":"#e5f0ad"},
+		{"id":"31bb318a93500944","type":"text","text":"![[Icon-6.png]]\n\n![[Database Engineer Prompt]]\n\n![[Database Engineer Description]]","x":600,"y":-2,"width":540,"height":1102,"color":"3"},
+		{"id":"13d4baa4739889f0","type":"text","text":"![[Icon-4.png]]\n\n![[Frontend Engineer Prompt]]\n\n![[Frontend Engineer Description]]","x":-1200,"y":1200,"width":540,"height":1102,"color":"6"},
+		{"id":"b4ccd496e99ada96","type":"text","text":"![[Icon-1.png]]\n\n![[Backend Engineer Prompt]]\n\n![[Backend Engineer Description]]","x":-613,"y":1200,"width":540,"height":1102,"color":"2"},
+		{"id":"440926b130bbf368","type":"text","text":"![[Icon-7.png]]\n\n![[Code Reviewer Prompt]]\n\n![[Code Reviewer Description]]\n","x":0,"y":1200,"width":540,"height":1102,"color":"5"},
+		{"id":"c7888960f8215078","type":"text","text":"![[Icon-8.png]]\n\n![[Security Reviewer Prompt]]\n\n![[Security Reviewer Description]]","x":600,"y":1200,"width":540,"height":1102,"color":"6"},
+		{"id":"05da7daf08911019","type":"text","text":"==General Purpose AI Agent (Default)==\n","x":-231,"y":-363,"width":344,"height":50,"color":"5"},
+		{"id":"43094a9b75cef9c7","type":"text","text":"![[Icon-9.png]]","x":-129,"y":-520,"width":140,"height":140}
+	],
+	"edges":[
+		{"id":"8b6aa600d429f49b","fromNode":"05da7daf08911019","fromSide":"bottom","toNode":"b4ccd496e99ada96","toSide":"top","label":"agent"},
+		{"id":"191912dd83de445e","fromNode":"05da7daf08911019","fromSide":"bottom","toNode":"31bb318a93500944","toSide":"top","label":"agent"},
+		{"id":"36718e60be02ffc5","fromNode":"05da7daf08911019","fromSide":"bottom","toNode":"440926b130bbf368","toSide":"top","label":"agent"},
+		{"id":"f425147e11354e3f","fromNode":"05da7daf08911019","fromSide":"bottom","toNode":"c7888960f8215078","toSide":"top","label":"agent"},
+		{"id":"c7552d11a70b611a","fromNode":"05da7daf08911019","fromSide":"bottom","toNode":"a81c0548ef356102","toSide":"top","label":"agent"},
+		{"id":"0b894961c11b4dcb","fromNode":"05da7daf08911019","fromSide":"bottom","toNode":"13d4baa4739889f0","toSide":"top","label":"agent"},
+		{"id":"656ce3c427926251","fromNode":"05da7daf08911019","fromSide":"bottom","toNode":"ea2858a751c8b7b8","toSide":"top","label":"agent"},
+		{"id":"9c9d253350e58f3a","fromNode":"05da7daf08911019","fromSide":"bottom","toNode":"1f89aba261b33ca9","toSide":"top","label":"agent"}
+	]
+}

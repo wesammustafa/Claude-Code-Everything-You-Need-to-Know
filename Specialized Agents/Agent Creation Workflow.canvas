@@ -1,0 +1,40 @@
+{
+	"nodes":[
+		{"id":"a5d239b905713fdf","type":"group","x":-8880,"y":-2320,"width":3280,"height":1920,"label":"New Agent Flow"},
+		{"id":"67693644da2840b9","type":"file","file":"Claude Code/Images/Agents/Agent-10.png","x":-7404,"y":-1560,"width":400,"height":314},
+		{"id":"987797f0c8012251","type":"file","file":"Claude Code/Images/Agents/Agent-11.png","x":-6964,"y":-1560,"width":250,"height":400},
+		{"id":"c495371d28a532ea","type":"file","file":"Claude Code/Images/Agents/Agent-12.png","x":-6674,"y":-1560,"width":400,"height":310},
+		{"id":"70b32e596c850809","type":"file","file":"Claude Code/Images/Agents/Agent-13.png","x":-6234,"y":-1560,"width":400,"height":310},
+		{"id":"a53e05fad8bd7479","type":"file","file":"Claude Code/Images/Agents/Agent-8.png","x":-8180,"y":-1560,"width":296,"height":400},
+		{"id":"f080df1cafdb0979","type":"file","file":"Claude Code/Images/Agents/Agent-9.png","x":-7844,"y":-1560,"width":400,"height":314},
+		{"id":"14024652df030fa9","type":"file","file":"Claude Code/Images/Agents/Agent-7.png","x":-8620,"y":-1560,"width":400,"height":228},
+		{"id":"607dca469f995025","type":"file","file":"Claude Code/Images/Agents/Agent-2.png","x":-8180,"y":-2198,"width":400,"height":372},
+		{"id":"41a4677c6d3c31cd","type":"file","file":"Claude Code/Images/Agents/Agent-1.png","x":-8620,"y":-2198,"width":400,"height":198},
+		{"id":"1bc510998510f456","type":"file","file":"Claude Code/Images/Agents/Agent-14.png","x":-8600,"y":-1000,"width":230,"height":401},
+		{"id":"c3de0c3f5daa2129","type":"file","file":"Claude Code/Images/Agents/Agent-17.png","x":-7451,"y":-1000,"width":362,"height":400},
+		{"id":"0880d7ee161323c4","type":"file","file":"Claude Code/Images/Agents/Agent-15.png","x":-8330,"y":-1000,"width":400,"height":360},
+		{"id":"9ac3692316d0bf6b","type":"file","file":"Claude Code/Images/Agents/Agent-16.png","x":-7890,"y":-1000,"width":399,"height":200},
+		{"id":"3b93f5ea831d3938","type":"file","file":"Claude Code/Images/Agents/Agent-3.png","x":-7740,"y":-2198,"width":526,"height":300},
+		{"id":"01bb9abe06c42861","type":"file","file":"Claude Code/Images/Agents/Agent-4.png","x":-7174,"y":-2198,"width":400,"height":228},
+		{"id":"093929edf9c7f9cd","type":"file","file":"Claude Code/Images/Agents/Agent-5.png","x":-6734,"y":-2198,"width":400,"height":228},
+		{"id":"c48785798b347c1a","type":"file","file":"Claude Code/Images/Agents/Agent-6.png","x":-6294,"y":-2198,"width":400,"height":228}
+	],
+	"edges":[
+		{"id":"7c0c7995d7eec383","fromNode":"607dca469f995025","fromSide":"right","toNode":"3b93f5ea831d3938","toSide":"left"},
+		{"id":"3b8565592177ee48","fromNode":"3b93f5ea831d3938","fromSide":"right","toNode":"01bb9abe06c42861","toSide":"left"},
+		{"id":"fdec5d3be2fa434c","fromNode":"01bb9abe06c42861","fromSide":"right","toNode":"093929edf9c7f9cd","toSide":"left"},
+		{"id":"086af3a1dda024e9","fromNode":"093929edf9c7f9cd","fromSide":"right","toNode":"c48785798b347c1a","toSide":"left"},
+		{"id":"08e6df16edba5d48","fromNode":"41a4677c6d3c31cd","fromSide":"right","toNode":"607dca469f995025","toSide":"left"},
+		{"id":"2701387e639582f3","fromNode":"a53e05fad8bd7479","fromSide":"right","toNode":"f080df1cafdb0979","toSide":"left"},
+		{"id":"cd14ee702453a157","fromNode":"f080df1cafdb0979","fromSide":"right","toNode":"67693644da2840b9","toSide":"left"},
+		{"id":"d10c041f2ed8a879","fromNode":"67693644da2840b9","fromSide":"right","toNode":"987797f0c8012251","toSide":"left"},
+		{"id":"8425de23e308408c","fromNode":"987797f0c8012251","fromSide":"right","toNode":"c495371d28a532ea","toSide":"left"},
+		{"id":"0c11a626feccdd3b","fromNode":"c495371d28a532ea","fromSide":"right","toNode":"70b32e596c850809","toSide":"left"},
+		{"id":"9eb78c601ae99a4c","fromNode":"1bc510998510f456","fromSide":"right","toNode":"0880d7ee161323c4","toSide":"left"},
+		{"id":"6b6be70c90a178e9","fromNode":"14024652df030fa9","fromSide":"right","toNode":"a53e05fad8bd7479","toSide":"left"},
+		{"id":"edd487426c6e0cab","fromNode":"0880d7ee161323c4","fromSide":"right","toNode":"9ac3692316d0bf6b","toSide":"left"},
+		{"id":"96de4cf1261d5472","fromNode":"9ac3692316d0bf6b","fromSide":"right","toNode":"c3de0c3f5daa2129","toSide":"left"},
+		{"id":"8f23dfc7e04b799a","fromNode":"70b32e596c850809","fromSide":"bottom","toNode":"1bc510998510f456","toSide":"top"},
+		{"id":"3a381e4855660a18","fromNode":"c48785798b347c1a","fromSide":"bottom","toNode":"14024652df030fa9","toSide":"top"}
+	]
+}

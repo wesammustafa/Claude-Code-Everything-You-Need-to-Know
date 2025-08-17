@@ -1,0 +1,15 @@
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# VS Code (optional, if you use it)
+.vscode/
+
+# General backup/temporary files
+*.swp
+*.swo
+*.tmp
+*.log
