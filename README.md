@@ -11,10 +11,10 @@ The ultimate all-in-one guide to mastering Claude Code. From setup, prompt engin
 - What is Claude Code?
 - Claude Code Setup: Get up and running seamlessly with a clean, optimized installation.
 - Prompt Engineering Deep Dive
-- Claude Commands Mastery: Extract the best possible results by leveraging Claude’s command capabilities to their fullest.
+- Claude Commands Mastery: Extract the best possible results by leveraging Claude's command capabilities to their fullest.
 - AI Agents: Harness agents, sub-agents, and `worktrees` to structure intelligence with precision.
 
-🚀 What We’ll Cover Next:
+🚀 What We'll Cover Next:
 
 - Step-by-Step Live Demo: Creating Specialized AI Agents
 - Hooks That Work: Discover the power of Claude Hooks and learn how to implement them for maximum impact.
@@ -82,15 +82,15 @@ It's essentially like having a very pair programming partner who can jump in and
 ---
 ### Claude Code Setup
 
-[![[Anthropic.png]]](https://www.anthropic.com/claude-code)
+[![Anthropic](Anthropic.png)](https://www.anthropic.com/claude-code)
 
-[![[Claude-Installation.png]]](https://docs.anthropic.com/en/docs/claude-code/overview)
+[![Claude Installation](Claude-Installation.png)](https://docs.anthropic.com/en/docs/claude-code/overview)
 
 ---
 ### Prompt Engineering Deep Dive
 > [!quote] Claude Initialization
 > Run the `/init` command to automatically generate a `CLAUDE.md` file.
-> Your `CLAUDE.md` files become part of Claude’s prompts, so they should be refined like any frequently used prompt. A common mistake is adding extensive content without iterating on its effectiveness. Take time to experiment and determine what produces the best instruction following from the model.
+> Your `CLAUDE.md` files become part of Claude's prompts, so they should be refined like any frequently used prompt. A common mistake is adding extensive content without iterating on its effectiveness. Take time to experiment and determine what produces the best instruction following from the model.
 ##### 1. Explore → Plan → Code → Commit
 > Versatile workflow for complex problems.
 
@@ -99,8 +99,8 @@ It's essentially like having a very pair programming partner who can jump in and
 - **Code:** Implement the solution; verify reasonableness as you go.  
 - **Commit:** Commit results, create pull requests, update READMEs/changelogs.
 - Claude has two default modes: `Plan Mode` and `Accept Edits Mode`. You can toggle between them using the `Shift + Tab` keys.
-    - ![[Plan-Mode.png]]
-    - ![[Accept-Edit-Mode.png]]
+    - ![Plan Mode](Plan-Mode.png)
+    - ![Accept Edit Mode](Accept-Edit-Mode.png)
 
     
 > [!warning] Research & planning first improves performance for complex tasks.
@@ -144,7 +144,7 @@ It's essentially like having a very pair programming partner who can jump in and
 | `/mcp`                    | Manage MCP server connections and OAuth authentication                                                   |
 | `/memory`                 | Edit CLAUDE.md memory files                                                                              |
 | `/model`                  | Select or change the AI model                                                                            |
-| `/permissions`            | View or update [permissions](https://docs.anthropic.com/en/docs/claude-code/iam#configuring-permissions) |
+| `/permissions`            | View or update [permissions](https://docs.anthropic.com/en/docs/claude-code/iam#configuring-permissions) |
 | `/pr_comments`            | View pull request comments                                                                               |
 | `/review`                 | Request code review                                                                                      |
 | `/status`                 | View account and system statuses                                                                         |
@@ -199,13 +199,13 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
 
 1. **Create worktrees**
     - `git worktree add -b feature-a ../feature-a`
-    - Create additional worktrees as needed (repeat steps 1 in new terminal tabs)
+    - Create additional worktrees as needed (repeat steps 1 in new terminal tabs)
     - Ex: Three separate terminal tabs, each linked to its own branch and worktree
-    ![[WorkTrees.png]]
+    ![WorkTrees](WorkTrees.png)
 2. **Launch Claude in each worktree**
     - `cd ../feature-a && claude`
     -  Ex: three Claude code sessions to manage each branch
-    ![[Claude-Sessions.png]]
+    ![Claude Sessions](Claude-Sessions.png)
 
 3. **General Agents**
    > [!quote] Claude Code's **agent system** — a powerful feature that lets you create specialized AI assistants for different coding tasks. Think of agents as specialized team members, each with their own expertise, tools, and focus area. Instead of having one general-purpose Claude handle everything, you can create focused agents for specific roles.
@@ -216,10 +216,10 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
      - Span 5 subagents to accelerate work
      - Ultrathink
      ```
-     ![[Agents-Prompt.png]]
+     ![Agents Prompt](Agents-Prompt.png)
 
    - Subagents executing multiple tasks in parallel, coordinated through a to-do list:  
-     ![[Subagents.png]]
+     ![Subagents](Subagents.png)
 4. **Specialized Agents**
     -  **Traditional approach:**
         - One Claude tries to be everything
@@ -233,25 +233,25 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
         - Each agent "remembers" previous conversations in their domain
     - Let's do it, step by step
      [Open full Canvas](Agent%20Creation%20Workflow.canvas)
-    ![[Agent-Creation-Workflow.png]]
+    ![Agent Creation Workflow](Agent-Creation-Workflow.png)
     
-    1. [[Agent-1.png|Initialize Agent Flow System]]
-    2. [[Agent-2.png|Configure Agent Type]]
-    3. [[Agent-3.png|Select Agent Location]]
-    4. [[Agent-4.png|Define Agent Identifier]]
-    5. [[Agent-5.png|Set Agent Identifier]]
-    6. [[Agent-6.png|Set Agent System Prompt]]  —> [[Security Reviewer Prompt]]
-    7. [[Agent-7.png|Set Agent Description]] —> [[Security Reviewer Description]]
-    8. [[Agent-8.png|Select Agent Tools]]
-    9. [[Agent-9.png|Select Agent Model]]
-    10. [[Agent-10.png|Select Agent Color]]
-    11. [[Agent-11.png|Confirm and Save Agent]]
-    12. [[Agent-12.png|Review Available Agents]]
-    13. [[Agent-13.png|Select One Agent Action]]
-    14. [[Agent-14.png|Select View Agent]]
-    15. [[Agent-15.png|Select Agent Using Command]]
-    16. [[Agent-16.png|Start Agent on Specific Feature]]
-    17. [[Agent-17.png|Review Final Results]]
+    1. ![Initialize Agent Flow System](Agent-1.png)
+    2. ![Configure Agent Type](Agent-2.png)
+    3. ![Select Agent Location](Agent-3.png)
+    4. ![Define Agent Identifier](Agent-4.png)
+    5. ![Set Agent Identifier](Agent-5.png)
+    6. ![Set Agent System Prompt](Agent-6.png)  —> [[Security Reviewer Prompt]]
+    7. ![Set Agent Description](Agent-7.png) —> [[Security Reviewer Description]]
+    8. ![Select Agent Tools](Agent-8.png)
+    9. ![Select Agent Model](Agent-9.png)
+    10. ![Select Agent Color](Agent-10.png)
+    11. ![Confirm and Save Agent](Agent-11.png)
+    12. ![Review Available Agents](Agent-12.png)
+    13. ![Select One Agent Action](Agent-13.png)
+    14. ![Select View Agent](Agent-14.png)
+    15. ![Select Agent Using Command](Agent-15.png)
+    16. ![Start Agent on Specific Feature](Agent-16.png)
+    17. ![Review Final Results](Agent-17.png)
 
 5. **General Agent orchestrate collaboration between Specialized Agents**
     ```md
@@ -264,7 +264,7 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
 > - Maintain one terminal tab per worktree
 > - Use [`Tmux`](https://github.com/tmux/tmux/wiki/Installing) to create a session for each terminal, allowing you to **detach** and keep processes running in the background.process working in background
 > - Use separate IDE windows for different worktrees
-> - Clean up when finished: `git worktree remove ../feature-a
+> - Clean up when finished: `git worktree remove ../feature-a
 ### References
 - https://github.com/adrianhajdin/ecommerce_sanity_stripe
 - https://docs.anthropic.com/en/docs/claude-code/quickstart
