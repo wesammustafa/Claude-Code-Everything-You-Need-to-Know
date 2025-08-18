@@ -242,10 +242,10 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
     <img src="Images/Agents/Agent-3.png" alt="Select Agent Location" width="600" height="300">
     <img src="Images/Agents/Agent-4.png" alt="Define Agent Identifier" width="600" height="300">
     <img src="Images/Agents/Agent-5.png" alt="Set Agent Identifier" width="600" height="300">
-    <img src="Images/Agents/Agent-6.png" alt="Set Agent System Prompt" width="600" height="300"> —> 
+    <img src="Images/Agents/Agent-6.png" alt="Set Agent System Prompt" width="600" height="300">
     [Security Reviewer Prompt](Specialized%20Agents/System%20Prompts/Security%20Reviewer%20Prompt.md)
 
-    <img src="Images/Agents/Agent-7.png" alt="Set Agent Description" width="600" height="250"> —>     
+    <img src="Images/Agents/Agent-7.png" alt="Set Agent Description" width="600" height="250">
     [Security Reviewer Description](Specialized%20Agents/Descriptions/Security%20Reviewer%20Description.md)
 
     <img src="Images/Agents/Agent-8.png" alt="Select Agent Tools" width="600" height="600">
