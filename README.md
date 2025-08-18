@@ -231,27 +231,29 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
         - Focused, deep feedback in specific areas
         - Clean separation of concerns
         - Each agent "remembers" previous conversations in their domain
+    
     - Let's do it, step by step
+
      [Open full Canvas](Agent%20Creation%20Workflow.canvas)
     ![Agent Creation Workflow](Images/Agent-Creation-Workflow.png)
-    
-    1. ![Initialize Agent Flow System](Images/Agents/Agent-1.png)
-    2. ![Configure Agent Type](Images/Agents/Agent-2.png)
-    3. ![Select Agent Location](Images/Agents/Agent-3.png)
-    4. ![Define Agent Identifier](Images/Agents/Agent-4.png)
-    5. ![Set Agent Identifier](Images/Agents/Agent-5.png)
-    6. ![Set Agent System Prompt](Images/Agents/Agent-6.png)  —> [[Security Reviewer Prompt]]
-    7. ![Set Agent Description](Images/Agents/Agent-7.png) —> [[Security Reviewer Description]]
-    8. ![Select Agent Tools](Images/Agents/Agent-8.png)
-    9. ![Select Agent Model](Images/Agents/Agent-9.png)
-    10. ![Select Agent Color](Images/Agents/Agent-10.png)
-    11. ![Confirm and Save Agent](Images/Agents/Agent-11.png)
-    12. ![Review Available Agents](Images/Agents/Agent-12.png)
-    13. ![Select One Agent Action](Images/Agents/Agent-13.png)
-    14. ![Select View Agent](Images/Agents/Agent-14.png)
-    15. ![Select Agent Using Command](Images/Agents/Agent-15.png)
-    16. ![Start Agent on Specific Feature](Images/Agents/Agent-16.png)
-    17. ![Review Final Results](Images/Agents/Agent-17.png)
+
+    <img src="Images/Agents/Agent-1.png" alt="Initialize Agent Flow System" width="600" height="300">
+    <img src="Images/Agents/Agent-2.png" alt="Configure Agent Type" width="600" height="400">
+    <img src="Images/Agents/Agent-3.png" alt="Select Agent Location" width="600" height="300">
+    <img src="Images/Agents/Agent-4.png" alt="Define Agent Identifier" width="600" height="300">
+    <img src="Images/Agents/Agent-5.png" alt="Set Agent Identifier" width="600" height="300">
+    <img src="Images/Agents/Agent-6.png" alt="Set Agent System Prompt" width="600" height="300"> —> [Security Reviewer Prompt](Specialized%20Agents/System%20Prompts/Security%20Reviewer%20Prompt.md)
+    <img src="Images/Agents/Agent-7.png" alt="Set Agent Description" width="600" height="250"> —> [Security Reviewer Description](Specialized%20Agents/Descriptions/Security%20Reviewer%20Description.md)
+    <img src="Images/Agents/Agent-8.png" alt="Select Agent Tools" width="600" height="600">
+    <img src="Images/Agents/Agent-9.png" alt="Select Agent Model" width="600" height="300">
+    <img src="Images/Agents/Agent-10.png" alt="Select Agent Color" width="600" height="300">
+    <img src="Images/Agents/Agent-11.png" alt="Confirm and Save Agent" width="600" height="600">
+    <img src="Images/Agents/Agent-12.png" alt="Review Available Agents" width="600" height="400">
+    <img src="Images/Agents/Agent-13.png" alt="Select One Agent Action" width="600" height="300">
+    <img src="Images/Agents/Agent-14.png" alt="Select View Agent" width="600" height="600">
+    <img src="Images/Agents/Agent-15.png" alt="Select Agent Using Command" width="600" height="400">
+    <img src="Images/Agents/Agent-16.png" alt="Start Agent on Specific Feature" width="600" height="300">
+    <img src="Images/Agents/Agent-17.png" alt="Review Final Results" width="600" height="400">
 
 5. **General Agent orchestrate collaboration between Specialized Agents**
     ```md
