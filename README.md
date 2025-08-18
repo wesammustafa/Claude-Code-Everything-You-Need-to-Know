@@ -82,9 +82,9 @@ It's essentially like having a very pair programming partner who can jump in and
 ---
 ### Claude Code Setup
 
-[![Anthropic](Anthropic.png)](https://www.anthropic.com/claude-code)
+[![Anthropic](./Anthropic.png)](https://www.anthropic.com/claude-code)
 
-[![Claude Installation](Claude-Installation.png)](https://docs.anthropic.com/en/docs/claude-code/overview)
+[![Claude Installation](./Claude-Installation.png)](https://docs.anthropic.com/en/docs/claude-code/overview)
 
 ---
 ### Prompt Engineering Deep Dive
@@ -99,8 +99,8 @@ It's essentially like having a very pair programming partner who can jump in and
 - **Code:** Implement the solution; verify reasonableness as you go.  
 - **Commit:** Commit results, create pull requests, update READMEs/changelogs.
 - Claude has two default modes: `Plan Mode` and `Accept Edits Mode`. You can toggle between them using the `Shift + Tab` keys.
-    - ![Plan Mode](Plan-Mode.png)
-    - ![Accept Edit Mode](Accept-Edit-Mode.png)
+    - ![Plan Mode](./Plan-Mode.png)
+    - ![Accept Edit Mode](./Accept-Edit-Mode.png)
 
     
 > [!warning] Research & planning first improves performance for complex tasks.
@@ -201,11 +201,11 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
     - `git worktree add -b feature-a ../feature-a`
     - Create additional worktrees as needed (repeat steps 1 in new terminal tabs)
     - Ex: Three separate terminal tabs, each linked to its own branch and worktree
-    ![WorkTrees](WorkTrees.png)
+    ![WorkTrees](./WorkTrees.png)
 2. **Launch Claude in each worktree**
     - `cd ../feature-a && claude`
     -  Ex: three Claude code sessions to manage each branch
-    ![Claude Sessions](Claude-Sessions.png)
+    ![Claude Sessions](./Claude-Sessions.png)
 
 3. **General Agents**
    > [!quote] Claude Code's **agent system** — a powerful feature that lets you create specialized AI assistants for different coding tasks. Think of agents as specialized team members, each with their own expertise, tools, and focus area. Instead of having one general-purpose Claude handle everything, you can create focused agents for specific roles.
@@ -216,10 +216,10 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
      - Span 5 subagents to accelerate work
      - Ultrathink
      ```
-     ![Agents Prompt](Agents-Prompt.png)
+     ![Agents Prompt](./Agents-Prompt.png)
 
    - Subagents executing multiple tasks in parallel, coordinated through a to-do list:  
-     ![Subagents](Subagents.png)
+     ![Subagents](./Subagents.png)
 4. **Specialized Agents**
     -  **Traditional approach:**
         - One Claude tries to be everything
@@ -233,25 +233,25 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
         - Each agent "remembers" previous conversations in their domain
     - Let's do it, step by step
      [Open full Canvas](Agent%20Creation%20Workflow.canvas)
-    ![Agent Creation Workflow](Agent-Creation-Workflow.png)
+    ![Agent Creation Workflow](./Agent-Creation-Workflow.png)
     
-    1. ![Initialize Agent Flow System](Agent-1.png)
-    2. ![Configure Agent Type](Agent-2.png)
-    3. ![Select Agent Location](Agent-3.png)
-    4. ![Define Agent Identifier](Agent-4.png)
-    5. ![Set Agent Identifier](Agent-5.png)
-    6. ![Set Agent System Prompt](Agent-6.png)  —> [[Security Reviewer Prompt]]
-    7. ![Set Agent Description](Agent-7.png) —> [[Security Reviewer Description]]
-    8. ![Select Agent Tools](Agent-8.png)
-    9. ![Select Agent Model](Agent-9.png)
-    10. ![Select Agent Color](Agent-10.png)
-    11. ![Confirm and Save Agent](Agent-11.png)
-    12. ![Review Available Agents](Agent-12.png)
-    13. ![Select One Agent Action](Agent-13.png)
-    14. ![Select View Agent](Agent-14.png)
-    15. ![Select Agent Using Command](Agent-15.png)
-    16. ![Start Agent on Specific Feature](Agent-16.png)
-    17. ![Review Final Results](Agent-17.png)
+    1. ![Initialize Agent Flow System](./Agent-1.png)
+    2. ![Configure Agent Type](./Agent-2.png)
+    3. ![Select Agent Location](./Agent-3.png)
+    4. ![Define Agent Identifier](./Agent-4.png)
+    5. ![Set Agent Identifier](./Agent-5.png)
+    6. ![Set Agent System Prompt](./Agent-6.png)  —> [[Security Reviewer Prompt]]
+    7. ![Set Agent Description](./Agent-7.png) —> [[Security Reviewer Description]]
+    8. ![Select Agent Tools](./Agent-8.png)
+    9. ![Select Agent Model](./Agent-9.png)
+    10. ![Select Agent Color](./Agent-10.png)
+    11. ![Confirm and Save Agent](./Agent-11.png)
+    12. ![Review Available Agents](./Agent-12.png)
+    13. ![Select One Agent Action](./Agent-13.png)
+    14. ![Select View Agent](./Agent-14.png)
+    15. ![Select Agent Using Command](./Agent-15.png)
+    16. ![Start Agent on Specific Feature](./Agent-16.png)
+    17. ![Review Final Results](./Agent-17.png)
 
 5. **General Agent orchestrate collaboration between Specialized Agents**
     ```md
