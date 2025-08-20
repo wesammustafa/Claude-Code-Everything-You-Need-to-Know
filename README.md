@@ -273,6 +273,122 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
 > - Use [`Tmux`](https://github.com/tmux/tmux/wiki/Installing) to create a session for each terminal, allowing you to **detach** and keep processes running in the background.process working in background
 > - Use separate IDE windows for different worktrees
 > - Clean up when finished: `git worktree remove ../feature-a
+
+
+### FAQ
+
+#### Q: How many tokens do I get with Claude Code Pro plan?
+
+**A:** Pro plan users get approximately **44,000 tokens per 5-hour period**, which translates to roughly **10-40 prompts** depending on codebase complexity and task requirements.
+
+- Usage limits reset every 5 hours (rolling window)
+- Only access to Claude Sonnet 4 (no Opus 4 access)
+
+#### Q: How are tokens calculated in Claude Code?
+
+**A:** Tokens include everything in your interaction:
+
+**Text Tokenization:**
+- Basic formula: `tokens ≈ number of words + punctuation marks`
+- Example: "Hello, world!" = approximately 4 tokens (use claude tokenizer to calculate tokens [Tokenizer for Claude 4](https://claude-tokenizer.vercel.app/))
+- Uses BPE (Byte Pair Encoding) for subword tokenization
+
+**What Counts Toward Your Limit:**
+- Your prompts and questions
+- Claude's responses and explanations  
+- System instructions and tool definitions
+- File content that Claude reads
+- Project structure analysis
+- Images: `tokens = (width px × height px) / 750`
+
+**Rough Conversion:**
+- 1 token ≈ 0.75 words (English text)
+- 1,000 tokens ≈ 750 words
+- 44,000 tokens ≈ 33,000 words
+
+#### Q: How many lines of code can I write with 44,000 tokens?
+
+**A:** **Theoretical capacity:** ~2,900-3,400 lines of pure code (13-15 tokens per line average)
+
+**Practical reality:** Effective for projects with **1,000-2,000 lines** because tokens are shared across:
+- Reading existing codebase
+- Claude's analysis and suggestions
+- Back-and-forth conversation
+- File modifications and explanations
+- Project context loading
+
+#### Q: What happens when I run multiple Claude Code sessions in different terminals?
+
+**A:** Two types of "sharing" occur:
+
+**1. Usage Limits (Shared Pool):**
+- All Claude Code sessions share the same 44,000 token allowance
+- Multiple sessions will exhaust your limits faster
+- Running 3 parallel sessions ≈ 3-13 prompts per session before hitting limits
+
+**2. Conversation Context (Independent):**
+- Each terminal has separate conversation history
+- Claude in tab 1 doesn't know what happened in tab 2
+- Each session analyzes codebases independently
+
+#### Q: How do Git worktrees affect Claude Code sessions?
+
+**A:** Git worktrees create an interesting hybrid situation:
+
+**Separate Working Directories:**
+- Each worktree shows different file contents
+- Changes committed in feature X won't appear in feature Y's files
+- Each Claude session sees different code states
+
+**Shared Git Metadata:**
+- All worktrees share the same `.git` directory
+- Git history, branches, and commit logs are visible across all worktrees
+- Claude can see that commits happened in other features (but not the actual code changes)
+
+**Example:**
+```bash
+# Terminal 1: feature/auth
+git commit -m "Add auth middleware"
+
+# Terminal 2: feature/payment  
+cat middleware.js        # Won't show auth changes
+git log --oneline --all  # WILL show the auth commit
+```
+
+#### Q: How can I get completely separate Claude Code contexts?
+
+**A:** Use **separate repository clones** instead of worktrees:
+
+```bash
+# Instead of worktrees:
+~/project-auth/     # Complete separate clone
+~/project-payment/  # Complete separate clone
+
+# Benefits:
+# - Separate .git directories
+# - Independent Git histories  
+# - No shared state whatsoever
+# - Claude sees completely isolated projects
+```
+
+#### Q: How can I maximize my Claude Code Pro usage?
+
+**A:** **Session Management:**
+- Use `/compact` command to reduce context in long sessions
+- Close unused sessions to avoid accidental token consumption
+- Time your sessions to align with your peak coding periods
+- Start fresh contexts for different types of work
+
+**Token Efficiency:**
+- Batch similar tasks together
+- Use `/model` command strategically (Sonnet 4 only on Pro)
+- Be specific in prompts to avoid back-and-forth
+- Work on one feature at a time when possible
+
+**Project Structure:**
+- Create concise CLAUDE.md files for project context
+- Use selective file reading when possible
+
 ### References
 - https://github.com/adrianhajdin/ecommerce_sanity_stripe
 - https://docs.anthropic.com/en/docs/claude-code/quickstart
