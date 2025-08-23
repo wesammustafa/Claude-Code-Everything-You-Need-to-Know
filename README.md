@@ -265,7 +265,7 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
     ```md
     Get the **backend-engineer** to suggest changes for improving the UI of our app. Then, get the **backend-engineer** to implement those changes. Then, get the **code-reviewer** to review the changes made by the **backend-engineer**. Finally, get the **backend-engineer** to fix up any issues pointed out by the reviewer.
     ```
-
+    <img src="Images/Orchestration.png" alt="Confirm and Save Agent" width="600" height="600">
 
 > [!tip]
 > - Use consistent naming conventions for worktrees
