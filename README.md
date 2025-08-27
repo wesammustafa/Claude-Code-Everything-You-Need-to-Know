@@ -81,9 +81,9 @@ It's essentially like having a very pair programming partner who can jump in and
 ---
 ### Claude Code Setup
 
-[![Anthropic](Images/Anthropic.png)](https://www.anthropic.com/claude-code)
+[![Anthropic](Images/anthropic.png)](https://www.anthropic.com/claude-code)
 
-[![Claude Installation](Images/Claude-Installation.png)](https://docs.anthropic.com/en/docs/claude-code/overview)
+[![Claude Installation](Images/claude-installation.png)](https://docs.anthropic.com/en/docs/claude-code/overview)
 
 ---
 ### Prompt Engineering Deep Dive
@@ -98,8 +98,8 @@ It's essentially like having a very pair programming partner who can jump in and
 - **Code:** Implement the solution; verify reasonableness as you go.  
 - **Commit:** Commit results, create pull requests, update READMEs/changelogs.
 - Claude has two default modes: `Plan Mode` and `Accept Edits Mode`. You can toggle between them using the `Shift + Tab` keys.
-    - ![Plan Mode](Images/Plan-Mode.png)
-    - ![Accept Edit Mode](Images/Accept-Edit-Mode.png)
+    - ![Plan Mode](Images/plan-mode.png)
+    - ![Accept Edit Mode](Images/accept-edit-mode.png)
 
 > **⚠️ Warning:** Research & planning first improves performance for complex tasks.
 
@@ -203,11 +203,11 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
     - `git worktree add -b feature-a ../feature-a`
     - Create additional worktrees as needed (repeat steps 1 in new terminal tabs)
     - Ex: Three separate terminal tabs, each linked to its own branch and worktree
-    ![WorkTrees](Images/WorkTrees.png)
+    ![WorkTrees](Images/work-trees.png)
 2. **Launch Claude in each worktree**
     - `cd ../feature-a && claude`
     -  Ex: three Claude code sessions to manage each branch
-    ![Claude Sessions](Images/Claude-Sessions.png)
+    ![Claude Sessions](Images/claude-sessions.png)
 
 3. **General Agents**
    > **📖 Agent System:** Claude Code's **agent system** — a powerful feature that lets you create specialized AI assistants for different coding tasks. Think of agents as specialized team members, each with their own expertise, tools, and focus area. Instead of having one general-purpose Claude handle everything, you can create focused agents for specific roles.
@@ -218,10 +218,10 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
      - Span 5 subagents to accelerate work
      - Ultrathink
      ```
-     ![Agents Prompt](Images/Agents-Prompt.png)
+     ![Agents Prompt](Images/agents-prompt.png)
 
    - Subagents executing multiple tasks in parallel, coordinated through a to-do list:  
-     ![Subagents](Images/Subagents.png)
+     ![Subagents](Images/subagents.png)
 4. **Specialized Agents**
     -  **Traditional approach:**
         - One Claude tries to be everything
@@ -236,38 +236,38 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
     
     - Let's do it, step by step
 
-     [View Agent Creation Workflow](Images/Agent-Creation-Workflow.png)
-    ![Agent Creation Workflow](Images/Agent-Creation-Workflow.png)
+     [View Agent Creation Workflow](Images/agent-creation-workflow.png)
+    ![Agent Creation Workflow](Images/agent-creation-workflow.png)
 
-    <img src="Images/Agents/Agent-1.png" alt="Initialize Agent Flow System" width="600" height="300">
-    <img src="Images/Agents/Agent-2.png" alt="Configure Agent Type" width="600" height="400">
-    <img src="Images/Agents/Agent-3.png" alt="Select Agent Location" width="600" height="300">
-    <img src="Images/Agents/Agent-4.png" alt="Define Agent Identifier" width="600" height="300">
-    <img src="Images/Agents/Agent-5.png" alt="Set Agent Identifier" width="600" height="300">
-    <img src="Images/Agents/Agent-6.png" alt="Set Agent System Prompt" width="600" height="300">
+    <img src="Images/Agents/agent-1.png" alt="Initialize Agent Flow System" width="600" height="300">
+    <img src="Images/Agents/agent-2.png" alt="Configure Agent Type" width="600" height="400">
+    <img src="Images/Agents/agent-3.png" alt="Select Agent Location" width="600" height="300">
+    <img src="Images/Agents/agent-4.png" alt="Define Agent Identifier" width="600" height="300">
+    <img src="Images/Agents/agent-5.png" alt="Set Agent Identifier" width="600" height="300">
+    <img src="Images/Agents/agent-6.png" alt="Set Agent System Prompt" width="600" height="300">
 
-    [Security Reviewer Prompt](Specialized%20Agents/System%20Prompts/Security%20Reviewer%20Prompt.md)
+    [Security Reviewer Prompt](specialized-agents/system-prompts/security-reviewer-prompt.md)
 
-    <img src="Images/Agents/Agent-7.png" alt="Set Agent Description" width="600" height="250">
+    <img src="Images/Agents/agent-7.png" alt="Set Agent Description" width="600" height="250">
     
-    [Security Reviewer Description](Specialized%20Agents/Descriptions/Security%20Reviewer%20Description.md)
+    [Security Reviewer Description](specialized-agents/descriptions/security-reviewer-description.md)
 
-    <img src="Images/Agents/Agent-8.png" alt="Select Agent Tools" width="600" height="600">
-    <img src="Images/Agents/Agent-9.png" alt="Select Agent Model" width="600" height="300">
-    <img src="Images/Agents/Agent-10.png" alt="Select Agent Color" width="600" height="300">
-    <img src="Images/Agents/Agent-11.png" alt="Confirm and Save Agent" width="600" height="600">
-    <img src="Images/Agents/Agent-12.png" alt="Review Available Agents" width="600" height="400">
-    <img src="Images/Agents/Agent-13.png" alt="Select One Agent Action" width="600" height="300">
-    <img src="Images/Agents/Agent-14.png" alt="Select View Agent" width="600" height="600">
-    <img src="Images/Agents/Agent-15.png" alt="Select Agent Using Command" width="600" height="400">
-    <img src="Images/Agents/Agent-16.png" alt="Start Agent on Specific Feature" width="600" height="300">
-    <img src="Images/Agents/Agent-17.png" alt="Review Final Results" width="600" height="400">
+    <img src="Images/Agents/agent-8.png" alt="Select Agent Tools" width="600" height="600">
+    <img src="Images/Agents/agent-9.png" alt="Select Agent Model" width="600" height="300">
+    <img src="Images/Agents/agent-10.png" alt="Select Agent Color" width="600" height="300">
+    <img src="Images/Agents/agent-11.png" alt="Confirm and Save Agent" width="600" height="600">
+    <img src="Images/Agents/agent-12.png" alt="Review Available Agents" width="600" height="400">
+    <img src="Images/Agents/agent-13.png" alt="Select One Agent Action" width="600" height="300">
+    <img src="Images/Agents/agent-14.png" alt="Select View Agent" width="600" height="600">
+    <img src="Images/Agents/agent-15.png" alt="Select Agent Using Command" width="600" height="400">
+    <img src="Images/Agents/agent-16.png" alt="Start Agent on Specific Feature" width="600" height="300">
+    <img src="Images/Agents/agent-17.png" alt="Review Final Results" width="600" height="400">
 
 5. **General Agent orchestrate collaboration between Specialized Agents**
     ```md
     Get the **backend-engineer** to suggest changes for improving the UI of our app. Then, get the **backend-engineer** to implement those changes. Then, get the **code-reviewer** to review the changes made by the **backend-engineer**. Finally, get the **backend-engineer** to fix up any issues pointed out by the reviewer.
     ```
-    <img src="Images/Orchestration.png" alt="Confirm and Save Agent" width="600" height="600">
+    <img src="Images/orchestration.png" alt="Confirm and Save Agent" width="600" height="600">
 
 > **💡 Tip:**
 > - Use consistent naming conventions for worktrees
