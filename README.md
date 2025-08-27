@@ -4,7 +4,6 @@ The ultimate all-in-one guide to mastering Claude Code. From setup, prompt engin
 > **⚠️ IMPORTANT NOTE**  
 > To get the best visualization for the documents in this repo, please install [Obsidian](https://obsidian.md/).
 
-
 ### 🧵 What We Covered:
 
 - What are LLMs, and how do they differ from AI tools like Claude Code? Why should we use AI tools?
@@ -88,10 +87,10 @@ It's essentially like having a very pair programming partner who can jump in and
 
 ---
 ### Prompt Engineering Deep Dive
-> [!quote] Claude Initialization
+> **📖 Claude Initialization**
 > Run the `/init` command to automatically generate a `CLAUDE.md` file.
 > Your `CLAUDE.md` files become part of Claude's prompts, so they should be refined like any frequently used prompt. A common mistake is adding extensive content without iterating on its effectiveness. Take time to experiment and determine what produces the best instruction following from the model.
-##### 1. Explore → Plan → Code → Commit
+#### 1. Explore → Plan → Code → Commit
 > Versatile workflow for complex problems.
 
 - **Explore:** Read relevant files/images/URLs; use subagents for verification. Do **not code yet**.  
@@ -102,11 +101,11 @@ It's essentially like having a very pair programming partner who can jump in and
     - ![Plan Mode](Images/Plan-Mode.png)
     - ![Accept Edit Mode](Images/Accept-Edit-Mode.png)
 
-    
-> [!warning] Research & planning first improves performance for complex tasks.
+> **⚠️ Warning:** Research & planning first improves performance for complex tasks.
+
 ---
 
-##### 2. Test-Driven Workflow (Write Tests → Code → Commit)
+#### 2. Test-Driven Workflow (Write Tests → Code → Commit)
 > Ideal for changes verifiable with unit/integration tests.
 
 - **Write Tests:** Create tests based on expected inputs/outputs; mark as TDD.  
@@ -118,14 +117,17 @@ It's essentially like having a very pair programming partner who can jump in and
 > 🔹 Clear targets (tests, mocks) improve iteration efficiency.
 
 ---
-##### 3. Visual Iteration (Code → Screenshot → Iterate → Commit)
+#### 3. Visual Iteration (Code → Screenshot → Iterate → Commit)
 - Provide screenshots or visual mocks.  
 - Implement code, take screenshots, iterate until outputs match mock.  
 - Commit once satisfied.
 
 > 🔹 Iteration significantly improves output quality (2-3 rounds usually enough).
+
+---
+
 ### Claude Commands
-##### Built-in slash commands
+#### Built-in slash commands
 
 | Command                   | Purpose                                                                                                  |
 | ------------------------- | -------------------------------------------------------------------------------------------------------- |
@@ -151,10 +153,10 @@ It's essentially like having a very pair programming partner who can jump in and
 | `/terminal-setup`         | Install Shift+Enter key binding for newlines (iTerm2 and VSCode only)                                    |
 | `/vim`                    | Enter vim mode for alternating insert and command modes                                                  |
 
-##### Custom slash commands
->[!quote] Custom slash commands allow you to define frequently-used prompts as Markdown files that Claude Code can execute. Commands are organized by scope (project-specific or personal) and support namespacing through directory structures.
+#### Custom slash commands
+> **📖 Note:** Custom slash commands allow you to define frequently-used prompts as Markdown files that Claude Code can execute. Commands are organized by scope (project-specific or personal) and support namespacing through directory structures.
 
-```Bash
+```bash
 mkdir -p .claude/commands
 echo "Analyze this code for performance issues and suggest optimizations:" > .claude/commands/optimize.md
 ```
@@ -187,7 +189,7 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
 
 [**Git worktree**](https://git-scm.com/docs/git-worktree)
 
-> [!quote]	Worktrees allow multiple copies of the same Git repository on your local environemt, each on a different branch.
+> **📖 Git Worktree:** Worktrees allow multiple copies of the same Git repository on your local environment, each on a different branch.
 
 - **Single repo limitation:** Normally, a Git repository can only be on one branch in one folder.  
 - **Worktrees:** Enable working on multiple branches simultaneously in separate folders.  
@@ -208,7 +210,7 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
     ![Claude Sessions](Images/Claude-Sessions.png)
 
 3. **General Agents**
-   > [!quote] Claude Code's **agent system** — a powerful feature that lets you create specialized AI assistants for different coding tasks. Think of agents as specialized team members, each with their own expertise, tools, and focus area. Instead of having one general-purpose Claude handle everything, you can create focused agents for specific roles.
+   > **📖 Agent System:** Claude Code's **agent system** — a powerful feature that lets you create specialized AI assistants for different coding tasks. Think of agents as specialized team members, each with their own expertise, tools, and focus area. Instead of having one general-purpose Claude handle everything, you can create focused agents for specific roles.
    
    - Example: Each agent can span multiple sub-agents to accelerate the process:  
      ```markdown
@@ -234,7 +236,7 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
     
     - Let's do it, step by step
 
-     [Open full Canvas](Agent%20Creation%20Workflow.canvas)
+     [View Agent Creation Workflow](Images/Agent-Creation-Workflow.png)
     ![Agent Creation Workflow](Images/Agent-Creation-Workflow.png)
 
     <img src="Images/Agents/Agent-1.png" alt="Initialize Agent Flow System" width="600" height="300">
@@ -267,12 +269,12 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
     ```
     <img src="Images/Orchestration.png" alt="Confirm and Save Agent" width="600" height="600">
 
-> [!tip]
+> **💡 Tip:**
 > - Use consistent naming conventions for worktrees
 > - Maintain one terminal tab per worktree
-> - Use [`Tmux`](https://github.com/tmux/tmux/wiki/Installing) to create a session for each terminal, allowing you to **detach** and keep processes running in the background.process working in background
+> - Use [`Tmux`](https://github.com/tmux/tmux/wiki/Installing) to create a session for each terminal, allowing you to **detach** and keep processes running in the background
 > - Use separate IDE windows for different worktrees
-> - Clean up when finished: `git worktree remove ../feature-a
+> - Clean up when finished: `git worktree remove ../feature-a`
 
 ### Hooks
 
