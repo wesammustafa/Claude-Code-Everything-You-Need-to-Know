@@ -81,8 +81,6 @@ It's essentially like having a very pair programming partner who can jump in and
 ---
 ### Claude Code Setup
 
-[![Anthropic](Images/anthropic.png)](https://www.anthropic.com/claude-code)
-
 [![Claude Installation](Images/claude-installation.png)](https://docs.anthropic.com/en/docs/claude-code/overview)
 
 ---
@@ -221,7 +219,7 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
      ![Agents Prompt](Images/agents-prompt.png)
 
    - Subagents executing multiple tasks in parallel, coordinated through a to-do list:  
-    ![Subagents](Images/subagents.png)
+     ![Subagents](Images/subagents.png)
 
 4. **Specialized Agents**
     -  **Traditional approach:**
