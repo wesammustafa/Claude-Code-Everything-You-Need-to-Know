@@ -81,7 +81,7 @@ It's essentially like having a very pair programming partner who can jump in and
 ---
 ### Claude Code Setup
 
-[![Anthropic](Images/anthropic.png)](https://www.anthropic.com)
+[![Anthropic](Images/Anthropic.png)](https://www.anthropic.com)
 
 [![Claude Installation](Images/claude-installation.png)](https://docs.anthropic.com/en/docs/claude-code/overview)
 
@@ -221,7 +221,7 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
      ![Agents Prompt](Images/agents-prompt.png)
 
    - Subagents executing multiple tasks in parallel, coordinated through a to-do list:  
-     ![Subagents](Images/subagents.png)
+     ![Subagents](Images/Subagents.png)
 
 4. **Specialized Agents**
     -  **Traditional approach:**
@@ -268,7 +268,7 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
     ```md
     Get the **backend-engineer** to suggest changes for improving the UI of our app. Then, get the **backend-engineer** to implement those changes. Then, get the **code-reviewer** to review the changes made by the **backend-engineer**. Finally, get the **backend-engineer** to fix up any issues pointed out by the reviewer.
     ```
-    <img src="Images/orchestration.png" alt="Confirm and Save Agent" width="600" height="600">
+    <img src="Images/Orchestration.png" alt="Confirm and Save Agent" width="600" height="600">
 
 > **💡 Tip:**
 > - Use consistent naming conventions for worktrees
