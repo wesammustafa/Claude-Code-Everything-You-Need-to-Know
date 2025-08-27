@@ -221,7 +221,8 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
      ![Agents Prompt](Images/agents-prompt.png)
 
    - Subagents executing multiple tasks in parallel, coordinated through a to-do list:  
-     ![Subagents](Images/subagents.png)
+    ![Subagents](Images/subagents.png)
+
 4. **Specialized Agents**
     -  **Traditional approach:**
         - One Claude tries to be everything
