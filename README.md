@@ -274,6 +274,275 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
 > - Use separate IDE windows for different worktrees
 > - Clean up when finished: `git worktree remove ../feature-a
 
+### Hooks
+
+Claude Code hooks are customizable checkpoints that let you intercept and control Claude's autonomous coding operations before they execute on your system. They act as programmable guardrails where you can define safety policies, validate changes, require approvals, or log activities. When Claude attempts to modify files, run commands, or make system changes, your hooks can inspect the proposed action and either allow it, block it, or modify it based on your custom logic, giving you fine-grained control over what the AI agent can actually do to your codebase.
+
+![Hooks Workflow](Images/hooks-workflow.png)
+
+### Configuration and Structure
+
+Claude Code hooks are configured in **settings files** such as `~/.claude/settings.json` (user settings), `.claude/settings.json` (project settings), `.claude/settings.local.json` (local project settings), and enterprise managed policy settings.
+
+Example:
+
+```py
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.8"
+# ///
+
+import json, sys, re
+from pathlib import Path
+
+def main():
+    try:
+        data = json.load(sys.stdin)
+        tool_name = data.get('tool_name', '')
+        tool_input = data.get('tool_input', {})
+        
+        # Block .env file access
+        if tool_name in ['Read', 'Edit', 'Write', 'MultiEdit']:
+            if '.env' in tool_input.get('file_path', '') and not tool_input.get('file_path', '').endswith('.env.sample'):
+                print("BLOCKED: .env file access prohibited", file=sys.stderr)
+                sys.exit(2)
+        
+        # Block dangerous rm commands
+        if tool_name == 'Bash':
+            cmd = tool_input.get('command', '').lower()
+            dangerous_patterns = [
+                r'\brm\s+.*-[a-z]*r[a-z]*f',  # rm -rf variations
+                r'\brm\s+.*-[a-z]*r.*[/~*\.]',  # rm -r with dangerous paths
+            ]
+            if any(re.search(p, cmd) for p in dangerous_patterns):
+                print("BLOCKED: Dangerous rm command", file=sys.stderr)
+                sys.exit(2)
+        
+        # Log all tool usage
+        log_dir = Path('logs')
+        log_dir.mkdir(exist_ok=True)
+        log_file = log_dir / 'tool_usage.json'
+        
+        logs = json.load(open(log_file)) if log_file.exists() else []
+        logs.append(data)
+        json.dump(logs, open(log_file, 'w'), indent=2)
+        
+    except: pass
+
+if __name__ == '__main__': main()
+```
+
+```json
+{
+  "hooks": {
+    "pre_tool_use": ".claude/hooks/pre_tool_use.py"
+  },
+  "safety": {
+    "block_env_access": true,
+    "block_dangerous_rm": true,
+    "log_all_tools": true
+  }
+}
+```
+
+### Hook Events
+
+Hooks run in response to various events within Claude Code's lifecycle:
+[examples](https://github.com/disler/claude-code-hooks-mastery)
+- **`PreToolUse`**: Runs **after Claude creates tool parameters but before processing the tool call**.
+- **`PostToolUse`**: Runs **immediately after a tool completes successfully**.
+- **`Notification`**: Runs when Claude Code sends notifications, such as when permission is needed to use a tool or when prompt input has been idle.
+- **`UserPromptSubmit`**: Runs when the user submits a prompt, **before Claude processes it**.
+- **`Stop`**: Runs when the main Claude Code agent has finished responding (does not run if stopped by user interrupt).
+- **`SubagentStop`**: Runs when a Claude Code subagent (Task tool call) has finished responding.
+- **`SessionEnd`**: Runs when a Claude Code session ends.
+- **`PreCompact`**: Runs before Claude Code is about to run a compact operation.
+- **`SessionStart`**: Runs when Claude Code starts a new session or resumes an existing session.
+
+### Hook Input
+
+Hooks receive **JSON data via stdin** containing session information and event-specific data. Common fields include `session_id`, `transcript_path` (path to conversation JSON), and `cwd` (current working directory). Event-specific fields vary:
+
+- `PreToolUse` and `PostToolUse` include `tool_name` and `tool_input` (and `tool_response` for `PostToolUse`).
+- `Notification` includes a `message`.
+- `UserPromptSubmit` includes the `prompt` text.
+- `Stop` and `SubagentStop` include `stop_hook_active`.
+- `PreCompact` includes `trigger` and `custom_instructions`.
+- `SessionStart` includes `source`.
+- `SessionEnd` includes `reason`.
+
+### Hook Output
+
+Hooks communicate status and control Claude Code behavior in two ways:
+
+1. **Simple: Exit Code**:
+    
+    - **Exit code 0 (Success)**: `stdout` is shown to the user in transcript mode (CTRL-R), and for `UserPromptSubmit` and `SessionStart`, `stdout` is added to Claude's context.
+    - **Exit code 2 (Blocking error)**: `stderr` is fed back to Claude to process automatically, or shown to the user to block specific actions depending on the hook event. For example, it **blocks tool calls in `PreToolUse`** and **prompt processing in `UserPromptSubmit`**.
+    - **Other exit codes (Non-blocking error)**: `stderr` is shown to the user, and execution continues.
+2. **Advanced: JSON Output**: Hooks can return structured JSON in `stdout` for more sophisticated control.
+    - **Event-specific decision control**:
+        - `PreToolUse` allows `permissionDecision`: `"allow"`, `"deny"`, or `"ask"`.
+        - `PostToolUse` allows `decision`: `"block"` or `undefined`, and `additionalContext`.
+        - `UserPromptSubmit` allows `decision`: `"block"` or `undefined`, and `additionalContext`.
+        - `Stop` / `SubagentStop` allows `decision`: `"block"` or `undefined`.
+        - `SessionStart` allows `additionalContext` to be added.
+
+### Security Considerations
+
+Hooks execute **arbitrary shell commands** on your system automatically and can modify, delete, or access any files your user account can access. Users are solely responsible for configured commands, and Anthropic provides no warranty.
+
+**Security Best Practices** include:
+
+- Validating and sanitizing inputs.
+- Quoting shell variables.
+- Blocking path traversal.
+- Using absolute paths for scripts.
+- Skipping sensitive files (e.g., `.env`, `.git/`). Configuration safety features include capturing a snapshot of hooks at startup and warning if hooks are modified externally, requiring review to apply changes.
+
+### Hook Execution Details and Debugging
+
+- **Timeout**: Hooks have a 60-second execution limit by default, configurable per command.
+- **Parallelization**: All matching hooks run in parallel.
+- **Environment**: Hooks run in the current directory with Claude Code’s environment, and the `CLAUDE_PROJECT_DIR` environment variable is available.
+- **Debugging**: Basic troubleshooting involves checking configuration with `/hooks`, verifying syntax, testing commands manually, and reviewing logs using `claude --debug`. Advanced debugging includes inspecting hook execution details, validating JSON schemas, and monitoring system resources.
+
+### Model Context Protocol (MCP)
+
+![Why is building AI Agents so chaotic?](Images/MCP/mcp-1.png)
+
+#### The Core Problem: Fragmentation and Inefficiency
+- AI agents are becoming smarter but face a massive hidden communication problem that's holding them back from their full potential.
+- Building AI agents is chaotic because it's ridiculously hard to get them to talk to the tools and data they need to be useful.
+- The current system is described as "a complete and utter mess," referred to by Anthropic as **"the land before MCP"**.
+- **Total fragmentation exists**, with teams, even inside the same company, reinventing the wheel by building custom one-off connections for every single tool and data source.
+- This chaos is named the **N by M problem**:
+	![Without MCP vs With MCP](Images/MCP/mcp-2.png)
+	- If you have `n` AI applications and `m` different tools, the old way forces you to build n * m unique integrations.
+	- This leads to an **exponential explosion of work that is completely unsustainable**.
+	 - This fragmentation everywhere, happening between different teams inside their own company, creating massive inefficiency and wasted effort.
+	- The desired outcome is an **N + M world**, where you just build one connection for each app and one for each tool, and they all work together.
+
+> **Installing Playwright MCP for Claude Code (CLI)**
+Claude Code uses a different installation method than Claude Desktop, with MCP servers being added per-directory and persisting in a ~/.claude.json configuration file.
+
+  **Quick Installation**
+
+The simplest method for Claude Code CLI:
+```bash
+# Navigate to your project directory
+cd /path/to/your/project
+
+# Add Playwright MCP to Claude Code
+claude mcp add playwright npx '@playwright/mcp@latest'
+```
+
+**ExecuteAutomation Version (More Features)**
+
+```bash
+claude mcp add playwright npx '@executeautomation/playwright-mcp-server'
+```
+
+**Usage After Installation**
+```bash
+# Start Claude Code in your project directory
+claude
+
+# Now you can use Playwright through natural language
+"Use playwright mcp to open a browser to example.com"
+"Take a screenshot of the current page"
+"Click on the login button and fill the form"
+```
+
+
+**Verification Commands**
+
+```bash
+# Check available MCP tools
+/mcp
+
+# Navigate to playwright section to see all tools
+# Available tools include: browser_navigate, browser_click, 
+# browser_screenshot, browser_type, etc.
+```
+
+
+**Directory-Specific Persistence**
+The claude mcp add command will persist but will only affect the directory in which you run it, with configuration stored in ~/.claude.json under a "projects" key.
+
+```bash
+# Each directory can have different MCP configurations
+cd ~/project-a
+claude mcp add playwright npx '@playwright/mcp@latest'
+
+cd ~/project-b  
+claude mcp add playwright npx '@executeautomation/playwright-mcp-server'
+```
+
+#### The Solution: Model Context Protocol
+
+- **MCP is the proposed solution** to this chaos.
+- It functions as a **universal translator for AI**.
+- **MCP is an open standard** designed to let any AI application speak fluently with any tool or data source.
+- It's the next logical step in a pattern seen before in tech:
+    ![The Evolution of Protocols](Images/MCP/mcp-3.png)
+    - **Web APIs** standardized how web apps talk to servers.
+    - The **Language Server Protocol (LSP)** did the same for code editors and their tools.
+    - **MCP is that same evolutionary leap for AI**, creating a common language for how agents talk to the rest of the world.
+- The core mission of MCP is to be an **open standard layer that flattens the N by M problem**.
+- It is explicitly **not a proprietary thing** but designed to be a public good for the whole ecosystem.
+- The goal is to make building with AI faster, more efficient, and more collaborative.
+
+#### How MCP Works: Three Core Pillars (Interfaces)
+  ![MCP Deep Dive](Images/MCP/mcp-4.png)
+  MCP is built on three core pillars designed to create a clean separation of duties and make it crystal clear who's in control of any given interaction:
+1. **Tools**
+	- **Controlled by the AI model** so it can take action.
+	- Developers expose capabilities like searching a database or writing to a file.
+	- The **model decides when and how to use those tools** to accomplish its goal.
+
+2. Resources
+	- **Controlled by the application**.
+	- Allows developers to feed the AI rich, structured information beyond plain text.
+	- Examples include attaching files, surfacing error logs, or sending complex JSON objects.
+	- The application developer decides what important context the AI needs.
+
+3. Prompts
+	- **Controlled by the user**.
+	- Function like slash commands in apps like Slack or Discord.
+	- A simple user shortcut (e.g., `/summarize_this_pull_request`) kicks off complex multi-step actions.
+	- This puts **direct powerful control** back in the user's hands.
+
+#### The Future Vision: The MCP Registry and Self-Evolving Agents
+
+![Agent Learning on the Fly](Images/MCP/mcp-5.png)
+- **MCP lays the foundation for the next generation of AI**, enabling agents that can learn, grow, and evolve on their own.
+- The key to this future is the **MCP Registry**.
+- **The MCP Registry** is imagined as a global centralized directory, like an app store for AI tools and capabilities.
+- Its function allows an AI agent to:
+    - **Search for** new tools **Verify** their authenticity
+    - **Dynamically connect** to brand new tools it's never encountered
+    - **Real-world example**: 
+        - An agent needs to check logs in Grafana but has no idea what Grafana is.
+        - Instead of failing, it pings the MCP registry, searches for a verified Grafana server, finds the official one, and instantly connects.
+        - The agent uses these new tools to read the log and complete the task.
+        - This demonstrates the agent **literally teaching itself a new skill on the fly**.
+- The ultimate vision: agents that are **no longer limited to their original tools**.
+- They will **proactively discover and integrate new capabilities** by themselves.
+- The agent will give itself context and evolve to meet whatever new challenge comes its way.
+
+### SDLC
+![Software Software Development Life Cycle](Images/sdlc.png)
+
+![What is Software Software Development Life Cycle?](Images/what-is-sdlc.png)
+
+[What is Software Development Life Cycle](https://aws.amazon.com/what-is/sdlc)
+
+### Super Claude Framework
+[Source](https://github.com/SuperClaude-Org/SuperClaude_Framework)
+
+### The BMAD METHOD — AI Agent Framework
+[Source](https://github.com/bmad-code-org/BMAD-METHOD)
 
 ### FAQ
 
@@ -394,10 +663,18 @@ git log --oneline --all  # WILL show the auth commit
 - https://docs.anthropic.com/en/docs/claude-code/quickstart
 - https://www.anthropic.com/engineering/claude-code-best-practices
 - https://docs.anthropic.com/en/docs/claude-code/slash-commands
-- https://aws.amazon.com/what-is/sdlc/
 - https://www.anthropic.com/engineering/building-effective-agents
 - https://www.anthropic.com/news/how-anthropic-teams-use-claude-code
 - https://modelcontextprotocol.io/docs/getting-started/intro
+- https://www.youtube.com/watch?v=kQmXtrmQ5Zg
+- https://github.com/modelcontextprotocol/servers?tab=readme-ov-file#%EF%B8%8F-official-integrations
+- https://github.com/OneRedOak/claude-code-workflows/tree/main
+- https://www.youtube.com/watch?v=xOO8Wt_i72s
+- https://github.com/microsoft/playwright-mcp
+- https://aws.amazon.com/what-is/sdlc/
+- https://developers.googleblog.com/en/a2a-a-new-era-of-agent-interoperability/
+- https://github.com/cline/cline
+- https://github.com/lastmile-ai/mcp-agent
 - https://github.com/yamadashy/repomix
 - https://tmuxcheatsheet.com/
 - https://obsidian.md/
