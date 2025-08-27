@@ -81,6 +81,8 @@ It's essentially like having a very pair programming partner who can jump in and
 ---
 ### Claude Code Setup
 
+[![Anthropic](Images/anthropic.png)](https://www.anthropic.com)
+
 [![Claude Installation](Images/claude-installation.png)](https://docs.anthropic.com/en/docs/claude-code/overview)
 
 ---
