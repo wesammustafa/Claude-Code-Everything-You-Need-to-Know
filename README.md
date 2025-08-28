@@ -305,6 +305,7 @@ Follow these steps to configure hooks in your project:
    Open `settings.json`, find the entry for: "/Users/wesam/.local/bin/uv" Replace it with the actual path returned by:  
  ```bash which uv```
 
+```text
 project-root/
 │
 ├── .claude/
@@ -316,6 +317,9 @@ project-root/
 │   └── settings.json
 │
 └── (other project files)
+```
+
+For a complete working example of hooks in action, see the [Event-X repository](https://github.com/wesammustafa/Event-X).
 
 ### Hook Events
 
