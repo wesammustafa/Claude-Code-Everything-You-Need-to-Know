@@ -233,32 +233,16 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
     
     - Let's do it, step by step
 
-     [View Agent Creation Workflow](Images/agent-creation-workflow.png)
+    [View Agent Creation Workflow](Images/agent-creation-workflow.png)
     ![Agent Creation Workflow](Images/agent-creation-workflow.png)
 
-    <img src="Images/Agents/agent-1.png" alt="Initialize Agent Flow System" width="600" height="300">
-    <img src="Images/Agents/agent-2.png" alt="Configure Agent Type" width="600" height="400">
-    <img src="Images/Agents/agent-3.png" alt="Select Agent Location" width="600" height="300">
-    <img src="Images/Agents/agent-4.png" alt="Define Agent Identifier" width="600" height="300">
-    <img src="Images/Agents/agent-5.png" alt="Set Agent Identifier" width="600" height="300">
     <img src="Images/Agents/agent-6.png" alt="Set Agent System Prompt" width="600" height="300">
 
     [Security Reviewer Prompt](specialized-agents/system-prompts/security-reviewer-prompt.md)
 
-    <img src="Images/Agents/agent-7.png" alt="Set Agent Description" width="600" height="250">
+    <img src="Images/Agents/agent-7.png" alt="Set Agent Description" width="600" height="300">
     
     [Security Reviewer Description](specialized-agents/descriptions/security-reviewer-description.md)
-
-    <img src="Images/Agents/agent-8.png" alt="Select Agent Tools" width="600" height="600">
-    <img src="Images/Agents/agent-9.png" alt="Select Agent Model" width="600" height="300">
-    <img src="Images/Agents/agent-10.png" alt="Select Agent Color" width="600" height="300">
-    <img src="Images/Agents/agent-11.png" alt="Confirm and Save Agent" width="600" height="600">
-    <img src="Images/Agents/agent-12.png" alt="Review Available Agents" width="600" height="400">
-    <img src="Images/Agents/agent-13.png" alt="Select One Agent Action" width="600" height="300">
-    <img src="Images/Agents/agent-14.png" alt="Select View Agent" width="600" height="600">
-    <img src="Images/Agents/agent-15.png" alt="Select Agent Using Command" width="600" height="400">
-    <img src="Images/Agents/agent-16.png" alt="Start Agent on Specific Feature" width="600" height="300">
-    <img src="Images/Agents/agent-17.png" alt="Review Final Results" width="600" height="400">
 
 5. **General Agent orchestrate collaboration between Specialized Agents**
     ```md
@@ -339,30 +323,36 @@ Hooks run in response to various events within Claude Code's lifecycle:
 
 Hooks receive **JSON data via stdin** containing session information and event-specific data. Common fields include `session_id`, `transcript_path` (path to conversation JSON), and `cwd` (current working directory). Event-specific fields vary:
 
-- `PreToolUse` and `PostToolUse` include `tool_name` and `tool_input` (and `tool_response` for `PostToolUse`).
-- `Notification` includes a `message`.
-- `UserPromptSubmit` includes the `prompt` text.
-- `Stop` and `SubagentStop` include `stop_hook_active`.
-- `PreCompact` includes `trigger` and `custom_instructions`.
-- `SessionStart` includes `source`.
-- `SessionEnd` includes `reason`.
+| Hook Event           | Payload / Fields |
+|---------------------|-----------------|
+| `PreToolUse`         | `tool_name`, `tool_input` |
+| `PostToolUse`        | `tool_name`, `tool_input`, `tool_response` |
+| `Notification`       | `message` |
+| `UserPromptSubmit`   | `prompt` |
+| `Stop` / `SubagentStop` | `stop_hook_active` |
+| `PreCompact`         | `trigger`, `custom_instructions` |
+| `SessionStart`       | `source` |
+| `SessionEnd`         | `reason` |
+
 
 ### Hook Output
 
 Hooks communicate status and control Claude Code behavior in two ways:
 
-1. **Simple: Exit Code**:
-    
-    - **Exit code 0 (Success)**: `stdout` is shown to the user in transcript mode (CTRL-R), and for `UserPromptSubmit` and `SessionStart`, `stdout` is added to Claude's context.
-    - **Exit code 2 (Blocking error)**: `stderr` is fed back to Claude to process automatically, or shown to the user to block specific actions depending on the hook event. For example, it **blocks tool calls in `PreToolUse`** and **prompt processing in `UserPromptSubmit`**.
-    - **Other exit codes (Non-blocking error)**: `stderr` is shown to the user, and execution continues.
-2. **Advanced: JSON Output**: Hooks can return structured JSON in `stdout` for more sophisticated control.
-    - **Event-specific decision control**:
-        - `PreToolUse` allows `permissionDecision`: `"allow"`, `"deny"`, or `"ask"`.
-        - `PostToolUse` allows `decision`: `"block"` or `undefined`, and `additionalContext`.
-        - `UserPromptSubmit` allows `decision`: `"block"` or `undefined`, and `additionalContext`.
-        - `Stop` / `SubagentStop` allows `decision`: `"block"` or `undefined`.
-        - `SessionStart` allows `additionalContext` to be added.
+## Hook Exit Codes and JSON Output
+
+| Exit Code / Feature                     | Behavior / Description |
+|----------------------------------------|-----------------------|
+| **Exit code 0 (Success)**               | `stdout` is shown to the user in transcript mode (CTRL-R). For `UserPromptSubmit` and `SessionStart`, `stdout` is added to Claude's context. |
+| **Exit code 2 (Blocking error)**        | `stderr` is fed back to Claude or shown to the user to block actions depending on the hook event. Examples: **blocks tool calls in `PreToolUse`** and **prompt processing in `UserPromptSubmit`**. |
+| **Other exit codes (Non-blocking error)** | `stderr` is shown to the user, but execution continues. |
+| **Advanced: JSON Output**               | Hooks can return structured JSON in `stdout` for sophisticated control. |
+| `PreToolUse`                            | `permissionDecision`: `"allow"`, `"deny"`, or `"ask"`. |
+| `PostToolUse`                           | `decision`: `"block"` or `undefined`; `additionalContext` can be returned. |
+| `UserPromptSubmit`                       | `decision`: `"block"` or `undefined`; `additionalContext` can be returned. |
+| `Stop` / `SubagentStop`                 | `decision`: `"block"` or `undefined`. |
+| `SessionStart`                           | `additionalContext` can be added. |
+
 
 ### Security Considerations
 
