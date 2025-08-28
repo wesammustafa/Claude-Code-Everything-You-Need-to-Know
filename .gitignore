@@ -13,3 +13,6 @@ Icon?
 *.swo
 *.tmp
 *.log
+
+# Logs folder
+logs/
