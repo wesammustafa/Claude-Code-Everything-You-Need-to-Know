@@ -12,17 +12,13 @@ The ultimate all-in-one guide to mastering Claude Code. From setup, prompt engin
 - Prompt Engineering Deep Dive
 - Claude Commands Mastery: Extract the best possible results by leveraging Claude's command capabilities to their fullest.
 - AI Agents: Harness agents, sub-agents, and `worktrees` to structure intelligence with precision.
-
-🚀 What We'll Cover Next:
-
-- Step-by-Step Live Demo: Creating Specialized AI Agents
 - Hooks That Work: Discover the power of Claude Hooks and learn how to implement them for maximum impact.
 - What are MCP servers and how to use them?
-- Workflow Design: Build fully customized, high-performance workflows tailored to your project goals.
 - Software Development Life Cycle (SDLC)
+- Workflow Design: Build fully customized, high-performance workflows tailored to your project goals.
+- Hands-On Demo: Full App Development Through the SDLC, Step by Step!
 - Super Claude: Unlock advanced capabilities and push beyond standard limits.
 - The BMAD Method: Apply a proven, systematic approach to deliver consistent, high-quality outcomes.
-- Hands-On Demo: Full App Development Through the SDLC, Step by Step!
 
 ### What are LLMs, and how do they differ from AI tools like Claude Code?
 
@@ -283,70 +279,43 @@ Claude Code hooks are customizable checkpoints that let you intercept and contro
 
 ![Hooks Workflow](Images/hooks-workflow.png)
 
-### Configuration and Structure
+### Setting Up Claude Hooks
 
 Claude Code hooks are configured in **settings files** such as `~/.claude/settings.json` (user settings), `.claude/settings.json` (project settings), `.claude/settings.local.json` (local project settings), and enterprise managed policy settings.
 
-Example:
+Follow these steps to configure hooks in your project:
 
-```py
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.8"
-# ///
+1. **Copy Hooks Folder**  
+   Copy the `.claude/hooks` directory into the `.claude` folder at the root of your project.
 
-import json, sys, re
-from pathlib import Path
+2. **Review Available Hooks**  
+   Inside the `hooks` folder, you’ll find Python scripts for each hook (e.g., `notification`, `post_tool_use`, etc.).
 
-def main():
-    try:
-        data = json.load(sys.stdin)
-        tool_name = data.get('tool_name', '')
-        tool_input = data.get('tool_input', {})
-        
-        # Block .env file access
-        if tool_name in ['Read', 'Edit', 'Write', 'MultiEdit']:
-            if '.env' in tool_input.get('file_path', '') and not tool_input.get('file_path', '').endswith('.env.sample'):
-                print("BLOCKED: .env file access prohibited", file=sys.stderr)
-                sys.exit(2)
-        
-        # Block dangerous rm commands
-        if tool_name == 'Bash':
-            cmd = tool_input.get('command', '').lower()
-            dangerous_patterns = [
-                r'\brm\s+.*-[a-z]*r[a-z]*f',  # rm -rf variations
-                r'\brm\s+.*-[a-z]*r.*[/~*\.]',  # rm -r with dangerous paths
-            ]
-            if any(re.search(p, cmd) for p in dangerous_patterns):
-                print("BLOCKED: Dangerous rm command", file=sys.stderr)
-                sys.exit(2)
-        
-        # Log all tool usage
-        log_dir = Path('logs')
-        log_dir.mkdir(exist_ok=True)
-        log_file = log_dir / 'tool_usage.json'
-        
-        logs = json.load(open(log_file)) if log_file.exists() else []
-        logs.append(data)
-        json.dump(logs, open(log_file, 'w'), indent=2)
-        
-    except: pass
+3. **Keep Only Required Hooks**  
+   Retain the hooks you need and delete the rest.
 
-if __name__ == '__main__': main()
-```
+4. **Install Package Manager**  
+   Install the [uv](https://docs.astral.sh/uv/getting-started/installation/) Python package manager.  
+   > This is required to execute Python scripts.
 
-```json
-{
-  "hooks": {
-    "pre_tool_use": ".claude/hooks/pre_tool_use.py"
-  },
-  "safety": {
-    "block_env_access": true,
-    "block_dangerous_rm": true,
-    "log_all_tools": true
-  }
-}
-```
+5. **Copy Settings File**  
+   Copy `.claude/settings.json` into your `.claude` folder.
+
+6. **Update Settings Path**  
+   Open `settings.json`, find the entry for: "/Users/wesam/.local/bin/uv" Replace it with the actual path returned by:  
+ ```bash which uv```
+
+project-root/
+│
+├── .claude/
+│   ├── hooks/
+│   │   ├── notification.py
+│   │   ├── post_tool_use.py
+│   │   └── ... (other hooks you keep)
+│   │
+│   └── settings.json
+│
+└── (other project files)
 
 ### Hook Events
 
