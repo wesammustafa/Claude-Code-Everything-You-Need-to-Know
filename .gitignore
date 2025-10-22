@@ -15,3 +15,7 @@
 
 # Logs folder
 logs/
+.serena
+
+# Claude Code local configuration
+.claude.json
