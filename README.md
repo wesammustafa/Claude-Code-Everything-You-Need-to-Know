@@ -375,6 +375,11 @@ Hooks execute **arbitrary shell commands** on your system automatically and can 
 
 ### Model Context Protocol (MCP)
 
+> **📚 Comprehensive MCP Documentation**
+> For detailed setup, configuration, and usage of MCP servers:
+> - **[MCP Servers Documentation](./mcp-servers/)** - Complete guide with prerequisites, installation, and individual server documentation (Serena, Sequential Thinking, Memory, Playwright)
+> - **[Troubleshooting Guide](./mcp-servers/README.md#troubleshooting)** - Common issues and solutions
+
 ![Why is building AI Agents so chaotic?](Images/MCP/mcp-1.png)
 
 #### The Core Problem: Fragmentation and Inefficiency
