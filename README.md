@@ -4,6 +4,8 @@ The ultimate all-in-one guide to mastering Claude Code. From setup, prompt engin
 > **⚠️ IMPORTANT NOTE**  
 > To get the best visualization for the documents in this repo, please install [Obsidian](https://obsidian.md/).
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know)
+
 ### 🧵 What We Covered:
 
 - What are LLMs, and how do they differ from AI tools like Claude Code? Why should we use AI tools?
