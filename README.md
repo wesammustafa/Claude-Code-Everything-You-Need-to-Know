@@ -153,10 +153,6 @@ It's essentially like having a very pair programming partner who can jump in and
 - Standard: $5 input / $25 output per MTok
 - Fast Mode: $30 input / $150 output per MTok (6x)
 
-**Special Offers:**
-- New Pro subscribers: $50 in free API credits
-- Fast Mode: 50% discount until Feb 16, 2026 11:59pm PT
-
 ---
 ### Claude Code Setup
 
@@ -978,8 +974,6 @@ Fast Mode uses **6x standard pricing**:
 | Standard Opus 4.6 | $5 | $25 |
 | Fast Mode Opus 4.6 | $30 | $150 |
 
-**Special Offer:** 50% discount on Fast Mode until Feb 16, 2026 11:59pm PT
-
 #### When to Use Fast Mode
 
 **✅ Best For:**
@@ -1766,9 +1760,6 @@ The MCP ecosystem continues to grow with:
 - 6x standard pricing: $30 input / $150 output per million tokens
 - 50% discount promotion until Feb 16, 2026 11:59pm PT
 - Toggle with `/fast` command
-
-**Special Offer:**
-- New Pro subscribers get $50 in free API credits to try Opus 4.6
 
 #### Q: How many lines of code can I write with 44,000 tokens?
 
