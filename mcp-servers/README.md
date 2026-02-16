@@ -99,6 +99,52 @@ claude --version
 
 > **Note:** All commands should return version numbers. If any command fails, install the missing prerequisite.
 
+---
+
+## MCP Registry & Ecosystem (2026)
+
+### Official MCP Registry
+
+The **[MCP Registry](https://registry.modelcontextprotocol.io/)** is now live (launched September 2025), providing a centralized directory for discovering MCP servers.
+
+**Features:**
+- 🔍 Browse hundreds of official and community servers
+- 📦 One-click installation instructions
+- 📚 Comprehensive documentation for each server
+- ✅ Quality-verified listings
+- 🔐 Support for public and private sub-registries
+
+**Discovering New Servers:**
+1. Visit https://registry.modelcontextprotocol.io/
+2. Search by category (code, database, browser, AI, etc.)
+3. Copy installation command for Claude Code CLI
+4. Install with `claude mcp add`
+
+**Popular Server Categories:**
+- **Code Intelligence**: Serena, GitHub, GitLab integrations
+- **Databases**: PostgreSQL, SQLite, MongoDB servers
+- **Browser Automation**: Playwright, Puppeteer
+- **AI & ML**: Sequential Thinking, Memory, various AI tool integrations
+- **APIs & Services**: REST clients, GraphQL, authentication servers
+
+### Latest MCP Protocol Features (2026)
+
+**New Capabilities:**
+- **MCP Apps**: Interactive UI components from servers
+- **OAuth Support**: Built-in client credentials authentication
+- **Async Operations**: Non-blocking server operations
+- **Server Discovery**: `.well-known` URLs for automatic discovery
+- **Improved Performance**: Stateless architecture for better scaling
+
+### Agentic AI Foundation
+
+MCP is now maintained by the **Agentic AI Foundation** (Linux Foundation), ensuring:
+- Open governance and community-driven development
+- Vendor-neutral standardization
+- Long-term sustainability
+
+---
+
 ### Installation
 
 MCP servers can be installed in two scopes:
