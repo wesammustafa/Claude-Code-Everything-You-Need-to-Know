@@ -286,7 +286,7 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
 
 > **🚨 SECURITY WARNING:** Skills execute with full access to your codebase and can run arbitrary commands. Only use skills from trusted sources. Review all third-party skills before adding them to your project. Skills from untrusted repositories can access files, execute commands, and potentially compromise your system.
 
-![Skills Workflow](Images/skills-workflow.png)
+![Skills Workflow](Images/skill-workflow.png)
 
 #### Quickstart: Your First Skill (3 minutes)
 
