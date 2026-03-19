@@ -1,8 +1,9 @@
-# Claude-Code-Everything-You-Need-to-Know
+# Claude-Code-Everything-You-Need-to-Know <img src="Images/claude-jumping.svg" width="80" height="72" alt="Animated Claude" />
+
 The ultimate all-in-one guide to mastering Claude Code. From setup, prompt engineering, commands, hooks, workflows, automation, and integrations, to MCP servers, tools, and the BMAD method—packed with step-by-step tutorials, real-world examples, and expert strategies to make this the global go-to repo for Claude mastery.
 
-> **⚠️ IMPORTANT NOTE**  
-> To get the best visualization for the documents in this repo, please install [Obsidian](https://obsidian.md/).
+> **📖 Recommended Tool**  
+> For the best reading experience with these documents, we recommend installing [Obsidian](https://obsidian.md/). It provides excellent visualization and navigation for markdown files.
 
 ### 🧵 What We Covered:
 
@@ -176,7 +177,7 @@ It's essentially like having a very pair programming partner who can jump in and
     - ![Plan Mode](Images/plan-mode.png)
     - ![Accept Edit Mode](Images/accept-edit-mode.png)
 
-> **⚠️ Warning:** Research & planning first improves performance for complex tasks.
+> **💡 Pro Tip:** Research & planning first significantly improves performance for complex tasks.
 
 ---
 
@@ -278,7 +279,7 @@ echo "Analyze this code for performance issues and suggest optimizations:" > .cl
 
 > **📖 Extensibility Layer:** Claude Skills transform complex, multi-step workflows into reusable slash commands. Think of them as "macros for AI" — instead of repeating the same detailed instructions, encapsulate them once and invoke them with a simple `/skill-name` command.
 
-> **⚠️ IMPORTANT TERMINOLOGY:** **"Skills"** and **"custom slash commands"** are the same thing. This documentation uses "skills" as the primary term, but you may see both used interchangeably. They both refer to markdown files in `.claude/commands/` that you invoke with `/skill-name`.
+> **📖 Terminology Note:** **"Skills"** and **"custom slash commands"** are the same thing. This documentation uses "skills" as the primary term, but you may see both used interchangeably. They both refer to markdown files in `.claude/commands/` that you invoke with `/skill-name`.
 
 > **🚨 SECURITY WARNING:** Skills execute with full access to your codebase and can run arbitrary commands. Only use skills from trusted sources. Review all third-party skills before adding them to your project. Skills from untrusted repositories can access files, execute commands, and potentially compromise your system.
 
