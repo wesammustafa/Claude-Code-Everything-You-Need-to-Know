@@ -160,6 +160,7 @@ It's essentially like having a very pair programming partner who can jump in and
 [![Anthropic](Images/Anthropic.png)](https://www.anthropic.com)
 
 [![Claude Installation](Images/claude-installation.png)](https://docs.anthropic.com/en/docs/claude-code/overview)
+> **Windows or macOS?** [ClaudeCode Launchpad CLI](https://github.com/noambrand/kivun-terminal) is a community installer that sets up Node.js, Git, and Claude Code in about 2 minutes — no manual steps. Includes a two-line status bar, folder picker, and optional terminal theme. [Download latest release](https://github.com/noambrand/kivun-terminal/releases/latest).
 
 ---
 ### Prompt Engineering Deep Dive
