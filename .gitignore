@@ -15,7 +15,9 @@
 
 # Logs folder
 logs/
-.serena
+.serena/
+.playwright-mcp/
+.opencode/
 
 # Claude Code local configuration
 .claude.json

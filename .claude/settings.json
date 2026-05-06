@@ -20,17 +20,6 @@
     "deny": []
   },
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/wesam/.local/bin/uv run .claude/hooks/pre_tool_use.py"
-          }
-        ]
-      }
-    ],
     "PostToolUse": [
       {
         "matcher": "",
