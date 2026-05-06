@@ -1,4 +1,4 @@
-# Claude Code: Everything You Need to Know <img src="Images/claude-jumping.svg" width="72" height="64" alt="Animated Claude" align="right" />
+# Claude Code: Everything You Need to Know <img src="Images/claude-jumping.svg" width="44" height="40" alt="Animated Claude" align="right" />
 
 A practical guide to Claude Code — from your first prompt to multi-agent automation, hooks, MCP, and team workflows. Built around clear mental models and real examples, not marketing.
 
