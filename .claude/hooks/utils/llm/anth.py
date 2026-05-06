@@ -12,6 +12,9 @@ import sys
 from dotenv import load_dotenv
 
 
+USAGE_MESSAGE = "Usage: ./anth.py 'your prompt here' or ./anth.py --completion"
+
+
 def prompt_llm(prompt_text):
     """
     Base Anthropic LLM prompting method using fastest model.
@@ -90,25 +93,40 @@ Generate ONE completion message:"""
     return response
 
 
-def main():
+def main(argv=None):
     """Command line interface for testing."""
-    if len(sys.argv) > 1:
-        if sys.argv[1] == "--completion":
-            message = generate_completion_message()
-            if message:
-                print(message)
-            else:
-                print("Error generating completion message")
+    args = sys.argv[1:] if argv is None else argv
+
+    if not args:
+        print(USAGE_MESSAGE)
+        return 1
+
+    if args[0] == "--completion":
+        if len(args) != 1:
+            print("Error: --completion does not accept additional arguments")
+            print(USAGE_MESSAGE)
+            return 1
+
+        message = generate_completion_message()
+        if message:
+            print(message)
         else:
-            prompt_text = " ".join(sys.argv[1:])
-            response = prompt_llm(prompt_text)
-            if response:
-                print(response)
-            else:
-                print("Error calling Anthropic API")
+            print("Error generating completion message")
+        return 0
+
+    prompt_text = " ".join(args).strip()
+    if not prompt_text:
+        print("Error: prompt text is required")
+        print(USAGE_MESSAGE)
+        return 1
+
+    response = prompt_llm(prompt_text)
+    if response:
+        print(response)
     else:
-        print("Usage: ./anth.py 'your prompt here' or ./anth.py --completion")
+        print("Error calling Anthropic API")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
