@@ -854,6 +854,7 @@ A curated set of pointers — official Anthropic docs, MCP resources, hooks exam
 - [Building effective agents (Anthropic engineering)](https://www.anthropic.com/engineering/building-effective-agents)
 - [Official MCP Registry](https://registry.modelcontextprotocol.io/)
 - [Hooks reference (official)](https://docs.anthropic.com/en/docs/claude-code/hooks)
+- [Vexilo · A field guide to Claude Code](https://vexilo.app/?lang=en) — Interactive visual index of 31 agents · 99 commands · 123 skills · 13 rules, organized around the 5-step workflow. One-click "Teach Claude this handbook" primes your local Claude session with the whole index in 30 seconds. ([companion repo](https://github.com/lilhawk7077/claude-code-resources))
 
 ---
 
