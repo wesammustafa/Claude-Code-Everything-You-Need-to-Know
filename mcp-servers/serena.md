@@ -8,7 +8,7 @@ Serena provides **semantic code intelligence** for Claude Code, enabling project
 
 ## Installation
 
-### 1️⃣ Global Installation (Recommended)
+### Step 1: Global Installation (Recommended)
 
 Install Serena globally for use across all projects:
 
@@ -38,7 +38,7 @@ claude mcp add serena -s user -- uvx --from git+https://github.com/oraios/serena
 
 ## Usage
 
-### 2️⃣ Activate a Project
+### Step 2: Activate a Project
 
 Within your Claude Code session, activate the current directory as a project:
 
@@ -48,7 +48,7 @@ Within your Claude Code session, activate the current directory as a project:
 
 This tells Serena to treat the current folder as the active project context.
 
-### 3️⃣ Index a Project (Optional, Recommended)
+### Step 3: Index a Project (Optional, Recommended)
 
 Indexing preloads your project into Serena for faster symbol lookup and semantic code understanding:
 
@@ -68,7 +68,7 @@ uvx --from git+https://github.com/oraios/serena serena project index
 
 ## Features
 
-- **Multi-language support**: Works with 15+ programming languages
+- **Multi-language support**: Works with a wide range of languages via the Language Server Protocol
 - **Symbol-level navigation**: Jump to definitions, find references
 - **Intelligent editing**: Context-aware code modifications
 - **Project understanding**: Semantic analysis of codebase structure

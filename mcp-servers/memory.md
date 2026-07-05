@@ -4,11 +4,13 @@
 
 The **Memory** server allows Claude Code to **store and retrieve information across sessions**, providing persistent context, remembering project details, and maintaining user preferences.
 
+> **Note:** This MCP server is distinct from Claude Code's **built-in auto memory** (on by default since v2.1.59), which stores notes under `~/.claude/projects/<project>/memory/` with a `MEMORY.md` index and is managed via the `/memory` command.
+
 ---
 
 ## Installation
 
-### 1️⃣ Global Installation (Recommended)
+### Step 1: Global Installation (Recommended)
 
 Install Memory globally for cross-project persistence:
 
@@ -28,9 +30,9 @@ claude mcp add memory -s local -- npx -y @modelcontextprotocol/server-memory
 
 ## Usage
 
-### 2️⃣ Using Memory in Claude Code
+### Step 2: Using Memory in Claude Code
 
-Once installed, Memory automatically stores and retrieves context from your sessions.
+Once installed, the server exposes **knowledge-graph tools** that Claude calls when you ask it to remember or recall something. Usage is not automatic — to make it so, add an instruction to your `CLAUDE.md` (e.g., "Use the memory server to store and retrieve project context").
 
 #### Example: Storing Information
 
@@ -61,7 +63,7 @@ Claude responds:
 - **Persistent context**: Information persists across sessions
 - **Project-specific notes**: Remember project details, conventions, and preferences
 - **User preferences**: Store personal preferences and workflow habits
-- **Seamless integration**: Works automatically with Claude Code
+- **On-request memory**: Claude calls the server's knowledge-graph tools when you ask it to remember or recall
 - **Cross-session memory**: Recall information from previous conversations
 
 ---

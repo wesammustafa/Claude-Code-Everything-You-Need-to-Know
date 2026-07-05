@@ -1,79 +1,79 @@
 # Models — Specifications & Pricing
 
-*[← Back to README](../../README.md#claude-opus-47-the-latest-flagship)*
+*[← Back to README](../../README.md#the-claude-5-era-todays-model-lineup)*
 
-The Claude 4 model family at a glance, plus deeper specs for the current flagship. For Anthropic's authoritative list (always more current), see the [official model overview](https://docs.anthropic.com/en/docs/about-claude/models).
+The current Claude lineup at a glance, plus deeper specs for the headline models. For Anthropic's authoritative list (always more current), see the [official model overview](https://platform.claude.com/docs/en/about-claude/models/overview).
 
 ---
 
-## The Claude 4 family
+## The current lineup (July 2026)
 
 | Model | Model ID | Context | Max output | Best for |
 |---|---|---|---|---|
-| **Opus 4.7** *(flagship)* | `claude-opus-4-7` | 200K (1M beta via API) | 128K | Complex reasoning, large refactors, multi-file analysis |
-| **Sonnet 4.6** *(balanced)* | `claude-sonnet-4-6` | 200K | 8K | Everyday coding — most tasks live here |
-| **Haiku 4.5** *(fast/cheap)* | `claude-haiku-4-5-20251001` | 200K | 8K | Quick edits, doc updates, light reasoning |
+| **Sonnet 5** *(default)* | `claude-sonnet-5` | 1M | 128K | Everyday coding — most tasks live here |
+| **Opus 4.8** *(Opus flagship)* | `claude-opus-4-8` | 1M | 128K | Complex reasoning, large refactors, agent orchestration |
+| **Fable 5** *(Mythos class)* | `claude-fable-5` | 1M | 128K | The genuinely hard problems — a tier above Opus |
+| **Haiku 4.5** *(fast/cheap)* | `claude-haiku-4-5` | 200K | 64K | Quick edits, doc updates, light reasoning |
 
-> ⚠️ Anthropic ships new models often. Always check the [official model overview](https://docs.anthropic.com/en/docs/about-claude/models) before pinning a model ID.
+> ⚠️ Anthropic ships new models often. Always check the [official model overview](https://platform.claude.com/docs/en/about-claude/models/overview) before pinning a model ID.
 
-**Previous-generation models still available:** `claude-opus-4-6` and `claude-sonnet-4-5-20250929` remain accessible via API and the `/model` switcher. They're no longer the default but useful for cost optimization or pinning a build to a specific behavior.
+**1M context is standard** on all current Opus/Sonnet/Fable models — no beta flag, and the full window bills at standard per-token rates (no long-context surcharge).
+
+**Legacy models still available:** Opus 4.7, Opus 4.6, and Sonnet 4.6 remain accessible via API and the `/model` switcher — useful for pinning a build to a specific behavior. **Opus 4.1 is deprecated and retires August 5, 2026.**
+
+**Mythos 5** (`claude-mythos-5`) is the same underlying model as Fable 5 with safeguards lifted in some areas — invitation-only for approved organizations via Project Glasswing, no self-serve access. See [the announcement](https://www.anthropic.com/news/claude-fable-5-mythos-5).
 
 ---
 
-## Claude Opus 4.7 — deep specs
+## The headliners
 
-### Key specifications
+### Claude Sonnet 5 — the new default
 
-| Feature | Specification |
-|---|---|
-| **Model ID** | `claude-opus-4-7` |
-| **Context window** | 200K tokens (1M beta via API) |
-| **Max output** | 128K tokens |
-| **Availability** | Pro, Max, and API plans |
-| **Fast Mode** | Available via Opus 4.6 (`/fast` switches the underlying model — see [Fast Mode](#fast-mode) below) |
+Announced June 30, 2026; Claude Code's default model since v2.1.197. The default for Free and Pro on claude.ai too.
 
-### What's new in 4.7 vs 4.6
+- **1M-token context, 128K max output** — whole-codebase work without splitting.
+- **Intro pricing:** $2/$10 per MTok through August 31, 2026, then $3/$15.
+- Defaults to `high` effort on API and Claude Code.
 
-- **Sharper adaptive thinking.** Reasoning depth scales more reliably with task complexity — fewer cases of overthinking trivial prompts or underthinking hard ones.
-- **Better long-context grounding.** Multi-file refactoring at the upper end of the 200K window holds the thread tighter than 4.6.
-- **Improved tool calling.** Lower rate of malformed JSON and clearer reasoning when picking between similar tools.
-- **Same price.** Input/output pricing matches Opus 4.6.
+→ [Announcement](https://www.anthropic.com/news/claude-sonnet-5)
 
-### Capabilities
+### Claude Opus 4.8 — the Opus flagship
 
-**1. Extended context window** — 200K standard for everyone; 1M beta via API only. Best for: analyzing entire large codebases at once, processing extensive documentation.
+Announced May 28, 2026, replacing Opus 4.7 at **unchanged pricing** ($5/$25).
 
-**2. Adaptive thinking** — dynamic reasoning that scales with task complexity. You can hint at depth with `"think"`, `"think hard"`, `"think harder"`, or `"ultrathink"` in your prompt; for the persistent dial, see [Effort levels](effort-levels.md). Opus 4.7 defaults to the `xhigh` effort level on every plan.
+- Launched alongside **Dynamic Workflows** (research preview) — orchestrating hundreds of parallel subagents.
+- Anthropic reports it is **~4× less likely than Opus 4.7** to let flaws in its own code pass unflagged.
+- Defaults to `high` effort on all surfaces; supports `xhigh`.
+- The default model for Fast Mode (see below).
 
-**3. Agent teams (experimental)** — multi-agent collaboration in one session. Enable with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`.
+→ [Announcement](https://www.anthropic.com/news/claude-opus-4-8)
 
-**4. Top-tier benchmarks** — leading scores on Terminal-Bench 2.0 and SWE-bench Verified.
+### Claude Fable 5 — the Mythos class
 
-### When to reach for Opus 4.7
+Announced June 9, 2026 with Mythos 5 — the first *Mythos-class* models, a capability tier above Opus.
 
-- Complex architectural decisions
-- Large-scale refactoring or migrations
-- Debugging intricate, multi-file issues
-- Production-critical code paths
+- **$10/$50 per MTok** (batch $5/$25).
+- **Adaptive thinking is always on** — `thinking: {type: "disabled"}` is rejected.
+- Dual-use safety classifiers (cyber, bio/chem, distillation) fall back to Opus 4.8 instead of refusing.
+- Uses the Opus 4.7 tokenizer — **~30% more tokens for the same text** vs pre-4.7 models; budget accordingly.
+- Was included free on Pro/Max/Team from June 9–22, 2026; since June 23 it draws usage credits on subscription plans. GA on API, Bedrock, Google Cloud, and Foundry.
 
-**Save tokens with Sonnet 4.6 or Haiku 4.5 when:**
-
-- The task is a single-file edit or simple refactor
-- You're writing or updating documentation
-- You're doing exploratory Q&A about an unfamiliar codebase
+→ [Announcement](https://www.anthropic.com/news/claude-fable-5-mythos-5)
 
 ---
 
 ## Fast Mode
 
-Fast Mode delivers ~2.5× faster responses at 6× the standard token price. It runs on **Opus 4.6** — not 4.7. Toggle with `/fast`; the **↯** indicator confirms it's on. Available via API and Pro/Max plans.
+Fast Mode delivers up to **2.5× faster output at 2× the standard price**, running on **Opus 4.8** (the default fast-mode model since Claude Code v2.1.154). Toggle with `/fast` (CLI-only, v2.1.36+); the **↯** indicator confirms it's on. On subscription plans it draws from usage credits.
 
-| | Standard Opus 4.6 | Fast Mode (Opus 4.6) |
+| | Standard Opus 4.8 | Fast Mode (Opus 4.8) |
 |---|---|---|
-| Input (per MTok) | $5 | $30 (6×) |
-| Output (per MTok) | $25 | $150 (6×) |
+| Input (per MTok) | $5 | $10 (2×) |
+| Output (per MTok) | $25 | $50 (2×) |
 
-> 💡 Default to Opus 4.7 for everyday work. Reach for `/fast` only when latency genuinely matters (live debugging, demo prep, time-pressured fixes).
+> ⚠️ **Older Opus fast modes are being retired:** Opus 4.7 fast ($30/$150) was deprecated June 25, 2026 and is **removed July 24, 2026** (requests will error, no fallback). Opus 4.6 has silently run at standard speed since June 29, 2026.
+
+→ [Official fast-mode docs](https://platform.claude.com/docs/en/build-with-claude/fast-mode)
 
 ---
 
@@ -83,21 +83,24 @@ Fast Mode delivers ~2.5× faster responses at 6× the standard token price. It r
 
 | Plan | Price | Models | Usage |
 |---|---|---|---|
-| Pro | $20/mo ($17/mo annual) | All | ~45 messages / 5hr |
-| Max 5x | $100/mo | All | 5× Pro |
-| Max 20x | $200/mo | All | 20× Pro |
+| Pro | $20/mo ($17/mo annual) | All current | Base — five-hour limits doubled May 6, 2026 |
+| Max 5x | from $100/mo | All current | 5× Pro |
+| Max 20x | $200/mo | All current | 20× Pro |
 
 ### API (pay-as-you-go)
 
 | Model | Input (per MTok) | Output (per MTok) |
 |---|---|---|
-| Opus 4.7 | $5 | $25 |
-| Sonnet 4.6 | $3 | $15 |
+| Sonnet 5 | $2 *(intro, → $3 after Aug 31, 2026)* | $10 *(intro, → $15)* |
+| Opus 4.8 | $5 | $25 |
+| Fable 5 | $10 | $50 |
 | Haiku 4.5 | $1 | $5 |
-| Opus 4.6 (Fast Mode only) | $30 | $150 |
 
-> Pricing changes occasionally. Check [anthropic.com/pricing](https://www.anthropic.com/pricing) before committing.
+- Fable 5 batch: $5/$25. Cache pricing: $12.50 (5-min write) / $20 (1-hr write) / $1 (read) per MTok.
+- The Batch API supports **300K output tokens** on Opus 4.8/4.7/4.6 and Sonnet 5/4.6 via the `output-300k-2026-03-24` beta header ([model overview](https://platform.claude.com/docs/en/about-claude/models/overview)).
+
+> Pricing changes occasionally. Check [claude.com/pricing](https://claude.com/pricing) and the [API pricing docs](https://platform.claude.com/docs/en/about-claude/pricing) before committing.
 
 ---
 
-[← Back to README](../../README.md#claude-opus-47-the-latest-flagship) · [FAQ](faq.md) · [Changelog](changelog.md)
+[← Back to README](../../README.md#the-claude-5-era-todays-model-lineup) · [FAQ](faq.md) · [Changelog](changelog.md)
