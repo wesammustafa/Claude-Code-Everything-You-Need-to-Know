@@ -329,6 +329,7 @@ The community has built an enormous catalog of Agent Skills. Three places to sta
 | [**anthropics/skills**](https://github.com/anthropics/skills) | Anthropic's official skills — PDF, slides, brand guidelines, document creation (158k+ ⭐) |
 | [**SkillHub**](https://www.skillhub.club/) · [**SkillsMP**](https://skillsmp.com/) · [**Smithery**](https://smithery.ai/skills) · [**skills.sh**](https://skills.sh/) | Searchable marketplaces — community Agent Skills indexed from GitHub at massive scale |
 | [`travisvn/awesome-claude-skills`](https://github.com/travisvn/awesome-claude-skills) · [`ComposioHQ/awesome-claude-skills`](https://github.com/ComposioHQ/awesome-claude-skills) | Curated lists for high-signal picks |
+| [**Context Kit**](https://github.com/JDDavenport/context-kit) | 4 PCA templates + 5 skills — gives every session deep personal context. Solves context amnesia — sessions start context-full. [Essay: building your personal AI OS →](https://docs.agenttree.army/articles/personal-ai-os/) |
 
 Notable community skills: `skill-creator`, `skill-installer`, `mcp-builder`, `systematic-debugging`, `pair-programming`, `github-code-review`, `pptx`, `react`, `frontend-design`, `prompt-engineering-patterns`, `superpowers`, `brainstorming`, `market-research-reports`, `senior-data-engineer`, and many more — see [the full ecosystem section in `docs/skills.md`](docs/skills.md#the-skills-ecosystem) for categorized tables and install paths.
 
