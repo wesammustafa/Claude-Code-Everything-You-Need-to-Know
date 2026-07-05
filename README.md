@@ -521,11 +521,21 @@ Ultrathink.
 
 Specialized agents are pre-written role prompts you drop into `.claude/agents/`. Each one carries its own focus and tooling, so a `security-reviewer` agent stays focused on threats instead of also opining on code style.
 
-![Agent creation workflow](Images/agent-creation-workflow.png)
+An agent is just a markdown file with YAML frontmatter — create `.claude/agents/security-reviewer.md` (or ask Claude to write it; the old `/agents` wizard was removed in v2.1.198):
 
-<img src="Images/Agents/agent-6.png" alt="Set Agent System Prompt" width="600">
+```markdown
+---
+name: security-reviewer
+description: Use after changes touching auth, input handling, or secrets — reviews diffs for vulnerabilities.
+tools: Read, Grep, Glob
+---
 
-<img src="Images/Agents/agent-7.png" alt="Set Agent Description" width="600">
+You are a security engineer. Review the changes for injection risks,
+secrets in code, authZ/authN gaps, and unsafe input handling. Report
+findings by severity with concrete fixes.
+```
+
+The `description` is what the main session uses to decide when to delegate — keep it to a couple of sentences of when-to-use criteria; the body below the frontmatter is the agent's system prompt. This repo's [`.claude/agents/`](.claude/agents) holds five working examples.
 
 **This repo ships 10 production-ready specialist prompts** you can drop into `.claude/agents/`:
 
@@ -542,7 +552,7 @@ Specialized agents are pre-written role prompts you drop into `.claude/agents/`.
 | Project Manager | [prompt](specialized-agents/system-prompts/project-manager-prompt.md) | [description](specialized-agents/Descriptions/project-manager-description.md) |
 | Business Analyst | [prompt](specialized-agents/system-prompts/business-analyst-prompt.md) | [description](specialized-agents/Descriptions/business-analyst-description.md) |
 
-> 📐 The two `.canvas` flowcharts in `specialized-agents/` (`agent-creation-workflow.canvas`, `agent-orchestration-workflow.canvas`) visualize the full pipelines. Open in [Obsidian](https://obsidian.md/) or any canvas-compatible viewer.
+> 📐 The `agent-orchestration-workflow.canvas` flowchart in `specialized-agents/` visualizes how the role prompts compose into a pipeline. Open in [Obsidian](https://obsidian.md/) or any canvas-compatible viewer.
 
 #### Orchestrating specialists from the main session
 
@@ -873,7 +883,7 @@ Yes — 1M context is standard on Sonnet 5, Opus 4.8, and Fable 5, with no long-
 ### 📖 Reading tips
 
 - **Reading on GitHub?** The in-page anchor links work natively. Tap the table-of-contents button (top-left of the file view) for fast jumping.
-- **Want a richer markdown view?** This repo plays well with [Obsidian](https://obsidian.md/) — handy if you also want to open the `specialized-agents/*.canvas` flowcharts.
+- **Want a richer markdown view?** This repo plays well with [Obsidian](https://obsidian.md/) — handy if you also want to open the `specialized-agents/agent-orchestration-workflow.canvas` flowchart.
 - **On a phone?** Stick to the [Choose your path](#-choose-your-path) section at the top; the wider tables read best on desktop.
 
 ---
