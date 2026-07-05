@@ -1,0 +1,27 @@
+name: 📅 Stale or incorrect content
+description: A fact, price, version, or feature in the guide is outdated or wrong
+labels: ["stale-content"]
+body:
+  - type: input
+    id: location
+    attributes:
+      label: Where
+      description: File and section (or a link to the line)
+      placeholder: "README.md → Fast Mode"
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's wrong
+      description: What the guide says vs. what is true now
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Source
+      description: Link to the official doc/announcement showing the current fact
+      placeholder: "https://code.claude.com/docs/en/…"
+    validations:
+      required: false

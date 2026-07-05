@@ -1,0 +1,18 @@
+name: 🐛 Broken link, script, or example
+description: Something in the repo doesn't work — a dead link, a failing hook script, a bad command
+labels: ["bug"]
+body:
+  - type: input
+    id: location
+    attributes:
+      label: Where
+      placeholder: "docs/skills.md → Installing a community skill"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you ran/clicked and what you got instead of the expected result
+    validations:
+      required: true

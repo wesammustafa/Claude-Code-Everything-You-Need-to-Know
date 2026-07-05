@@ -27,12 +27,13 @@ Thanks for your interest in improving this guide. This is a learning resource â€
 ## File layout
 
 ```
-README.md                        # Tutorial / landing page (~400 lines)
+README.md                        # Tutorial / landing page (~850 lines; long-form sections belong in docs/)
 docs/
   skills.md                      # Full Skills guide
   reference/
     commands.md                  # Slash command cheatsheet
     models.md                    # Model specs and pricing
+    effort-levels.md             # Reasoning effort guide
     faq.md                       # Consolidated Q&A
     changelog.md                 # Updates & deprecations
     further-reading.md           # External links
