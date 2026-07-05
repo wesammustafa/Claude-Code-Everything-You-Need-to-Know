@@ -8,7 +8,7 @@ The **Sequential Thinking** server helps Claude Code **break down complex proble
 
 ## Installation
 
-### 1️⃣ Global Installation (Recommended)
+### Step 1: Global Installation (Recommended)
 
 Install Sequential Thinking globally for use across all projects:
 
@@ -28,7 +28,7 @@ claude mcp add sequential-thinking -s local -- npx -y @modelcontextprotocol/serv
 
 ## Usage
 
-### 2️⃣ Using Sequential Thinking in Claude Code
+### Step 2: Using Sequential Thinking in Claude Code
 
 Once installed, Sequential Thinking integrates automatically into Claude sessions. It activates when you request step-by-step reasoning or task breakdown.
 

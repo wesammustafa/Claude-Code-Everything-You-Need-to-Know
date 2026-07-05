@@ -2,7 +2,7 @@
 
 *~30 min read · [← Back to README](../README.md#claude-skills)*
 
-> **Mental model:** Skills package a workflow into a markdown file Claude can run. Two flavors: *slash skills* you invoke with `/name`, and *Agent Skills* Claude reaches for automatically when their description matches the task.
+> **Mental model:** Skills package a workflow into a markdown file Claude can run. Two flavors — officially one system now: *slash skills* you invoke with `/name`, and *Agent Skills* Claude reaches for automatically when their description matches the task. `.claude/commands/deploy.md` and `.claude/skills/deploy/SKILL.md` both create `/deploy`.
 
 > ⚠️ **Security:** Skills are executable instructions running with your shell permissions. Only install skills from trusted sources, and read the file before adding it to your project — exactly like reviewing a shell script before sourcing it.
 
@@ -92,12 +92,13 @@ Claude Skills (a.k.a. *custom slash commands*) are markdown files in `.claude/co
 
 ## Built-in skills vs custom skills
 
-**Built-in skills** (shipped with Claude Code):
+**Built-in skills** (bundled with Claude Code):
 
 | Skill | Purpose | Invocation |
 |---|---|---|
+| `dataviz` | Design-system guidance for charts, dashboards, and data visualizations (bundled since v2.1.198) | `/dataviz` |
+| `debug` | Troubleshoot the current session and configuration | `/debug` |
 | `keybindings-help` | Customize keyboard shortcuts and modify `~/.claude/keybindings.json` | `/keybindings-help` |
-| `mermaid` | Create entity-relationship diagrams and flowcharts | `/mermaid` |
 
 **Custom skills** (in this repository's `.claude/commands/`):
 
@@ -205,12 +206,6 @@ Claude becomes an empathetic UX specialist:
 - Auto-numbers todos for easy reference
 - Tracks completion timestamps
 - **Perfect for:** Sprint planning, personal task tracking, session continuity
-
-**`/mermaid` — Diagram Generation**
-- Creates entity-relationship diagrams from database schemas
-- Generates flowcharts, sequence diagrams, and architecture visualizations
-- Outputs valid Mermaid syntax for embedding in markdown
-- **Perfect for:** Documentation, architecture discussions, onboarding
 
 ---
 
@@ -358,7 +353,7 @@ Always review `.claude/commands/` files from cloned repositories before invoking
 
 **Q: Can I modify built-in skills?**
 
-No. Built-in skills (`/keybindings-help`, `/mermaid`) are shipped with Claude Code and cannot be modified. You can create your own custom skills with similar names (e.g., `/my-mermaid`) for custom behavior.
+No. Built-in skills (`/dataviz`, `/debug`, `/keybindings-help`, …) ship with Claude Code and cannot be modified directly. You can create your own custom skill with a similar name for custom behavior — project-level skills win name collisions (this repo's custom `/review` intentionally shadows the built-in `/review` that way).
 
 **Q: How do I share skills with my team?**
 
@@ -470,9 +465,9 @@ Brief description of what this skill does.
 [Show example input/output or workflow]
 ```
 
-**3. Example: simple skill (complete file)**
+**3. Example: simple skill**
 
-Complete contents of `.claude/commands/five.md`:
+A simplified version of this repo's [`.claude/commands/five.md`](../.claude/commands/five.md) (the real file adds usage notes, variables, and worked examples):
 
 ```markdown
 # Five Whys Analysis
@@ -492,7 +487,7 @@ Apply the Five Whys root cause analysis technique to investigate issues.
 - Multiple root causes may exist — explore different branches
 ```
 
-> 💡 Copy this exactly to `.claude/commands/five.md` to use it immediately.
+> 💡 Copy this to `.claude/commands/five.md` to use it immediately — or grab [the full version](../.claude/commands/five.md) from this repo.
 
 **4. Example: complex skill (complete file)**
 
@@ -594,10 +589,11 @@ claude
 
 ### Version requirements
 
-- **Claude Code version:** Skills are available in Claude Code v1.0+ (2024 – present)
-- **No special installation needed** — Skills work out of the box with any Claude Code installation
-- **All plans supported** — Available in Free, Pro, and Max plans
-- **All models supported** — Works across the Claude 4 model family
+- **No special installation needed** — skills work out of the box with any current Claude Code installation.
+- **One system** — custom slash commands and Agent Skills are unified: `.claude/commands/<name>.md` ≡ `.claude/skills/<name>/SKILL.md`.
+- **Open standard** — skills follow the [agentskills.io](https://agentskills.io) specification (released Dec 18, 2025), adopted by ~40 products including OpenAI Codex, GitHub Copilot, Cursor, and Gemini CLI.
+- **Plans** — available on Pro, Max, Team/Enterprise, and usage-based API billing (Claude Code isn't included in the Free plan).
+- **All models supported** — works across the current model lineup.
 
 ### Edge cases & gotchas
 
@@ -653,7 +649,7 @@ Analyze the code at the provided file path or URL.
 2. Perform code review...
 ```
 
-> **Note:** There is no special `$ARGUMENTS` variable syntax — Claude automatically sees the text you type after `/skill-name` as part of the request context.
+> **Note:** `$ARGUMENTS` is a supported placeholder in custom commands/skills — this repo's own [`.claude/commands/review.md`](../.claude/commands/review.md) uses it (`**PR Link/Number**: $ARGUMENTS`). Plain trailing text after the command also works: Claude sees whatever you type after `/skill-name` as part of the request context. See the [official commands reference](https://code.claude.com/docs/en/commands).
 
 ### ❌ Don't
 
@@ -721,7 +717,8 @@ Analyze the code at the provided file path or URL.
 > - **Use subagents** for parallelizable work within complex skills.
 > - **Split mega-skills** into smaller, composable units.
 > - **Cache common patterns** as skills instead of re-prompting.
-> - **Use Fast Mode** (see [Fast Mode](../README.md#fast-mode-)) when running skill-heavy workflows for 2.5× faster responses.
+> - **Use Fast Mode** (see [Fast Mode](../README.md#fast-mode)) when latency matters in skill-heavy workflows.
+> - **Stack skills** — `/skill-a /skill-b …` invocations run in sequence (v2.1.199+).
 
 ---
 
@@ -741,9 +738,12 @@ A vibrant community has formed around Agent Skills since Anthropic open-sourced 
 
 | Marketplace | URL | Focus |
 |---|---|---|
-| **SkillHub** | [skillhub.club](https://www.skillhub.club/) | ~7K AI-evaluated skills auto-indexed from public GitHub repos. Searchable by category. |
-| **SkillsMP** | [skillsmp.com](https://skillsmp.com/) | ~900K skills aggregated across GitHub. Independent (not Anthropic-affiliated). Filters by occupation, popularity, author. |
-| **Smithery** | [smithery.ai](https://smithery.ai/) | Originally an MCP-server registry; now covers Agent Skills too. Includes a CLI for discovery and install. |
+| **SkillHub** | [skillhub.club](https://www.skillhub.club/) | ~100K+ AI-evaluated skills auto-indexed from public GitHub repos. Searchable by category. |
+| **SkillsMP** | [skillsmp.com](https://skillsmp.com/) | Millions of skills aggregated across GitHub (2M+ advertised). Independent (not Anthropic-affiliated). Filters by occupation, popularity, author. |
+| **Smithery** | [smithery.ai/skills](https://smithery.ai/skills) | Originally an MCP-server registry; now covers Agent Skills too. Includes a CLI for discovery and install. |
+| **skills.sh** | [skills.sh](https://skills.sh/) | Vercel's open agent-skills ecosystem (launched January 2026). |
+
+> 📦 **Official plugin marketplaces:** Claude Code also ships two Anthropic-run plugin marketplaces — *claude-plugins-official* (auto-registered on first launch) and the reviewed community marketplace (`/plugin marketplace add anthropics/claude-plugins-community`). Plugins can bundle skills, commands, agents, hooks, and MCP servers in one install — see the [plugins docs](https://code.claude.com/docs/en/plugins).
 
 > ⚠️ Marketplaces aggregate community content and don't vet every entry. Read `SKILL.md` (and any `scripts/` it references) before installing — the same care you'd apply to a shell script.
 
@@ -754,7 +754,7 @@ A vibrant community has formed around Agent Skills since Anthropic open-sourced 
 | [**travisvn/awesome-claude-skills**](https://github.com/travisvn/awesome-claude-skills) | Broadest community list with creation guides, security notes, and best-practice picks. |
 | [**ComposioHQ/awesome-claude-skills**](https://github.com/ComposioHQ/awesome-claude-skills) | 1000+ production-ready skills organized by category; integrates with Composio's Connect-Apps for 500+ external apps. |
 | [**jesseotremblay/claude-skills**](https://github.com/jesseotremblay/claude-skills) | Skill-creator toolkit + business-analysis library (SWOT, market sizing, [market research](https://github.com/jesseotremblay/claude-skills/tree/main/market-research)). |
-| [**mattpocock/skills**](https://github.com/mattpocock/skills) | Engineering-focused composable skills (TDD, debugging, triage). Includes the well-known [`grill-me`](https://github.com/mattpocock/skills/blob/main/grill-me/SKILL.md). |
+| [**mattpocock/skills**](https://github.com/mattpocock/skills) | Engineering-focused composable skills (TDD, debugging, triage). Includes the well-known [`grill-me`](https://github.com/mattpocock/skills/blob/main/skills/productivity/grill-me/SKILL.md). |
 
 ### Notable community skills, by category
 
@@ -849,7 +849,8 @@ cp -r /tmp/src/<skill-name>/ .claude/skills/<skill-name>/
 
 # Verify the skill loaded
 claude
-> /skills          # list available Agent Skills
+> /help            # custom skills appear in the command list
+> /reload-skills   # reload skill files without restarting (v2.1.152+)
 ```
 
 > 💡 **Convert a slash skill to an Agent Skill.** Move `.claude/commands/<name>.md` to `.claude/skills/<name>/SKILL.md`, add YAML frontmatter at the top (`name`, `description`), and Claude will start invoking it automatically when the description matches the user's request — no more typing `/<name>`.

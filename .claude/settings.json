@@ -3,7 +3,6 @@
     "allow": [
       "Bash(mkdir:*)",
       "Bash(uv:*)",
-      "Bash(/Users/wesam/.local/bin/uv:*)",
       "Bash(find:*)",
       "Bash(mv:*)",
       "Bash(grep:*)",
@@ -26,7 +25,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/wesam/.local/bin/uv run .claude/hooks/post_tool_use.py"
+            "command": "uv run \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/post_tool_use.py"
           }
         ]
       }
@@ -37,7 +36,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/wesam/.local/bin/uv run .claude/hooks/notification.py --notify"
+            "command": "uv run \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/notification.py --notify"
           }
         ]
       }
@@ -48,7 +47,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/wesam/.local/bin/uv run .claude/hooks/stop.py --chat"
+            "command": "uv run \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop.py --chat"
           }
         ]
       }
@@ -59,7 +58,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/wesam/.local/bin/uv run .claude/hooks/subagent_stop.py"
+            "command": "uv run \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/subagent_stop.py"
           }
         ]
       }

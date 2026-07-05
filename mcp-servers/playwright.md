@@ -8,7 +8,7 @@ The **Playwright** server provides **browser automation capabilities** for Claud
 
 ## Installation
 
-### 1️⃣ Basic Installation
+### Step 1: Basic Installation
 
 #### Global Installation (Recommended)
 
@@ -26,7 +26,7 @@ claude mcp add playwright -s local -- npx -y @playwright/mcp@latest
 
 ## Advanced Configuration
 
-### 2️⃣ Configuration Options
+### Step 2: Configuration Options
 
 #### Specify Browser Type
 
@@ -62,7 +62,7 @@ claude mcp add playwright -s user -- npx -y @playwright/mcp@latest --device "iPh
 
 ## Configuration File
 
-### 3️⃣ Using a JSON Configuration
+### Step 3: Using a JSON Configuration
 
 For complex setups, use a configuration file:
 
@@ -91,7 +91,7 @@ claude mcp add playwright -s user -- npx -y @playwright/mcp@latest --config /pat
 
 ## Usage
 
-### 4️⃣ Using Playwright in Claude Code
+### Step 4: Using Playwright in Claude Code
 
 #### Open a Browser
 
@@ -114,17 +114,22 @@ Type in Claude:
 /mcp
 ```
 
-Then select **playwright** to see available tools:
+Then select **playwright** to see available tools. The most useful ones include:
 
 | Tool | Description |
 |------|-------------|
-| `playwright_navigate` | Navigate to URLs |
-| `playwright_screenshot` | Capture screenshots |
-| `playwright_click` | Click elements |
-| `playwright_fill` | Fill form fields |
-| `playwright_evaluate` | Execute JavaScript |
-| `playwright_scroll` | Scroll page content |
-| `playwright_select` | Select dropdown options |
+| `browser_navigate` | Navigate to a URL |
+| `browser_snapshot` | Capture an accessibility snapshot of the page |
+| `browser_take_screenshot` | Take a visual screenshot of the page |
+| `browser_click` | Click an element on the page |
+| `browser_type` | Type text into an editable element |
+| `browser_fill_form` | Fill multiple form fields at once |
+| `browser_select_option` | Select an option in a dropdown |
+| `browser_evaluate` | Run JavaScript on the page |
+| `browser_wait_for` | Wait for text to appear/disappear or time to pass |
+| `browser_tabs` | List, create, close, or switch browser tabs |
+
+See the [Playwright MCP README](https://github.com/microsoft/playwright-mcp/blob/main/README.md) for the full tool list, including network mocking, storage, tracing, and PDF export tools.
 
 ---
 

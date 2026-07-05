@@ -10,10 +10,12 @@ This directory contains comprehensive documentation for the four core Model Cont
 
 | Server | Purpose | Key Features | Documentation |
 |--------|---------|--------------|---------------|
-| **Serena** | Semantic code intelligence | • Multi-language support (15+)<br>• Symbol-level navigation<br>• Project indexing<br>• Context-aware editing | [serena.md](./serena.md) |
+| **Serena** | Semantic code intelligence | • Wide language support via LSP<br>• Symbol-level navigation<br>• Project indexing<br>• Context-aware editing | [serena.md](./serena.md) |
 | **Sequential Thinking** | Advanced reasoning | • Problem decomposition<br>• Multi-step planning<br>• Structured analysis<br>• Decision support | [sequential-thinking.md](./sequential-thinking.md) |
 | **Memory** | Persistent context | • Cross-session memory<br>• Project preferences<br>• Historical context<br>• Knowledge retention | [memory.md](./memory.md) |
 | **Playwright** | Browser automation | • Web scraping<br>• Automated testing<br>• Screenshot capture<br>• Device emulation | [playwright.md](./playwright.md) |
+
+> **Tip:** Keep only 3–6 MCP servers active at a time — every connected server adds tools to Claude's context.
 
 ---
 
@@ -83,7 +85,7 @@ Before installing MCP servers, ensure the following tools are installed:
 |------|-------------|--------------|
 | **Node.js & npx** | Sequential Thinking, Memory, Playwright | [nodejs.org](https://nodejs.org/) |
 | **uv & uvx** | Serena | [Install uv](https://docs.astral.sh/uv/getting-started/installation/) |
-| **Claude Code CLI** | All servers | [Claude Docs](https://docs.claude.com/en/docs/claude-code) |
+| **Claude Code CLI** | All servers | [Claude Code Docs](https://code.claude.com/docs) |
 
 #### Verify Prerequisites
 
@@ -101,22 +103,20 @@ claude --version
 
 ---
 
-## MCP Registry & Ecosystem (2026)
+## MCP registry & ecosystem
 
 ### Official MCP Registry
 
-The **[MCP Registry](https://registry.modelcontextprotocol.io/)** is now live (launched September 2025), providing a centralized directory for discovering MCP servers.
+The **[MCP Registry](https://registry.modelcontextprotocol.io/)** is the official directory for discovering MCP servers. It is currently **in preview**.
 
-**Features:**
-- 🔍 Browse hundreds of official and community servers
-- 📦 One-click installation instructions
-- 📚 Comprehensive documentation for each server
-- ✅ Quality-verified listings
-- 🔐 Support for public and private sub-registries
+**How it works:**
+- Servers are published under reverse-DNS namespaces (e.g., `io.github.username/server-name`)
+- Namespace ownership is verified via GitHub, DNS, or HTTP
+- The registry serves as the source of truth for downstream aggregators and marketplaces
 
 **Discovering New Servers:**
 1. Visit https://registry.modelcontextprotocol.io/
-2. Search by category (code, database, browser, AI, etc.)
+2. Search for the server you need
 3. Copy installation command for Claude Code CLI
 4. Install with `claude mcp add`
 
@@ -127,18 +127,25 @@ The **[MCP Registry](https://registry.modelcontextprotocol.io/)** is now live (l
 - **AI & ML**: Sequential Thinking, Memory, various AI tool integrations
 - **APIs & Services**: REST clients, GraphQL, authentication servers
 
-### Latest MCP Protocol Features (2026)
+**Ecosystem scale** (as of December 2025): 97M+ monthly SDK downloads and roughly 10,000 active servers ([source](https://blog.modelcontextprotocol.io/posts/2025-12-09-mcp-joins-agentic-ai-foundation/)).
 
-**New Capabilities:**
-- **MCP Apps**: Interactive UI components from servers
-- **OAuth Support**: Built-in client credentials authentication
-- **Async Operations**: Non-blocking server operations
-- **Server Discovery**: `.well-known` URLs for automatic discovery
-- **Improved Performance**: Stateless architecture for better scaling
+### Current MCP protocol features
+
+The current ratified spec revision is **2025-11-25**, which added:
+- **OIDC discovery** for authorization
+- **Icons** for servers and their tools
+- **URL elicitation** for gathering user input
+- **Sampling tool calls**
+- **OAuth Client ID Metadata Documents**
+- **Experimental tasks**
+
+**MCP Apps** — interactive HTML UIs rendered in sandboxed iframes — became the first official MCP extension on January 26, 2026 ([announcement](https://blog.modelcontextprotocol.io/posts/2026-01-26-mcp-apps/)).
+
+**Coming up:** a release candidate for the next spec revision — the largest since MCP launched — finalizes on **July 28, 2026**. It introduces a stateless core and official extensions ([release candidate](https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/)).
 
 ### Agentic AI Foundation
 
-MCP is now maintained by the **Agentic AI Foundation** (Linux Foundation), ensuring:
+Since December 9, 2025, MCP has been governed by the **Agentic AI Foundation (AAIF)**, a directed fund under the Linux Foundation. Its founding projects are MCP, Block's goose, and OpenAI's AGENTS.md, with platinum members including AWS, Google, Microsoft, and Cloudflare. This ensures:
 - Open governance and community-driven development
 - Vendor-neutral standardization
 - Long-term sustainability
@@ -236,7 +243,7 @@ Having issues with MCP server installation or connection? This section covers co
 
 ### General Troubleshooting
 
-#### 1️⃣ Server Shows "Failed to connect"
+#### Server Shows "Failed to connect"
 
 **Step 1: Verify Prerequisites**
 
@@ -266,19 +273,19 @@ Check `~/.claude.json` (macOS/Linux) or `%USERPROFILE%\.claude.json` (Windows) f
 claude
 ```
 
-#### 2️⃣ "Command not found" Errors
+#### "Command not found" Errors
 
 | Error | Solution |
 |-------|----------|
 | `npx not found` | Install Node.js from [nodejs.org](https://nodejs.org/) |
 | `uvx not found` | Install uv from [docs.astral.sh](https://docs.astral.sh/uv/getting-started/installation/) |
-| `claude not found` | Install Claude Code CLI from [docs.claude.com](https://docs.claude.com/en/docs/claude-code) |
+| `claude not found` | Install Claude Code CLI from [code.claude.com](https://code.claude.com/docs) |
 
 ---
 
 ### Serena-Specific Issues
 
-#### 3️⃣ Serena Connection Failures
+#### Serena Connection Failures
 
 **Verify uv Installation**
 
@@ -312,7 +319,7 @@ claude mcp add serena -s user -- uvx --from git+https://github.com/oraios/serena
 
 ### Playwright-Specific Issues
 
-#### 4️⃣ Playwright Connection Failures
+#### Playwright Connection Failures
 
 **Verify Node.js**
 
@@ -355,7 +362,7 @@ claude mcp add playwright -s user -- npx -y @playwright/mcp@latest
 
 ### Sequential Thinking & Memory Issues
 
-#### 5️⃣ Sequential Thinking / Memory Failures
+#### Sequential Thinking / Memory Failures
 
 Both servers require Node.js and `npx`. If they fail to connect:
 
@@ -392,7 +399,7 @@ claude mcp add memory -s user -- npx -y @modelcontextprotocol/server-memory
 
 ### Complete Reinstall
 
-#### 6️⃣ Full Server Reinstallation
+#### Full Server Reinstallation
 
 If a server repeatedly fails, perform a complete reinstall:
 
@@ -409,7 +416,7 @@ claude mcp add <server-name> -s user -- <command>
 
 ### Verification
 
-#### 7️⃣ Verify All Servers
+#### Verify All Servers
 
 After troubleshooting, always verify server status:
 
@@ -433,7 +440,7 @@ playwright: ✓ Connected
 
 - **Restart Claude Code** after configuration changes
 - **Prefer one scope per server**: Combining global and local installations may cause conflicts
-- **Check logs** in `~/.claude/logs/` for detailed error messages
+- **Run `claude --debug`** to surface MCP connection errors in the session
 - **Update regularly**: Use `@latest` for npm packages to get the newest versions
 
 ---
