@@ -68,7 +68,7 @@ def announce_notification():
         
         # Call the TTS script with the notification message
         subprocess.run([
-            "/Users/wesam/.local/bin/uv", "run", tts_script, notification_message
+            "uv", "run", tts_script, notification_message
         ], 
         capture_output=True,  # Suppress output
         timeout=10  # 10-second timeout
