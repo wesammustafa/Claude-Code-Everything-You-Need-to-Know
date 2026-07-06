@@ -1,3 +1,8 @@
+---
+name: five
+description: Apply the Five Whys root cause analysis technique to investigate an issue
+---
+
 # Five Whys Analysis
 
 Apply the Five Whys root cause analysis technique to investigate issues.

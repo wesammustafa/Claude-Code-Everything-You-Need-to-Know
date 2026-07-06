@@ -1,3 +1,8 @@
+---
+name: test
+description: LLM unit testing best practices checklist for testing internal logic, not API endpoints
+---
+
 # ✅ LLM Unit Testing Best Practices Checklist  
 _Focused on testing internal logic, not API endpoints_
 
