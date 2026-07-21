@@ -898,6 +898,7 @@ A curated set of pointers — official Anthropic docs, MCP resources, hooks exam
 
 - [Claude Code overview (official)](https://code.claude.com/docs/en/overview)
 - [Claude Code best practices (official)](https://code.claude.com/docs/en/best-practices)
+- [Darkmoon](https://github.com/ASCIT31/Dark-Moon) - Open source (GPL-3.0) autonomous AI pentest platform and MCP host, covering web, API, Active Directory and Kubernetes, with proof of exploitation.
 - [Building effective agents (Anthropic engineering)](https://www.anthropic.com/engineering/building-effective-agents)
 - [Official MCP Registry](https://registry.modelcontextprotocol.io/)
 - [Hooks reference (official)](https://code.claude.com/docs/en/hooks)
