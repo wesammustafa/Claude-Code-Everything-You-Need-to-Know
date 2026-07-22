@@ -69,7 +69,7 @@ def announce_notification():
         # Call the TTS script with the notification message
         subprocess.run([
             "uv", "run", tts_script, notification_message
-        ],
+        ], 
         capture_output=True,  # Suppress output
         timeout=10  # 10-second timeout
         )

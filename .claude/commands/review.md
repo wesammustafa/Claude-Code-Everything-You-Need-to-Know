@@ -1,3 +1,8 @@
+---
+name: review
+description: Run a multi-perspective PR review (product, dev, QA, security, DevOps, UX) and post it to GitHub
+---
+
 # PR Review
 
 **PR Link/Number**: $ARGUMENTS
