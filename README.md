@@ -355,6 +355,7 @@ Notable community skills: `skill-creator`, `skill-installer`, `mcp-builder`, `sy
 | Auto-format on save | Runs `prettier` / `ruff` / `gofmt` after every Edit so Claude's output matches your style |
 | Block sensitive paths | Refuses changes to `.env`, `secrets/`, `infra/prod/` regardless of what Claude tries |
 | Action audit log | Records every tool call to a file — paper trail of what Claude did and when |
+| Quota awareness | [`usage-guard`](https://github.com/eltonylfgi-blip/claude-code-usage-guard) uses a local `Stop` hook to warn as you approach a 5-hour or weekly limit and show an even-pace readout; disclosure: I created it |
 
 If none of those resonate, skip ahead.
 
