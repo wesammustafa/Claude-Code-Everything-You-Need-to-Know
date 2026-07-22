@@ -1,3 +1,8 @@
+---
+name: tdd
+description: Development practices and TDD workflow to follow before starting a feature
+---
+
 This outlines the development practices and principles we require you to follow. Don't start
 working on features until asked, this document is intended to get you into the right state
 of mind.
