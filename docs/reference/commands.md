@@ -11,14 +11,17 @@ The most useful built-in slash commands, plus the file-format spec for custom co
 | Command | Purpose |
 |---|---|
 | `/add-dir` | Add additional working directories |
+| `/batch` | Orchestrate a large change in parallel — researches the codebase, decomposes the work into 5–30 independent units, presents a plan, then spawns one background subagent per unit **in its own git worktree**, each opening a PR |
 | `/cd` | Change the session's working directory |
 | `/clear` | Clear conversation history |
 | `/code-review [level]` | Review the current diff (`low`–`max`, or `ultra` for a multi-agent cloud review); `--fix` applies findings, `--comment` posts them to the PR. `/ultrareview` is an alias for the ultra tier |
 | `/compact [instructions]` | Compact conversation with optional focus instructions |
 | `/config` | View or modify configuration (`/config key=value` sets directly) |
 | `/debug` | Troubleshoot current session and configuration |
+| `/deep-research <question>` | Bundled [workflow](../workflows.md) — fans web searches across several angles, cross-checks sources, votes on each claim, returns a cited report. Needs the WebSearch tool |
 | `/desktop` *(alias `/app`)* | Hand the current CLI session to the desktop app (macOS/Windows) |
 | `/doctor` | Check the health of your Claude Code installation |
+| `/fork` | Copy the current conversation into a new background session and keep working here. Pass a prompt and the copy starts on it immediately |
 | `/effort` | Set reasoning effort (`low` / `medium` / `high` / `xhigh` / `max` / `ultracode`); no args opens an interactive slider; `/effort auto` resets to the model default. See [Effort levels](effort-levels.md) |
 | `/fast` | Toggle Fast Mode — Opus 4.8 at 2× price for up to 2.5× output speed |
 | `/goal` | Set a standing goal for the session |
@@ -41,12 +44,14 @@ The most useful built-in slash commands, plus the file-format spec for custom co
 | `/scroll-speed` | Adjust terminal scroll speed |
 | `/simplify` | Cleanup-only review — reuse, simplification, efficiency (no bug hunting) |
 | `/status` | View account and system statuses |
+| `/subtask` | Fork a subagent that inherits your **full conversation context** instead of starting fresh (with agent view off, this is `/fork` instead) |
+| `/tasks` | List the current session's background work — subagents, workflows, background commands — and attach to or stop any of it |
 | `/teleport` *(alias `/tp`)* | Send current session to claude.ai/code for web access |
 | `/terminal-setup` | Configure terminal key bindings (iTerm2/VSCode) |
 | `/usage` | Show token and plan usage (merged `/cost` + `/stats` in v2.1.118) |
 | `/usage-credits` | Manage usage credits (renamed from `/extra-usage` in v2.1.144) |
 | `/vim` | Enter vim mode for alternating insert and command modes |
-| `/workflows` | Watch dynamic multi-agent workflow runs |
+| `/workflows` | List and watch [dynamic workflow](../workflows.md) runs — drill into phases and agents, pause, stop, or press `s` to save a run's script as a reusable command |
 
 > 💡 **Day 1 essentials:** start with `/init`, `/help`, `/clear`, `/usage`, and `/model`.
 >

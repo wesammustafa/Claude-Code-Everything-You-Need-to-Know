@@ -24,22 +24,23 @@ npm install -g @anthropic-ai/claude-code
 |---|---|---|
 | 🚀 **New to Claude Code** | [Setup](#claude-code-setup) → [Prompt Engineering](#prompt-engineering-deep-dive) → [Your First Skill](#claude-skills) | ~15 min |
 | ⚡ **Already using it, want depth** | [Skills](#claude-skills) · [Hooks](#hooks) · [MCP](#model-context-protocol-mcp) | ~30 min each |
-| 🧠 **Building teams or automation** | [Agent Teams](#agent-teams-experimental) · [Workflows & automation](#beyond-one-terminal--the-2026-automation-surface) · [BMAD](#the-bmad-method--ai-agent-framework) | varies |
+| 🧠 **Building teams or automation** | [Dynamic Workflows](#dynamic-workflows) · [Agent Teams](#agent-teams-experimental) · [BMAD](#the-bmad-method--ai-agent-framework) | varies |
 
 ---
 
 ## 🧠 When to use what
 
-The four extension points in Claude Code, side by side:
+The five extension points in Claude Code, side by side:
 
 | Tool | Use when… | Skip if… | Lives in |
 |---|---|---|---|
 | **[Skills](#claude-skills)** *(slash commands)* | You repeat the same prompt or workflow ≥3 times | One-off task | `.claude/commands/*.md` |
 | **[Hooks](#hooks)** | You want code to run *automatically* on tool use, session start, etc. | You only want manual triggers | `.claude/settings.json` |
 | **[Subagents](#ai-agents)** | A subtask is big enough to need its own isolated context | The task fits in your main session | `.claude/agents/*.md` |
+| **[Workflows](#dynamic-workflows)** | The job needs more agents than one conversation can coordinate | A couple of subagents would do | `.claude/workflows/*.js` |
 | **[MCP servers](#model-context-protocol-mcp)** | You need Claude to use *external* tools (browsers, DBs, APIs) | All your data is in local files | Configured per project |
 
-> 💡 These four compose. Most polished workflows combine 2–3.
+> 💡 These five compose. Most polished setups combine 2–3.
 
 ---
 
@@ -49,7 +50,7 @@ The four extension points in Claude Code, side by side:
 
 **Workflow extensions** — [Slash Commands](#claude-commands) · [Skills](#claude-skills) · [Hooks](#hooks)
 
-**Multi-agent & integration** — [Subagents](#ai-agents) · [Agent Teams](#agent-teams-experimental) · [Workflows & automation](#beyond-one-terminal--the-2026-automation-surface) · [MCP](#model-context-protocol-mcp)
+**Multi-agent & integration** — [Subagents](#ai-agents) · [Dynamic Workflows](#dynamic-workflows) · [Agent Teams](#agent-teams-experimental) · [Automation surface](#beyond-one-terminal--the-2026-automation-surface) · [MCP](#model-context-protocol-mcp)
 
 **Productivity & frameworks** — [Effort levels](#effort-levels) · [Fast Mode](#fast-mode) · [Super Claude](#super-claude-framework) · [BMAD Method](#the-bmad-method--ai-agent-framework)
 
@@ -153,6 +154,7 @@ This repo's own [`.claude/`](.claude/) directory is a working example of a fully
 | [`.claude/agents/`](.claude/agents) | 5 specialized subagents (frontend, tech lead, PM, UX designer, code reviewer) |
 | [`.claude/commands/`](.claude/commands) | 7 custom skills — `/pr`, `/review`, `/tdd`, `/test`, `/five`, `/ux`, `/todo`. Slash commands and Agent Skills are now one system — see [Skills](#claude-skills). |
 | [`.claude/hooks/`](.claude/hooks) | Python hook scripts (`post_tool_use.py`, `notification.py`, `stop.py`, `subagent_stop.py`) — see [Hooks](#hooks) |
+| [`.claude/workflows/`](.claude/workflows) | A runnable [dynamic workflow](#dynamic-workflows) — `/stale-docs-audit` fans agents across the docs and refutes its own findings |
 
 > 💡 **Next:** Once you're comfortable with the basics, jump to [Claude Skills](#claude-skills) to build reusable slash commands in 3 minutes.
 
@@ -681,13 +683,50 @@ Dependencies:
 
 ---
 
+<a id="dynamic-workflows"></a>
+### Dynamic Workflows
+
+*~3 min read · [Full guide in `docs/workflows.md` →](docs/workflows.md)*
+
+> **Mental model:** A dynamic workflow is a **JavaScript script that orchestrates subagents**. Claude writes the script for the task you describe; a runtime executes it in the background while your session stays responsive. Everything else on this page has Claude deciding what runs next, turn by turn — here, **the script holds the plan**.
+
+Two consequences make this more than "more agents":
+
+- **Your context stays clean.** Intermediate results live in script variables, not Claude's context window. That's why a workflow can coordinate 200 agents when a conversation can't coordinate 10.
+- **Quality patterns become repeatable.** A script can make independent agents *adversarially refute each other's findings* before anything is reported, or draft a plan from several angles and weigh them. Same structure every run.
+
+#### Try it in 2 minutes — no script required
+
+```text
+/deep-research What changed in the Node.js permission model between v20 and v22?
+```
+
+`/deep-research` is bundled. It fans searches across several angles, cross-checks the sources, votes on each claim, and returns a cited report with the claims that failed cross-checking already filtered out. Approve the run, then `/workflows` to watch phases, agent counts, and live token spend.
+
+#### Starting your own
+
+| Scope | How |
+|---|---|
+| **One task** | Say `ultracode` — or just "use a workflow" — in your prompt |
+| **Whole session** | `/effort ultracode` (or `claude --effort ultracode`) — Claude plans a workflow for every substantive task |
+| **Forever** | Run `/workflows`, select a run, press `s` to save its script to `.claude/workflows/` — it becomes `/<name>` for everyone who clones the repo |
+
+Three phrases that reliably improve the script Claude writes: **"adversarially verify each finding"** (skeptic agents that try to refute results), **"in its own isolated copy"** (each agent gets a git worktree, so parallel edits can't conflict), and **"until two rounds in a row find nothing new"** (a convergence condition instead of a guessed count).
+
+> 📂 **This repo ships a working one:** [`.claude/workflows/stale-docs-audit.js`](.claude/workflows/stale-docs-audit.js) — one reader agent per doc file, then independent skeptics that try to refute each finding before it's reported. Clone and run `/stale-docs-audit`.
+
+> ⚠️ **Two things that surprise people.** The subagents a workflow spawns **always run in `acceptEdits`** regardless of your session's permission mode — file edits are auto-approved. And an agent still running when you stop a run isn't cached, so **many small agents preserve far more progress on resume** than a few long ones. [Details →](docs/workflows.md#permissions)
+
+Limits: **16 concurrent agents**, **1,000 per run**, no mid-run user input, resume only within the same session. Cost control lives in `/config` (**Dynamic workflow size**, default `medium` ≈ under 15 agents) — and the cheapest habit is running on one directory before the whole repo.
+
+---
+
 ### Beyond one terminal — the 2026 automation surface
 
 Claude Code grew a set of orchestration features in mid-2026 that compose with everything above:
 
 | Feature | What it does | Docs |
 |---|---|---|
-| **Dynamic workflows** | Claude writes and runs an orchestration script that fans out tens to hundreds of subagents in the background; watch runs with `/workflows`. Opt in per session with `/effort ultracode` | [workflows](https://code.claude.com/docs/en/workflows) |
 | **Cloud code review** | `/code-review ultra` runs a multi-agent review in the cloud (alias `/ultrareview` — 3 free runs on Pro/Max, then usage credits); `claude ultrareview` runs it non-interactively for CI | [commands](https://code.claude.com/docs/en/commands) |
 | **Routines** | `/schedule` (alias `/routines`) runs scheduled agents on Anthropic-managed cloud infrastructure; `/loop` and the Cron tools cover local scheduling | [scheduled tasks](https://code.claude.com/docs/en/scheduled-tasks) |
 | **Artifacts** *(beta)* | Publish live, shareable web pages to claude.ai straight from the CLI — Pro/Max/Team/Enterprise, CSP-sandboxed, 16 MiB limit | [artifacts](https://code.claude.com/docs/en/artifacts) |
