@@ -144,19 +144,28 @@ Once Claude Code is running, try one of these:
 
 Creates a project-level instruction file that Claude reads on every session — your project's "house rules." More on this in [Prompt Engineering Deep Dive](#prompt-engineering-deep-dive).
 
-#### 5. (Bonus) See a real Claude Code project setup
+<a id="steal-this-setup"></a>
+#### 5. (Bonus) Steal this repo's setup
 
-This repo's own [`.claude/`](.claude/) directory is a working example of a fully-configured Claude Code project. Browse it as a reference for what a polished setup looks like:
+This repo's [`.claude/`](.claude/) directory is a **working, runnable** Claude Code project — one of each extension point, not screenshots of one. Every path below is something you can copy into your own project today:
 
-| Path | What it does |
-|---|---|
-| [`.claude/settings.json`](.claude/settings.json) | Project-level Claude Code settings — permissions and hooks |
-| [`.claude/agents/`](.claude/agents) | 5 specialized subagents (frontend, tech lead, PM, UX designer, code reviewer) |
-| [`.claude/commands/`](.claude/commands) | 7 custom skills — `/pr`, `/review`, `/tdd`, `/test`, `/five`, `/ux`, `/todo`. Slash commands and Agent Skills are now one system — see [Skills](#claude-skills). |
-| [`.claude/hooks/`](.claude/hooks) | Python hook scripts (`post_tool_use.py`, `notification.py`, `stop.py`, `subagent_stop.py`) — see [Hooks](#hooks) |
-| [`.claude/workflows/`](.claude/workflows) | A runnable [dynamic workflow](#dynamic-workflows) — `/stale-docs-audit` fans agents across the docs and refutes its own findings |
+| Path | What you get | Copy it when… |
+|---|---|---|
+| [`.claude/commands/`](.claude/commands) | 7 slash skills — `/pr`, `/review`, `/tdd`, `/test`, `/five`, `/ux`, `/todo` | You want PR hygiene and review rigor without writing the prompts |
+| [`.claude/skills/`](.claude/skills) | An Agent Skill — `/claude-md-review` audits a `CLAUDE.md` for vagueness, dead paths, and bloat | You want a worked example of the [frontmatter contract](docs/skills.md#frontmatter-reference) |
+| [`.claude/agents/`](.claude/agents) | 5 subagents, plus [10 more role prompts](#3-specialized-subagents--drop-in-role-prompts) in `specialized-agents/` | You want specialists without authoring role prompts — they double as [Agent Teams](#agent-teams-experimental) teammates |
+| [`.claude/workflows/`](.claude/workflows) | A [dynamic workflow](#dynamic-workflows) — `/stale-docs-audit` fans agents across your docs, then refutes its own findings | You want a real script to read before writing your own |
+| [`.claude/hooks/`](.claude/hooks) | Python hooks — `post_tool_use.py`, `notification.py`, `stop.py`, `subagent_stop.py` | You want [lifecycle automation](#hooks) (needs [`uv`](https://docs.astral.sh/uv/getting-started/installation/)) |
+| [`.claude/settings.json`](.claude/settings.json) | Permissions + hook wiring | You're copying the hooks — swap the hardcoded `uv` path for `$(which uv)` |
 
-> 💡 **Next:** Once you're comfortable with the basics, jump to [Claude Skills](#claude-skills) to build reusable slash commands in 3 minutes.
+```bash
+git clone --depth 1 https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know /tmp/cc-guide
+cp -r /tmp/cc-guide/.claude/commands/pr.md  your-project/.claude/commands/   # take what you want
+```
+
+> ⚠️ **Read before you copy.** Skills, hooks, agents, and workflows are executable instructions that run with your permissions — including from *this* repo. Copy file by file and read each one, the same way you'd review a shell script before sourcing it. Don't `cp -r` a whole `.claude/` you haven't opened.
+
+> 💡 **Next:** [Claude Skills](#claude-skills) to build your own in 3 minutes.
 
 ---
 ### Prompt Engineering Deep Dive
@@ -324,9 +333,9 @@ That's it — a working slash skill. Promote it to an Agent Skill later by movin
 
 The [full Skills guide in `docs/skills.md`](docs/skills.md) covers:
 
-- The 7 custom slash skills in this repo's `.claude/commands/`: `/pr`, `/review`, `/tdd`, `/test`, `/five`, `/ux`, `/todo`
+- The 8 skills shipped here: `/pr`, `/review`, `/tdd`, `/test`, `/five`, `/ux`, `/todo`, plus the Agent Skill [`/claude-md-review`](.claude/skills/claude-md-review/SKILL.md)
 - Bundled built-in skills (e.g. `/dataviz`, `/debug`, `/keybindings-help`)
-- Slash skills vs Agent Skills — when to use each, frontmatter contract, conversion path
+- Slash skills vs Agent Skills, and the [full frontmatter reference](docs/skills.md#frontmatter-reference) — including why `allowed-tools` **grants** permission rather than restricting it
 - Workflow recipes — feature dev with TDD + PR, bug investigation, UX-first dev
 - How to write your own skills (file format, scope, examples)
 - Skills FAQ, troubleshooting, and best practices

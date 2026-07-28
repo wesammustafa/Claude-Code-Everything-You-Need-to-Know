@@ -11,10 +11,11 @@
 | | Slash skills *(custom slash commands)* | Agent Skills |
 |---|---|---|
 | **File path** | `.claude/commands/<name>.md` | `.claude/skills/<name>/SKILL.md` |
-| **Frontmatter** | None required | YAML — `name`, `description` (required); `allowed-tools`, `model`, `paths` (optional) |
-| **Invocation** | User types `/<name>` | Model auto-invokes when its description matches the request |
+| **Frontmatter** | Optional — supports the same fields | Optional, but `description` is what lets Claude auto-invoke |
+| **Invocation** | User types `/<name>` | **Both** — you type `/<name>`, *and* Claude auto-invokes when the description matches |
 | **Scope** | Project (`.claude/`) or user (`~/.claude/`) | Project (`.claude/skills/`) or user (`~/.claude/skills/`) |
 | **Loading** | Loaded on `/` autocomplete | Metadata pre-loaded; full content read on demand (progressive disclosure) |
+| **Extras** | — | A whole directory for supporting files (`scripts/`, `references/`, `assets/`) |
 | **Best for** | Workflows you want to trigger explicitly | Capabilities Claude should reach for when relevant |
 
 > 💡 **Which to write?** Start with slash skills — simpler, no frontmatter, and you control invocation. Reach for Agent Skills when you want Claude to *decide* when the workflow applies (e.g., "if the user asks about PDFs, invoke `pdf-handler`"). The wider community has converged on Agent Skills as the format for shareable capabilities — see [The skills ecosystem](#the-skills-ecosystem) below.
@@ -98,29 +99,20 @@ Claude Skills (a.k.a. *custom slash commands*) are markdown files in `.claude/co
 | `debug` | Troubleshoot the current session and configuration | `/debug` |
 | `keybindings-help` | Customize keyboard shortcuts and modify `~/.claude/keybindings.json` | `/keybindings-help` |
 
-**Custom skills** (in this repository's `.claude/commands/`):
+**Custom skills** (shipped in this repository):
 
-| Skill | Category | Complexity |
+| Skill | Format | What it does |
 |---|---|---|
-| `/pr` | Workflow | High |
-| `/review` | Quality | High |
-| `/test` | Quality | Medium |
-| `/tdd` | Workflow | High |
-| `/five` | Persona | Low |
-| `/ux` | Persona | Medium |
-| `/todo` | Task | Low |
+| `/pr` | Slash | Automated pull request creation with branch management and commit splitting |
+| `/review` | Slash | Multi-perspective code review (PM, Dev, QA, Security, DevOps, UX) |
+| `/test` | Slash | Unit testing best-practices checklist for LLM-driven test generation |
+| `/tdd` | Slash | Complete test-driven development workflow with Red-Green-Refactor cycle |
+| `/five` | Slash | Five Whys root-cause analysis for debugging and problem-solving |
+| `/ux` | Slash | User-experience designer persona for empathetic, user-centric design |
+| `/todo` | Slash | Task management in `todos.md` with due dates and completion tracking |
+| `/claude-md-review` | **Agent Skill** | Audits a `CLAUDE.md` for vagueness, dead file paths, stale commands, and bloat — and Claude reaches for it on its own when a project's instructions look like the problem |
 
-**What each skill does:**
-
-| Skill | Description |
-|---|---|
-| `/pr` | Automated pull request creation with branch management and commit splitting |
-| `/review` | Multi-perspective code review (PM, Dev, QA, Security, DevOps, UX) |
-| `/test` | Unit testing best-practices checklist for LLM-driven test generation |
-| `/tdd` | Complete test-driven development workflow with Red-Green-Refactor cycle |
-| `/five` | Five Whys root-cause analysis for debugging and problem-solving |
-| `/ux` | User-experience designer persona for empathetic, user-centric design |
-| `/todo` | Task management in `todos.md` with due dates and completion tracking |
+The first seven live in [`.claude/commands/`](../.claude/commands) as plain markdown. [`/claude-md-review`](../.claude/skills/claude-md-review/SKILL.md) lives in `.claude/skills/` and is the worked example of the [frontmatter contract](#frontmatter-reference) — read it alongside the field table below.
 
 > 💡 **Pro tip:** Start with simple skills like `/five` or `/todo` to understand the pattern, then progress to complex workflows like `/tdd` or `/review`.
 
@@ -851,17 +843,46 @@ claude
 > /reload-skills   # reload skill files without restarting (v2.1.152+)
 ```
 
-> 💡 **Convert a slash skill to an Agent Skill.** Move `.claude/commands/<name>.md` to `.claude/skills/<name>/SKILL.md`, add YAML frontmatter at the top (`name`, `description`), and Claude will start invoking it automatically when the description matches the user's request — no more typing `/<name>`.
+> 💡 **Convert a slash skill to an Agent Skill.** Move `.claude/commands/<name>.md` to `.claude/skills/<name>/SKILL.md` and add a `description`. Claude will then invoke it automatically when the description matches the request, on top of you still being able to type `/<name>`.
+
+<a id="frontmatter-reference"></a>
+
+### Frontmatter reference
+
+**Every field is optional.** Only `description` is *recommended* — it's how Claude decides when to apply the skill. Without it, the first paragraph of the body is used instead.
 
 ```yaml
 ---
-name: my-skill
 description: Use when the user asks for X, Y, or Z. Adds A and B.
-allowed-tools: ["Read", "Edit", "Bash"]   # optional
+allowed-tools: Read, Grep
 ---
 
 # Skill body — same structured prompt you'd put in a slash skill
 ```
+
+The fields worth knowing:
+
+| Field | What it does |
+|---|---|
+| `description` | What the skill does **and when to use it**. Put the key use case first — `description` + `when_to_use` is truncated at **1,536 characters** in the skill listing |
+| `when_to_use` | Extra trigger phrases and example requests; appended to `description`, counts toward the same cap |
+| `disable-model-invocation` | `true` = only *you* can invoke it. Use for anything with side effects (`/deploy`, `/commit`) — you don't want Claude deciding your code looks ready to ship |
+| `user-invocable` | `false` = hide from the `/` menu. For background knowledge users shouldn't trigger directly |
+| `allowed-tools` | **Pre-approves** tools for the invoking turn — see the warning below |
+| `disallowed-tools` | Removes tools from Claude's pool while the skill is active. *This* is the restricting field |
+| `paths` | Globs that limit auto-activation to matching files — e.g. only load a Terraform skill when touching `**/*.tf` |
+| `model` / `effort` | Override model or [effort level](reference/effort-levels.md) while the skill is active; reverts on your next prompt |
+| `context: fork` | Run the skill in its own subagent context (pair with `agent:` to pick the type, `background: false` to wait for the result) |
+| `argument-hint` / `arguments` | Autocomplete hint, and named positional args for `$name` substitution in the body |
+| `hooks` | Hooks scoped to this skill's lifecycle |
+
+> ⚠️ **`allowed-tools` grants, it does not restrict.** It lets Claude use the listed tools **without asking you** during the turn that invokes the skill. Every other tool stays callable under your normal permission settings — this field never sandboxes anything. To actually remove tools, use `disallowed-tools`.
+>
+> For project skills in `.claude/skills/`, `allowed-tools` takes effect once you accept the workspace trust dialog. **A skill can grant itself broad tool access, so read project skills before trusting a repository.**
+
+> ⚠️ **`name` is not the command.** In a project or personal skill, the command comes from the **directory name** (`.claude/skills/deploy/SKILL.md` → `/deploy`) and frontmatter `name` only sets the display label in listings. Only in *plugin* skills does `name` set the last command segment.
+
+> ℹ️ Skill content is loaded **once** — the rendered `SKILL.md` enters the conversation as a single message and stays for the session. Claude does not re-read the file on later turns, so write standing instructions rather than one-time steps. The `allowed-tools` grant, by contrast, clears on your next message.
 
 ---
 
