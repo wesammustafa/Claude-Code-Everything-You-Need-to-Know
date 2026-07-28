@@ -296,16 +296,9 @@ echo "Analyze this code for performance issues and suggest optimizations:" \
 
 > ⚠️ **Security:** Skills are executable instructions running with your shell permissions. Read every third-party skill before adding it — exactly like reviewing a shell script before sourcing it.
 
-**Where Claude looks for `/name`**, first match wins:
+![Skill resolution: typing /name or Claude matching a description both enter one lookup order — project .claude/, then user ~/.claude/, then plugins, then built-in, first match wins. Both .claude/commands/name.md and .claude/skills/name/SKILL.md create the same /name command.](Images/skill-resolution.svg)
 
-| # | Location | Scope |
-|---|---|---|
-| 1 | `.claude/commands/name.md` or `.claude/skills/name/SKILL.md` | Project — in nested `.claude/` setups, the one closest to your cwd wins |
-| 2 | `~/.claude/commands/…` or `~/.claude/skills/…` | User — all your projects |
-| 3 | Plugin-provided skills | Namespaced as `/plugin:name` |
-| 4 | Built-in skills | Shipped with Claude Code |
-
-Project beats user beats built-in — which is how this repo's custom `/review` deliberately shadows the built-in one. Slash skills load on `/` autocomplete; Agent Skills preload only their metadata and read the body on demand.
+Project beats user beats built-in — which is how this repo's custom `/review` deliberately shadows the built-in one. Slash skills load on `/` autocomplete; Agent Skills preload only their metadata and read the body on demand. [Full lookup table →](docs/skills.md#where-claude-looks)
 
 #### Your first skill in 3 minutes
 

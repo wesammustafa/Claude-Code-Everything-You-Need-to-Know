@@ -6,6 +6,23 @@
 
 > ⚠️ **Security:** Skills are executable instructions running with your shell permissions. Only install skills from trusted sources, and read the file before adding it to your project — exactly like reviewing a shell script before sourcing it.
 
+![Skill resolution: typing /name or Claude matching a description both enter one lookup order — project .claude/, then user ~/.claude/, then plugins, then built-in, first match wins. Both .claude/commands/name.md and .claude/skills/name/SKILL.md create the same /name command.](../Images/skill-resolution.svg)
+
+<a id="where-claude-looks"></a>
+
+### Where Claude looks for `/name`
+
+First match wins:
+
+| # | Location | Scope |
+|---|---|---|
+| 1 | `.claude/commands/name.md` or `.claude/skills/name/SKILL.md` | Project — in nested `.claude/` setups, the one closest to your cwd wins |
+| 2 | `~/.claude/commands/…` or `~/.claude/skills/…` | User — all your projects |
+| 3 | Plugin-provided skills | Namespaced as `/plugin:name` |
+| 4 | Built-in skills | Shipped with Claude Code |
+
+Project beats user beats built-in, which is how this repo's custom `/review` deliberately shadows the built-in one.
+
 ## Two flavors of skills
 
 | | Slash skills *(custom slash commands)* | Agent Skills |

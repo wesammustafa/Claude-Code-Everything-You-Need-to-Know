@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" width="1200" height="640" role="img" aria-labelledby="t d">
+  <title id="t">How Claude Code resolves a skill name</title>
+  <desc id="d">Two entry points, typing slash name or Claude matching a skill description, feed one lookup order: project .claude/, then user ~/.claude/, then plugins, then built-in. First match wins. Both .claude/commands/name.md and .claude/skills/name/SKILL.md create the same slash name command.</desc>
+
+  <rect width="1200" height="640" fill="#191210"/>
+
+  <text x="600" y="54" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="25" font-weight="600" fill="#f2ece4">How Claude Code resolves <tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" fill="#e8905f">/name</tspan></text>
+  <text x="600" y="82" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="15" fill="#a1958c">Two ways in · one lookup order · first match wins</text>
+
+  <!-- entry points -->
+  <rect x="140" y="112" width="420" height="78" rx="10" fill="#221913" stroke="#3d2e24" stroke-width="1.5"/>
+  <text x="350" y="147" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="17" fill="#f2ece4">You type <tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" fill="#e8905f">/name</tspan></text>
+  <text x="350" y="172" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#a1958c">explicit invocation</text>
+
+  <rect x="640" y="112" width="420" height="78" rx="10" fill="#221913" stroke="#3d2e24" stroke-width="1.5"/>
+  <text x="850" y="147" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="17" fill="#f2ece4">Claude matches the <tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" fill="#e8905f">description</tspan></text>
+  <text x="850" y="172" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#a1958c">automatic · off when disable-model-invocation: true</text>
+
+  <!-- connectors into the lookup panel -->
+  <path d="M350 190 V214 H600 V232" fill="none" stroke="#6b5a4d" stroke-width="1.5"/>
+  <path d="M850 190 V214 H600" fill="none" stroke="#6b5a4d" stroke-width="1.5"/>
+  <path d="M593 231 H607 L600 243 Z" fill="#6b5a4d"/>
+
+  <!-- lookup order panel -->
+  <rect x="140" y="248" width="920" height="252" rx="10" fill="#1f1611" stroke="#3d2e24" stroke-width="1.5"/>
+  <text x="168" y="281" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" fill="#e8905f">Lookup order · first match wins</text>
+  <path d="M140 296 H1060" stroke="#3d2e24" stroke-width="1.5"/>
+
+  <circle cx="192" cy="336" r="14" fill="#2e2119" stroke="#d97a4e" stroke-width="1.5"/>
+  <text x="192" y="341" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="14" fill="#e8905f">1</text>
+  <text x="226" y="342" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" fill="#f2ece4">.claude/</text>
+  <text x="420" y="342" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="14" fill="#a1958c">project · in nested setups, the one closest to your cwd wins</text>
+
+  <circle cx="192" cy="382" r="14" fill="#2e2119" stroke="#d97a4e" stroke-width="1.5"/>
+  <text x="192" y="387" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="14" fill="#e8905f">2</text>
+  <text x="226" y="388" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" fill="#f2ece4">~/.claude/</text>
+  <text x="420" y="388" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="14" fill="#a1958c">user · available in every project</text>
+
+  <circle cx="192" cy="428" r="14" fill="#2e2119" stroke="#d97a4e" stroke-width="1.5"/>
+  <text x="192" y="433" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="14" fill="#e8905f">3</text>
+  <text x="226" y="434" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" fill="#f2ece4">plugins</text>
+  <text x="420" y="434" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="14" fill="#a1958c">namespaced as /plugin:name</text>
+
+  <circle cx="192" cy="474" r="14" fill="#2e2119" stroke="#d97a4e" stroke-width="1.5"/>
+  <text x="192" y="479" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="14" fill="#e8905f">4</text>
+  <text x="226" y="480" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" fill="#f2ece4">built-in</text>
+  <text x="420" y="480" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="14" fill="#a1958c">ships with Claude Code</text>
+
+  <path d="M600 500 V526" fill="none" stroke="#6b5a4d" stroke-width="1.5"/>
+  <path d="M593 525 H607 L600 537 Z" fill="#6b5a4d"/>
+
+  <!-- outcome -->
+  <rect x="140" y="542" width="920" height="66" rx="10" fill="#221913" stroke="#d97a4e" stroke-width="1.5"/>
+  <text x="600" y="571" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" fill="#f2ece4">.claude/commands/name.md   <tspan fill="#e8905f">≡</tspan>   .claude/skills/name/SKILL.md</text>
+  <text x="600" y="594" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#a1958c">Both create /name · the body enters the conversation once and persists for the session</text>
+</svg>
