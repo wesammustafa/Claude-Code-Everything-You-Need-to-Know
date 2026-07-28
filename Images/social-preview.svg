@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640" role="img" aria-label="Claude Code: Everything You Need to Know. From first prompt to agent teams, one guide. Covers Skills, Hooks, Subagents, Workflows, and MCP.">
+  <!-- Source for Images/social-preview.png (GitHub Settings > Social preview needs a raster file).
+       Edit here, then re-render. Brand orange #E07C4C matches Images/claude-jumping.svg. -->
+
+  <rect x="0" y="0" width="1280" height="640" fill="#191210"/>
+
+  <!-- faint grid -->
+  <g stroke="#E07C4C" stroke-width="1" opacity="0.05">
+    <path d="M40 0V640M80 0V640M120 0V640M160 0V640M200 0V640M240 0V640M280 0V640M320 0V640M360 0V640M400 0V640M440 0V640M480 0V640M520 0V640M560 0V640M600 0V640M640 0V640M680 0V640M720 0V640M760 0V640M800 0V640M840 0V640M880 0V640M920 0V640M960 0V640M1000 0V640M1040 0V640M1080 0V640M1120 0V640M1160 0V640M1200 0V640M1240 0V640"/>
+    <path d="M0 40H1280M0 80H1280M0 120H1280M0 160H1280M0 200H1280M0 240H1280M0 280H1280M0 320H1280M0 360H1280M0 400H1280M0 440H1280M0 480H1280M0 520H1280M0 560H1280M0 600H1280"/>
+  </g>
+
+  <!-- wordmark -->
+  <text x="96" y="152" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="22" font-weight="700" letter-spacing="5" fill="#E07C4C">CLAUDE CODE</text>
+
+  <!-- headline -->
+  <text x="96" y="238" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="66" font-weight="800" fill="#F5F0E8">Everything You</text>
+  <text x="96" y="316" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="66" font-weight="800" fill="#F5F0E8">Need to <tspan fill="#E07C4C">Know</tspan></text>
+
+  <!-- tagline -->
+  <text x="96" y="398" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="26" fill="#a89b92">From first prompt to agent teams — one guide.</text>
+
+  <!-- the five extension points, matching the README table -->
+  <g font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="21" font-weight="600" fill="#F5F0E8" text-anchor="middle">
+    <rect x="96"  y="444" width="120" height="46" rx="23" fill="#241a14" stroke="#E07C4C" stroke-width="1.5"/>
+    <text x="156" y="474">Skills</text>
+
+    <rect x="234" y="444" width="108" height="46" rx="23" fill="#241a14" stroke="#E07C4C" stroke-width="1.5"/>
+    <text x="288" y="474">Hooks</text>
+
+    <rect x="360" y="444" width="156" height="46" rx="23" fill="#241a14" stroke="#E07C4C" stroke-width="1.5"/>
+    <text x="438" y="474">Subagents</text>
+
+    <rect x="534" y="444" width="156" height="46" rx="23" fill="#241a14" stroke="#E07C4C" stroke-width="1.5"/>
+    <text x="612" y="474">Workflows</text>
+
+    <rect x="708" y="444" width="90" height="46" rx="23" fill="#241a14" stroke="#E07C4C" stroke-width="1.5"/>
+    <text x="753" y="474">MCP</text>
+  </g>
+
+  <!-- mascot, geometry lifted from Images/claude-jumping.svg -->
+  <g transform="translate(880,132) scale(3.2)">
+    <ellipse cx="50" cy="82" rx="22" ry="5" fill="#000000" opacity="0.22"/>
+    <rect x="22" y="10" width="8"  height="14" fill="#E07C4C"/>
+    <rect x="70" y="10" width="8"  height="14" fill="#E07C4C"/>
+    <rect x="18" y="24" width="64" height="4"  fill="#E07C4C"/>
+    <rect x="14" y="28" width="72" height="32" fill="#E07C4C"/>
+    <rect x="30" y="34" width="8"  height="10" fill="#000000"/>
+    <rect x="62" y="34" width="8"  height="10" fill="#000000"/>
+    <rect x="2"  y="36" width="12" height="8"  fill="#E07C4C"/>
+    <rect x="86" y="36" width="12" height="8"  fill="#E07C4C"/>
+    <rect x="24" y="60" width="12" height="14" fill="#E07C4C"/>
+    <rect x="64" y="60" width="12" height="14" fill="#E07C4C"/>
+  </g>
+
+  <rect x="0" y="628" width="1280" height="12" fill="#E07C4C"/>
+</svg>
