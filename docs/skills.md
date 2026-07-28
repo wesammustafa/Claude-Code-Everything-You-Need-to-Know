@@ -6,8 +6,6 @@
 
 > ⚠️ **Security:** Skills are executable instructions running with your shell permissions. Only install skills from trusted sources, and read the file before adding it to your project — exactly like reviewing a shell script before sourcing it.
 
-![Skills Workflow](../Images/skill-workflow.png)
-
 ## Two flavors of skills
 
 | | Slash skills *(custom slash commands)* | Agent Skills |

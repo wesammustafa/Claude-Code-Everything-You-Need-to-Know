@@ -287,7 +287,16 @@ echo "Analyze this code for performance issues and suggest optimizations:" \
 
 > ⚠️ **Security:** Skills are executable instructions running with your shell permissions. Read every third-party skill before adding it — exactly like reviewing a shell script before sourcing it.
 
-![Skills Workflow](Images/skill-workflow.png)
+**Where Claude looks for `/name`**, first match wins:
+
+| # | Location | Scope |
+|---|---|---|
+| 1 | `.claude/commands/name.md` or `.claude/skills/name/SKILL.md` | Project — in nested `.claude/` setups, the one closest to your cwd wins |
+| 2 | `~/.claude/commands/…` or `~/.claude/skills/…` | User — all your projects |
+| 3 | Plugin-provided skills | Namespaced as `/plugin:name` |
+| 4 | Built-in skills | Shipped with Claude Code |
+
+Project beats user beats built-in — which is how this repo's custom `/review` deliberately shadows the built-in one. Slash skills load on `/` autocomplete; Agent Skills preload only their metadata and read the body on demand.
 
 #### Your first skill in 3 minutes
 
@@ -510,10 +519,11 @@ cd ../feature-a && claude                     # start Claude in it
 git worktree remove ../feature-a              # clean up when done
 ```
 
-![Worktrees](Images/work-trees.png)
-![Three Claude sessions, one per worktree](Images/claude-sessions.png)
+![Three terminals creating one worktree each, then confirming the branches are checked out independently](Images/work-trees.png)
 
 > 💡 Use [tmux](https://github.com/tmux/tmux/wiki/Installing) to keep each worktree's session attached even when you close the terminal.
+>
+> 💡 Prefer not to manage them by hand? `claude agents` (agent view) puts **each dispatched session in its own worktree automatically**, and `/batch` does the same per unit of work.
 
 #### 2. General-purpose subagents — when one Claude isn't enough
 
@@ -525,8 +535,8 @@ Spawn 5 subagents to accelerate the work.
 Ultrathink.
 ```
 
-![Spawning subagents from a prompt](Images/agents-prompt.png)
-![Subagents executing tasks in parallel via a shared task list](Images/Subagents.png)
+![The same spawn prompt typed into three separate sessions](Images/agents-prompt.png)
+![Each session running five subagents concurrently, each with its own tool calls and token count](Images/Subagents.png)
 
 #### 3. Specialized subagents — drop-in role prompts
 
@@ -563,11 +573,9 @@ The `description` is what the main session uses to decide when to delegate — k
 | Project Manager | [prompt](specialized-agents/system-prompts/project-manager-prompt.md) | [description](specialized-agents/Descriptions/project-manager-description.md) |
 | Business Analyst | [prompt](specialized-agents/system-prompts/business-analyst-prompt.md) | [description](specialized-agents/Descriptions/business-analyst-description.md) |
 
-> 📐 The `agent-orchestration-workflow.canvas` flowchart in `specialized-agents/` visualizes how the role prompts compose into a pipeline. Open in [Obsidian](https://obsidian.md/) or any canvas-compatible viewer.
-
 #### Orchestrating specialists from the main session
 
-Once you have specialized agents, the main session orchestrates them:
+Once you have specialized agents, the main session orchestrates them by name:
 
 ```markdown
 Have backend-engineer suggest UI improvements; have frontend-engineer
@@ -575,7 +583,11 @@ implement them; have code-reviewer review the changes; have
 frontend-engineer address the review feedback.
 ```
 
-<img src="Images/Orchestration.png" alt="Orchestration of specialized agents" width="600">
+<img src="Images/Orchestration.png" alt="Canvas board of the ten role prompts, fanning out from a general-purpose agent" width="600">
+
+> 📐 That board is [`specialized-agents/agent-orchestration-workflow.canvas`](specialized-agents/agent-orchestration-workflow.canvas) — open it in [Obsidian](https://obsidian.md/) or any canvas-compatible viewer to read the full prompts side by side.
+>
+> 💡 The same prompts work as **Agent Teams teammates** — see [Agent Teams](#agent-teams-experimental).
 
 ---
 
@@ -901,7 +913,6 @@ A curated set of pointers — official Anthropic docs, MCP resources, hooks exam
 
 - [Claude Code overview (official)](https://code.claude.com/docs/en/overview)
 - [Claude Code best practices (official)](https://code.claude.com/docs/en/best-practices)
-- [Darkmoon](https://github.com/ASCIT31/Dark-Moon) - Open source (GPL-3.0) autonomous AI pentest platform and MCP host, covering web, API, Active Directory and Kubernetes, with proof of exploitation.
 - [Building effective agents (Anthropic engineering)](https://www.anthropic.com/engineering/building-effective-agents)
 - [Official MCP Registry](https://registry.modelcontextprotocol.io/)
 - [Hooks reference (official)](https://code.claude.com/docs/en/hooks)

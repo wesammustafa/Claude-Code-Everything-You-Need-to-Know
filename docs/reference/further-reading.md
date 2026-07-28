@@ -76,10 +76,13 @@ Curated links to official docs, deep-dives, and community resources for Claude C
 
 ## Development tools & adjacent resources
 
+*Community-maintained, not Anthropic projects.*
+
 - [Tmux cheatsheet](https://tmuxcheatsheet.com/)
 - [Obsidian — markdown viewer](https://obsidian.md/)
 - [Repomix — repository packaging tool](https://github.com/yamadashy/repomix)
 - [Cline — alternative AI coding assistant](https://github.com/cline/cline)
+- [Darkmoon — autonomous AI pentest platform and MCP host (GPL-3.0)](https://github.com/ASCIT31/Dark-Moon), covering web, API, Active Directory, and Kubernetes
 
 ---
 
