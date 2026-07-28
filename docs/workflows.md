@@ -293,10 +293,10 @@ Three phrases that reliably improve the script Claude writes:
 
 - [Official workflows docs](https://code.claude.com/docs/en/workflows) — authoritative reference
 - [Run agents in parallel](https://code.claude.com/docs/en/agents) — subagents vs agent view vs teams vs workflows
-- [Agent Teams](../README.md#agent-teams-experimental) — the other multi-agent surface, and when to pick it instead
+- [Agent Teams guide](agent-teams.md) — the other multi-agent surface, and when to pick it instead
 - [Effort levels](reference/effort-levels.md) — what `ultracode` changes
 - [Slash commands](reference/commands.md) — `/workflows`, `/deep-research`, `/batch`
 
 ---
 
-[← Back to README](../README.md#dynamic-workflows) · [Skills](skills.md) · [Effort levels](reference/effort-levels.md)
+[← Back to README](../README.md#dynamic-workflows) · [Agent Teams](agent-teams.md) · [Skills](skills.md)

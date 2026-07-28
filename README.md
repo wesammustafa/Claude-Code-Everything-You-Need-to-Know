@@ -54,7 +54,7 @@ The five extension points in Claude Code, side by side:
 
 **Productivity & frameworks** — [Effort levels](#effort-levels) · [Fast Mode](#fast-mode) · [Super Claude](#super-claude-framework) · [BMAD Method](#the-bmad-method--ai-agent-framework)
 
-**Reference** — [Slash Command Cheatsheet](#built-in-slash-commands) · [Effort levels (full guide)](docs/reference/effort-levels.md) · [FAQ](#faq) · [Updates & Deprecations](#updates--deprecations) · [Further Reading](#references)
+**Reference** — [Slash Command Cheatsheet](#built-in-slash-commands) · [Effort levels](docs/reference/effort-levels.md) · [Workflows](docs/workflows.md) · [Agent Teams](docs/agent-teams.md) · [Skills](docs/skills.md) · [FAQ](#faq) · [Updates & Deprecations](#updates--deprecations) · [Further Reading](#references)
 
 <!-- Compatibility anchors for old inbound links -->
 <a id="sdlc"></a>
@@ -480,15 +480,24 @@ Claude Code snapshots your hook configuration at session start and warns if hook
 ---
 
 <a id="ai-agents"></a>
-### Subagents
+<a id="running-agents-in-parallel"></a>
+### Subagents & running agents in parallel
 
-Three building blocks for going beyond a single Claude session:
+Claude Code has **four** ways to run agents at once. They're easy to confuse, so start here — the question that separates them is **who coordinates the work**:
 
-| Building block | What it gives you | When to reach for it |
+| Surface | Who coordinates | Reach for it when… |
 |---|---|---|
-| **Git worktrees** | Multiple branches checked out simultaneously, each in its own folder + Claude session | You want to work on `feature-A` while Claude finishes `feature-B` |
-| **General-purpose subagents** | Spawn isolated Claude sub-sessions from your main session for parallel sub-tasks | A task is large or context-heavy enough that the main session shouldn't carry it |
-| **Specialized subagents** | Pre-written role prompts (security-reviewer, frontend-engineer, etc.) you drop into `.claude/agents/` | You want focused expertise without writing the role prompt yourself |
+| **Subagents** *(below)* | Claude, turn by turn, inside one session | A side task would flood your main conversation with search results, logs, or file contents you'll never reference again |
+| **Agent view** — `claude agents` *(research preview)* | **You** — hand off, check back later | You have several independent tasks and want to dispatch them, glance at status, and step in only when one needs you. Each dispatched session gets **its own worktree automatically** |
+| **[Agent Teams](#agent-teams-experimental)** *(experimental)* | A lead agent supervising peer sessions | Workers need to **talk to each other** — share findings, challenge each other, self-claim from a shared task list |
+| **[Dynamic Workflows](#dynamic-workflows)** | **A script**, not Claude's judgement | The job outgrows a handful of subagents, or you want findings cross-checked against each other: codebase-wide audits, 500-file migrations |
+
+Two supporting tools that aren't a coordination style of their own:
+
+- **[Git worktrees](#1-git-worktrees--parallel-branches-parallel-sessions)** — separate checkouts so parallel sessions never touch the same files.
+- **`/batch`** — a bundled skill that researches the codebase, splits one large change into **5–30 independent units**, and spawns a background subagent per unit **in its own worktree, each opening a PR**. It's a packaged use of subagents + worktrees, and the fastest way to feel this whole category.
+
+> 💡 **Checking on running work** depends on what you started: `/tasks` for anything backgrounded in the current session, `claude agents` for background sessions, `/workflows` for workflow runs. Note `/agents` (removed as a wizard in v2.1.198) is a different thing entirely from `claude agents`.
 
 #### 1. Git worktrees — parallel branches, parallel sessions
 
@@ -582,104 +591,59 @@ export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1   # add to ~/.zshrc to persist
 claude
 ```
 
-#### How a team is structured
+Or, more durably, in `settings.json`:
 
-- **Team lead** *(your main session)* — assigns tasks, sets dependencies, reviews completed work.
-- **Teammates** *(specialist sub-agents)* — focus on a single task each, update the shared list, can request help.
-- **Shared task list** — single source of truth visible to everyone, tracks dependencies and status (pending / in progress / completed).
-
-**Mechanics as of mid-2026:** each session has **one implicit team** — the old `TeamCreate`/`TeamDelete` tools were removed in v2.1.178, and teammates are spawned through the Agent tool's `name` parameter. Teammates display **in-process** by default; for split-pane views you need tmux or iTerm2 (`teammateMode: "iterm2"`, v2.1.186+).
-
-#### Multi-agent collaboration patterns
-
-**1. Parallel development** — three independent streams, three teammates, one team lead synthesizing.
-
-```markdown
-Task 1: frontend-engineer  – Build login UI
-Task 2: backend-engineer   – Implement auth API
-Task 3: qa-engineer        – Write integration tests
+```json
+{ "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1" } }
 ```
 
-**2. Sequential pipeline** — one teammate's output feeds the next.
+#### The example that justifies the cost
 
-```markdown
-Task 1: backend-engineer   – Create database schema
-  ↓ (blocks Task 2)
-Task 2: backend-engineer   – Implement CRUD endpoints
-  ↓ (blocks Task 3)
-Task 3: frontend-engineer  – Build admin dashboard
+Most "spawn N teammates" prompts would work just as well with subagents. This one wouldn't — it needs teammates to **talk to each other**:
+
+```text
+Users report the app exits after one message instead of staying connected.
+Spawn 5 agent teammates to investigate different hypotheses. Have them talk to
+each other to try to disprove each other's theories, like a scientific
+debate. Update the findings doc with whatever consensus emerges.
 ```
 
-**3. Code review workflow** — feature lands, multiple reviewers, then revision.
+The debate structure *is* the mechanism. Sequential investigation anchors: once one theory gets explored, everything after is biased toward it. With independent investigators actively trying to disprove each other, the theory that survives is far more likely to be the real root cause.
 
-```markdown
-Task 1: feature-developer  – Implement new feature
-  ↓ (completed)
-Task 2: security-reviewer  – Check for vulnerabilities
-Task 3: perf-reviewer      – Analyze optimization opportunities
-  ↓ (both complete)
-Task 4: feature-developer  – Address review feedback
+#### Staff a team with the role prompts you already have
+
+A teammate can be spawned **from a subagent definition** — so this repo's [`.claude/agents/`](.claude/agents) and [10 specialist prompts](#3-specialized-subagents--drop-in-role-prompts) work as teammates, not just as subagents:
+
+```text
+Spawn a teammate using the security-reviewer agent type to audit the auth module.
 ```
 
-**4. Research → implementation** — one analyst, multiple workers applying findings.
+It honors that definition's `tools` allowlist and `model`, and the body is *appended* to the teammate's system prompt. (`skills` and `mcpServers` frontmatter is **not** applied to teammates.)
 
-```markdown
-Task 1: research-agent     – Analyze existing codebase patterns
-  ↓ (generates recommendations)
-Task 2: implementation team – Apply findings across modules
-  - Teammate A: auth module
-  - Teammate B: payment module
-  - Teammate C: notifications module
-```
+#### Three things that catch people out
 
-#### Example: full feature implementation
+- **Teammates don't inherit the lead's `/model`.** Set **Default teammate model** in `/config` (pick *Default (leader's model)* to follow the lead), or name the model per spawn. They *do* inherit the lead's effort level. Model and fast mode are fixed at spawn — `/model` and `/fast` only ever change the lead.
+- **Teammates don't get the lead's conversation history.** They load `CLAUDE.md`, MCP servers, and skills like any session, but everything task-specific has to be in the spawn prompt.
+- **No worktree isolation.** Unlike agent view, teams don't isolate teammates — two teammates editing one file is a straight overwrite. Partition the files yourself.
 
-```markdown
-Team lead: coordinate overall strategy.
+#### Monitoring, and the naming trap
 
-Teammates:
-- planner: requirements → technical spec
-- backend-dev: API endpoints
-- frontend-dev: UI components
-- db-specialist: schema design + migration
-- qa-engineer: unit + integration tests
-- security-reviewer: security audit
+Teammates appear in the **agent panel** below your prompt input: `↑`/`↓` to select, `Enter` to open a transcript and message that teammate directly, `Esc` to interrupt, `Ctrl+T` for the task list. An idle row that vanished is **hidden, not stopped** — it returns on the teammate's next turn.
 
-Dependencies:
-1. planner → spec (blocks all)
-2. db-specialist → schema (blocks backend-dev)
-3. backend-dev + frontend-dev in parallel
-4. qa-engineer waits for implementation
-5. security-reviewer waits for all code
-```
+> ⚠️ `claude agents` opens **agent view**, a *different* surface for background sessions — not your team monitor. And subagents show up in the same agent panel as teammates, so seeing rows there doesn't prove a team actually formed.
 
 #### Best practices
 
 | ✅ Do | ❌ Don't |
 |---|---|
-| Give teammates clear, focused, single-purpose tasks | Spawn more than 3–5 teammates per session |
-| Use descriptive names (`frontend-specialist`, not `agent1`) | Assign vague or overlapping tasks |
-| Set explicit task dependencies (`blockedBy`) | Skip dependencies — they prevent merge conflicts |
-| Let teammates work in parallel when possible | Micromanage; trust the role prompt |
-| Watch progress in the `claude agents` dashboard | Mix different project contexts in one team |
+| Start with **3–5 teammates**, ~5–6 tasks each | Scale up before the work needs it — three focused beat five scattered |
+| Give each teammate a distinct, non-overlapping slice of files | Let two teammates edit the same file |
+| Put task specifics in the spawn prompt | Assume teammates saw your conversation |
+| Name teammates descriptively so you can address them later | Use `agent1`, `agent2` |
+| Start with **research and review** while learning | Start with parallel implementation |
+| Gate "done" with a `TaskCompleted` hook (exit 2 blocks) | Let a teammate declare victory on a red test suite |
 
-#### Common issues
-
-| Issue | Fix |
-|---|---|
-| Teammates conflicting on the same files | Add explicit `blockedBy` dependencies |
-| Team too slow | Reduce team size; increase parallelization |
-| Tasks stuck | Check for circular dependencies |
-| Context drift | Make task descriptions and teammate names more specific |
-
-#### Limitations (it's experimental)
-
-- Multiple agents consume more tokens — budget accordingly.
-- Large teams add coordination overhead; 3–5 teammates is the sweet spot.
-- One team per session, no nested teams, and the lead is fixed; in-process teammates can't be resumed after a restart.
-- Deeper models make better leads — Opus 4.8 or Fable 5 as lead, Sonnet 5 teammates is a solid split.
-
-> 📚 Authoritative reference: [code.claude.com/docs/en/agent-teams](https://code.claude.com/docs/en/agent-teams).
+> 📚 **[Full guide in `docs/agent-teams.md` →](docs/agent-teams.md)** — display modes, plan approval, the mailbox architecture, permissions, hooks, troubleshooting, and the honest limitations list. Authoritative reference: [code.claude.com/docs/en/agent-teams](https://code.claude.com/docs/en/agent-teams).
 
 ---
 
