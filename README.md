@@ -3,7 +3,7 @@
 **From first prompt to agent teams — one guide.**
 
 [![Mentioned in Awesome Claude Code](https://awesome.re/mentioned-badge.svg)](https://github.com/hesreallyhim/awesome-claude-code)
-[![GitHub stars](https://img.shields.io/github/stars/wesammustafa/Claude-Code-Everything-You-Need-to-Know?style=flat&color=e8b83a)](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/wesammustafa/Claude-Code-Everything-You-Need-to-Know?style=flat&color=e8b83a)](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know)
 [![Last commit](https://img.shields.io/github/last-commit/wesammustafa/Claude-Code-Everything-You-Need-to-Know?color=4c9985)](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/commits/main)
 [![License](https://img.shields.io/github/license/wesammustafa/Claude-Code-Everything-You-Need-to-Know?color=5b6470)](LICENSE)
 ![Last reviewed](https://img.shields.io/badge/last_reviewed-July_2026-b0693c)
