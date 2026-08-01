@@ -744,6 +744,7 @@ Install from the [registry](https://registry.modelcontextprotocol.io/) or follow
 | **Tavily** | Web search, page extraction, and research designed for AI agents | [tavily-ai/tavily-mcp](https://github.com/tavily-ai/tavily-mcp) |
 | **Chrome DevTools** | Drives a real Chrome instance — DOM inspection, network logs, console, performance traces, screenshots | [ChromeDevTools/chrome-devtools-mcp](https://github.com/ChromeDevTools/chrome-devtools-mcp) |
 | **mem0** | Hosted long-term memory with semantic recall across sessions and projects (richer than the local-only Memory server above) | [mem0ai/mem0](https://github.com/mem0ai/mem0) |
+| **GoodMemory** | Local-first, auditable memory for Claude Code — SQLite by default, inspect/forget/export controls, and opt-in writeback | [hjqcan/GoodMemory](https://github.com/hjqcan/GoodMemory) |
 
 **Specialized — reach for these when the workflow fits:**
 
