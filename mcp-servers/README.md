@@ -2,7 +2,7 @@
 
 ## Overview
 
-This directory contains comprehensive documentation for the four core Model Context Protocol (MCP) servers that enhance Claude Code's capabilities.
+This directory contains comprehensive documentation for five Model Context Protocol (MCP) servers that enhance Claude Code's capabilities.
 
 ---
 
@@ -14,6 +14,7 @@ This directory contains comprehensive documentation for the four core Model Cont
 | **Sequential Thinking** | Advanced reasoning | • Problem decomposition<br>• Multi-step planning<br>• Structured analysis<br>• Decision support | [sequential-thinking.md](./sequential-thinking.md) |
 | **Memory** | Persistent context | • Cross-session memory<br>• Project preferences<br>• Historical context<br>• Knowledge retention | [memory.md](./memory.md) |
 | **Playwright** | Browser automation | • Web scraping<br>• Automated testing<br>• Screenshot capture<br>• Device emulation | [playwright.md](./playwright.md) |
+| **Parallel Search** | Web research | • Web search<br>• Page retrieval<br>• Remote HTTP connection | [parallel-search.md](./parallel-search.md) |
 
 > **Tip:** Keep only 3–6 MCP servers active at a time — every connected server adds tools to Claude's context.
 
@@ -36,6 +37,7 @@ This directory contains comprehensive documentation for the four core Model Cont
 - **Serena**: Analyze code structure and dependencies
 - **Sequential Thinking**: Break down complex problems
 - **Playwright**: Gather web data
+- **Parallel Search**: Find sources and retrieve page content
 
 ---
 
@@ -64,11 +66,12 @@ Use case: Automated testing workflows
 - Memory remembers test patterns and credentials
 ```
 
-**4. All Four Together**
+**4. All Five Together**
 ```
 Use case: Full-stack development
 - Serena for backend code intelligence
 - Playwright for frontend testing
+- Parallel Search for web research
 - Sequential Thinking for planning
 - Memory for project knowledge
 ```
@@ -220,6 +223,7 @@ playwright: ✓ Connected
 - **[Sequential Thinking](./sequential-thinking.md)** - For complex problem-solving
 - **[Memory](./memory.md)** - For persistent project knowledge
 - **[Playwright](./playwright.md)** - For web automation needs
+- **[Parallel Search](./parallel-search.md)** - For web search and page retrieval
 
 ---
 

@@ -729,6 +729,7 @@ Full setup walkthroughs in [`mcp-servers/`](./mcp-servers/). New to MCP? [`mcp-s
 | **Sequential Thinking** | Step-by-step reasoning that breaks complex problems into manageable steps | [sequential-thinking.md](./mcp-servers/sequential-thinking.md) |
 | **Memory** | Persistent context across sessions | [memory.md](./mcp-servers/memory.md) |
 | **Playwright** | Browser automation — interaction, scraping, testing, accessibility | [playwright.md](./mcp-servers/playwright.md) |
+| **Parallel Search** | Web search and page retrieval through a hosted remote server | [parallel-search.md](./mcp-servers/parallel-search.md) |
 
 See [`mcp-servers/README.md`](./mcp-servers/README.md) for the comparison matrix, install commands, and troubleshooting.
 
