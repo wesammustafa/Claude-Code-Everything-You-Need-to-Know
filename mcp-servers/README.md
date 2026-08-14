@@ -2,7 +2,7 @@
 
 ## Overview
 
-This directory contains comprehensive documentation for the four core Model Context Protocol (MCP) servers that enhance Claude Code's capabilities.
+This directory contains comprehensive documentation for five Model Context Protocol (MCP) servers that enhance Claude Code's capabilities.
 
 ---
 
@@ -14,6 +14,7 @@ This directory contains comprehensive documentation for the four core Model Cont
 | **Sequential Thinking** | Advanced reasoning | • Problem decomposition<br>• Multi-step planning<br>• Structured analysis<br>• Decision support | [sequential-thinking.md](./sequential-thinking.md) |
 | **Memory** | Persistent context | • Cross-session memory<br>• Project preferences<br>• Historical context<br>• Knowledge retention | [memory.md](./memory.md) |
 | **Playwright** | Browser automation | • Web scraping<br>• Automated testing<br>• Screenshot capture<br>• Device emulation | [playwright.md](./playwright.md) |
+| **Xquik** | Public X research | • Post search<br>• Profile lookup<br>• Account relationship checks<br>• Approval-gated actions | [xquik.md](./xquik.md) |
 
 > **Tip:** Keep only 3–6 MCP servers active at a time — every connected server adds tools to Claude's context.
 
@@ -36,6 +37,7 @@ This directory contains comprehensive documentation for the four core Model Cont
 - **Serena**: Analyze code structure and dependencies
 - **Sequential Thinking**: Break down complex problems
 - **Playwright**: Gather web data
+- **Xquik**: Gather public X posts, profiles, and account signals
 
 ---
 
@@ -64,13 +66,14 @@ Use case: Automated testing workflows
 - Memory remembers test patterns and credentials
 ```
 
-**4. All Four Together**
+**4. All Five Together**
 ```
 Use case: Full-stack development
 - Serena for backend code intelligence
 - Playwright for frontend testing
 - Sequential Thinking for planning
 - Memory for project knowledge
+- Xquik for public X research
 ```
 
 ---
@@ -86,6 +89,7 @@ Before installing MCP servers, ensure the following tools are installed:
 | **Node.js & npx** | Sequential Thinking, Memory, Playwright | [nodejs.org](https://nodejs.org/) |
 | **uv & uvx** | Serena | [Install uv](https://docs.astral.sh/uv/getting-started/installation/) |
 | **Claude Code CLI** | All servers | [Claude Code Docs](https://code.claude.com/docs) |
+| **Browser access** | Xquik OAuth | Opens the account authorization flow |
 
 #### Verify Prerequisites
 
@@ -174,6 +178,10 @@ claude mcp add memory -s user -- npx -y @modelcontextprotocol/server-memory
 
 # Playwright - Browser automation
 claude mcp add playwright -s user -- npx -y @playwright/mcp@latest
+
+# Xquik - Public X research
+claude mcp add --transport http -s user xquik https://xquik.com/mcp
+claude mcp login xquik
 ```
 
 #### Local Installation (Project-Specific)
@@ -192,6 +200,10 @@ claude mcp add memory -s local -- npx -y @modelcontextprotocol/server-memory
 
 # Playwright
 claude mcp add playwright -s local -- npx -y @playwright/mcp@latest
+
+# Xquik
+claude mcp add --transport http -s local xquik https://xquik.com/mcp
+claude mcp login xquik
 ```
 
 #### Verify Installation
@@ -210,6 +222,7 @@ sequential-thinking: ✓ Connected
 serena: ✓ Connected
 memory: ✓ Connected
 playwright: ✓ Connected
+xquik: ✓ Connected
 ```
 
 > **Tip:** If a server shows as disconnected, try removing and reinstalling it, or see the [Troubleshooting section](#troubleshooting).
@@ -220,6 +233,7 @@ playwright: ✓ Connected
 - **[Sequential Thinking](./sequential-thinking.md)** - For complex problem-solving
 - **[Memory](./memory.md)** - For persistent project knowledge
 - **[Playwright](./playwright.md)** - For web automation needs
+- **[Xquik](./xquik.md)** - For public X research and approved account workflows
 
 ---
 
