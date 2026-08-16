@@ -787,6 +787,7 @@ These are skills that surface repeatedly across SkillHub, SkillsMP, and the awes
 | `verification-quality` | Verifies output meets a defined quality bar before sign-off |
 | `evaluation` | Systematic output evaluation with rubrics |
 | `systematic-debugging` | Methodical bug investigation with hypothesis tracking |
+| [`anti-ui-slop`](https://github.com/uizze/uizze/tree/main/skills/anti-ui-slop) | Prevent generic AI UI with a product-specific contract, complete states, and a pre-ship finish gate, grounded in 800,000+ real web and iOS screens |
 
 #### Skill & tool development
 
