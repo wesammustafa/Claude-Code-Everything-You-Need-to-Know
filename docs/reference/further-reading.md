@@ -64,6 +64,7 @@ Curated links to official docs, deep-dives, and community resources for Claude C
 
 - [Hooks examples (community)](https://github.com/disler/claude-code-hooks-mastery)
 - [Hooks guide (eesel)](https://www.eesel.ai/blog/hooks-in-claude-code)
+- [Awesome Claude Code Hooks — curated list of hooks (community)](https://github.com/loqimean/awesome-claude-code-hooks)
 
 ---
 
