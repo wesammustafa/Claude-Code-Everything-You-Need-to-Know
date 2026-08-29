@@ -729,6 +729,7 @@ Full setup walkthroughs in [`mcp-servers/`](./mcp-servers/). New to MCP? [`mcp-s
 | **Sequential Thinking** | Step-by-step reasoning that breaks complex problems into manageable steps | [sequential-thinking.md](./mcp-servers/sequential-thinking.md) |
 | **Memory** | Persistent context across sessions | [memory.md](./mcp-servers/memory.md) |
 | **Playwright** | Browser automation — interaction, scraping, testing, accessibility | [playwright.md](./mcp-servers/playwright.md) |
+| **Xquik** | Public X search, profiles, and approval-gated account workflows | [xquik.md](./mcp-servers/xquik.md) |
 
 See [`mcp-servers/README.md`](./mcp-servers/README.md) for the comparison matrix, install commands, and troubleshooting.
 
