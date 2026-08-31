@@ -776,6 +776,7 @@ These are skills that surface repeatedly across SkillHub, SkillsMP, and the awes
 | `react` | Component conventions, hook idioms, and refactoring guidance |
 | `frontend-design` | Design-system implementation aligned with brand tokens |
 | `senior-data-engineer` | Data engineering reviewer / mentor persona |
+| `claude-skills-pro` | 15-skill engineering pack: 7-dimension code review, root-cause debugging, mutation-checked test generation, zero-downtime DB migrations — 5 of 15 free under MIT |
 
 #### Quality, review & debugging
 
