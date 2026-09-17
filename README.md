@@ -744,6 +744,7 @@ Install from the [registry](https://registry.modelcontextprotocol.io/) or follow
 | **Tavily** | Web search, page extraction, and research designed for AI agents | [tavily-ai/tavily-mcp](https://github.com/tavily-ai/tavily-mcp) |
 | **Chrome DevTools** | Drives a real Chrome instance — DOM inspection, network logs, console, performance traces, screenshots | [ChromeDevTools/chrome-devtools-mcp](https://github.com/ChromeDevTools/chrome-devtools-mcp) |
 | **mem0** | Hosted long-term memory with semantic recall across sessions and projects (richer than the local-only Memory server above) | [mem0ai/mem0](https://github.com/mem0ai/mem0) |
+| **Mnemoverse** | Hosted memory server over MCP: tell it a recalled memory helped or misled, and it re-ranks what comes back next; one key shared across Claude Code, Cursor, VS Code, and ChatGPT | [mnemoverse/mcp-memory-server](https://github.com/mnemoverse/mcp-memory-server) |
 
 **Specialized — reach for these when the workflow fits:**
 
