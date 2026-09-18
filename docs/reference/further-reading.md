@@ -83,6 +83,7 @@ Curated links to official docs, deep-dives, and community resources for Claude C
 - [Repomix — repository packaging tool](https://github.com/yamadashy/repomix)
 - [Cline — alternative AI coding assistant](https://github.com/cline/cline)
 - [Darkmoon — autonomous AI pentest platform and MCP host (GPL-3.0)](https://github.com/ASCIT31/Dark-Moon), covering web, API, Active Directory, and Kubernetes
+- [YYLO — command-line orchestrator for coding agents (MIT)](https://github.com/yylo-dev/yylo), with typed task, validation, merge, and release-readiness boundaries and a dedicated branch/worktree per task
 
 ---
 
