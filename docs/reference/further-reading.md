@@ -81,6 +81,7 @@ Curated links to official docs, deep-dives, and community resources for Claude C
 - [Tmux cheatsheet](https://tmuxcheatsheet.com/)
 - [Obsidian — markdown viewer](https://obsidian.md/)
 - [Repomix — repository packaging tool](https://github.com/yamadashy/repomix)
+- [OrcaPromptVault — Claude Code's system prompt as sent](https://github.com/Continuum-AI-Corp/OrcaPromptVault/tree/main/Claude-Code): dated recordings of the assembled request for four Claude Code runs. Interactive is 26,131 characters and 35 tools; `claude -p` on the same version is 20,806 and 29, and the identity line changes. Each file carries the command that reproduces it
 - [Cline — alternative AI coding assistant](https://github.com/cline/cline)
 - [Darkmoon — autonomous AI pentest platform and MCP host (GPL-3.0)](https://github.com/ASCIT31/Dark-Moon), covering web, API, Active Directory, and Kubernetes
 
