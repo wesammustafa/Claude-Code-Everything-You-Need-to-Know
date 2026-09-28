@@ -742,6 +742,7 @@ Install from the [registry](https://registry.modelcontextprotocol.io/) or follow
 |---|---|---|
 | **Context7** | Live, version-pinned library docs piped into the prompt — grounds answers in current API surfaces instead of training-cutoff guesses | [upstash/context7](https://github.com/upstash/context7) |
 | **Tavily** | Web search, page extraction, and research designed for AI agents | [tavily-ai/tavily-mcp](https://github.com/tavily-ai/tavily-mcp) |
+| **BuyWhere** | Cross-border product search for AI agents — 300M+ catalog, shipping-aware ranking, hosted MCP at `https://api.buywhere.ai/mcp` | [BuyWhere/buywhere-mcp](https://github.com/BuyWhere/buywhere-mcp) |
 | **Chrome DevTools** | Drives a real Chrome instance — DOM inspection, network logs, console, performance traces, screenshots | [ChromeDevTools/chrome-devtools-mcp](https://github.com/ChromeDevTools/chrome-devtools-mcp) |
 | **mem0** | Hosted long-term memory with semantic recall across sessions and projects (richer than the local-only Memory server above) | [mem0ai/mem0](https://github.com/mem0ai/mem0) |
 
