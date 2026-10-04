@@ -19,17 +19,6 @@
     "deny": []
   },
   "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "uv run \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/post_tool_use.py"
-          }
-        ]
-      }
-    ],
     "Notification": [
       {
         "matcher": "",
@@ -37,28 +26,6 @@
           {
             "type": "command",
             "command": "uv run \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/notification.py --notify"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "uv run \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop.py --chat"
-          }
-        ]
-      }
-    ],
-    "SubagentStop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "uv run \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/subagent_stop.py"
           }
         ]
       }

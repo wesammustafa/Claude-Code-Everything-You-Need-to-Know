@@ -157,7 +157,7 @@ This repo's [`.claude/`](.claude/) directory is a **working, runnable** Claude C
 | [`.claude/skills/`](.claude/skills) | An Agent Skill — `/claude-md-review` audits a `CLAUDE.md` for vagueness, dead paths, and bloat | You want a worked example of the [frontmatter contract](docs/skills.md#frontmatter-reference) |
 | [`.claude/agents/`](.claude/agents) | 5 subagents, plus [10 more role prompts](#3-specialized-subagents--drop-in-role-prompts) in `specialized-agents/` | You want specialists without authoring role prompts — they double as [Agent Teams](#agent-teams-experimental) teammates |
 | [`.claude/workflows/`](.claude/workflows) | A [dynamic workflow](#dynamic-workflows) — `/stale-docs-audit` fans agents across your docs, then refutes its own findings | You want a real script to read before writing your own |
-| [`.claude/hooks/`](.claude/hooks) | Python hooks — `post_tool_use.py`, `notification.py`, `stop.py`, `subagent_stop.py` | You want [lifecycle automation](#hooks) (needs [`uv`](https://docs.astral.sh/uv/getting-started/installation/)) |
+| [`.claude/hooks/`](.claude/hooks) | A Python hook — `notification.py` speaks an alert when Claude Code needs your input, such as a permission prompt | You want [lifecycle automation](#hooks) (needs [`uv`](https://docs.astral.sh/uv/getting-started/installation/)) |
 | [`.claude/settings.json`](.claude/settings.json) | Permissions + hook wiring | You're copying the hooks (they call `uv run` with `$CLAUDE_PROJECT_DIR`, so `uv` just needs to be on your `PATH`) |
 
 ```bash
@@ -406,8 +406,7 @@ project-root/
 └── .claude/
     ├── hooks/
     │   ├── notification.py
-    │   ├── post_tool_use.py
-    │   └── ...
+    │   └── utils/
     └── settings.json
 ```
 
