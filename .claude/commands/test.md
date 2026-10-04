@@ -1,5 +1,4 @@
 ---
-name: test
 description: LLM unit testing best practices checklist for testing internal logic, not API endpoints
 ---
 

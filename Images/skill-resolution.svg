@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" width="1200" height="640" role="img" aria-labelledby="t d">
   <title id="t">How Claude Code resolves a skill name</title>
-  <desc id="d">Two entry points, typing slash name or Claude matching a skill description, feed one lookup order: project .claude/, then user ~/.claude/, then plugins, then built-in. First match wins. Both .claude/commands/name.md and .claude/skills/name/SKILL.md create the same slash name command.</desc>
+  <desc id="d">Two entry points, typing slash name or Claude matching a skill description, feed one lookup order: user ~/.claude/, then project .claude/, then plugins, then built-in. First match wins. Both .claude/commands/name.md and .claude/skills/name/SKILL.md create the same slash name command.</desc>
 
   <rect width="1200" height="640" fill="#191210"/>
 
@@ -28,13 +28,13 @@
 
   <circle cx="192" cy="336" r="14" fill="#2e2119" stroke="#d97a4e" stroke-width="1.5"/>
   <text x="192" y="341" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="14" fill="#e8905f">1</text>
-  <text x="226" y="342" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" fill="#f2ece4">.claude/</text>
-  <text x="420" y="342" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="14" fill="#a1958c">project · in nested setups, the one closest to your cwd wins</text>
+  <text x="226" y="342" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" fill="#f2ece4">~/.claude/</text>
+  <text x="420" y="342" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="14" fill="#a1958c">user · available in every project</text>
 
   <circle cx="192" cy="382" r="14" fill="#2e2119" stroke="#d97a4e" stroke-width="1.5"/>
   <text x="192" y="387" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="14" fill="#e8905f">2</text>
-  <text x="226" y="388" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" fill="#f2ece4">~/.claude/</text>
-  <text x="420" y="388" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="14" fill="#a1958c">user · available in every project</text>
+  <text x="226" y="388" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" fill="#f2ece4">.claude/</text>
+  <text x="420" y="388" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="14" fill="#a1958c">project · same-named nested skills both stay available</text>
 
   <circle cx="192" cy="428" r="14" fill="#2e2119" stroke="#d97a4e" stroke-width="1.5"/>
   <text x="192" y="433" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="14" fill="#e8905f">3</text>

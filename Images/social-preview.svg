@@ -39,6 +39,7 @@
   </g>
 
   <!-- mascot, geometry lifted from Images/claude-jumping.svg -->
+  <!-- mascot source: https://github.com/shanraisshan/claude-code-best-practice, Copyright (c) 2025-2026 Shayan Rais, MIT License (full notice in Images/claude-jumping.svg) -->
   <g transform="translate(880,132) scale(3.2)">
     <ellipse cx="50" cy="82" rx="22" ry="5" fill="#000000" opacity="0.22"/>
     <rect x="22" y="10" width="8"  height="14" fill="#E07C4C"/>

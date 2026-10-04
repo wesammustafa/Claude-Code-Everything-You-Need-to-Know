@@ -6,13 +6,15 @@
 [![GitHub stars](https://img.shields.io/github/stars/wesammustafa/Claude-Code-Everything-You-Need-to-Know?style=flat&color=e8b83a)](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know)
 [![Last commit](https://img.shields.io/github/last-commit/wesammustafa/Claude-Code-Everything-You-Need-to-Know?color=4c9985)](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/commits/main)
 [![License](https://img.shields.io/github/license/wesammustafa/Claude-Code-Everything-You-Need-to-Know?color=5b6470)](LICENSE)
-![Last reviewed](https://img.shields.io/badge/last_reviewed-July_2026-b0693c)
+![Reviewed July 2026, corrected Oct 2026](https://img.shields.io/badge/reviewed-July_2026%2C_corrected_Oct_2026-b0693c)
 
 A practical guide to Claude Code — from your first prompt to multi-agent automation, hooks, MCP, and team workflows. Built around clear mental models and real examples, not marketing.
 
 ```bash
-npm install -g @anthropic-ai/claude-code
+curl -fsSL https://claude.ai/install.sh | bash
 ```
+
+macOS, Linux, and WSL. For Windows and other install methods, see the [official setup guide](https://code.claude.com/docs/en/setup).
 
 **Who this is for:** Developers using (or about to use) Claude Code. Beginners get a guided path; power users get depth on Skills, Hooks, MCP, and Agent Teams.
 
@@ -85,18 +87,18 @@ claude          # start a session in the current repo
 <a id="claude-opus-47-the-latest-flagship"></a>
 ### The Claude 5 era: today's model lineup
 
-Three launches landed in quick succession this summer: **Claude Opus 4.8** (May 28, 2026) took over as the Opus-tier flagship, **Claude Fable 5** and its restricted sibling **Claude Mythos 5** (June 9, 2026) opened a new *Mythos-class* tier above Opus, and **Claude Sonnet 5** (June 30, 2026) became Claude Code's default model. 1M-token context is now standard across current Opus, Sonnet, and Fable models — no beta flag, no long-context surcharge — with 128K max output.
+Launches landed in quick succession through 2026: **Claude Opus 4.8** (May 28, 2026), **Claude Fable 5** and its restricted sibling **Claude Mythos 5** (June 9, 2026), which opened a new *Mythos-class* tier above Opus, **Claude Sonnet 5** (June 30, 2026), **Claude Opus 5** (July 24, 2026), **Claude Fable 5.1** and **Claude Mythos 5.1** (September 1, 2026), **Claude Opus 5.5** (September 22, 2026), and **Claude Sonnet 5.5** (September 28, 2026). Since Claude Code v2.1.280, Opus 5.5 is the [default model](https://code.claude.com/docs/en/model-config#default-model-setting) on Pro, Max, Team, Enterprise, and the Anthropic API. 1M-token context is now standard across current Opus, Sonnet, and Fable models (no beta flag, no long-context surcharge), with 128K max output.
 
 **Choosing a model — quick guide:**
 
 | Model | Reach for it when… |
 |---|---|
-| **Sonnet 5** *(default)* | Everyday coding — most tasks live here. Intro pricing $2/$10 per MTok through Aug 31, 2026 (then $3/$15) |
-| **Opus 4.8** | Complex reasoning, large refactors, orchestrating agents — $5/$25, unchanged from 4.7 |
-| **Fable 5** | Genuinely hard problems — Mythos-class capability above Opus at $10/$50 |
+| **Sonnet 5.5** | Everyday coding: most tasks live here. $2/$10 per MTok, the same as Sonnet 5 |
+| **Opus 5.5** *(default)* | Complex reasoning, large refactors, orchestrating agents: $4/$20, 20% less than Opus 5 |
+| **Fable 5.1** | Genuinely hard problems: Mythos-class capability above Opus at $10/$50 |
 | **Haiku 4.5** | Fast, lightweight tasks — quick questions, doc updates ($1/$5, 200K context) |
 
-> Opus 4.7 / 4.6 and Sonnet 4.6 are now *legacy models* (still available via API and `/model`); Opus 4.1 retires August 5, 2026. **Mythos 5** is the same underlying model as Fable 5 with fewer safeguards — invitation-only for approved organizations via Project Glasswing.
+> Opus 5, Opus 4.8, Opus 4.7, Opus 4.6, Opus 4.5, Sonnet 5, Sonnet 4.6, and Fable 5 are now *legacy models* (still available); Opus 4.1 [retired on August 5, 2026](https://platform.claude.com/docs/en/about-claude/model-deprecations), except on Bedrock and Google Cloud. Sonnet 5's $2/$10 intro price was made permanent on August 10, 2026, so the planned September 1, 2026 rise to $3/$15 never happened. **Mythos 5** (invitation-only via Project Glasswing) shares Fable 5's specs and pricing, and **Mythos 5.1** is the same model as Fable 5.1 with different safeguards, available only through Anthropic's trusted access programs.
 >
 > *[→ Full specs, capabilities, and pricing in `docs/reference/models.md`](docs/reference/models.md)*
 
@@ -108,10 +110,10 @@ Three launches landed in quick succession this summer: **Claude Opus 4.8** (May 
 #### 1. Install
 
 ```bash
-npm install -g @anthropic-ai/claude-code
+curl -fsSL https://claude.ai/install.sh | bash
 ```
 
-> Requires Node.js 18+. For other install methods (Homebrew, curl, native binary), see the [official install guide](https://code.claude.com/docs/en/setup).
+> This is the recommended native install for macOS, Linux, and WSL, and it updates itself in the background. On Windows, use the PowerShell or CMD command from the [official install guide](https://code.claude.com/docs/en/setup). Alternatives: Homebrew, WinGet, and npm (`npm install -g @anthropic-ai/claude-code`, which [requires Node.js 22+](https://code.claude.com/docs/en/setup#install-with-npm)).
 
 #### 2. Authenticate
 
@@ -156,7 +158,7 @@ This repo's [`.claude/`](.claude/) directory is a **working, runnable** Claude C
 | [`.claude/agents/`](.claude/agents) | 5 subagents, plus [10 more role prompts](#3-specialized-subagents--drop-in-role-prompts) in `specialized-agents/` | You want specialists without authoring role prompts — they double as [Agent Teams](#agent-teams-experimental) teammates |
 | [`.claude/workflows/`](.claude/workflows) | A [dynamic workflow](#dynamic-workflows) — `/stale-docs-audit` fans agents across your docs, then refutes its own findings | You want a real script to read before writing your own |
 | [`.claude/hooks/`](.claude/hooks) | Python hooks — `post_tool_use.py`, `notification.py`, `stop.py`, `subagent_stop.py` | You want [lifecycle automation](#hooks) (needs [`uv`](https://docs.astral.sh/uv/getting-started/installation/)) |
-| [`.claude/settings.json`](.claude/settings.json) | Permissions + hook wiring | You're copying the hooks — swap the hardcoded `uv` path for `$(which uv)` |
+| [`.claude/settings.json`](.claude/settings.json) | Permissions + hook wiring | You're copying the hooks (they call `uv run` with `$CLAUDE_PROJECT_DIR`, so `uv` just needs to be on your `PATH`) |
 
 ```bash
 git clone --depth 1 https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know /tmp/cc-guide
@@ -176,10 +178,10 @@ cp -r /tmp/cc-guide/.claude/commands/pr.md  your-project/.claude/commands/   # t
 > Versatile workflow for complex problems.
 
 - **Explore:** Read relevant files/images/URLs; use subagents for verification. Do **not code yet**.  
-- **Plan:** Ask Claude to make a plan. Use `"think"`, `"think hard"`, `"think harder"`, or `"ultrathink"` to nudge depth in the prompt — see [Effort levels](#effort-levels) for the full reasoning dial. Optionally save the plan for future reference.  
+- **Plan:** Ask Claude to make a plan. Add `ultrathink` to the prompt for deeper reasoning on that turn; Claude Code [recognizes only `ultrathink`](https://code.claude.com/docs/en/model-config#use-ultrathink-for-one-off-deep-reasoning) and passes "think", "think hard", or "think harder" through as ordinary prompt text. See [Effort levels](#effort-levels) for the full reasoning dial. Optionally save the plan for future reference.  
 - **Code:** Implement the solution; verify reasonableness as you go.  
 - **Commit:** Commit results, create pull requests, update READMEs/changelogs.
-- Claude has two default modes: `Plan Mode` and `Accept Edits Mode`. You can toggle between them using the `Shift + Tab` keys.
+- Claude Code has six [permission modes](https://code.claude.com/docs/en/permission-modes): `default` (labeled Manual), `acceptEdits`, `plan`, `auto`, `dontAsk`, and `bypassPermissions`. Press `Shift + Tab` to cycle `default` → `acceptEdits` → `plan`, followed by `bypassPermissions` and `auto` when they're available (`dontAsk` is never in the cycle). With Claude Code v2.1.283 or later, `auto` is the built-in starting mode for interactive terminal and VS Code sessions; `--permission-mode` or `permissions.defaultMode` can choose another.
     - ![Plan Mode](Images/plan-mode.png)
     - ![Accept Edit Mode](Images/accept-edit-mode.png)
 
@@ -215,18 +217,18 @@ cp -r /tmp/cc-guide/.claude/commands/pr.md  your-project/.claude/commands/   # t
 
 > **Mental model:** Effort is a **behavioural dial**, not a token budget — it shifts thinking depth, tool-call appetite, response length, and how persistently Claude pushes through multi-step work. Higher ≠ smarter; context quality often matters more.
 
-**The API knows 5 levels** (`low` → `max`, default `high`); **Claude Code adds a sixth:**
+**The API knows 5 levels** (`low` → `max`; the default depends on the model); **Claude Code adds an `ultracode` toggle on top:**
 
 | Level | Reach for it when… |
 |---|---|
 | `low` | Fast interactive queries you're steering — file renames, simple greps |
 | `medium` | General coding, small refactors, autonomous sessions where the plan is clear |
-| `high` | Multi-file refactors, complex debugging — the default on current models |
-| `xhigh` | Long autonomous agentic sessions (Fable 5, Mythos 5, Opus 4.8/4.7, Sonnet 5) |
+| `high` | Multi-file refactors, complex debugging. Claude Code's default on most effort models (Opus 5.5 and Sonnet 5.5 default to `medium`, Opus 4.7 to `xhigh`) |
+| `xhigh` | Long autonomous agentic sessions (Fable 5.1/5, Opus 5.5/5/4.8/4.7, Sonnet 5.5/5) |
 | `max` | Architecture, subtle bugs, security review — genuinely hard problems only. Session-only |
-| `ultracode` *(Claude Code only)* | `xhigh` reasoning **plus** automatic multi-agent [workflow orchestration](https://code.claude.com/docs/en/workflows). Session-only |
+| `ultracode` *(Claude Code setting, not an effort level)* | Automatic multi-agent [workflow orchestration](https://code.claude.com/docs/en/workflows) at whatever effort the session runs (v2.1.284+); `--effort ultracode` also sets `xhigh`. Save it with the [`ultracode` setting](https://code.claude.com/docs/en/settings-reference#ultracode) |
 
-**Current defaults (July 2026):** Opus 4.8 → `high` on all surfaces; Sonnet 5 → `high` on API and Claude Code. Check yours with `/effort`. *(Historical footnote: Claude Code v2.1.117, April 2026, first standardized Pro/Max defaults to `high` after the March "nerfed medium" episode.)*
+**[Defaults in Claude Code](https://code.claude.com/docs/en/model-config#adjust-effort-level) (v2.1.289):** Opus 5.5 and Sonnet 5.5 → `medium`; Opus 4.7 → `xhigh`; every other effort model, including Fable 5.1, Opus 4.8, and Sonnet 5 → `high`. Haiku 4.5 has no effort setting. Check yours with `/effort`. *(Historical footnote: Claude Code v2.1.117, April 2026, first standardized Pro/Max defaults to `high` after the March "nerfed medium" episode.)*
 
 **Setting it, in order of persistence:**
 
@@ -236,12 +238,12 @@ cp -r /tmp/cc-guide/.claude/commands/pr.md  your-project/.claude/commands/   # t
 
 # This session — slider with no args, level name with arg
 /effort xhigh
-/effort ultracode               # xhigh + automatic multi-agent workflows
+/effort ultracode               # automatic multi-agent workflows; keeps your effort level (v2.1.284+)
 /effort auto                    # reset to model default
 
 # All sessions (low/medium/high/xhigh) — add this key to .claude/settings.json:
 #   "effortLevel": "high"
-# max and ultracode are session-only by design and can't be persisted.
+# max can't be saved here; ultracode has its own "ultracode" setting.
 ```
 
 > ⚠️ **Two gotchas worth knowing:**
@@ -296,9 +298,9 @@ echo "Analyze this code for performance issues and suggest optimizations:" \
 
 > ⚠️ **Security:** Skills are executable instructions running with your shell permissions. Read every third-party skill before adding it — exactly like reviewing a shell script before sourcing it.
 
-![Skill resolution: typing /name or Claude matching a description both enter one lookup order — project .claude/, then user ~/.claude/, then plugins, then built-in, first match wins. Both .claude/commands/name.md and .claude/skills/name/SKILL.md create the same /name command.](Images/skill-resolution.svg)
+![Skill resolution: typing /name or Claude matching a description both enter one lookup order: personal ~/.claude/, then project .claude/, then plugins (namespaced as /plugin-name:skill-name), then built-in, first match wins. Enterprise skills beat both personal and project. Both .claude/commands/name.md and .claude/skills/name/SKILL.md create the same /name command.](Images/skill-resolution.svg)
 
-Project beats user beats built-in — which is how this repo's custom `/review` deliberately shadows the built-in one. Slash skills load on `/` autocomplete; Agent Skills preload only their metadata and read the body on demand. [Full lookup table →](docs/skills.md#where-claude-looks)
+On a name clash, enterprise beats personal (`~/.claude/`) and personal beats project (`.claude/`); a local skill replaces a bundled skill of the same name, or (in a local terminal session) a built-in command, but not its aliases; plugin skills are namespaced as `/plugin-name:skill-name`, so both load ([official rules](https://code.claude.com/docs/en/skills#resolve-skills-that-share-a-name)). Slash skills load on `/` autocomplete; Agent Skills preload only their metadata and read the body on demand. [Full lookup table →](docs/skills.md#where-claude-looks)
 
 #### Your first skill in 3 minutes
 
@@ -397,7 +399,7 @@ Hooks live in settings files at four scopes (later overrides earlier):
 2. Delete the hook scripts you don't need; keep the rest.
 3. Install [`uv`](https://docs.astral.sh/uv/getting-started/installation/) (required to run the Python hook scripts).
 4. Copy `.claude/settings.json` into your project's `.claude/` folder.
-5. In `settings.json`, replace any hardcoded `uv` path with the output of `$(which uv)`.
+5. Make sure `uv` is on your `PATH`: the hook commands in `settings.json` run `uv run "$CLAUDE_PROJECT_DIR"/.claude/hooks/...`, so no paths need editing.
 
 ```text
 project-root/
@@ -425,7 +427,7 @@ Hooks run in response to various events within Claude Code's lifecycle:
 - **`TeammateIdle`**: Runs when an agent teammate becomes idle (Agent Teams) — exit code 2 sends the teammate back to work.
 - **`TaskCompleted`**: Runs when a task is marked as completed — exit code 2 blocks the completion.
 
-> These are the most-used events. The full catalog is **30 events** (SubagentStart, PermissionRequest, FileChanged, WorktreeCreate, PostCompact, …) — see the [official hooks reference](https://code.claude.com/docs/en/hooks).
+> These are the most-used events. The full catalog is **33 events** as of October 4, 2026 (SubagentStart, PermissionRequest, FileChanged, WorktreeCreate, PostCompact, …); see the [official hooks reference](https://code.claude.com/docs/en/hooks).
 
 #### Hook input
 
@@ -587,8 +589,6 @@ frontend-engineer address the review feedback.
 
 <img src="Images/Orchestration.png" alt="Canvas board of the ten role prompts, fanning out from a general-purpose agent" width="600">
 
-> 📐 That board is [`specialized-agents/agent-orchestration-workflow.canvas`](specialized-agents/agent-orchestration-workflow.canvas) — open it in [Obsidian](https://obsidian.md/) or any canvas-compatible viewer to read the full prompts side by side.
->
 > 💡 The same prompts work as **Agent Teams teammates** — see [Agent Teams](#agent-teams-experimental).
 
 ---
@@ -707,11 +707,11 @@ Claude Code grew a set of orchestration features in mid-2026 that compose with e
 |---|---|---|
 | **Cloud code review** | `/code-review ultra` runs a multi-agent review in the cloud (alias `/ultrareview` — 3 free runs on Pro/Max, then usage credits); `claude ultrareview` runs it non-interactively for CI | [commands](https://code.claude.com/docs/en/commands) |
 | **Routines** | `/schedule` (alias `/routines`) runs scheduled agents on Anthropic-managed cloud infrastructure; `/loop` and the Cron tools cover local scheduling | [scheduled tasks](https://code.claude.com/docs/en/scheduled-tasks) |
-| **Artifacts** *(beta)* | Publish live, shareable web pages to claude.ai straight from the CLI — Pro/Max/Team/Enterprise, CSP-sandboxed, 16 MiB limit | [artifacts](https://code.claude.com/docs/en/artifacts) |
+| **Artifacts** | Publish live, shareable web pages to claude.ai straight from the CLI (Pro/Max/Team/Enterprise, CSP-sandboxed, 16 MiB limit) | [artifacts](https://code.claude.com/docs/en/artifacts) |
 | **Auto memory** | On by default — Claude keeps per-project memory in `~/.claude/projects/<project>/memory/` with a `MEMORY.md` index; manage with `/memory` | [memory](https://code.claude.com/docs/en/memory) |
 | **Claude in Chrome** | Browser-driving agent, GA since v2.1.198 (July 1, 2026) | — |
 
-Subagents got sharper too: they run **in the background by default** (v2.1.198), can nest **5 levels deep** (v2.1.172), and `claude agents` opens a live multi-agent dashboard (Research Preview). The `/agents` setup wizard is gone — define agents by editing `.claude/agents/` directly, or ask Claude to do it.
+Subagents got sharper too: they run **in the background by default** (v2.1.198), can nest **[up to three layers](https://code.claude.com/docs/en/sub-agents#let-subagents-spawn-their-own-subagents)** below the main conversation by default (v2.1.219; set `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=1` to turn nesting off), and `claude agents` opens a live multi-agent dashboard (Research Preview). The `/agents` setup wizard is gone: define agents by editing `.claude/agents/` directly, or ask Claude to do it.
 
 ---
 
@@ -751,24 +751,15 @@ Install from the [registry](https://registry.modelcontextprotocol.io/) or follow
 |---|---|---|---|
 | **context-mode** | Curates and ships project context (rules, files, conventions) on demand | Multi-repo setups wanting consistent context without hand-rolled CLAUDE.md plumbing | [mksglu/context-mode](https://github.com/mksglu/context-mode) |
 | **Shadcn** | Pulls shadcn/ui component source into the session for accurate scaffolding | Frontend work in a shadcn/ui codebase | [ui.shadcn.com/docs/mcp](https://ui.shadcn.com/docs/mcp) |
-| **LangSmith** | Trace, evaluate, and debug LLM apps from inside Claude Code | Building on LangChain / LangGraph and want observability without leaving the terminal | [langchain-ai/langsmith-mcp-server](https://github.com/langchain-ai/langsmith-mcp-server) |
 | **TrustGraph** | Knowledge-graph-backed RAG with multi-source ingestion and graph-aware retrieval | Advanced RAG where flat vector search isn't enough — entity-rich corpora, agentic retrieval | [trustgraph-ai/trustgraph](https://github.com/trustgraph-ai/trustgraph) |
 
 #### The N×M problem MCP solves
 
-![N×M problem before MCP](Images/MCP/mcp-1.png)
-
 Before MCP, every AI app needed a custom integration for every tool: `n` apps × `m` tools = `n × m` brittle one-off connections. Teams inside the same company would reinvent the same Slack/GitHub/Postgres integration over and over.
-
-![Without MCP vs With MCP](Images/MCP/mcp-2.png)
 
 MCP collapses this to **N + M**: each app implements MCP once, each tool exposes MCP once, and any combination works together. Same pattern Web APIs gave us for app-to-server and LSP gave us for editor-to-language tooling.
 
-![The evolution of protocols](Images/MCP/mcp-3.png)
-
 #### Three pillars
-
-![MCP three pillars](Images/MCP/mcp-4.png)
 
 Each pillar makes ownership explicit, so it's always clear who's driving:
 
@@ -780,8 +771,6 @@ Each pillar makes ownership explicit, so it's always clear who's driving:
 
 #### The MCP Registry & self-discovering agents
 
-![Agent learning on the fly](Images/MCP/mcp-5.png)
-
 The [official MCP Registry](https://registry.modelcontextprotocol.io/) (public preview since September 2025) is the app-store-equivalent for MCP servers. An agent that needs to check Grafana logs but doesn't have a Grafana tool wired up can ping the registry, find the verified server, install it, and continue — teaching itself a new capability on the fly.
 
 #### The MCP ecosystem today
@@ -789,7 +778,7 @@ The [official MCP Registry](https://registry.modelcontextprotocol.io/) (public p
 - **Vendor-neutral governance** — MCP was donated to the [Agentic AI Foundation](https://www.anthropic.com/news/donating-the-model-context-protocol-and-establishing-of-the-agentic-ai-foundation) (a Linux Foundation directed fund) in December 2025, alongside Block's goose and OpenAI's AGENTS.md.
 - **Registry** — search official and community servers at [registry.modelcontextprotocol.io](https://registry.modelcontextprotocol.io/) (still officially in preview).
 - **MCP Apps** — the first official MCP extension (January 2026): servers can ship interactive UI components in sandboxed iframes, not just text tools.
-- **Spec cadence** — current ratified spec is 2025-11-25; the [2026-07-28 release candidate](https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/) (stateless core, official extensions) is the largest revision since launch.
+- **Spec cadence**: the current spec is 2026-07-28, [released on July 28, 2026](https://blog.modelcontextprotocol.io/posts/2026-07-28/) (stateless core, official extensions), the largest revision since launch; it succeeded 2025-11-25.
 - **Scale** — 97M+ monthly SDK downloads and ~10,000 active servers as of December 2025.
 
 ```bash
@@ -805,14 +794,14 @@ claude mcp login <server>                          # OAuth sign-in (v2.1.186+)
 <a id="fast-mode"></a>
 ### Fast Mode ↯
 
-`/fast` toggles fast mode — up to **2.5× faster output at 2× the price**, running on **Opus 4.8** (the default fast-mode model since v2.1.154). CLI-only, requires v2.1.36+. The **↯** indicator confirms it's on. On subscription plans, fast mode draws from usage credits rather than plan limits.
+`/fast` toggles fast mode, a [research preview](https://code.claude.com/docs/en/fast-mode): up to **2.5× faster output at 2× the price**. Since v2.1.280 it runs on **Opus 5.5** by default; Opus 5 and Opus 4.8 also support it ($10/$50 per MTok in fast mode), Sonnet and Haiku don't. It isn't CLI-only: the VS Code extension has a **Toggle fast mode** command, and claude.ai/code has a toggle in the model menu. The **↯** indicator confirms it's on. On subscription plans, fast mode draws from usage credits rather than plan limits.
 
-| | Standard Opus 4.8 | Fast Mode (Opus 4.8) |
+| | Standard Opus 5.5 | Fast Mode (Opus 5.5) |
 |---|---|---|
-| Input (per MTok) | $5 | $10 (2×) |
-| Output (per MTok) | $25 | $50 (2×) |
+| Input (per MTok) | $4 | $8 (2×) |
+| Output (per MTok) | $20 | $40 (2×) |
 
-> ⚠️ **Fast mode on older Opus models is going away.** Opus 4.7 fast ($30/$150) was deprecated June 25 and is **removed on July 24, 2026**; Opus 4.6 has silently run at standard speed since June 29. Don't build workflows on either.
+> ⚠️ **Fast mode on older Opus models is gone.** Opus 4.7 fast was deprecated on June 25, 2026 and **removed on July 24, 2026** (v2.1.219), and Opus 4.6 doesn't support fast mode either.
 
 ```bash
 /fast                                    # toggle on (↯ appears)
@@ -862,10 +851,10 @@ A few of the most-asked questions:
 Anthropic no longer publishes exact counts — third-party estimates put Pro at roughly ~45 messages per 5-hour window, and Claude Code's five-hour rate limits were **doubled on May 6, 2026** ([announcement](https://www.anthropic.com/news/higher-limits-spacex)). [Details →](docs/reference/faq.md#q-how-many-messages-do-i-get-on-the-pro-plan)
 
 **What's the difference between Pro, Max 5x, and Max 20x?**
-Pro $20/mo, Max 5x from $100/mo (5× usage), Max 20x $200/mo (20× usage). All paid tiers include Claude Code and the current lineup — Fable 5 draws usage credits rather than plan limits. [Pricing details →](docs/reference/faq.md#q-what-are-the-claude-subscription-plans)
+Pro $20/mo, Max 5x from $100/mo (5× usage), Max 20x $200/mo (20× usage). All paid tiers include Claude Code and the current lineup; depending on your plan and seat tier, [Fable usage can bill to usage credits](https://code.claude.com/docs/en/model-config#fable-and-usage-credits) instead of plan limits. [Pricing details →](docs/reference/faq.md#q-what-are-the-claude-subscription-plans)
 
 **Should I use Fast Mode?**
-It now runs on Opus 4.8 at 2× price for up to 2.5× output speed — an easy call when latency matters. [More →](docs/reference/faq.md#q-what-is-fast-mode-and-when-should-i-use-it)
+Since v2.1.280 it defaults to Opus 5.5 (Opus 5 and Opus 4.8 also support it), at 2× price for up to 2.5× output speed: an easy call when latency matters. It's a research preview. [More →](docs/reference/faq.md#q-what-is-fast-mode-and-when-should-i-use-it)
 
 **What's the difference between custom slash commands and skills?**
 Officially one system now — `.claude/commands/deploy.md` and `.claude/skills/deploy/SKILL.md` both create `/deploy`. See [Skills FAQ in `docs/skills.md`](docs/skills.md#skills-faq).
@@ -877,21 +866,22 @@ Yes — 1M context is standard on Sonnet 5, Opus 4.8, and Fable 5, with no long-
 
 <a id="updates--deprecations-february-2026"></a>
 <a id="updates--deprecations"></a>
+<a id="updates--deprecations-as-of-july-2026"></a>
 
-### Updates & Deprecations (as of July 2026)
+### Updates & Deprecations
 
 *[→ Full changelog in `docs/reference/changelog.md`](docs/reference/changelog.md)* — major changes, new features, and deprecations through early July 2026 (Claude Code v2.1.201).
 
 **Recent highlights:**
 
-- 🆕 **Claude Sonnet 5** *(June 30, 2026)* — Claude Code's new default model; 1M-token context standard.
+- 🆕 **Claude Sonnet 5** *(June 30, 2026)*: 1M-token context standard; the default model on Pro and Team Standard until v2.1.280, when **Claude Opus 5.5** *(September 22, 2026)* became Claude Code's default on Pro, Max, Team, Enterprise, and the Anthropic API.
 - 🆕 **Claude Opus 4.8** *(May 28, 2026)* — Opus flagship at unchanged pricing; **Claude Fable 5 / Mythos 5** *(June 9, 2026)* opened the Mythos-class tier above Opus.
 - 🆕 **Dynamic workflows + `ultracode`** — Claude orchestrates tens to hundreds of background subagents; watch with `/workflows`.
-- 🆕 **Artifacts** *(beta)* — publish live web pages to claude.ai from the CLI.
+- 🆕 **Artifacts** *([generally available](https://code.claude.com/docs/en/whats-new/2026-w27) the week of June 29, 2026)*: publish live web pages to claude.ai from the CLI.
 - 🆕 **v2.1.198** *(July 1, 2026)* — Claude in Chrome GA, subagents run in the background by default, `/agents` wizard removed.
 - 📝 **Renames** — `/cost` + `/stats` → `/usage`; `/extra-usage` → `/usage-credits`; permission mode "default" → "Manual" (v2.1.200); `/simplify` → `/code-review` (then reintroduced as a cleanup-only review).
 - 📝 **Limits** — five-hour rate limits doubled for Pro/Max/Team on May 6, 2026.
-- ❌ **Deprecations** — Opus 4.1 retires Aug 5, 2026; Opus 4.7 fast mode removed July 24, 2026.
+- ❌ **Deprecations**: Opus 4.1 retired on August 5, 2026; Opus 4.7 fast mode was removed on July 24, 2026.
 
 > 💡 For Anthropic's authoritative release notes, see the [Claude Code CHANGELOG](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md) and the [weekly "What's new" digests](https://code.claude.com/docs/en/whats-new/).
 
@@ -900,7 +890,7 @@ Yes — 1M context is standard on Sonnet 5, Opus 4.8, and Fable 5, with no long-
 ### 📖 Reading tips
 
 - **Reading on GitHub?** The in-page anchor links work natively. Tap the table-of-contents button (top-left of the file view) for fast jumping.
-- **Want a richer markdown view?** This repo plays well with [Obsidian](https://obsidian.md/) — handy if you also want to open the `specialized-agents/agent-orchestration-workflow.canvas` flowchart.
+- **Want a richer markdown view?** This repo plays well with [Obsidian](https://obsidian.md/).
 - **On a phone?** Stick to the [Choose your path](#-choose-your-path) section at the top; the wider tables read best on desktop.
 
 ---
@@ -923,4 +913,6 @@ A curated set of pointers — official Anthropic docs, MCP resources, hooks exam
 
 > Features, pricing, and availability change frequently. Always check the [official Claude Code documentation](https://code.claude.com/docs/en/overview) for the most current information.
 
-*Last reviewed July 2026 · Spotted something stale? [Open an issue](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues) or send a PR — see [`CONTRIBUTING.md`](CONTRIBUTING.md).*
+*Last full review: July 2026. On October 4, 2026, specific facts were corrected against Claude Code v2.1.289 (latest channel; stable is v2.1.285): install method, model lineup and default model, Sonnet 5 pricing, Opus 4.1 retirement, effort defaults and ultracode, think keywords, permission modes, skill precedence, hook event count, subagent nesting, Artifacts status, and fast mode; the MCP spec status was also updated. The rest of the guide was not re-verified. Spotted something stale? [Open an issue](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues) or send a PR (see [`CONTRIBUTING.md`](CONTRIBUTING.md)).*
+
+*Mascot: [`Images/claude-jumping.svg`](Images/claude-jumping.svg) comes from [shanraisshan/claude-code-best-practice](https://github.com/shanraisshan/claude-code-best-practice), Copyright (c) 2025-2026 Shayan Rais, used under the [MIT License](https://github.com/shanraisshan/claude-code-best-practice/blob/main/LICENSE).*

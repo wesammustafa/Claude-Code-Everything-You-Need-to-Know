@@ -1,5 +1,4 @@
 ---
-name: pr
 description: Create a branch, split changes into logical commits, and open a pull request
 ---
 

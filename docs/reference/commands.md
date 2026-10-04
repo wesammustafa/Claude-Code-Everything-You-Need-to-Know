@@ -23,7 +23,7 @@ The most useful built-in slash commands, plus the file-format spec for custom co
 | `/doctor` | Check the health of your Claude Code installation |
 | `/fork` | Copy the current conversation into a new background session and keep working here. Pass a prompt and the copy starts on it immediately |
 | `/effort` | Set reasoning effort (`low` / `medium` / `high` / `xhigh` / `max` / `ultracode`); no args opens an interactive slider; `/effort auto` resets to the model default. See [Effort levels](effort-levels.md) |
-| `/fast` | Toggle Fast Mode — Opus 4.8 at 2× price for up to 2.5× output speed |
+| `/fast` | Toggle [Fast Mode](https://code.claude.com/docs/en/fast-mode) — Opus 5.5 by default (v2.1.280 and later) at 2× price for up to 2.5× output speed |
 | `/goal` | Set a standing goal for the session |
 | `/help` | Get usage help |
 | `/hooks` | Interactive menu for hook configuration |
@@ -35,7 +35,6 @@ The most useful built-in slash commands, plus the file-format spec for custom co
 | `/model` | Switch models — your selection persists as the default for new sessions since v2.1.153 (press `s` for session-only) |
 | `/permissions` | View or update [permissions](https://code.claude.com/docs/en/iam) |
 | `/plugin` | Manage plugins and plugin marketplaces (`/plugin list`, `/plugin marketplace add …`) |
-| `/pr_comments` | View pull request comments |
 | `/reload-skills` | Reload skill files without restarting the session |
 | `/rename` | Auto-generate descriptive session names |
 | `/review` | Request code review |
@@ -46,11 +45,10 @@ The most useful built-in slash commands, plus the file-format spec for custom co
 | `/status` | View account and system statuses |
 | `/subtask` | Fork a subagent that inherits your **full conversation context** instead of starting fresh (with agent view off, this is `/fork` instead) |
 | `/tasks` | List the current session's background work — subagents, workflows, background commands — and attach to or stop any of it |
-| `/teleport` *(alias `/tp`)* | Send current session to claude.ai/code for web access |
+| `/teleport` *(alias `/tp`)* | Pull a cloud session into this terminal |
 | `/terminal-setup` | Configure terminal key bindings (iTerm2/VSCode) |
 | `/usage` | Show token and plan usage (merged `/cost` + `/stats` in v2.1.118) |
 | `/usage-credits` | Manage usage credits (renamed from `/extra-usage` in v2.1.144) |
-| `/vim` | Enter vim mode for alternating insert and command modes |
 | `/workflows` | List and watch [dynamic workflow](../workflows.md) runs — drill into phases and agents, pause, stop, or press `s` to save a run's script as a reusable command |
 
 > 💡 **Day 1 essentials:** start with `/init`, `/help`, `/clear`, `/usage`, and `/model`.
