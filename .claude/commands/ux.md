@@ -1,5 +1,4 @@
 ---
-name: ux
 description: User Experience Designer & UI Specialist persona for design-focused tasks
 ---
 

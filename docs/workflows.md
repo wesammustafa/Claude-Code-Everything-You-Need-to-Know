@@ -87,10 +87,10 @@ Claude Code highlights the keyword and Claude writes a script instead of working
 
 ```bash
 /effort ultracode                 # this session
-claude --effort ultracode         # from launch (v2.1.203+)
+claude --effort ultracode         # from launch (v2.1.203+); also sets xhigh
 ```
 
-`ultracode` combines `xhigh` reasoning with automatic workflow orchestration: Claude plans a workflow for **every substantive task** instead of waiting to be asked. One request can become several workflows in a row — one to understand the code, one to make the change, one to verify it.
+`ultracode` turns on automatic workflow orchestration at whatever effort level the session runs (v2.1.284+; earlier versions also forced `xhigh`): Claude plans a workflow for **every substantive task** instead of waiting to be asked. One request can become several workflows in a row — one to understand the code, one to make the change, one to verify it.
 
 That means every request costs more and takes longer. It resets when you start a new session; drop back with `/effort high` for routine work. Only offered on models that support `xhigh`.
 
@@ -100,7 +100,7 @@ The prompt shows the planned phases, plus **Yes, run it** / **Yes, and don't ask
 
 | Permission mode | When you're prompted |
 |---|---|
-| Manual (default), accept edits | Every run, unless you chose "don't ask again" for that workflow in this project |
+| Manual (`default`), accept edits | Every run, unless you chose "don't ask again" for that workflow in this project |
 | Auto | First launch only — a **Yes** records consent in user settings. Skipped entirely when `ultracode` is on |
 | Bypass permissions, `claude -p`, Agent SDK | Never — the run starts immediately |
 

@@ -30,7 +30,7 @@ This directory contains comprehensive documentation for the four core Model Cont
 
 #### Web Automation
 - **Playwright**: Browser control and testing
-- **Memory**: Store authentication and workflow preferences
+- **Memory**: Store workflow preferences
 
 #### Research & Analysis
 - **Serena**: Analyze code structure and dependencies
@@ -61,7 +61,7 @@ Use case: Enhanced context awareness
 ```
 Use case: Automated testing workflows
 - Playwright executes browser automation
-- Memory remembers test patterns and credentials
+- Memory remembers test patterns (never credentials: it writes plain, unencrypted JSON to a local file)
 ```
 
 **4. All Four Together**
@@ -131,7 +131,7 @@ The **[MCP Registry](https://registry.modelcontextprotocol.io/)** is the officia
 
 ### Current MCP protocol features
 
-The current ratified spec revision is **2025-11-25**, which added:
+The previous ratified spec revision, **2025-11-25**, added:
 - **OIDC discovery** for authorization
 - **Icons** for servers and their tools
 - **URL elicitation** for gathering user input
@@ -141,7 +141,7 @@ The current ratified spec revision is **2025-11-25**, which added:
 
 **MCP Apps** — interactive HTML UIs rendered in sandboxed iframes — became the first official MCP extension on January 26, 2026 ([announcement](https://blog.modelcontextprotocol.io/posts/2026-01-26-mcp-apps/)).
 
-**Coming up:** a release candidate for the next spec revision — the largest since MCP launched — finalizes on **July 28, 2026**. It introduces a stateless core and official extensions ([release candidate](https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/)).
+**Now current:** the next spec revision, **2026-07-28**, was released on **July 28, 2026** ([announcement](https://blog.modelcontextprotocol.io/posts/2026-07-28/)), and was the [current protocol version](https://modelcontextprotocol.io/specification/versioning) as of October 4, 2026. Its [release candidate](https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/) introduced a stateless core and official extensions.
 
 ### Agentic AI Foundation
 

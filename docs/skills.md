@@ -6,7 +6,7 @@
 
 > ⚠️ **Security:** Skills are executable instructions running with your shell permissions. Only install skills from trusted sources, and read the file before adding it to your project — exactly like reviewing a shell script before sourcing it.
 
-![Skill resolution: typing /name or Claude matching a description both enter one lookup order — project .claude/, then user ~/.claude/, then plugins, then built-in, first match wins. Both .claude/commands/name.md and .claude/skills/name/SKILL.md create the same /name command.](../Images/skill-resolution.svg)
+![Skill resolution: typing /name or Claude matching a description both enter one lookup order: user ~/.claude/, then project .claude/, then plugins (namespaced as /plugin:name), then built-in, first match wins. Both .claude/commands/name.md and .claude/skills/name/SKILL.md create the same /name command.](../Images/skill-resolution.svg)
 
 <a id="where-claude-looks"></a>
 
@@ -16,12 +16,12 @@ First match wins:
 
 | # | Location | Scope |
 |---|---|---|
-| 1 | `.claude/commands/name.md` or `.claude/skills/name/SKILL.md` | Project — in nested `.claude/` setups, the one closest to your cwd wins |
-| 2 | `~/.claude/commands/…` or `~/.claude/skills/…` | User — all your projects |
-| 3 | Plugin-provided skills | Namespaced as `/plugin:name` |
+| 1 | `~/.claude/commands/…` or `~/.claude/skills/…` | User: all your projects |
+| 2 | `.claude/commands/name.md` or `.claude/skills/name/SKILL.md` | Project: same-named skills in nested `.claude/skills/` folders both stay available, the nested one under a path-qualified name such as `/apps/web:name` |
+| 3 | Plugin-provided skills | Namespaced as `/plugin:name`, so on a name clash both load |
 | 4 | Built-in skills | Shipped with Claude Code |
 
-Project beats user beats built-in, which is how this repo's custom `/review` deliberately shadows the built-in one.
+User beats project, enterprise skills beat both, and a skill beats a same-named file in `.claude/commands/`. Your skill replaces a same-named bundled skill (or, in a local terminal session, a built-in command), but not its aliases ([official rules](https://code.claude.com/docs/en/skills#resolve-skills-that-share-a-name)). This repo's custom `/review` was meant to shadow the built-in one, but since v2.1.223 the built-in `/review` is an alias of the bundled `/code-review` skill, and the docs don't say whether a project `review` file overrides that alias.
 
 ## Two flavors of skills
 
@@ -360,7 +360,7 @@ Always review `.claude/commands/` files from cloned repositories before invoking
 
 **Q: Can I modify built-in skills?**
 
-No. Built-in skills (`/dataviz`, `/debug`, `/keybindings-help`, …) ship with Claude Code and cannot be modified directly. You can create your own custom skill with a similar name for custom behavior — project-level skills win name collisions (this repo's custom `/review` intentionally shadows the built-in `/review` that way).
+No. Built-in skills (`/dataviz`, `/debug`, `/keybindings-help`, …) ship with Claude Code and cannot be modified directly. You can create your own custom skill with a similar name for custom behavior: your skill replaces a same-named bundled skill (or, in a local terminal session, a built-in command), but not its aliases (this repo's custom `/review` was meant to shadow the built-in `/review` that way, but since v2.1.223 the built-in `/review` is an alias of `/code-review`, and the docs don't say whether a project `review` file overrides it).
 
 **Q: How do I share skills with my team?**
 
@@ -375,7 +375,7 @@ Yes. Skills are local markdown files read by Claude Code. No network connection 
 
 **Q: What happens if I have two skills with the same name?**
 
-Project skills (`.claude/commands/`) take precedence over global skills (`~/.claude/commands/`). The project-level skill executes.
+Personal skills (`~/.claude/skills/`) take precedence over project skills (`.claude/skills/`). The personal skill executes.
 
 **Q: Can skills accept arguments?**
 
@@ -566,7 +566,7 @@ claude
 
 **3. Wrong skill executes**
 - **Cause:** Name collision between project and global skills
-- **Solution:** Project skills (`.claude/commands/`) take precedence over global
+- **Solution:** Personal skills (`~/.claude/skills/`) take precedence over project skills (`.claude/skills/`)
 
 **4. Skill content ignored**
 - **Cause:** Markdown formatting errors
@@ -746,11 +746,11 @@ A vibrant community has formed around Agent Skills since Anthropic open-sourced 
 | Marketplace | URL | Focus |
 |---|---|---|
 | **SkillHub** | [skillhub.club](https://www.skillhub.club/) | ~100K+ AI-evaluated skills auto-indexed from public GitHub repos. Searchable by category. |
-| **SkillsMP** | [skillsmp.com](https://skillsmp.com/) | Millions of skills aggregated across GitHub (2M+ advertised). Independent (not Anthropic-affiliated). Filters by occupation, popularity, author. |
+| **SkillsMP** | [skillsmp.com](https://skillsmp.com/) | Millions of skills aggregated across GitHub (3M+ advertised as of October 4, 2026). Independent (not Anthropic-affiliated). Filters by occupation, popularity, author. |
 | **Smithery** | [smithery.ai/skills](https://smithery.ai/skills) | Originally an MCP-server registry; now covers Agent Skills too. Includes a CLI for discovery and install. |
 | **skills.sh** | [skills.sh](https://skills.sh/) | Vercel's open agent-skills ecosystem (launched January 2026). |
 
-> 📦 **Official plugin marketplaces:** Claude Code also ships two Anthropic-run plugin marketplaces — *claude-plugins-official* (auto-registered on first launch) and the reviewed community marketplace (`/plugin marketplace add anthropics/claude-plugins-community`). Plugins can bundle skills, commands, agents, hooks, and MCP servers in one install — see the [plugins docs](https://code.claude.com/docs/en/plugins).
+> 📦 **Official plugin marketplaces:** Anthropic publishes [three general-purpose plugin marketplaces](https://code.claude.com/docs/en/plugins/anthropic-marketplaces) for Claude Code: *claude-plugins-official* (auto-registered on first launch), the reviewed community marketplace (`/plugin marketplace add anthropics/claude-plugins-community`), and the demo marketplace in `anthropics/claude-code`. Plugins can bundle skills, commands, agents, hooks, and MCP servers in one install. See the [plugins docs](https://code.claude.com/docs/en/plugins).
 
 > ⚠️ Marketplaces aggregate community content and don't vet every entry. Read `SKILL.md` (and any `scripts/` it references) before installing — the same care you'd apply to a shell script.
 
@@ -897,7 +897,7 @@ The fields worth knowing:
 >
 > For project skills in `.claude/skills/`, `allowed-tools` takes effect once you accept the workspace trust dialog. **A skill can grant itself broad tool access, so read project skills before trusting a repository.**
 
-> ⚠️ **`name` is not the command.** In a project or personal skill, the command comes from the **directory name** (`.claude/skills/deploy/SKILL.md` → `/deploy`) and frontmatter `name` only sets the display label in listings. Only in *plugin* skills does `name` set the last command segment.
+> ⚠️ **`name` and the directory name both work.** In a project or personal skill, frontmatter `name` sets the command the `/` menu shows and that you type (unless another command already uses that name), and the **directory name** also invokes the skill: `.claude/skills/deploy-staging/SKILL.md` with `name: deploy` runs as `/deploy` or `/deploy-staging`. In *plugin* skills, `name` sets the last command segment after the plugin prefix ([skills docs](https://code.claude.com/docs/en/skills)).
 
 > ℹ️ Skill content is loaded **once** — the rendered `SKILL.md` enters the conversation as a single message and stays for the session. Claude does not re-read the file on later turns, so write standing instructions rather than one-time steps. The `allowed-tools` grant, by contrast, clears on your next message.
 

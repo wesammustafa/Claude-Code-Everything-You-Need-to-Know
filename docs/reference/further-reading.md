@@ -48,7 +48,7 @@ Curated links to official docs, deep-dives, and community resources for Claude C
 - [MCP roadmap](https://modelcontextprotocol.io/development/roadmap)
 - [Official MCP servers (GitHub)](https://github.com/modelcontextprotocol/servers)
 - [Registry announcement](https://blog.modelcontextprotocol.io/posts/2025-09-08-mcp-registry-preview/)
-- [2026-07-28 spec release candidate](https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/)
+- [The 2026-07-28 specification](https://blog.modelcontextprotocol.io/posts/2026-07-28/)
 - [Donation to the Agentic AI Foundation](https://www.anthropic.com/news/donating-the-model-context-protocol-and-establishing-of-the-agentic-ai-foundation)
 - [MCP auth specifications](https://auth0.com/blog/mcp-specs-update-all-about-auth/)
 

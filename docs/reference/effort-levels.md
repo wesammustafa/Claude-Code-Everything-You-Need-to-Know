@@ -8,11 +8,11 @@
 
 ## TL;DR
 
-- **The API knows 5 levels:** `low` · `medium` · `high` · `xhigh` · `max`, with `high` as the default.
-- **Claude Code adds a 6th:** `ultracode` — `xhigh` reasoning plus standing permission to orchestrate multi-agent [workflows](https://code.claude.com/docs/en/workflows). It's not an API level.
-- **`max` and `ultracode` are session-only by design** — they can't be persisted in `settings.json`.
-- **`xhigh` is broadly available now:** Fable 5, Mythos 5, Opus 4.8, Opus 4.7, and Sonnet 5 all support it (no longer a single-model exclusive).
-- **Current defaults (July 2026):** Opus 4.8 → `high` on all surfaces; Sonnet 5 → `high` on API and Claude Code.
+- **The API knows 5 levels:** `low` · `medium` · `high` · `xhigh` · `max`, with `high` as the default on most models (`medium` on Opus 5.5, per the [model overview](https://platform.claude.com/docs/en/about-claude/models/overview)).
+- **Claude Code adds `ultracode`:** a separate toggle, not an effort level, that gives Claude standing permission to orchestrate multi-agent [workflows](https://code.claude.com/docs/en/workflows) at the session's effort level (v2.1.284+; `--effort ultracode` also sets `xhigh`). It's not an API level.
+- **`max` is session-only:** `effortLevel` in `settings.json` doesn't accept it. `ultracode` can be saved with its own [`ultracode` setting](https://code.claude.com/docs/en/settings-reference#ultracode).
+- **`xhigh` is broadly available:** as of October 4, 2026, Fable 5.1, Fable 5, Opus 5.5, Sonnet 5.5, Opus 5, Sonnet 5, Opus 4.8, and Opus 4.7 all support it in Claude Code (no longer a single-model exclusive).
+- **Current Claude Code defaults (as of October 4, 2026):** Opus 5.5 and Sonnet 5.5 → `medium`; Opus 4.7 → `xhigh`; every other model that supports effort → `high` ([model config](https://code.claude.com/docs/en/model-config#adjust-effort-level)). On the API, Sonnet 5.5 defaults to `high`.
 - **Context quality often beats more effort.** A model on Low with great context regularly outperforms the same model on Max with poor context.
 - **Higher ≠ always better.** Anthropic's own guidance: `max` shows diminishing returns and is more prone to overthinking on routine work.
 
@@ -39,10 +39,10 @@ Even at low, Claude will still think on sufficiently hard problems — just less
 |---|---|---|---|
 | **Low** | API + Claude Code | Fastest. Skips thinking on simple problems, minimum tool use, terse responses. | Fast interactive queries where you're steering — file renames, simple greps, build commands. |
 | **Medium** | API + Claude Code | Balanced. Thinks when warranted, skips when not. | General coding, small refactors, writing tests, autonomous sessions where the plan is clear. |
-| **High** | API + Claude Code *(default)* | Almost always engages thinking, reads related files unprompted, gives thorough responses. | Multi-file refactors, complex debugging. The default on current models. |
-| **xHigh** | Fable 5, Mythos 5, Opus 4.8/4.7, Sonnet 5 | A notch above high — more thorough reasoning, more willing to explore, more persistent. | Long autonomous agentic sessions. |
+| **High** | API + Claude Code *(default on most models)* | Almost always engages thinking, reads related files unprompted, gives thorough responses. | Multi-file refactors, complex debugging. The Claude Code default on every model that supports effort, except Opus 5.5 and Sonnet 5.5 (`medium`) and Opus 4.7 (`xhigh`). |
+| **xHigh** | Fable 5.1/5, Opus 5.5/5/4.8/4.7, Sonnet 5.5/5 | A notch above high: more thorough reasoning, more willing to explore, more persistent. | Long autonomous agentic sessions. |
 | **Max** | API + Claude Code, session-only | Highest capability, no token constraints on reasoning. | Architecture decisions, subtle bugs, security reviews — genuinely hard problems. Skip for routine work. |
-| **Ultracode** | Claude Code only, session-only | `xhigh` reasoning **plus** automatic multi-agent workflow orchestration — Claude fans work out to background subagents on every substantive task. | Exhaustive audits, migrations, deep research — when thoroughness matters more than token cost. |
+| **Ultracode** | Claude Code only; a toggle, not an effort level | Automatic multi-agent workflow orchestration at the session's effort level (v2.1.284+): Claude fans work out to background subagents on every substantive task. | Exhaustive audits, migrations, deep research — when thoroughness matters more than token cost. |
 
 > ⚠️ **Anthropic's official guidance for `max`:** reserve it for genuinely frontier problems. On most workloads it adds significant cost for relatively small quality gains, and on some structured-output tasks it can lead to overthinking. — [Effort API docs](https://platform.claude.com/docs/en/build-with-claude/effort)
 
@@ -57,7 +57,7 @@ Even at low, Claude will still think on sufficiently hard problems — just less
 | **Fable 5** | `high` | Adaptive thinking always on — it can't be disabled |
 | **Haiku 4.5** | n/a | Effort dial isn't meaningful on Haiku |
 
-> 📜 **History:** effort defaults churned through spring 2026 — dropped to `medium` for all plans in early March (a speed/cost tune that hit quality), then standardized back to `high` everywhere in Claude Code v2.1.117 (April 2026). If a guide tells you Pro/Max users are on a nerfed `medium` default, that's the fossil record — **check `/effort` in your session.**
+> 📜 **History:** effort defaults churned through spring 2026: dropped to `medium` for all plans in early March (a speed/cost tune that hit quality), then standardized back to `high` everywhere in Claude Code v2.1.117 (April 2026). Opus 5.5 (v2.1.280+) and Sonnet 5.5 (v2.1.284+) default to `medium` in Claude Code again, so **check `/effort` in your session.**
 
 ---
 
@@ -117,7 +117,7 @@ Mechanisms, in increasing order of persistence:
 
 # Raise for the session
 /effort xhigh
-/effort ultracode    # xhigh + automatic multi-agent workflows
+/effort ultracode    # automatic multi-agent workflows; keeps your effort level (v2.1.284+)
 ```
 
 To persist a level project-wide, add the key to your existing `.claude/settings.json` (don't overwrite the file):
@@ -128,7 +128,7 @@ To persist a level project-wide, add the key to your existing `.claude/settings.
 }
 ```
 
-> `max` and `ultracode` are session-only by design and cannot be set via `settings.json`.
+> `max` can't be set via `effortLevel` in `settings.json`; `ultracode` has its own `ultracode` setting.
 
 ---
 
@@ -144,7 +144,7 @@ Opus 4.7+, Opus 4.8, and Fable 5 use a tokenizer that produces **~30% more token
 
 ### `ultracode` is not an API level
 
-Setting `effort: "ultracode"` in an API request will fail — it exists only in Claude Code, where it means "xhigh + standing permission to orchestrate workflows."
+Setting `effort: "ultracode"` in an API request will fail — it exists only in Claude Code, where it's a toggle that gives standing permission to orchestrate workflows at the session's effort level.
 
 ---
 
@@ -153,7 +153,7 @@ Setting `effort: "ultracode"` in an API request will fail — it exists only in 
 If you remember nothing else from this page:
 
 1. **Check your current effort with `/effort`** — defaults have churned and your `settings.json` may be stale.
-2. **Stay on the model default (`high`)** unless you have a specific reason to change.
+2. **Stay on the model default (`medium` on Opus 5.5 and Sonnet 5.5, `high` on most other models)** unless you have a specific reason to change.
 3. **Reach for `max` only when the problem genuinely needs it** — architecture, subtle bugs, security review. Skip for routine work.
 4. **Before raising effort, fix context.** Sharper `CLAUDE.md`, atomic plan, named files. ~80% of the time that's the actual fix.
 5. **Plan with Opus at xHigh/Max, execute with Sonnet** at a lower effort when the work is large enough to split.

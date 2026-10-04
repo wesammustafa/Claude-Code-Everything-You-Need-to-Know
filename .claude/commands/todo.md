@@ -1,5 +1,4 @@
 ---
-name: todo
 description: Manage project todos in todos.md file
 ---
 

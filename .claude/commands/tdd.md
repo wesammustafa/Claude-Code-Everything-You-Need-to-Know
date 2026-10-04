@@ -1,5 +1,4 @@
 ---
-name: tdd
 description: Development practices and TDD workflow to follow before starting a feature
 ---
 
