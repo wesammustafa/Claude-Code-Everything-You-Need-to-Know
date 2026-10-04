@@ -753,6 +753,7 @@ Install from the [registry](https://registry.modelcontextprotocol.io/) or follow
 | **Shadcn** | Pulls shadcn/ui component source into the session for accurate scaffolding | Frontend work in a shadcn/ui codebase | [ui.shadcn.com/docs/mcp](https://ui.shadcn.com/docs/mcp) |
 | **LangSmith** | Trace, evaluate, and debug LLM apps from inside Claude Code | Building on LangChain / LangGraph and want observability without leaving the terminal | [langchain-ai/langsmith-mcp-server](https://github.com/langchain-ai/langsmith-mcp-server) |
 | **TrustGraph** | Knowledge-graph-backed RAG with multi-source ingestion and graph-aware retrieval | Advanced RAG where flat vector search isn't enough — entity-rich corpora, agentic retrieval | [trustgraph-ai/trustgraph](https://github.com/trustgraph-ai/trustgraph) |
+| **Agent QA** | Authors, validates, runs and triages YAML tests with natural-language steps for web, Android and iOS through local MCP | Application testing with a configured local dashboard; FSL-1.1-ALv2 | [vostride/agent-qa](https://github.com/vostride/agent-qa) |
 
 #### The N×M problem MCP solves
 
