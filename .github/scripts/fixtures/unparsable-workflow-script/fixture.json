@@ -1,0 +1,5 @@
+{
+  "rule": "static-validation",
+  "expect": "fail",
+  "about": "An example workflow script with a syntax error in its body."
+}

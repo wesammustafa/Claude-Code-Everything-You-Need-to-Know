@@ -1,0 +1,5 @@
+{
+  "rule": "static-validation,inertness,smoke-tests",
+  "expect": "pass",
+  "about": "An inert example kit: a skill without a name (it is optional), an agent, a workflow script, a settings snippet, a hook script and a passing smoke test."
+}

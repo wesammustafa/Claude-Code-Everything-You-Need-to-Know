@@ -1,0 +1,5 @@
+{
+  "rule": "static-validation",
+  "expect": "fail",
+  "about": "An example skill whose frontmatter has a name but no description."
+}

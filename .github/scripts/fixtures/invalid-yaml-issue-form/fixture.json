@@ -1,0 +1,5 @@
+{
+  "rule": "static-validation",
+  "expect": "fail",
+  "about": "An issue form that is not valid YAML."
+}

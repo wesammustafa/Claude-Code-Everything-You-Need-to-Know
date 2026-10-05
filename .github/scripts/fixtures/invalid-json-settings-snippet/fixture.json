@@ -1,0 +1,5 @@
+{
+  "rule": "static-validation",
+  "expect": "fail",
+  "about": "An example settings snippet that is not valid JSON."
+}

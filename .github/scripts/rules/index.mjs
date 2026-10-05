@@ -8,5 +8,8 @@ import * as expiry from './expiry.mjs';
 import * as emDash from './em-dash.mjs';
 import * as images from './images.mjs';
 import * as lessonLint from './lesson-lint.mjs';
+import * as staticValidation from './static-validation.mjs';
+import * as inertness from './inertness.mjs';
+import * as smokeTests from './smoke-tests.mjs';
 
-export const rules = [internalLinks, anchorDiff, stubPaths, stamps, editionGate, expiry, emDash, images, lessonLint];
+export const rules = [internalLinks, anchorDiff, stubPaths, stamps, editionGate, expiry, emDash, images, lessonLint, staticValidation, inertness, smokeTests];

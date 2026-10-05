@@ -1,0 +1,5 @@
+{
+  "rule": "smoke-tests",
+  "expect": "fail",
+  "about": "An example whose Claude-free smoke test exits non-zero."
+}

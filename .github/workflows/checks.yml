@@ -21,6 +21,8 @@ jobs:
           node-version: lts/*
       - name: Install lychee
         run: .github/scripts/install-lychee.sh
+      - name: Show the other tools the checks use
+        run: ruby --version && shellcheck --version && jq --version
       - name: Self-test the checks against their fixtures
         run: node --test '.github/scripts/test/**/*.test.mjs'
       - name: Run the checks

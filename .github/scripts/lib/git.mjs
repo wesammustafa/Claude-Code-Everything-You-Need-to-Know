@@ -76,3 +76,11 @@ export function addedLines(root, sha) {
   for (const path of [...added.keys()]) if (isExcluded(path)) added.delete(path);
   return added;
 }
+
+// Files added, changed or deleted relative to the base, untracked included.
+// A rename that git detects lists only its new path.
+export function changedFiles(root, sha) {
+  const tracked = git(root, ['diff', '--name-only', sha, '--']).split('\n');
+  const untracked = git(root, ['ls-files', '--others', '--exclude-standard']).split('\n');
+  return [...tracked, ...untracked].filter((f) => f && !isExcluded(f));
+}
