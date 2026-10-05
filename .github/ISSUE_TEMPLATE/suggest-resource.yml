@@ -1,0 +1,81 @@
+name: 💡 Suggest a resource
+description: Suggest a tool, MCP server, skill, plugin, course or article for the guide to list
+labels: ["resource-suggestion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Read the [listing policy](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/main/CONTRIBUTING.md#listing-policy) first. Each field below asks for evidence the listing bar checks.
+
+        - This form is the only way to suggest a listing. Unsolicited pull requests that add one are closed.
+        - Suggestions that clear the bar are added at the next content review, not one by one. While listing changes are frozen (see the policy), nothing is added before that review.
+        - Suggesting your own project is fine if you disclose your affiliation below. It faces the same bar as any other suggestion.
+  - type: input
+    id: url
+    attributes:
+      label: URL
+      description: The repository or the canonical page.
+      placeholder: "https://github.com/owner/repo"
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - MCP server
+        - Skill
+        - Plugin
+        - Hook
+        - CLI tool
+        - Course or tutorial
+        - Article
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: license
+    attributes:
+      label: License
+      description: Its SPDX identifier where it has one. The listing policy says which licenses qualify.
+      placeholder: "MIT"
+    validations:
+      required: true
+  - type: textarea
+    id: lesson
+    attributes:
+      label: Lesson or section it serves
+      description: The lesson or section of the guide that needs it (a link or the heading), and what a reader does with it there. Third-party items are listed only where a lesson uses them.
+    validations:
+      required: true
+  - type: input
+    id: adoption
+    attributes:
+      label: Adoption, with the date measured
+      description: GitHub stars, weekly npm or PyPI downloads, or marketplace installs, and the full date you measured it.
+      placeholder: "1,240 GitHub stars on 2026-10-04"
+    validations:
+      required: true
+  - type: input
+    id: last-commit
+    attributes:
+      label: Last commit on the default branch
+      description: The full date of the latest commit on the default branch.
+      placeholder: "2026-10-01"
+    validations:
+      required: true
+  - type: input
+    id: affiliation
+    attributes:
+      label: Your affiliation
+      description: Write "No affiliation", or your connection to what you are suggesting, such as "I maintain it" or "I work for the vendor".
+      placeholder: "No affiliation"
+    validations:
+      required: true
+  - type: checkboxes
+    id: policy
+    attributes:
+      label: Listing policy
+      options:
+        - label: "I have read the [listing policy](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/main/CONTRIBUTING.md#listing-policy)."
+          required: true
