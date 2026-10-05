@@ -1,4 +1,4 @@
-# Claude Code: Everything You Need to Know <img src="Images/claude-jumping.svg" width="44" height="40" alt="Animated Claude" align="right" />
+# Claude Code: Everything You Need to Know <picture><source media="(prefers-color-scheme: dark)" srcset="assets/brand/mark-dark.svg"><img src="assets/brand/mark-light.svg" width="44" height="44" alt="Trail blazes: three painted marks climbing a post, the mark of this guide" align="right"></picture>
 
 **From first prompt to agent teams — one guide.**
 
@@ -894,5 +894,3 @@ A curated set of pointers — official Anthropic docs, MCP resources, hooks exam
 > Features, pricing, and availability change frequently. Always check the [official Claude Code documentation](https://code.claude.com/docs/en/overview) for the most current information.
 
 *Last full review: July 2026. On October 4, 2026, specific facts were corrected against Claude Code v2.1.289 (latest channel; stable is v2.1.285): install method, model lineup and default model, Sonnet 5 pricing, Opus 4.1 retirement, effort defaults and ultracode, think keywords, permission modes, skill precedence, hook event count, subagent nesting, Artifacts status, and fast mode; the MCP spec status was also updated. The rest of the guide was not re-verified. Spotted something stale? [Open an issue](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues) or send a PR (see [`CONTRIBUTING.md`](CONTRIBUTING.md)).*
-
-*Mascot: [`Images/claude-jumping.svg`](Images/claude-jumping.svg) comes from [shanraisshan/claude-code-best-practice](https://github.com/shanraisshan/claude-code-best-practice), Copyright (c) 2025-2026 Shayan Rais, used under the [MIT License](https://github.com/shanraisshan/claude-code-best-practice/blob/main/LICENSE).*
