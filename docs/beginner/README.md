@@ -1,6 +1,6 @@
 # Beginner
 
-<sub>**Beginner** · about 2 to 2½ hours · Verified against Claude Code v2.1.285 (stable) on 2026-10-05</sub>
+<sub>**Beginner** · about 2½ hours · Verified against Claude Code v2.1.285 (stable) on 2026-10-05</sub>
 
 One session, one change. You install Claude Code, decide what it may do without asking, take one change from request to commit, keep a long session on track, and give it a project memory.
 
@@ -8,13 +8,17 @@ One session, one change. You install Claude Code, decide what it may do without 
 
 - [ ] Work in a terminal: change folders, run commands and read their output.
 - [ ] Use git: clone a repository, commit, and read `git status` and `git diff`.
-- [ ] Sign in with a Claude subscription (Pro, Max, Team or Enterprise), a Claude Console account, or a supported cloud provider ([Quickstart](https://code.claude.com/docs/en/quickstart)).
+- [ ] Have a Claude subscription (Pro, Max, Team or Enterprise; the free plan doesn't include Claude Code), a Claude Console account, or access through a supported cloud provider ([Quickstart](https://code.claude.com/docs/en/quickstart), [Advanced setup](https://code.claude.com/docs/en/setup)). Lesson 1 shows you how to sign in.
 
 New to the terminal? The official [Terminal guide for new users](https://code.claude.com/docs/en/terminal-guide) walks you through opening one and installing Claude Code.
 
 ## Practice
 
-Before lesson 1, make your own copy of the [practice template](https://github.com/wesammustafa/claude-code-practice): select **Use this template**, then **Create a new repository**, and clone your copy. Every Beginner exercise and the capstone run there, each with a check you run as `npm run check -- <lesson-id>`. The checks need Node.js LTS, which a Codespace on your copy has preinstalled. To practice in one of your own repositories instead, keep the template copy as well: the checks run from it with `--dir`.
+Before lesson 1, make your own copy of the [practice template](https://github.com/wesammustafa/claude-code-practice): select **Use this template**, then **Create a new repository**, and clone your copy. Every Beginner exercise and the capstone run there.
+
+Each core lesson and the capstone end with a check you run in your copy as `npm run check -- <id>`, where the id is `b-1` to `b-5` for the lessons and `b-capstone` for the capstone. The Electives end with a checklist you confirm yourself. The checks need Node.js LTS, which a Codespace on your copy has preinstalled. To practice in one of your own repositories instead, keep the template copy as well: the checks run from it with `--dir`.
+
+On native Windows, if PowerShell refuses to run `npm` with `running scripts is disabled on this system` ([Troubleshoot installation](https://code.claude.com/docs/en/troubleshoot-install#running-scripts-is-disabled-on-this-system)), follow the Windows note in [lesson 1](01-install-and-look-around.md#you-need).
 
 ## Lessons
 
@@ -24,13 +28,15 @@ Before lesson 1, make your own copy of the [practice template](https://github.co
 4. [Keep a session on track](04-keep-a-session-on-track.md)
 5. [Project memory with CLAUDE.md](05-project-memory.md)
 
-Each lesson takes 15 to 20 minutes, and the capstone 30 to 60.
+Each lesson takes about 20 minutes, and the capstone 30 to 60.
 
 ## Capstone
 
-[Fix a reported bug, from plan to commit](capstone.md): record your Claude Code version, then fix a reported bug in the practice template: plan the fix, change two files, make the failing test pass, and commit. Its check covers every statement below that leaves a file or a commit behind.
+[Fix a reported bug, from plan to commit](capstone.md): record your Claude Code version, then fix a reported bug in the practice template: plan the fix, change two source files, add a test that fails before the fix and passes after it, and commit. Its check covers what it can see in files and git, and the capstone page lists the rest of the [Beginner Exit](#by-the-end-of-this-level-you-can) for you to tick yourself.
 
 ## By the end of this level you can
+
+This list is the Beginner Exit ([Glossary](../reference/glossary.md)), which the capstone puts together in one task.
 
 - [ ] Install Claude Code, sign in, start it in your repository, and tell which version, model and account you're on.
 - [ ] Choose and switch permission modes, and approve a plan in plan mode before any change.
@@ -54,10 +60,10 @@ Optional lessons beside the core path:
 
 ## Next level
 
-[Intermediate](../intermediate/README.md): one developer's setup.
+[Intermediate](../intermediate/README.md): one developer's setup. Its lessons aren't published yet. The Intermediate index lists them, links each one as it is published, and links official courses to take meanwhile.
 
 ---
 
-<sub>Sources: [Quickstart](https://code.claude.com/docs/en/quickstart) · [Terminal guide for new users](https://code.claude.com/docs/en/terminal-guide) · [Commands](https://code.claude.com/docs/en/commands) · [Output styles](https://code.claude.com/docs/en/output-styles) · [Create custom subagents](https://code.claude.com/docs/en/sub-agents)</sub>
+<sub>Sources: [Quickstart](https://code.claude.com/docs/en/quickstart) · [Advanced setup](https://code.claude.com/docs/en/setup) · [Terminal guide for new users](https://code.claude.com/docs/en/terminal-guide) · [Troubleshoot installation](https://code.claude.com/docs/en/troubleshoot-install) · [Commands](https://code.claude.com/docs/en/commands) · [Output styles](https://code.claude.com/docs/en/output-styles) · [Create custom subagents](https://code.claude.com/docs/en/sub-agents)</sub>
 
 <sub>Up: [Claude Code: Everything You Need to Know](../../README.md)</sub>
