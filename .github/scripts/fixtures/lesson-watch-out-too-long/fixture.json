@@ -1,0 +1,5 @@
+{
+  "rule": "lesson-lint",
+  "expect": "fail",
+  "about": "A lesson whose Watch out slot has four items; the limit is three."
+}

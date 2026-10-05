@@ -236,6 +236,8 @@ Checks test state a script can read: git state, files, exit codes and settings f
 
 Beginner lesson bodies carry no version numbers, prices or stability labels, and at most one caveat, about safety. Intermediate lessons carry at most two caveats, and Advanced lessons at most three.
 
+The `lesson-lint` check enforces this shape on every lesson (`docs/<level>/NN-*.md`) and Elective (`docs/<level>/electives/*.md`). An Elective's header line says `Elective` in place of the position, and its Check has no `npm run check` line.
+
 ### Callouts
 
 Callouts are GitHub alerts, at most two per lesson, each with one meaning:
@@ -255,6 +257,7 @@ Callouts are GitHub alerts, at most two per lesson, each with one meaning:
 - Every image has alt text that says what the reader should learn from it, not "screenshot" and not a repeat of the caption.
 - Text in a diagram or image reaches 4.5:1 contrast in GitHub's light and dark themes; other marks reach 3:1.
 - No third-party images (logos, icons, slides, product screenshots), no animation and no embedded video.
+- The `images` check enforces the alt text, the Mermaid lines, and the names, references and budget below.
 - New images go under `assets/`: `assets/brand/` for the guide's identity and `assets/lessons/<lesson-id>/` for captures. Names are kebab-case, and paths are explicit and relative. Budget: an SVG up to 50 KB, a capture up to 200 KB. Every image that is not a capture ships its editable source beside it. Hand-drawn SVG is for the guide's identity pieces only.
 
 ### Headings
@@ -278,7 +281,7 @@ Callouts are GitHub alerts, at most two per lesson, each with one meaning:
 - Filler such as "In this section we will explore", "as we mentioned earlier" or "it's worth noting that". Cut it.
 - Marketing language. "The ultimate guide to mastering..." reads as hype; lead with what the reader actually gets.
 - Multi-paragraph docstrings. One short line at most in code samples.
-- Em dashes in new prose. Keep them only inside quotations, identifiers and filenames.
+- Em dashes in new prose. Keep them only inside quotations, identifiers and filenames. The `em-dash` check skips text in backticks, code blocks and double quotes; any other line that must keep one carries `<!-- allow-em-dash -->`.
 - Claims about features you have not verified.
 
 ## File layout

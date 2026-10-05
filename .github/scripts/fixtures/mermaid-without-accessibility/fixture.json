@@ -1,0 +1,5 @@
+{
+  "rule": "images",
+  "expect": "fail",
+  "about": "A Mermaid diagram with no accTitle or accDescr."
+}

@@ -1,0 +1,5 @@
+{
+  "rule": "lesson-lint",
+  "expect": "fail",
+  "about": "A lesson whose footer has navigation but no Sources line."
+}

@@ -1,0 +1,5 @@
+{
+  "rule": "em-dash",
+  "expect": "pass",
+  "about": "Em dashes pass on unchanged lines, inside backticks or code blocks, inside double quotes, and on a line with the allow marker."
+}

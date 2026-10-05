@@ -1,0 +1,5 @@
+{
+  "rule": "images",
+  "expect": "fail",
+  "about": "An image under assets/ whose file name is not kebab-case."
+}
