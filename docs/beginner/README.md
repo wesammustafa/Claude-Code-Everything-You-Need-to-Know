@@ -28,7 +28,7 @@ Each lesson takes 10 to 20 minutes. Lessons are linked here as they are publishe
 
 ## Capstone
 
-Record your Claude Code version, then fix a reported bug in the practice template: plan the fix, change two files, make the failing test pass, and commit. Its check covers every statement below that leaves a file or a commit behind.
+[Fix a reported bug, from plan to commit](capstone.md): record your Claude Code version, then fix a reported bug in the practice template: plan the fix, change two files, make the failing test pass, and commit. Its check covers every statement below that leaves a file or a commit behind.
 
 ## By the end of this level you can
 
