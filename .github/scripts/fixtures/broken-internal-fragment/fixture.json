@@ -1,0 +1,5 @@
+{
+  "rule": "internal-links",
+  "expect": "fail",
+  "about": "A link to a heading that does not exist on the target page."
+}

@@ -1,0 +1,5 @@
+{
+  "rule": "internal-links",
+  "expect": "pass",
+  "about": "The private scratch folder is outside every check, so its broken links do not fail the run."
+}

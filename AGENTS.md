@@ -30,6 +30,7 @@ Before you write or change one, fetch the Tier 1 source for its domain:
 ## Pull requests
 
 - One change per PR. Fill in the PR template. For its claim table, start a separate agent that tries to refute each changed claim against Tier 1, and copy that agent's results into the table; never fill the Result column yourself. Leave the box "I have personally verified any AI-assisted content in this PR" for the user to tick.
+- Before you open a PR, run `node .github/scripts/check.mjs` on your working tree and fix every `FAIL`; CI runs the same command. If you change a rule, also run `node --test '.github/scripts/test/**/*.test.mjs'`.
 - Lesson PRs, and example PRs whose example a core lesson or capstone uses, record a dry-run in a clean configuration: [CONTRIBUTING.md#pull-requests](CONTRIBUTING.md#pull-requests).
 
 ## Listings
