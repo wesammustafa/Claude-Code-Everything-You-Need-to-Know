@@ -33,6 +33,10 @@ Before you write or change one, fetch the Tier 1 source for its domain:
 - Before you open a PR, run `node .github/scripts/check.mjs` on your working tree and fix every `FAIL`; CI runs the same command. If you change a rule, also run `node --test '.github/scripts/test/**/*.test.mjs'`.
 - Lesson PRs, and example PRs whose example a core lesson or capstone uses, record a dry-run in a clean configuration: [CONTRIBUTING.md#pull-requests](CONTRIBUTING.md#pull-requests).
 
+## Examples
+
+Learner examples live under `examples/<level>/<NN-lesson>/`, never at a path Claude Code loads on its own: use `dot-claude/`, `dot-mcp.json`, `CLAUDE.example.md` and `AGENTS.example.md`. Every executable example follows the [safety contract](CONTRIBUTING.md#adding-a-skill): (1) it runs only once copied into a project; (2) local only, with no network calls or keys, except the MCP lesson's pinned server; (3) it captures no transcripts and logs no tool input or output; (4) least privilege, with a `Read` deny rule for `.env` and no `Write`, `Edit` or broad `Bash(x:*)` allow rules; (5) a header block, including its test line; (6) a POSIX shell with only bash, jq, python3's standard library and git; (7) a smoke test that runs without Claude. The root `.claude/` is maintainer tooling: add nothing there.
+
 ## Listings
 
 A listing is an external tool, MCP server, skill, plugin, course or article the guide points readers to as something to use or read. Listing changes have been frozen since 2026-10-04 while the guide is reworked; [CONTRIBUTING.md#listing-policy](CONTRIBUTING.md#listing-policy) says whether the freeze still holds, and has the full bar, labels, section line, security caveat and form. Add a listing only when the user links the accepted resource suggestion issue, or the content-review PR, that approved it; otherwise point them to the [Suggest a resource form](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=suggest-resource.yml).
