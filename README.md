@@ -1,769 +1,95 @@
 # Claude Code: Everything You Need to Know <picture><source media="(prefers-color-scheme: dark)" srcset="assets/brand/mark-dark.svg"><img src="assets/brand/mark-light.svg" width="44" height="44" alt="Trail blazes: three painted marks climbing a post, the mark of this guide" align="right"></picture>
 
-**From first prompt to agent teams — one guide.**
+**Learn Claude Code in three levels, from your first session to unattended multi-agent runs.**
 
-[![Mentioned in Awesome Claude Code](https://awesome.re/mentioned-badge.svg)](https://github.com/hesreallyhim/awesome-claude-code)
-[![GitHub stars](https://img.shields.io/github/stars/wesammustafa/Claude-Code-Everything-You-Need-to-Know?style=flat&color=e8b83a)](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know)
-[![Last commit](https://img.shields.io/github/last-commit/wesammustafa/Claude-Code-Everything-You-Need-to-Know?color=4c9985)](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/commits/main)
-[![License](https://img.shields.io/github/license/wesammustafa/Claude-Code-Everything-You-Need-to-Know?color=5b6470)](LICENSE)
-![Reviewed July 2026, corrected Oct 2026](https://img.shields.io/badge/reviewed-July_2026%2C_corrected_Oct_2026-b0693c)
+An independent community guide. Not affiliated with or endorsed by Anthropic.
 
-A practical guide to Claude Code — from your first prompt to multi-agent automation, hooks, MCP, and team workflows. Built around clear mental models and real examples, not marketing.
+[![Verified against Claude Code v2.1.285 (stable)](https://img.shields.io/badge/verified-v2.1.285_stable-2e6e57)](CHANGELOG.md#v202610---2026-10-05) [![Edition release date](https://img.shields.io/github/release-date/wesammustafa/Claude-Code-Everything-You-Need-to-Know?label=edition&color=2e6e57)](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/releases/latest) [![License: MIT](https://img.shields.io/badge/license-MIT-5b6470)](LICENSE) [![Mentioned in Awesome Claude Code](https://awesome.re/mentioned-badge.svg)](https://github.com/hesreallyhim/awesome-claude-code)
 
-```bash
-curl -fsSL https://claude.ai/install.sh | bash
-```
+<a id="-choose-your-path"></a>
+## Pick your level
 
-macOS, Linux, and WSL. For Windows and other install methods, see the [official setup guide](https://code.claude.com/docs/en/setup).
+### Beginner
+**For you if** you're new to Claude Code and comfortable with a terminal and git.\
+You'll take one change from request to commit, safely, and give your project a memory. About 2½ hours.\
+**[Start Beginner](docs/beginner/README.md)**
 
-**Who this is for:** Developers using (or about to use) Claude Code. Beginners get a guided path; power users get depth on Skills, Hooks, MCP, and Agent Teams.
+### Intermediate
+**Ready if** you can plan a change in plan mode, review the diff and commit it, and keep a long session on track.\
+You'll shape Claude Code to your project with skills, hooks, subagents, MCP and plugins. About 3 hours.\
+**[Start Intermediate](docs/intermediate/README.md)**
 
----
+*Being rebuilt: these pages are from the previous edition and not yet re-verified.*
 
-## 🧭 Choose your path
+### Advanced
+**Ready if** you can write a project skill, enforce a rule with a hook, delegate to a subagent and connect an MCP server.\
+You'll run Claude Code in parallel, unattended in CI, and for a team, within limits you set. About 3 hours 20 minutes, plus run time.\
+**[Start Advanced](docs/advanced/README.md)**
 
-| You are… | Start here | Time |
-|---|---|---|
-| 🚀 **New to Claude Code** | [Setup](#claude-code-setup) → [Prompt Engineering](#prompt-engineering-deep-dive) → [Your First Skill](#claude-skills) | ~15 min |
-| ⚡ **Already using it, want depth** | [Skills](#claude-skills) · [Hooks](#hooks) · [MCP](#model-context-protocol-mcp) | ~30 min each |
-| 🧠 **Building teams or automation** | [Dynamic Workflows](#dynamic-workflows) · [Agent Teams](#agent-teams-experimental) | varies |
+*Being rebuilt: these pages are from the previous edition and not yet re-verified.*
 
----
-
-## 🧠 When to use what
-
-The five extension points in Claude Code, side by side:
-
-| Tool | Use when… | Skip if… | Lives in |
-|---|---|---|---|
-| **[Skills](#claude-skills)** *(slash commands)* | You repeat the same prompt or workflow ≥3 times | One-off task | `.claude/commands/*.md` |
-| **[Hooks](#hooks)** | You want code to run *automatically* on tool use, session start, etc. | You only want manual triggers | `.claude/settings.json` |
-| **[Subagents](#ai-agents)** | A subtask is big enough to need its own isolated context | The task fits in your main session | `.claude/agents/*.md` |
-| **[Workflows](#dynamic-workflows)** | The job needs more agents than one conversation can coordinate | A couple of subagents would do | `.claude/workflows/*.js` |
-| **[MCP servers](#model-context-protocol-mcp)** | You need Claude to use *external* tools (browsers, DBs, APIs) | All your data is in local files | Configured per project |
-
-> 💡 These five compose. Most polished setups combine 2–3.
-
----
-
-## 📚 What's inside
-
-**Fundamentals** — [What is Claude Code?](#what-is-claude-code) · [Setup](#claude-code-setup) · [Prompt Engineering](#prompt-engineering-deep-dive)
-
-**Workflow extensions** — [Slash Commands](#claude-commands) · [Skills](#claude-skills) · [Hooks](#hooks)
-
-**Multi-agent & integration** — [Subagents](#ai-agents) · [Dynamic Workflows](#dynamic-workflows) · [Agent Teams](#agent-teams-experimental) · [Automation surface](#beyond-one-terminal--the-2026-automation-surface) · [MCP](#model-context-protocol-mcp)
-
-**Productivity**: [Effort levels](#effort-levels) · [Fast Mode](#fast-mode)
-
-**Reference** — [Slash Command Cheatsheet](#built-in-slash-commands) · [Effort levels](docs/reference/effort-levels.md) · [Workflows](docs/workflows.md) · [Agent Teams](docs/agent-teams.md) · [Skills](docs/skills.md) · [FAQ](#faq) · [Updates & Deprecations](#updates--deprecations) · [Further Reading](#references)
-
-<!-- Compatibility anchors for old inbound links -->
-<a id="sdlc"></a>
-<a id="what-are-llms-and-how-do-they-differ-from-ai-tools-like-claude-code"></a>
-
-### What is Claude Code?
-
-Claude Code is Anthropic's official CLI for working with Claude from your terminal. You point it at a project; it reads the code, plans, edits files, runs commands, and commits — all from the prompt line.
-
-**Three things it does that a chat UI can't:**
-
-- **Reads your actual repo** — not pasted snippets. Claude sees your file tree, runs `grep`, follows imports, and grounds answers in real context.
-- **Edits in place and runs your tests** — diff-aware edits, then `pytest`/`vitest`/`go test` on the spot to verify the change.
-- **Composes with the rest of your stack** — slash commands, hooks, sub-agents, MCP servers, and your normal git/shell workflow.
-
-If you've used Copilot or Cursor, think of Claude Code as their "agent in your terminal" peer — same idea, different surface, no editor lock-in.
-
-```bash
-claude          # start a session in the current repo
-> explain what this codebase does
-> fix the failing test in src/api.test.ts
-> open a PR with the changes
-```
-
----
-
-<a id="claude-opus-46-the-latest-powerhouse"></a>
-<a id="claude-opus-47-the-latest-flagship"></a>
-### The Claude 5 era: today's model lineup
-
-Launches landed in quick succession through 2026: **Claude Opus 4.8** (May 28, 2026), **Claude Fable 5** and its restricted sibling **Claude Mythos 5** (June 9, 2026), which opened a new *Mythos-class* tier above Opus, **Claude Sonnet 5** (June 30, 2026), **Claude Opus 5** (July 24, 2026), **Claude Fable 5.1** and **Claude Mythos 5.1** (September 1, 2026), **Claude Opus 5.5** (September 22, 2026), and **Claude Sonnet 5.5** (September 28, 2026). Since Claude Code v2.1.280, Opus 5.5 is the [default model](https://code.claude.com/docs/en/model-config#default-model-setting) on Pro, Max, Team, Enterprise, and the Anthropic API. 1M-token context is now standard across current Opus, Sonnet, and Fable models (no beta flag, no long-context surcharge), with 128K max output.
-
-**Choosing a model — quick guide:**
-
-| Model | Reach for it when… |
-|---|---|
-| **Sonnet 5.5** | Everyday coding: most tasks live here. $2/$10 per MTok, the same as Sonnet 5 |
-| **Opus 5.5** *(default)* | Complex reasoning, large refactors, orchestrating agents: $4/$20, 20% less than Opus 5 |
-| **Fable 5.1** | Genuinely hard problems: Mythos-class capability above Opus at $10/$50 |
-| **Haiku 4.5** | Fast, lightweight tasks — quick questions, doc updates ($1/$5, 200K context) |
-
-> Opus 5, Opus 4.8, Opus 4.7, Opus 4.6, Opus 4.5, Sonnet 5, Sonnet 4.6, and Fable 5 are now *legacy models* (still available); Opus 4.1 [retired on August 5, 2026](https://platform.claude.com/docs/en/about-claude/model-deprecations), except on Bedrock and Google Cloud. Sonnet 5's $2/$10 intro price was made permanent on August 10, 2026, so the planned September 1, 2026 rise to $3/$15 never happened. **Mythos 5** (invitation-only via Project Glasswing) shares Fable 5's specs and pricing, and **Mythos 5.1** is the same model as Fable 5.1 with different safeguards, available only through Anthropic's trusted access programs.
->
-> *[→ Full specs, capabilities, and pricing in `docs/reference/models.md`](docs/reference/models.md)*
-
----
-### Claude Code Setup
-
-> ⏱️ **5-minute setup.** Get from zero to your first AI-assisted commit.
-
-#### 1. Install
+## Install
 
 ```bash
 curl -fsSL https://claude.ai/install.sh | bash
 ```
 
-> This is the recommended native install for macOS, Linux, and WSL, and it updates itself in the background. On Windows, use the PowerShell or CMD command from the [official install guide](https://code.claude.com/docs/en/setup). Alternatives: Homebrew, WinGet, and npm (`npm install -g @anthropic-ai/claude-code`, which [requires Node.js 22+](https://code.claude.com/docs/en/setup#install-with-npm)).
+macOS, Linux and WSL. For Windows and other installers, see the [official setup page](https://code.claude.com/docs/en/setup). Claude Code needs a paid Claude plan (Pro, Max, Team or Enterprise), a Claude Console account, or a supported cloud provider ([Quickstart](https://code.claude.com/docs/en/quickstart)).
 
-#### 2. Authenticate
+<a id="-whats-inside"></a><a id="-reading-tips"></a>
+## Everything in the guide
 
-```bash
-claude
-```
+<details>
+<summary>Every page, by level</summary>
 
-On first run, Claude Code opens a browser to sign in with your Anthropic account (Pro, Max, or API key all work). After that, you can re-authenticate any time with `/login` (and sign out with `/logout`) inside a session, or `claude auth login|status|logout` from your shell.
+**Beginner:** [Level index](docs/beginner/README.md) · [Install, sign in and look around](docs/beginner/01-install-and-look-around.md) · [Permission modes and plan mode](docs/beginner/02-permission-modes-and-plan-mode.md) · [Your first change, from request to commit](docs/beginner/03-first-change.md) · [Keep a session on track](docs/beginner/04-keep-a-session-on-track.md) · [Project memory with CLAUDE.md](docs/beginner/05-project-memory.md) · [Capstone](docs/beginner/capstone.md)
 
-#### 3. Run your first prompt
+**Beginner Electives:** [IDE extensions](docs/beginner/electives/ide-extensions.md) · [Screenshots and images](docs/beginner/electives/screenshots-and-images.md) · [The built-in teachers](docs/beginner/electives/built-in-teachers.md)
 
-From any project directory:
+**Intermediate** (being rebuilt): [Level index](docs/intermediate/README.md)
 
-```bash
-cd ~/your-project
-claude
-```
+**Advanced** (being rebuilt): [Level index](docs/advanced/README.md)
 
-Once Claude Code is running, try one of these:
+**Topics:** [All topics](docs/topics/README.md) · [Permissions and safety](docs/topics/permissions-and-safety.md) · [Memory and context](docs/topics/memory-and-context.md) · [Models, effort and cost](docs/topics/models-effort-and-cost.md) · [Skills](docs/topics/skills.md) · [Hooks](docs/topics/hooks.md) · [Subagents and parallel work](docs/topics/subagents-and-parallel-work.md) · [MCP](docs/topics/mcp.md) · [Plugins](docs/topics/plugins.md) · [Automation](docs/topics/automation.md)
 
-- `explain what this codebase does` — Claude reads your repo and summarizes.
-- `add a README section about installation` — generates content based on your project.
-- `find and fix the failing test in src/api.test.ts` — diagnoses and edits in place.
+**Reference:** [Reference index](docs/reference/README.md) · [Models and effort](docs/reference/models.md) · [Commands by level](docs/reference/commands.md) · [Feature map](docs/reference/feature-map.md) · [Further learning](docs/reference/further-reading.md) · [Glossary](docs/reference/glossary.md) · [Changelog](docs/reference/changelog.md)
 
-#### 4. (Optional) Generate a `CLAUDE.md`
+**From the previous edition, not yet re-verified:** [Skills](docs/legacy/skills.md) · [Hooks](docs/legacy/hooks.md) · [Subagents and parallel work](docs/legacy/subagents-and-parallel-work.md) · [MCP](docs/legacy/mcp.md) · [Fast mode](docs/legacy/fast-mode.md) · [Skills in depth](docs/skills.md) · [Agent teams](docs/agent-teams.md) · [Dynamic workflows](docs/workflows.md) · [Effort levels](docs/reference/effort-levels.md) · [FAQ](docs/reference/faq.md)
 
-```
-/init
-```
+**Examples:** [How to use the examples](examples/README.md)
 
-Creates a project-level instruction file that Claude reads on every session — your project's "house rules." More on this in [Prompt Engineering Deep Dive](#prompt-engineering-deep-dive).
-
-<a id="steal-this-setup"></a>
-#### 5. (Bonus) Steal this repo's setup
-
-This repo's [`.claude/`](.claude/) folder holds the maintainer's own tooling. It has no hooks and no allow rules, so cloning the repo and trusting the folder runs nothing by itself; its skill and workflow run only when invoked. Each path below is something you can copy into your own project:
-
-| Path | What you get | Copy it when… |
-|---|---|---|
-| [`.claude/skills/`](.claude/skills) | An Agent Skill — `/claude-md-review` audits a `CLAUDE.md` for vagueness, dead paths, and bloat | You want a worked example of the [frontmatter contract](docs/skills.md#frontmatter-reference) |
-| [`.claude/workflows/`](.claude/workflows) | A [dynamic workflow](#dynamic-workflows) — `/stale-docs-audit` fans agents across your docs, then refutes its own findings | You want a real script to read before writing your own |
-| [`.claude/settings.json`](.claude/settings.json) | A deny rule that stops Claude's file tools from reading `.env` and `.env.*` files under the folder where you start Claude Code | You want the same guard on your own secrets |
-
-The slash commands, subagents and hook this table used to list were removed; see the [CHANGELOG](CHANGELOG.md#removed-live-config).
-
-```bash
-git clone --depth 1 https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know /tmp/cc-guide
-cp -r /tmp/cc-guide/.claude/skills/claude-md-review  your-project/.claude/skills/   # take what you want
-```
-
-> ⚠️ **Read before you copy.** Skills, hooks, agents, and workflows are executable instructions that run with your permissions — including from *this* repo. Copy file by file and read each one, the same way you'd review a shell script before sourcing it. Don't `cp -r` a whole `.claude/` you haven't opened.
-
-> 💡 **Next:** [Claude Skills](#claude-skills) to build your own in 3 minutes.
-
----
-### Prompt Engineering Deep Dive
-> **📖 Claude Initialization**
-> Run the `/init` command to automatically generate a `CLAUDE.md` file.
-> Your `CLAUDE.md` files become part of Claude's prompts, so they should be refined like any frequently used prompt. A common mistake is adding extensive content without iterating on its effectiveness. Take time to experiment and determine what produces the best instruction following from the model.
-#### 1. Explore → Plan → Code → Commit
-> Versatile workflow for complex problems.
-
-- **Explore:** Read relevant files/images/URLs; use subagents for verification. Do **not code yet**.  
-- **Plan:** Ask Claude to make a plan. Add `ultrathink` to the prompt for deeper reasoning on that turn; Claude Code [recognizes only `ultrathink`](https://code.claude.com/docs/en/model-config#use-ultrathink-for-one-off-deep-reasoning) and passes "think", "think hard", or "think harder" through as ordinary prompt text. See [Effort levels](#effort-levels) for the full reasoning dial. Optionally save the plan for future reference.  
-- **Code:** Implement the solution; verify reasonableness as you go.  
-- **Commit:** Commit results, create pull requests, update READMEs/changelogs.
-- Claude Code has six [permission modes](https://code.claude.com/docs/en/permission-modes): `default` (labeled Manual), `acceptEdits`, `plan`, `auto`, `dontAsk`, and `bypassPermissions`. Press `Shift + Tab` to cycle `default` → `acceptEdits` → `plan`, followed by `bypassPermissions` and `auto` when they're available (`dontAsk` is never in the cycle). With Claude Code v2.1.283 or later, `auto` is the built-in starting mode for interactive terminal and VS Code sessions; `--permission-mode` or `permissions.defaultMode` can choose another.
-    - ![Plan Mode](Images/plan-mode.png)
-    - ![Accept Edit Mode](Images/accept-edit-mode.png)
-
-> **💡 Pro Tip:** Research & planning first significantly improves performance for complex tasks.
+</details>
 
 ---
 
-#### 2. Test-Driven Workflow (Write Tests → Code → Commit)
-> Ideal for changes verifiable with unit/integration tests.
+Found something stale? [Report it with a source](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=stale-content.yml). Stuck on a lesson? Use the link at the bottom of that lesson. Claude Code is a product of Anthropic.
+
+[MIT License](LICENSE) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
+
+### Links from the previous edition
+
+The previous edition's README sections moved. If a link brought you here, find its section below:
+
+- <a id="sdlc"></a><a id="what-are-llms-and-how-do-they-differ-from-ai-tools-like-claude-code"></a><a id="what-is-claude-code"></a><a id="claude-code-setup"></a><a id="1-install"></a><a id="2-authenticate"></a><a id="3-run-your-first-prompt"></a>Moved to [Install, sign in and look around](docs/beginner/01-install-and-look-around.md).
+- <a id="prompt-engineering-deep-dive"></a><a id="1-explore--plan--code--commit"></a><a id="2-test-driven-workflow-write-tests--code--commit"></a>Moved to [Your first change, from request to commit](docs/beginner/03-first-change.md).
+- <a id="4-optional-generate-a-claudemd"></a>Moved to [Project memory with CLAUDE.md](docs/beginner/05-project-memory.md).
+- <a id="3-visual-iteration-code--screenshot--iterate--commit"></a>Moved to [Give Claude a screenshot](docs/beginner/electives/screenshots-and-images.md).
+- <a id="claude-opus-46-the-latest-powerhouse"></a><a id="claude-opus-47-the-latest-flagship"></a><a id="the-claude-5-era-todays-model-lineup"></a><a id="effort-levels"></a><a id="4-effort-levels--how-hard-claude-thinks"></a>Moved to [Models and effort](docs/reference/models.md).
+- <a id="claude-commands"></a><a id="built-in-slash-commands"></a><a id="day-1-essentials"></a>Moved to [Commands by level](docs/reference/commands.md).
+- <a id="custom-slash-commands"></a><a id="claude-skills"></a><a id="your-first-skill-in-3-minutes"></a><a id="want-more-depth"></a><a id="what-are-skills"></a><a id="built-in-vs-custom-skills"></a><a id="skills-faq"></a><a id="creating-custom-skills"></a><a id="troubleshooting-skills"></a><a id="skills-best-practices"></a>Moved to [Skills (previous edition)](docs/legacy/skills.md).
+- <a id="available-skills-reference"></a><a id="using-skills-in-workflow"></a>Moved to [Skills topic](docs/topics/skills.md).
+- <a id="hooks"></a><a id="setting-up-claude-hooks"></a><a id="setting-up-hooks"></a><a id="hook-events"></a><a id="hook-input"></a><a id="hook-output"></a><a id="security-considerations"></a><a id="hook-execution-details-and-debugging"></a><a id="execution--debugging"></a>Moved to [Hooks (previous edition)](docs/legacy/hooks.md).
+- <a id="ai-agents"></a>Moved to [Subagents and parallel work topic](docs/topics/subagents-and-parallel-work.md).
+- <a id="running-agents-in-parallel"></a><a id="subagents--running-agents-in-parallel"></a><a id="1-git-worktrees--parallel-branches-parallel-sessions"></a><a id="2-general-purpose-subagents--when-one-claude-isnt-enough"></a><a id="orchestrating-specialists-from-the-main-session"></a>Moved to [Subagents and parallel work (previous edition)](docs/legacy/subagents-and-parallel-work.md).
+- <a id="agent-teams-experimental---2026"></a><a id="agent-teams-experimental"></a><a id="enable-it"></a><a id="the-example-that-justifies-the-cost"></a><a id="staff-a-team-with-the-role-prompts-you-already-have"></a><a id="three-things-that-catch-people-out"></a><a id="monitoring-and-the-naming-trap"></a><a id="best-practices"></a>Moved to [Agent teams (previous edition)](docs/agent-teams.md).
+- <a id="dynamic-workflows"></a><a id="try-it-in-2-minutes--no-script-required"></a><a id="starting-your-own"></a>Moved to [Dynamic workflows (previous edition)](docs/workflows.md).
+- <a id="beyond-one-terminal--the-2026-automation-surface"></a>Moved to [Feature map](docs/reference/feature-map.md).
+- <a id="model-context-protocol-mcp"></a><a id="the-nm-problem-mcp-solves"></a><a id="three-pillars"></a><a id="the-mcp-registry--self-discovering-agents"></a><a id="the-mcp-ecosystem-today"></a>Moved to [MCP (previous edition)](docs/legacy/mcp.md).
+- <a id="fast-mode"></a><a id="fast-mode-"></a>Moved to [Fast mode (previous edition)](docs/legacy/fast-mode.md).
+- <a id="beyond-your-own-skills--the-ecosystem"></a><a id="3-specialized-subagents--drop-in-role-prompts"></a><a id="featured-mcp-servers"></a><a id="more-mcp-servers-worth-knowing"></a><a id="super-claude-framework"></a><a id="the-bmad-method--ai-agent-framework"></a>Removed: listings no lesson uses. See the [CHANGELOG](CHANGELOG.md#removed-listings).
+- <a id="updates--deprecations-february-2026"></a><a id="updates--deprecations"></a><a id="updates--deprecations-as-of-july-2026"></a>Removed: the guide's summaries of Claude Code releases. See the [CHANGELOG](CHANGELOG.md#removed-changelog-mirror).
+- <a id="faq"></a>Moved to [FAQ (previous edition)](docs/reference/faq.md).
+- <a id="references"></a>Moved to [Further learning](docs/reference/further-reading.md).
+- <a id="steal-this-setup"></a><a id="5-bonus-steal-this-repos-setup"></a>Moved to [Examples](examples/README.md).
+- <a id="-when-to-use-what"></a>Moved to [When to use what](docs/intermediate/README.md#when-to-use-what).
 
-- **Write Tests:** Create tests based on expected inputs/outputs; mark as TDD.  
-- **Run & Fail Tests:** Confirm they fail; no implementation yet.  
-- **Commit Tests:** Commit once satisfied.  
-- **Write Code:** Implement code to pass tests; iterate with verification via subagents.  
-- **Commit Code:** Final commit after all tests pass.
-
-> 🔹 Clear targets (tests, mocks) improve iteration efficiency.
-
----
-#### 3. Visual Iteration (Code → Screenshot → Iterate → Commit)
-- Provide screenshots or visual mocks.  
-- Implement code, take screenshots, iterate until outputs match mock.  
-- Commit once satisfied.
-
-> 🔹 Iteration significantly improves output quality (2-3 rounds usually enough).
-
----
-
-<a id="effort-levels"></a>
-#### 4. Effort levels — how hard Claude thinks
-
-*[→ Full guide in `docs/reference/effort-levels.md`](docs/reference/effort-levels.md)*
-
-> **Mental model:** Effort is a **behavioural dial**, not a token budget — it shifts thinking depth, tool-call appetite, response length, and how persistently Claude pushes through multi-step work. Higher ≠ smarter; context quality often matters more.
-
-**The API knows 5 levels** (`low` → `max`; the default depends on the model); **Claude Code adds an `ultracode` toggle on top:**
-
-| Level | Reach for it when… |
-|---|---|
-| `low` | Fast interactive queries you're steering — file renames, simple greps |
-| `medium` | General coding, small refactors, autonomous sessions where the plan is clear |
-| `high` | Multi-file refactors, complex debugging. Claude Code's default on most effort models (Opus 5.5 and Sonnet 5.5 default to `medium`, Opus 4.7 to `xhigh`) |
-| `xhigh` | Long autonomous agentic sessions (Fable 5.1/5, Opus 5.5/5/4.8/4.7, Sonnet 5.5/5) |
-| `max` | Architecture, subtle bugs, security review — genuinely hard problems only. Session-only |
-| `ultracode` *(Claude Code setting, not an effort level)* | Automatic multi-agent [workflow orchestration](https://code.claude.com/docs/en/workflows) at whatever effort the session runs (v2.1.284+); `--effort ultracode` also sets `xhigh`. Save it with the [`ultracode` setting](https://code.claude.com/docs/en/settings-reference#ultracode) |
-
-**[Defaults in Claude Code](https://code.claude.com/docs/en/model-config#adjust-effort-level) (v2.1.289):** Opus 5.5 and Sonnet 5.5 → `medium`; Opus 4.7 → `xhigh`; every other effort model, including Fable 5.1, Opus 4.8, and Sonnet 5 → `high`. Haiku 4.5 has no effort setting. Check yours with `/effort`. *(Historical footnote: Claude Code v2.1.117, April 2026, first standardized Pro/Max defaults to `high` after the March "nerfed medium" episode.)*
-
-**Setting it, in order of persistence:**
-
-```bash
-# This turn only — adds an in-context cue (does not change API effort)
-> ultrathink — design the migration strategy
-
-# This session — slider with no args, level name with arg
-/effort xhigh
-/effort ultracode               # automatic multi-agent workflows; keeps your effort level (v2.1.284+)
-/effort auto                    # reset to model default
-
-# All sessions (low/medium/high/xhigh) — add this key to .claude/settings.json:
-#   "effortLevel": "high"
-# max can't be saved here; ultracode has its own "ultracode" setting.
-```
-
-> ⚠️ **Two gotchas worth knowing:**
-> - **`max` shows diminishing returns on routine work** and is more prone to overthinking — Anthropic's own guidance. Don't default to it.
-> - **Context quality often beats more effort.** If you're reaching for max on a task that shouldn't need it, ~80% of the time the fix is upstream — sharper `CLAUDE.md`, atomic plan, named files. [Full breakdown →](docs/reference/effort-levels.md#effort--intelligence--the-context-quality-trap)
-
-> 💡 **Pattern: plan-with-Opus / execute-with-Sonnet.** Plan in Opus 4.8 (or Fable 5) at xhigh or max; hand the atomic, zero-ambiguity plan to Sonnet 5 at lower effort to execute. Sonnet follows clear plans without drift, so the cheap execution is reliable when the plan is sharp.
-
----
-
-### Claude Commands
-<a id="built-in-slash-commands"></a>
-
-Claude Code ships dozens of built-in slash commands ([official reference](https://code.claude.com/docs/en/commands)) plus the ability to define your own as **skills** (markdown files in `.claude/commands/`). The two work together — built-ins for common operations, custom skills for your team's workflows.
-
-#### Day-1 essentials
-
-| Command | Purpose |
-|---|---|
-| `/init` | Generate a `CLAUDE.md` for your project — your "house rules" Claude reads every session |
-| `/help` | List all available commands |
-| `/clear` | Reset conversation history when you want a clean slate |
-| `/usage` | Track token and plan usage (merged `/cost` + `/stats` as of v2.1.118) |
-| `/model` | Switch models — your pick persists as the default for new sessions (press `s` for session-only) |
-
-> *[→ Curated slash-command cheatsheet in `docs/reference/commands.md`](docs/reference/commands.md)* (including `/fast`, `/hooks`, `/mcp`, `/teleport`, `/workflows`, `/rewind`, …)
-
-#### Custom slash commands
-
-Define a frequently-used prompt once as a markdown file, invoke it forever with `/skill-name`:
-
-```bash
-mkdir -p .claude/commands
-echo "Analyze this code for performance issues and suggest optimizations:" \
-  > .claude/commands/optimize.md
-```
-
-> 💡 **Next level:** custom slash commands and Skills are the same thing. Head to [Claude Skills](#claude-skills) for the deep dive: built-in skills, the Agent Skill in this repo, and how to write your own.
-
----
-
-<a id="claude-skills"></a>
-### Claude Skills
-
-*~3 min read · [Full guide in `docs/skills.md` →](docs/skills.md)*
-
-> **Mental model:** Skills package a workflow into a markdown file. Two equivalent formats — officially one system now:
-> - **Slash skills** — `.claude/commands/<name>.md`, you invoke them with `/<name>`
-> - **Agent Skills** — `.claude/skills/<name>/SKILL.md` with YAML frontmatter; Claude can also auto-invoke these when the description matches the task
->
-> `.claude/commands/deploy.md` and `.claude/skills/deploy/SKILL.md` both create `/deploy`. Skills follow the open [agentskills.io](https://agentskills.io) standard, adopted by ~40 products beyond Claude Code (Codex, Copilot, Cursor, Gemini CLI, …).
-
-> ⚠️ **Security:** Skills are executable instructions running with your shell permissions. Read every third-party skill before adding it — exactly like reviewing a shell script before sourcing it.
-
-![Skill resolution: typing /name or Claude matching a description both enter one lookup order: personal ~/.claude/, then project .claude/, then plugins (namespaced as /plugin-name:skill-name), then built-in, first match wins. Enterprise skills beat both personal and project. Both .claude/commands/name.md and .claude/skills/name/SKILL.md create the same /name command.](Images/skill-resolution.svg)
-
-On a name clash, enterprise beats personal (`~/.claude/`) and personal beats project (`.claude/`); a local skill replaces a bundled skill of the same name, or (in a local terminal session) a built-in command, but not its aliases; plugin skills are namespaced as `/plugin-name:skill-name`, so both load ([official rules](https://code.claude.com/docs/en/skills#resolve-skills-that-share-a-name)). Slash skills load on `/` autocomplete; Agent Skills preload only their metadata and read the body on demand. [Full lookup table →](docs/skills.md#where-claude-looks)
-
-#### Your first skill in 3 minutes
-
-```bash
-mkdir -p .claude/commands
-
-cat > .claude/commands/analyze.md << 'EOF'
-# Code Analysis
-
-Analyze the current code for:
-- Potential bugs and edge cases
-- Performance optimizations
-- Code quality improvements
-- Security vulnerabilities
-
-Provide specific, actionable recommendations.
-EOF
-
-claude       # then type: /analyze
-```
-
-That's it — a working slash skill. Promote it to an Agent Skill later by moving it to `.claude/skills/analyze/SKILL.md` and adding `name`/`description` frontmatter.
-
-#### Want more depth?
-
-The [full Skills guide in `docs/skills.md`](docs/skills.md) covers:
-
-- The Agent Skill shipped here, [`/claude-md-review`](.claude/skills/claude-md-review/SKILL.md)
-- Bundled built-in skills (e.g. `/dataviz`, `/debug`, `/keybindings-help`)
-- Slash skills vs Agent Skills, and the [full frontmatter reference](docs/skills.md#frontmatter-reference) — including why `allowed-tools` **grants** permission rather than restricting it
-- How to write your own skills (file format, scope, examples)
-- Skills FAQ, troubleshooting, and best practices
-
-<a id="beyond-your-own-skills--the-ecosystem"></a>Removed: this listed third-party skill catalogs and marketplaces that no lesson uses. To find more skills, start with Anthropic's [plugin marketplaces](https://code.claude.com/docs/en/plugins/anthropic-marketplaces). See the [CHANGELOG](CHANGELOG.md#removed-listings).
-
-<!-- Anchor compatibility: deep-section anchors now live in docs/skills.md -->
-<a id="what-are-skills"></a>
-<a id="built-in-vs-custom-skills"></a>
-<a id="available-skills-reference"></a>
-<a id="using-skills-in-workflow"></a>
-<a id="skills-faq"></a>
-<a id="creating-custom-skills"></a>
-<a id="troubleshooting-skills"></a>
-<a id="skills-best-practices"></a>
-
----
-
-### Hooks
-
-> **Mental model:** Hooks are programmable checkpoints on Claude Code's lifecycle (before/after a tool call, session start, prompt submit, etc.). Your script inspects the proposed action and returns *allow* / *deny* / *modify*.
-
-**Three cases that win most teams over:**
-
-| Use case | What the hook does |
-|---|---|
-| Auto-format on save | Runs `prettier` / `ruff` / `gofmt` after every Edit so Claude's output matches your style |
-| Block sensitive paths | Refuses changes to `.env`, `secrets/`, `infra/prod/` regardless of what Claude tries |
-| Action audit log | Records every tool call to a file — paper trail of what Claude did and when |
-
-If none of those resonate, skip ahead.
-
-![Hooks Workflow](Images/hooks-workflow.png)
-
-<a id="setting-up-claude-hooks"></a>
-#### Setting up hooks
-
-Hooks live in settings files at four scopes (later overrides earlier):
-
-| Scope | Path |
-|---|---|
-| User-wide | `~/.claude/settings.json` |
-| Project (committed) | `.claude/settings.json` |
-| Project (local, gitignored) | `.claude/settings.local.json` |
-| Enterprise managed policy | platform-specific |
-
-**Quickest setup** — use the interactive menu:
-
-```bash
-/hooks    # browse, enable, configure hooks without touching JSON
-```
-
-#### Hook Events
-
-Hooks run in response to various events within Claude Code's lifecycle:
-[examples](https://github.com/disler/claude-code-hooks-mastery)
-- **`PreToolUse`**: Runs **after Claude creates tool parameters but before processing the tool call**.
-- **`PostToolUse`**: Runs **immediately after a tool completes successfully**.
-- **`Notification`**: Runs when Claude Code sends notifications, such as when permission is needed to use a tool or when prompt input has been idle.
-- **`UserPromptSubmit`**: Runs when the user submits a prompt, **before Claude processes it**.
-- **`Stop`**: Runs when the main Claude Code agent has finished responding (does not run if stopped by user interrupt).
-- **`SubagentStop`**: Runs when a Claude Code subagent (Task tool call) has finished responding.
-- **`SessionEnd`**: Runs when a Claude Code session ends.
-- **`PreCompact`**: Runs before Claude Code is about to run a compact operation.
-- **`SessionStart`**: Runs when Claude Code starts a new session or resumes an existing session.
-- **`TeammateIdle`**: Runs when an agent teammate becomes idle (Agent Teams) — exit code 2 sends the teammate back to work.
-- **`TaskCompleted`**: Runs when a task is marked as completed — exit code 2 blocks the completion.
-
-> These are the most-used events. The full catalog is **33 events** as of October 4, 2026 (SubagentStart, PermissionRequest, FileChanged, WorktreeCreate, PostCompact, …); see the [official hooks reference](https://code.claude.com/docs/en/hooks).
-
-#### Hook input
-
-Hooks receive **JSON via stdin**. Every event includes `session_id`, `transcript_path`, and `cwd`. Event-specific fields:
-
-| Hook Event | Event-specific fields |
-|---|---|
-| `PreToolUse` | `tool_name`, `tool_input` |
-| `PostToolUse` | `tool_name`, `tool_input`, `tool_response` |
-| `Notification` | `message` |
-| `UserPromptSubmit` | `prompt` |
-| `Stop` / `SubagentStop` | `stop_hook_active` |
-| `PreCompact` | `trigger`, `custom_instructions` |
-| `SessionStart` | `source` |
-| `SessionEnd` | `reason` |
-| `TeammateIdle` | `teammate_id`, `last_activity` |
-| `TaskCompleted` | `task_id`, `task_name`, `completion_time` |
-
-> ℹ️ The `team_name` field in `TaskCreated` / `TaskCompleted` / `TeammateIdle` payloads is deprecated since v2.1.178 (one implicit team per session).
-
-#### Hook output
-
-Two ways to communicate back: **exit codes** for simple control, **JSON in stdout** for fine-grained behavior.
-
-| Exit code | Effect |
-|---|---|
-| `0` (success) | `stdout` shown in transcript mode (CTRL-R). For `UserPromptSubmit` / `SessionStart`, `stdout` is added to Claude's context. |
-| `2` (blocking) | `stderr` fed back to Claude (or shown to user) to block the action. Stops tool calls in `PreToolUse`; stops prompt processing in `UserPromptSubmit`. |
-| Other | `stderr` shown; execution continues. |
-
-**Advanced: structured JSON in stdout.** Per-event decision fields:
-
-| Event | JSON output |
-|---|---|
-| `PreToolUse` | `permissionDecision`: `"allow"` / `"deny"` / `"ask"`; `updatedInput` to modify tool parameters |
-| `PostToolUse` | `decision`: `"block"` or `undefined`; `additionalContext` can be returned |
-| `UserPromptSubmit` | `decision`: `"block"` or `undefined`; `additionalContext` can be returned |
-| `Stop` / `SubagentStop` | `decision`: `"block"` or `undefined` |
-| `SessionStart` | `additionalContext` |
-
-#### Security considerations
-
-Hooks run **arbitrary shell commands automatically** with your user permissions — they can read, modify, or delete any file you can. Anthropic provides no warranty for what your hooks do.
-
-**Best practices:**
-
-- Validate and sanitize all inputs from stdin JSON
-- Quote shell variables (`"$var"`, not `$var`)
-- Block path traversal (`..`, absolute paths outside the project)
-- Use absolute paths for invoked scripts so PATH attacks don't redirect
-- Explicitly skip sensitive files (`.env`, `.git/`, `secrets/`)
-
-Claude Code snapshots your hook configuration at session start and warns if hooks change mid-session — review before applying.
-
-<a id="hook-execution-details-and-debugging"></a>
-#### Execution & debugging
-
-- **Timeout** — defaults vary by hook type: 600s for `command`/`http`/`mcp_tool` hooks, 30s for `prompt` hooks, 60s for `agent` hooks (some events lower these — e.g. `UserPromptSubmit` command hooks get 30s). Configurable per hook.
-- **Parallelization** — all matching hooks run in parallel; identical handlers are deduplicated automatically.
-- **Environment** — hooks run in the current dir with Claude Code's env; `CLAUDE_PROJECT_DIR` is available.
-- **Debug** — `/hooks` shows current config; `claude --debug` shows hook execution logs; test scripts manually with the JSON payload piped to stdin.
-
----
-
-<a id="ai-agents"></a>
-<a id="running-agents-in-parallel"></a>
-### Subagents & running agents in parallel
-
-Claude Code has **four** ways to run agents at once. They're easy to confuse, so start here — the question that separates them is **who coordinates the work**:
-
-| Surface | Who coordinates | Reach for it when… |
-|---|---|---|
-| **Subagents** *(below)* | Claude, turn by turn, inside one session | A side task would flood your main conversation with search results, logs, or file contents you'll never reference again |
-| **Agent view** — `claude agents` *(research preview)* | **You** — hand off, check back later | You have several independent tasks and want to dispatch them, glance at status, and step in only when one needs you. Each dispatched session gets **its own worktree automatically** |
-| **[Agent Teams](#agent-teams-experimental)** *(experimental)* | A lead agent supervising peer sessions | Workers need to **talk to each other** — share findings, challenge each other, self-claim from a shared task list |
-| **[Dynamic Workflows](#dynamic-workflows)** | **A script**, not Claude's judgement | The job outgrows a handful of subagents, or you want findings cross-checked against each other: codebase-wide audits, 500-file migrations |
-
-Two supporting tools that aren't a coordination style of their own:
-
-- **[Git worktrees](#1-git-worktrees--parallel-branches-parallel-sessions)** — separate checkouts so parallel sessions never touch the same files.
-- **`/batch`** — a bundled skill that researches the codebase, splits one large change into **5–30 independent units**, and spawns a background subagent per unit **in its own worktree, each opening a PR**. It's a packaged use of subagents + worktrees, and the fastest way to feel this whole category.
-
-> 💡 **Checking on running work** depends on what you started: `/tasks` for anything backgrounded in the current session, `claude agents` for background sessions, `/workflows` for workflow runs. Note `/agents` (removed as a wizard in v2.1.198) is a different thing entirely from `claude agents`.
-
-#### 1. Git worktrees — parallel branches, parallel sessions
-
-[Git worktrees](https://git-scm.com/docs/git-worktree) let one repo have multiple branches checked out at the same time, each in its own folder. Pair them with one Claude Code session per worktree to run independent streams of work.
-
-```bash
-git worktree add -b feature-a ../feature-a    # create the worktree
-cd ../feature-a && claude                     # start Claude in it
-# Repeat in another terminal for feature-b. Each session is independent.
-git worktree remove ../feature-a              # clean up when done
-```
-
-![Three terminals creating one worktree each, then confirming the branches are checked out independently](Images/work-trees.png)
-
-> 💡 Use [tmux](https://github.com/tmux/tmux/wiki/Installing) to keep each worktree's session attached even when you close the terminal.
->
-> 💡 Prefer not to manage them by hand? `claude agents` (agent view) puts **each dispatched session in its own worktree automatically**, and `/batch` does the same per unit of work.
-
-#### 2. General-purpose subagents — when one Claude isn't enough
-
-From your main session, ask Claude to spawn subagents for a parallel sub-task. Each subagent runs in its own context window and reports a summary back, so the main session stays focused.
-
-```markdown
-Analyze the implementation of the payment feature.
-Spawn 5 subagents to accelerate the work.
-Ultrathink.
-```
-
-![The same spawn prompt typed into three separate sessions](Images/agents-prompt.png)
-![Each session running five subagents concurrently, each with its own tool calls and token count](Images/Subagents.png)
-
-<a id="3-specialized-subagents--drop-in-role-prompts"></a><a id="orchestrating-specialists-from-the-main-session"></a>Removed: the ten role prompts this section listed. To write a subagent of your own, see [Create custom subagents](https://code.claude.com/docs/en/sub-agents). See the [CHANGELOG](CHANGELOG.md#removed-listings).
-
----
-
-<a id="agent-teams-experimental---2026"></a>
-### Agent Teams (Experimental)
-
-**Agent Teams** is an experimental feature that lets a single Claude Code session coordinate **multiple specialist agents** through a shared task list. The main session acts as the team lead; teammates work on their tasks (sometimes in parallel), report progress, and update the shared list. Reach for it on full-stack features, large refactors, or anything where multiple perspectives genuinely help. Skip it for single-file edits and quick fixes.
-
-#### Enable it
-
-```bash
-export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1   # add to ~/.zshrc to persist
-claude
-```
-
-Or, more durably, in `settings.json`:
-
-```json
-{ "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1" } }
-```
-
-#### The example that justifies the cost
-
-Most "spawn N teammates" prompts would work just as well with subagents. This one wouldn't — it needs teammates to **talk to each other**:
-
-```text
-Users report the app exits after one message instead of staying connected.
-Spawn 5 agent teammates to investigate different hypotheses. Have them talk to
-each other to try to disprove each other's theories, like a scientific
-debate. Update the findings doc with whatever consensus emerges.
-```
-
-The debate structure *is* the mechanism. Sequential investigation anchors: once one theory gets explored, everything after is biased toward it. With independent investigators actively trying to disprove each other, the theory that survives is far more likely to be the real root cause.
-
-#### Staff a team with the role prompts you already have
-
-A teammate can be spawned **from a subagent definition**, so the subagents you define work as teammates, not just as subagents:
-
-```text
-Spawn a teammate using the security-reviewer agent type to audit the auth module.
-```
-
-It honors that definition's `tools` allowlist and `model`, and the body is *appended* to the teammate's system prompt. (`skills` and `mcpServers` frontmatter is **not** applied to teammates.)
-
-#### Three things that catch people out
-
-- **Teammates don't inherit the lead's `/model`.** Set **Default teammate model** in `/config` (pick *Default (leader's model)* to follow the lead), or name the model per spawn. They *do* inherit the lead's effort level. Model and fast mode are fixed at spawn — `/model` and `/fast` only ever change the lead.
-- **Teammates don't get the lead's conversation history.** They load `CLAUDE.md`, MCP servers, and skills like any session, but everything task-specific has to be in the spawn prompt.
-- **No worktree isolation.** Unlike agent view, teams don't isolate teammates — two teammates editing one file is a straight overwrite. Partition the files yourself.
-
-#### Monitoring, and the naming trap
-
-Teammates appear in the **agent panel** below your prompt input: `↑`/`↓` to select, `Enter` to open a transcript and message that teammate directly, `Esc` to interrupt, `Ctrl+T` for the task list. An idle row that vanished is **hidden, not stopped** — it returns on the teammate's next turn.
-
-> ⚠️ `claude agents` opens **agent view**, a *different* surface for background sessions — not your team monitor. And subagents show up in the same agent panel as teammates, so seeing rows there doesn't prove a team actually formed.
-
-#### Best practices
-
-| ✅ Do | ❌ Don't |
-|---|---|
-| Start with **3–5 teammates**, ~5–6 tasks each | Scale up before the work needs it — three focused beat five scattered |
-| Give each teammate a distinct, non-overlapping slice of files | Let two teammates edit the same file |
-| Put task specifics in the spawn prompt | Assume teammates saw your conversation |
-| Name teammates descriptively so you can address them later | Use `agent1`, `agent2` |
-| Start with **research and review** while learning | Start with parallel implementation |
-| Gate "done" with a `TaskCompleted` hook (exit 2 blocks) | Let a teammate declare victory on a red test suite |
-
-> 📚 **[Full guide in `docs/agent-teams.md` →](docs/agent-teams.md)** — display modes, plan approval, the mailbox architecture, permissions, hooks, troubleshooting, and the honest limitations list. Authoritative reference: [code.claude.com/docs/en/agent-teams](https://code.claude.com/docs/en/agent-teams).
-
----
-
-<a id="dynamic-workflows"></a>
-### Dynamic Workflows
-
-*~3 min read · [Full guide in `docs/workflows.md` →](docs/workflows.md)*
-
-> **Mental model:** A dynamic workflow is a **JavaScript script that orchestrates subagents**. Claude writes the script for the task you describe; a runtime executes it in the background while your session stays responsive. Everything else on this page has Claude deciding what runs next, turn by turn — here, **the script holds the plan**.
-
-Two consequences make this more than "more agents":
-
-- **Your context stays clean.** Intermediate results live in script variables, not Claude's context window. That's why a workflow can coordinate 200 agents when a conversation can't coordinate 10.
-- **Quality patterns become repeatable.** A script can make independent agents *adversarially refute each other's findings* before anything is reported, or draft a plan from several angles and weigh them. Same structure every run.
-
-#### Try it in 2 minutes — no script required
-
-```text
-/deep-research What changed in the Node.js permission model between v20 and v22?
-```
-
-`/deep-research` is bundled. It fans searches across several angles, cross-checks the sources, votes on each claim, and returns a cited report with the claims that failed cross-checking already filtered out. Approve the run, then `/workflows` to watch phases, agent counts, and live token spend.
-
-#### Starting your own
-
-| Scope | How |
-|---|---|
-| **One task** | Say `ultracode` — or just "use a workflow" — in your prompt |
-| **Whole session** | `/effort ultracode` (or `claude --effort ultracode`) — Claude plans a workflow for every substantive task |
-| **Forever** | Run `/workflows`, select a run, press `s` to save its script to `.claude/workflows/` — it becomes `/<name>` for everyone who clones the repo |
-
-Three phrases that reliably improve the script Claude writes: **"adversarially verify each finding"** (skeptic agents that try to refute results), **"in its own isolated copy"** (each agent gets a git worktree, so parallel edits can't conflict), and **"until two rounds in a row find nothing new"** (a convergence condition instead of a guessed count).
-
-> 📂 **This repo ships a working one:** [`.claude/workflows/stale-docs-audit.js`](.claude/workflows/stale-docs-audit.js) — one reader agent per doc file, then independent skeptics that try to refute each finding before it's reported. Clone and run `/stale-docs-audit`.
-
-> ⚠️ **Two things that surprise people.** The subagents a workflow spawns **always run in `acceptEdits`** regardless of your session's permission mode — file edits are auto-approved. And an agent still running when you stop a run isn't cached, so **many small agents preserve far more progress on resume** than a few long ones. [Details →](docs/workflows.md#permissions)
-
-Limits: **16 concurrent agents**, **1,000 per run**, no mid-run user input, resume only within the same session. Cost control lives in `/config` (**Dynamic workflow size**, default `medium` ≈ under 15 agents) — and the cheapest habit is running on one directory before the whole repo.
-
----
-
-### Beyond one terminal — the 2026 automation surface
-
-Claude Code grew a set of orchestration features in mid-2026 that compose with everything above:
-
-| Feature | What it does | Docs |
-|---|---|---|
-| **Cloud code review** | `/code-review ultra` runs a multi-agent review in the cloud (alias `/ultrareview` — 3 free runs on Pro/Max, then usage credits); `claude ultrareview` runs it non-interactively for CI | [commands](https://code.claude.com/docs/en/commands) |
-| **Routines** | `/schedule` (alias `/routines`) runs scheduled agents on Anthropic-managed cloud infrastructure; `/loop` and the Cron tools cover local scheduling | [scheduled tasks](https://code.claude.com/docs/en/scheduled-tasks) |
-| **Artifacts** | Publish live, shareable web pages to claude.ai straight from the CLI (Pro/Max/Team/Enterprise, CSP-sandboxed, 16 MiB limit) | [artifacts](https://code.claude.com/docs/en/artifacts) |
-| **Auto memory** | On by default — Claude keeps per-project memory in `~/.claude/projects/<project>/memory/` with a `MEMORY.md` index; manage with `/memory` | [memory](https://code.claude.com/docs/en/memory) |
-| **Claude in Chrome** | Browser-driving agent, GA since v2.1.198 (July 1, 2026) | — |
-
-Subagents got sharper too: they run **in the background by default** (v2.1.198), can nest **[up to three layers](https://code.claude.com/docs/en/sub-agents#let-subagents-spawn-their-own-subagents)** below the main conversation by default (v2.1.219; set `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=1` to turn nesting off), and `claude agents` opens a live multi-agent dashboard (Research Preview). The `/agents` setup wizard is gone: define agents by editing `.claude/agents/` directly, or ask Claude to do it.
-
----
-
-### Model Context Protocol (MCP)
-
-> **Mental model:** MCP is a universal translator that lets any AI tool talk to any data source through one open protocol — USB-C for AI integrations.
-
-<a id="featured-mcp-servers"></a><a id="more-mcp-servers-worth-knowing"></a>Removed: the tables of MCP servers. To find a server, see [Connect Claude Code to tools via MCP](https://code.claude.com/docs/en/mcp). See the [CHANGELOG](CHANGELOG.md#removed-listings).
-
-#### The N×M problem MCP solves
-
-Before MCP, every AI app needed a custom integration for every tool: `n` apps × `m` tools = `n × m` brittle one-off connections. Teams inside the same company would reinvent the same Slack/GitHub/Postgres integration over and over.
-
-MCP collapses this to **N + M**: each app implements MCP once, each tool exposes MCP once, and any combination works together. Same pattern Web APIs gave us for app-to-server and LSP gave us for editor-to-language tooling.
-
-#### Three pillars
-
-Each pillar makes ownership explicit, so it's always clear who's driving:
-
-| Pillar | Controlled by | Purpose |
-|---|---|---|
-| **Tools** | The model | Lets the AI take actions — query a DB, call an API, write a file |
-| **Resources** | The application | Feeds the AI structured context — files, error logs, JSON objects |
-| **Prompts** | The user | Slash-command shortcuts that kick off multi-step workflows |
-
-#### The MCP Registry & self-discovering agents
-
-The [official MCP Registry](https://registry.modelcontextprotocol.io/) (public preview since September 2025) is the app-store-equivalent for MCP servers. An agent that needs to check Grafana logs but doesn't have a Grafana tool wired up can ping the registry, find the verified server, install it, and continue — teaching itself a new capability on the fly.
-
-<a id="the-mcp-ecosystem-today"></a>Removed: a survey of the MCP ecosystem that no lesson uses. See the [CHANGELOG](CHANGELOG.md#removed-listings).
-
----
-
-<a id="fast-mode"></a>
-### Fast Mode ↯
-
-`/fast` toggles fast mode, a [research preview](https://code.claude.com/docs/en/fast-mode): up to **2.5× faster output at 2× the price**. Since v2.1.280 it runs on **Opus 5.5** by default; Opus 5 and Opus 4.8 also support it ($10/$50 per MTok in fast mode), Sonnet and Haiku don't. It isn't CLI-only: the VS Code extension has a **Toggle fast mode** command, and claude.ai/code has a toggle in the model menu. The **↯** indicator confirms it's on. On subscription plans, fast mode draws from usage credits rather than plan limits.
-
-| | Standard Opus 5.5 | Fast Mode (Opus 5.5) |
-|---|---|---|
-| Input (per MTok) | $4 | $8 (2×) |
-| Output (per MTok) | $20 | $40 (2×) |
-
-> ⚠️ **Fast mode on older Opus models is gone.** Opus 4.7 fast was deprecated on June 25, 2026 and **removed on July 24, 2026** (v2.1.219), and Opus 4.6 doesn't support fast mode either.
-
-```bash
-/fast                                    # toggle on (↯ appears)
-> fix the auth bug in src/login.ts       # faster output
-/fast                                    # toggle off when done
-```
-
-**Decision rule:** use it when latency matters (live debugging, demo prep, time-pressured fixes). At 2× cost it's a much easier call than the old 6× — but background work still doesn't need it. Use `/usage` to monitor.
-
----
-
-<a id="super-claude-framework"></a><a id="the-bmad-method--ai-agent-framework"></a>Removed: two third-party agent frameworks, SuperClaude and BMAD, that no lesson uses. See the [CHANGELOG](CHANGELOG.md#removed-listings).
-
----
-
-### FAQ
-
-*[→ Full FAQ in `docs/reference/faq.md`](docs/reference/faq.md)* — covers models, pricing, tokens, plans, Fast Mode, worktrees, and Pro-plan optimization.
-
-A few of the most-asked questions:
-
-**How many messages do I get on the Pro plan?**
-Anthropic no longer publishes exact counts — third-party estimates put Pro at roughly ~45 messages per 5-hour window, and Claude Code's five-hour rate limits were **doubled on May 6, 2026** ([announcement](https://www.anthropic.com/news/higher-limits-spacex)). [Details →](docs/reference/faq.md#q-how-many-messages-do-i-get-on-the-pro-plan)
-
-**What's the difference between Pro, Max 5x, and Max 20x?**
-Pro $20/mo, Max 5x from $100/mo (5× usage), Max 20x $200/mo (20× usage). All paid tiers include Claude Code and the current lineup; depending on your plan and seat tier, [Fable usage can bill to usage credits](https://code.claude.com/docs/en/model-config#fable-and-usage-credits) instead of plan limits. [Pricing details →](docs/reference/faq.md#q-what-are-the-claude-subscription-plans)
-
-**Should I use Fast Mode?**
-Since v2.1.280 it defaults to Opus 5.5 (Opus 5 and Opus 4.8 also support it), at 2× price for up to 2.5× output speed: an easy call when latency matters. It's a research preview. [More →](docs/reference/faq.md#q-what-is-fast-mode-and-when-should-i-use-it)
-
-**What's the difference between custom slash commands and skills?**
-Officially one system now — `.claude/commands/deploy.md` and `.claude/skills/deploy/SKILL.md` both create `/deploy`. See [Skills FAQ in `docs/skills.md`](docs/skills.md#skills-faq).
-
-**Can I use the 1M-token context window?**
-Yes — 1M context is standard on Sonnet 5, Opus 4.8, and Fable 5, with no long-context surcharge. [More →](docs/reference/faq.md#q-can-i-use-the-1m-context-window)
-
----
-
-<a id="updates--deprecations-february-2026"></a>
-<a id="updates--deprecations"></a>
-<a id="updates--deprecations-as-of-july-2026"></a>
-
-### Updates & Deprecations
-
-*[→ Full changelog in `docs/reference/changelog.md`](docs/reference/changelog.md)* — major changes, new features, and deprecations through early July 2026 (Claude Code v2.1.201).
-
-**Recent highlights:**
-
-- 🆕 **Claude Sonnet 5** *(June 30, 2026)*: 1M-token context standard; the default model on Pro and Team Standard until v2.1.280, when **Claude Opus 5.5** *(September 22, 2026)* became Claude Code's default on Pro, Max, Team, Enterprise, and the Anthropic API.
-- 🆕 **Claude Opus 4.8** *(May 28, 2026)* — Opus flagship at unchanged pricing; **Claude Fable 5 / Mythos 5** *(June 9, 2026)* opened the Mythos-class tier above Opus.
-- 🆕 **Dynamic workflows + `ultracode`** — Claude orchestrates tens to hundreds of background subagents; watch with `/workflows`.
-- 🆕 **Artifacts** *([generally available](https://code.claude.com/docs/en/whats-new/2026-w27) the week of June 29, 2026)*: publish live web pages to claude.ai from the CLI.
-- 🆕 **v2.1.198** *(July 1, 2026)* — Claude in Chrome GA, subagents run in the background by default, `/agents` wizard removed.
-- 📝 **Renames** — `/cost` + `/stats` → `/usage`; `/extra-usage` → `/usage-credits`; permission mode "default" → "Manual" (v2.1.200); `/simplify` → `/code-review` (then reintroduced as a cleanup-only review).
-- 📝 **Limits** — five-hour rate limits doubled for Pro/Max/Team on May 6, 2026.
-- ❌ **Deprecations**: Opus 4.1 retired on August 5, 2026; Opus 4.7 fast mode was removed on July 24, 2026.
-
-> 💡 For Anthropic's authoritative release notes, see the [Claude Code CHANGELOG](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md) and the [weekly "What's new" digests](https://code.claude.com/docs/en/whats-new/).
-
----
-
-### 📖 Reading tips
-
-- **Reading on GitHub?** The in-page anchor links work natively. Tap the table-of-contents button (top-left of the file view) for fast jumping.
-- **Want a richer markdown view?** This repo plays well with [Obsidian](https://obsidian.md/).
-- **On a phone?** Stick to the [Choose your path](#-choose-your-path) section at the top; the wider tables read best on desktop.
-
----
-
-### References
-
-*[→ Full reading list in `docs/reference/further-reading.md`](docs/reference/further-reading.md)*
-
-A curated set of pointers — official Anthropic docs, MCP resources, hooks examples, workflow tutorials, pricing references, and adjacent tooling.
-
-**Most-clicked starting points:**
-
-- [Claude Code overview (official)](https://code.claude.com/docs/en/overview)
-- [Claude Code best practices (official)](https://code.claude.com/docs/en/best-practices)
-- [Building effective agents (Anthropic engineering)](https://www.anthropic.com/engineering/building-effective-agents)
-- [Official MCP Registry](https://registry.modelcontextprotocol.io/)
-- [Hooks reference (official)](https://code.claude.com/docs/en/hooks)
-
----
-
-> Features, pricing, and availability change frequently. Always check the [official Claude Code documentation](https://code.claude.com/docs/en/overview) for the most current information.
-
-*Last full review: July 2026. On October 4, 2026, specific facts were corrected against Claude Code v2.1.289 (latest channel; stable is v2.1.285): install method, model lineup and default model, Sonnet 5 pricing, Opus 4.1 retirement, effort defaults and ultracode, think keywords, permission modes, skill precedence, hook event count, subagent nesting, Artifacts status, and fast mode; the MCP spec status was also updated. The rest of the guide was not re-verified. Spotted something stale? [Open an issue](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues) or send a PR (see [`CONTRIBUTING.md`](CONTRIBUTING.md)).*

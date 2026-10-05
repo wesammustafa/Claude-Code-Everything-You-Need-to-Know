@@ -1,5 +1,8 @@
 # Reasoning Effort Levels
 
+> [!NOTE]
+> From the previous edition, not yet re-verified. The guide is being rebuilt as lessons; this page keeps the earlier material reachable until they land.
+
 *~8 min read · [← Back to README](../../README.md#prompt-engineering-deep-dive)*
 
 > **Mental model:** Effort is a **behavioural dial**, not a strict token budget. It shifts how much Claude thinks before responding, how willing it is to read related files, how long the response gets, and how persistently it pushes through multi-step work. A higher dial doesn't make the model smarter — it changes its bias.

@@ -1,5 +1,8 @@
 # Claude Skills — The Complete Guide
 
+> [!NOTE]
+> From the previous edition, not yet re-verified. The guide is being rebuilt as lessons; this page keeps the earlier material reachable until they land.
+
 *~30 min read · [← Back to README](../README.md#claude-skills)*
 
 > **Mental model:** Skills package a workflow into a markdown file Claude can run. Two flavors — officially one system now: *slash skills* you invoke with `/name`, and *Agent Skills* Claude reaches for automatically when their description matches the task. `.claude/commands/deploy.md` and `.claude/skills/deploy/SKILL.md` both create `/deploy`.
