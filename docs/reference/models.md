@@ -1,114 +1,80 @@
-# Models — Specifications & Pricing
+<a id="models--specifications--pricing"></a>
+# Models and effort
 
-*[← Back to README](../../README.md#the-claude-5-era-todays-model-lineup)*
+<sub>Verified against Claude Code v2.1.285 (stable) on 2026-10-05</sub>
 
-The current Claude lineup at a glance, plus deeper specs for the headline models. For Anthropic's authoritative list (always more current), see the [official model overview](https://platform.claude.com/docs/en/about-claude/models/overview).
+Which model a session runs and how hard it thinks are two separate choices. This page is the lookup for both: the model aliases, the effort levels and the ways to set them. Which model and effort a task needs is taught in the Intermediate lesson "Pick the model and effort". To compare the current models and find their IDs, see Anthropic's [models overview](https://platform.claude.com/docs/en/about-claude/models/overview).
 
----
+<a id="the-current-lineup-july-2026"></a><a id="the-current-lineup-as-of-october-4-2026"></a><a id="the-headliners"></a><a id="claude-sonnet-5--the-new-default"></a><a id="claude-sonnet-5-legacy"></a><a id="claude-opus-48--the-opus-flagship"></a><a id="claude-opus-48-legacy"></a><a id="claude-fable-5--the-mythos-class"></a><a id="claude-fable-5-legacy"></a>
+## Aliases
 
-<a id="the-current-lineup-july-2026"></a>
+An alias picks the recommended model of a family, so you never need a version number. Pick one with `/model <alias>`, `claude --model <alias>` or the `model` setting ([Model configuration](https://code.claude.com/docs/en/model-config#model-aliases)).
 
-## The current lineup (as of October 4, 2026)
-
-| Model | Model ID | Context | Max output | Best for |
-|---|---|---|---|---|
-| **Sonnet 5.5** | `claude-sonnet-5-5` | 1M | 128K | Everyday coding: most tasks live here |
-| **Opus 5.5** *(default since v2.1.280)* | `claude-opus-5-5` | 1M | 128K | Complex reasoning, large refactors, agent orchestration |
-| **Fable 5.1** *(Mythos class)* | `claude-fable-5-1` | 1M | 128K | The genuinely hard problems, a tier above Opus |
-| **Haiku 4.5** *(fast/cheap)* | `claude-haiku-4-5` | 200K | 64K | Quick edits, doc updates, light reasoning |
-
-> ⚠️ Anthropic ships new models often. Always check the [official model overview](https://platform.claude.com/docs/en/about-claude/models/overview) before pinning a model ID.
-
-**1M context is standard** on all current Opus/Sonnet/Fable models — no beta flag, and the full window bills at standard per-token rates (no long-context surcharge).
-
-**Legacy models still available:** Fable 5, Opus 5, Opus 4.8, Opus 4.7, Opus 4.6, Opus 4.5, Sonnet 5, and Sonnet 4.6 remain accessible via API and the `/model` switcher, useful for pinning a build to a specific behavior. **Opus 4.1 was retired on August 5, 2026** (except on Bedrock and Google Cloud, which set their own schedules; see [model deprecations](https://platform.claude.com/docs/en/about-claude/model-deprecations)).
-
-**Mythos 5** (`claude-mythos-5`) is the same underlying model as Fable 5 with safeguards lifted in some areas: invitation-only for approved organizations via Project Glasswing, no self-serve access. See [the announcement](https://www.anthropic.com/news/claude-fable-5-mythos-5). The current Mythos model is **Mythos 5.1** (`claude-mythos-5-1`, released September 1, 2026), the same model as Fable 5.1, available only through Anthropic's trusted access programs.
-
----
-
-## The headliners
-
-<a id="claude-sonnet-5--the-new-default"></a>
-
-### Claude Sonnet 5 (legacy)
-
-Announced June 30, 2026. It was Claude Code's `default` model on Pro and Team Standard until v2.1.280, when Opus 5.5 became the default ([model config](https://code.claude.com/docs/en/model-config#default-model-setting)). Sonnet 5.5, released September 28, 2026, is now the current Sonnet model.
-
-- **1M-token context, 128K max output** — whole-codebase work without splitting.
-- **Pricing:** $2/$10 per MTok. It launched as introductory pricing through August 31, 2026; on August 10, 2026, Anthropic made it the standard price and cancelled the increase to $3/$15 planned for September 1, 2026 ([pricing docs](https://platform.claude.com/docs/en/about-claude/pricing)).
-- Defaults to `high` effort on API and Claude Code.
-
-→ [Announcement](https://www.anthropic.com/news/claude-sonnet-5)
-
-<a id="claude-opus-48--the-opus-flagship"></a>
-
-### Claude Opus 4.8 (legacy)
-
-Announced May 28, 2026, replacing Opus 4.7 at **unchanged pricing** ($5/$25).
-
-- Launched alongside **Dynamic Workflows** (research preview) — orchestrating hundreds of parallel subagents.
-- Anthropic reports it is **~4× less likely than Opus 4.7** to let flaws in its own code pass unflagged.
-- Defaults to `high` effort on all surfaces; supports `xhigh`.
-- Was the default model for Fast Mode in Claude Code v2.1.154 through v2.1.218, and still supports it (see below).
-
-→ [Announcement](https://www.anthropic.com/news/claude-opus-4-8)
-
-<a id="claude-fable-5--the-mythos-class"></a>
-
-### Claude Fable 5 (legacy)
-
-Announced June 9, 2026 with Mythos 5: the first *Mythos-class* models, a capability tier above Opus. Fable 5.1, released September 1, 2026, is now the current Fable model.
-
-- **$10/$50 per MTok** (batch $5/$25).
-- **Adaptive thinking is always on** — `thinking: {type: "disabled"}` is rejected.
-- Dual-use safety classifiers (cyber, bio/chem, distillation) fall back to Opus 4.8 instead of refusing.
-- Uses the Opus 4.7 tokenizer — **~30% more tokens for the same text** vs pre-4.7 models; budget accordingly.
-- Was included free on Pro/Max/Team from June 9–22, 2026; since June 23, depending on plan and seat tier, [Fable usage can bill to usage credits](https://code.claude.com/docs/en/model-config#fable-and-usage-credits). GA on API, Bedrock, Google Cloud, and Foundry.
-
-→ [Announcement](https://www.anthropic.com/news/claude-fable-5-mythos-5)
-
----
-
-## Fast Mode
-
-Fast Mode (research preview) delivers up to **2.5× faster output at 2× the standard price**, running on **Opus 5.5** (the default fast-mode model since Claude Code v2.1.280; [Claude Code fast mode docs](https://code.claude.com/docs/en/fast-mode)). Opus 5 and Opus 4.8 also support it, at $10/$50 per MTok. Toggle with `/fast` in the CLI, the **Toggle fast mode** command in the VS Code extension, or the model menu at claude.ai/code; the **↯** indicator confirms it's on. On subscription plans it draws from usage credits.
-
-| | Standard Opus 5.5 | Fast Mode (Opus 5.5) |
+| Alias | On the Anthropic API it uses | Reach for it when |
 |---|---|---|
-| Input (per MTok) | $4 | $8 (2×) |
-| Output (per MTok) | $20 | $40 (2×) |
+| `sonnet` | The latest Sonnet | Day-to-day coding |
+| `opus` | The latest Opus | Complex reasoning |
+| `fable` | The Fable model for your provider | The hardest, longest-running tasks |
+| `best` | Fable where your account has it, otherwise Opus | You want the strongest model available to you |
+| `haiku` | Haiku | Quick, simple tasks |
+| `opusplan` | Opus in plan mode, then Sonnet to carry out the plan | You want deep planning and cheaper execution |
+| `opus[1m]` | Opus with a 1 million token context window | Very long sessions, on a provider where `opus` doesn't already have that window |
 
-> ⚠️ **Older Opus fast modes were retired:** Opus 4.7 fast was deprecated on June 25, 2026 and **removed on July 24, 2026** (Claude Code v2.1.219); API requests to `claude-opus-4-7` with `speed: "fast"` now return an error. Opus 4.6 doesn't support fast mode (its fast requests run at standard speed).
+- An alias moves to a newer model over time. To stay on one version, use its full model name, such as `claude-opus-5-5`, from the [models overview](https://platform.claude.com/docs/en/about-claude/models/overview).
+- `default` isn't an alias: it clears any model you picked and returns to your account's default.
+- On other providers an alias can resolve to an older model: `sonnet` does on Claude Platform on AWS, Amazon Bedrock, Google Cloud's Agent Platform and Microsoft Foundry, and `opus` does on Microsoft Foundry. The [alias table](https://code.claude.com/docs/en/model-config#model-aliases) lists them.
+- Fable can draw on usage credits depending on your plan and seat ([Fable and usage credits](https://code.claude.com/docs/en/model-config#fable-and-usage-credits)).
 
-→ [Official fast-mode docs](https://platform.claude.com/docs/en/build-with-claude/fast-mode)
+The default model differs by account type and provider. Check yours with `/model` or `/status`, and see [Default model setting](https://code.claude.com/docs/en/model-config#default-model-setting) for the rules.
+
+## Effort levels
+
+Effort controls how much the model reasons on each step. Lower effort answers sooner and spends fewer tokens; higher effort checks more of its own work ([Adjust effort level](https://code.claude.com/docs/en/model-config#adjust-effort-level)).
+
+| Level | Fits |
+|---|---|
+| `low` | Quick exchanges where you review each result: a first sketch, a rename |
+| `medium` | Day-to-day work with a clear scope, such as a new feature, on the models where it is the default; elsewhere, a cheaper level that gives up some capability |
+| `high` | Work where edge cases are likely, such as fixing a bug in existing code |
+| `xhigh` | Deeper reasoning at a higher token spend |
+| `max` | Hard problems Claude works through without you; test it before relying on it, since it can overthink |
+
+- Which levels a model offers, and which one it starts at, differ by model: see the [levels per model](https://code.claude.com/docs/en/model-config#adjust-effort-level) in the docs. `/effort status` prints the level in effect.
+- Set a level the model doesn't offer and Claude Code uses the highest level it does offer below that.
+- The scale is calibrated per model, so `high` on one model is not the same amount of reasoning as `high` on another.
+
+## Setting effort
+
+| Where | How long it lasts |
+|---|---|
+| `/effort <level>`, or `/effort` for a slider | Saved as your default for that model; press `s` in the slider for this session only |
+| The effort slider in `/model` | The same as `/effort` |
+| `claude --effort <level>` | This session |
+| `CLAUDE_CODE_EFFORT_LEVEL` environment variable | Every session started with it. It overrides the other sources, though a `maxEffortLevel` cap still applies |
+| `modelSettings` or `effortLevel` in a settings file | Every session the file applies to. `modelSettings` sets one model's level; a top-level `effortLevel` in your user settings doesn't apply to the newest models |
+| `effort` in a skill's or subagent's frontmatter | While that skill or subagent runs |
+
+`/effort auto` clears the level you saved for the current model; the model then uses an `effortLevel` from your settings if one applies, otherwise its own default ([Set the effort level](https://code.claude.com/docs/en/model-config#set-the-effort-level)).
+
+## Gotchas
+
+- `max` applies to the current session only, unless you set it with `CLAUDE_CODE_EFFORT_LEVEL`. The `effortLevel` and `modelSettings` settings don't accept it.
+- `ultrathink` in a prompt asks for deeper reasoning on that turn only and leaves the effort level unchanged. Phrases such as "think hard" are ordinary text ([Use ultrathink](https://code.claude.com/docs/en/model-config#use-ultrathink-for-one-off-deep-reasoning)).
+- Ultracode is a setting, not an effort level: with it on, Claude plans a [dynamic workflow](https://code.claude.com/docs/en/workflows) for each substantive task, at whatever level the session runs ([Model configuration](https://code.claude.com/docs/en/model-config#adjust-effort-level)).
+- Switching models in the middle of a session recomputes the whole request, and on most models so does changing effort, so Claude Code may ask you to confirm first ([Prompt caching](https://code.claude.com/docs/en/prompt-caching)).
+
+<a id="fast-mode"></a>
+## Related pages
+
+- Fast mode, which the docs mark "in research preview": a faster configuration of supported Opus models that subscription plans pay for with usage credits only. See [Fast mode](https://code.claude.com/docs/en/fast-mode).
+- Choosing a model and effort for a task: Anthropic's [Choosing a Claude model and effort level in Claude Code](https://claude.com/blog/claude-model-and-effort-level-in-claude-code).
+- Retirement dates: [Model deprecations](https://platform.claude.com/docs/en/about-claude/model-deprecations).
+
+<a id="pricing"></a><a id="subscription-plans"></a><a id="api-pay-as-you-go"></a>
+The guide carries no prices or plan limits. See [claude.com/pricing](https://claude.com/pricing) for plans and [API pricing](https://platform.claude.com/docs/en/about-claude/pricing) for per-token rates.
 
 ---
 
-## Pricing
+<sub>Sources: [Model configuration](https://code.claude.com/docs/en/model-config) · [Models overview](https://platform.claude.com/docs/en/about-claude/models/overview) · [Prompt caching](https://code.claude.com/docs/en/prompt-caching) · [Fast mode](https://code.claude.com/docs/en/fast-mode) · [Model deprecations](https://platform.claude.com/docs/en/about-claude/model-deprecations) · [Pricing](https://claude.com/pricing) · [API pricing](https://platform.claude.com/docs/en/about-claude/pricing)</sub>
 
-### Subscription plans
-
-| Plan | Price | Models | Usage |
-|---|---|---|---|
-| Pro | $20/mo ($17/mo annual) | All current | Base — five-hour limits doubled May 6, 2026 |
-| Max 5x | from $100/mo | All current | 5× Pro |
-| Max 20x | $200/mo | All current | 20× Pro |
-
-### API (pay-as-you-go)
-
-| Model | Input (per MTok) | Output (per MTok) |
-|---|---|---|
-| Sonnet 5.5 | $2 | $10 |
-| Opus 5.5 | $4 | $20 |
-| Fable 5.1 | $10 | $50 |
-| Haiku 4.5 | $1 | $5 |
-
-- Fable 5 batch: $5/$25. Fable 5 cache pricing: $12.50 (5-min write) / $20 (1-hr write) / $1 (read) per MTok; Fable 5.1 cache reads cost $0.25 per MTok.
-- The Batch API supports **300K output tokens** on Opus 4.8/4.7/4.6 and Sonnet 5/4.6 via the `output-300k-2026-03-24` beta header ([model overview](https://platform.claude.com/docs/en/about-claude/models/overview)).
-
-> Pricing changes occasionally. Check [claude.com/pricing](https://claude.com/pricing) and the [API pricing docs](https://platform.claude.com/docs/en/about-claude/pricing) before committing.
-
----
-
-[← Back to README](../../README.md#the-claude-5-era-todays-model-lineup) · [FAQ](faq.md) · [Changelog](changelog.md)
+<sub>Up: [Reference](README.md)</sub>

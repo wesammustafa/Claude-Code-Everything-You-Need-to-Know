@@ -1,5 +1,5 @@
 {
   "rule": "stamps",
   "expect": "pass",
-  "about": "Before the front-door switch README has no trust strip, so the strip half of the rule is skipped; exempt reference pages need no Stamp."
+  "about": "Before the front-door switch README has no trust strip, so the strip half of the rule is skipped; a Stub and a page from the previous edition need no Stamp."
 }
