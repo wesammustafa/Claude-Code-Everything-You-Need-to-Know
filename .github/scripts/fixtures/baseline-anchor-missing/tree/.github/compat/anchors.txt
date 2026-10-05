@@ -1,0 +1,3 @@
+# Fixture list
+docs/models.md#pricing
+docs/models.md#model-aliases

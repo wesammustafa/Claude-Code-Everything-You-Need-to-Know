@@ -1,0 +1,5 @@
+{
+  "rule": "stub-paths",
+  "expect": "fail",
+  "about": "A page path in the committed list was deleted instead of being left as a Stub."
+}

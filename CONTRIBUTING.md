@@ -276,20 +276,18 @@ The folder layout changes while the guide is reworked into three levels, so this
 
 ## Anchor compatibility
 
-The README and the `docs/` pages have a stable URL fragment per section (e.g., `#claude-skills`, `#hooks`). When you rename or remove a heading:
+Listed anchors and page paths from `main` as it was when the rework started keep resolving: [`.github/compat/anchors.txt`](.github/compat/anchors.txt) lists the anchors of `README.md`, the `docs/` pages and `mcp-servers/README.md`, and [`.github/compat/paths.txt`](.github/compat/paths.txt) the paths of the `docs/` and `mcp-servers/` pages, each of which must stay a page or a Stub. Only pull requests that add Stubs edit the two lists.
+
+When you rename or remove a heading:
 
 1. Add an invisible HTML anchor that preserves the old slug:
    ```html
    <a id="old-slug-here"></a>
    ### New Heading
    ```
-2. Run the diff before merging, with `f` set to the file you changed:
-   ```bash
-   f=README.md
-   diff <(git show origin/main:"$f" | awk '/^ *```/{c=!c} !c && /^#+ /' | sort) \
-        <(awk '/^ *```/{c=!c} !c && /^#+ /' "$f" | sort)
-   ```
-   It compares the heading lines outside code blocks. No output means no heading changed. Each line marked `<` is an old heading that needs an anchor from step 1.
+2. Run the [checks](#checks). The `anchor-diff` rule fails, naming each missing id, if an anchor in `anchors.txt`, or an anchor on the base branch in `README.md` or `docs/` (pages under `docs/legacy/` excepted), no longer exists.
+
+When you move or remove a page in `paths.txt`, leave a Stub at the old path: an H1, a line such as `This page moved to [Hooks](../intermediate/05-hooks.md).` (or one saying it was removed in an edition, with a one-clause reason and a link to the CHANGELOG entry), and the old page's anchors as `<a id>` lines. The `stub-paths` rule fails if a listed path is gone.
 
 This keeps inbound links from social posts working even after restructures.
 

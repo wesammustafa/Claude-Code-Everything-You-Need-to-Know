@@ -41,7 +41,7 @@ The bar in brief: to add any other Vendor or Community item, a named lesson must
 
 ## Editorial rules
 
-- Renaming or removing a heading: put `<a id="old-slug"></a>` on the line above the new heading so links to the old slug keep working, then run the heading check in [CONTRIBUTING.md#anchor-compatibility](CONTRIBUTING.md#anchor-compatibility). Headings carry no dates, versions, model names, "new" or year words, stability labels or emoji.
+- Renaming or removing a heading: put `<a id="old-slug"></a>` on the line above the new heading so links to the old slug keep working, and leave a Stub at a moved page's old path ([CONTRIBUTING.md#anchor-compatibility](CONTRIBUTING.md#anchor-compatibility)); the checks' `anchor-diff` and `stub-paths` rules catch a missing one. Headings carry no dates, versions, model names, "new" or year words, stability labels or emoji.
 - Anchor date-sensitive claims to a version (`v2.1.x`) or a full date. Hedge third-party estimates and attribute them in the sentence.
 - Prefer lists or stacked blocks to tables wider than three short columns. GitHub's file view joins consecutive lines, so end a line with a backslash where a paragraph needs a line break.
 - In prose you write, use a comma, colon, parentheses or a new sentence where an em dash (U+2014) would go. Em dashes are fine inside quotations, identifiers and filenames.

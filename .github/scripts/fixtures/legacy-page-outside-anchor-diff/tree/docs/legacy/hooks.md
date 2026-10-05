@@ -1,0 +1,3 @@
+# Previous edition: hooks
+
+Retired.

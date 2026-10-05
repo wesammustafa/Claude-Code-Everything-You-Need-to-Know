@@ -1,0 +1,5 @@
+{
+  "rule": "anchor-diff",
+  "expect": "pass",
+  "about": "Pages from the previous edition under docs/legacy/ sit outside the anchor diff, so retiring their sections is allowed."
+}
