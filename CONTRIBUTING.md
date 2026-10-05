@@ -5,8 +5,64 @@ Thanks for your interest in improving this guide. This is a learning resource �
 ## Ways to contribute
 
 - **Spot something stale or wrong?** Open an issue with the section name and the problem.
-- **Have a useful skill, hook pattern, or MCP server walkthrough?** PRs welcome — see the file layout below.
+- **Want to suggest a third-party tool, MCP server, skill, plugin, course or article?** Use the [Suggest a resource form](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=suggest-resource.yml). Unsolicited pull requests that add listings are closed; see the [Listing policy](#listing-policy).
 - **Want to expand a thin section?** SDLC walkthroughs, new workflow recipes, and real-world `.claude/` examples are all high-value.
+
+<a id="adding-an-mcp-server-walkthrough"></a>
+## Listing policy
+
+**Freeze:** since 2026-10-04, listing changes are frozen while the guide is reworked. Suggestions made through the [Suggest a resource form](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=suggest-resource.yml) stay open for the next content review.
+
+A listing is an external item the guide points you to as something to use or read: a tool, MCP server, skill, plugin, course or article.
+
+### Where listings appear
+
+- A third-party item appears only where a lesson uses it. Items from Anthropic or the MCP project may also appear on a reference page that uses them.
+- No catalogs. Each topic ends with one "Find more" pointer: Anthropic's plugin marketplaces and the [MCP Registry](https://registry.modelcontextprotocol.io) (labelled "preview", [its own wording](https://modelcontextprotocol.io/registry/about)), plus at most two curated lists that clear the listing bar.
+- Unlinked, name-only lists are cut.
+
+### Labels
+
+Each listing carries one label:
+
+| Label | Meaning |
+|---|---|
+| **Anthropic** | Made by Anthropic |
+| **Vendor** | A maker's own tool for its own product, such as Microsoft's Playwright MCP server or the MCP project's reference servers |
+| **Community** | Any other third-party item |
+
+Each section with listings carries one line, `Listings checked against the listing bar on <full date>.` Rows carry no dates.
+
+### The listing bar
+
+To add any other Vendor or Community item, every add rule must hold. At each review, an item is removed if any removal rule holds. Tier 1 means the authoritative source for that kind of claim, such as [code.claude.com/docs](https://code.claude.com/docs) for Claude Code behavior.
+
+| Check | Add rule (all must hold) | Removal rule (any one removes it) |
+|---|---|---|
+| Lesson | A named lesson needs it | No rule |
+| License | Public repo with an [OSI-approved license](https://opensource.org/licenses) (CC BY, CC BY-SA or CC0 for docs-only resources) | No rule |
+| Activity | A default-branch commit within the last 90 days | No default-branch commit in 12 months |
+| Adoption | At least 1,000 GitHub stars, or at least 1,000 weekly npm or PyPI downloads, or at least 10,000 marketplace installs, measured on a stated date | Under 100 stars and under 1,000 weekly downloads, with no Anthropic marketplace listing |
+| Accuracy | Nothing it says about Claude Code contradicts Tier 1 | It contradicts Tier 1 |
+| Hosted service | Its core function does not depend on a proprietary hosted service, unless it is a vendor's own tool for its own product, labelled `needs a <vendor> account` | No rule |
+| Status | No rule | Archived or deprecated upstream, or its canonical URL or repo returns 404 |
+
+**Anthropic and MCP-project items** need only a lesson or reference page that uses them, a live URL, and no "not maintained" or "not official" disclaimer. This includes the MCP project's reference servers, which carry the Vendor label because the label names the maker.
+
+### Security caveat
+
+Every section that lists an item that runs code or gets tool access (MCP servers, hooks, plugins, skills with scripts) carries this line once:
+
+> Third-party: it can run code on your machine or give Claude new tools. Review it before installing; this guide does not audit it.
+
+The guide does not security-audit listings.
+
+### Suggesting a resource
+
+- Listings are added at a content review, not through contributors' pull requests. A listing added at a review links that review's pull request. To suggest one, use the [Suggest a resource form](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=suggest-resource.yml); its required fields ask for the evidence the bar needs.
+- An unsolicited pull request that adds a listing is closed with a reply that points to the form.
+- Suggestions that clear the bar wait for the next content review. Nothing merges ad hoc.
+- Suggesting your own project is allowed. Disclose your affiliation; the same bar applies.
 
 ## Doc style guide
 
@@ -70,12 +126,6 @@ Skills live in [`.claude/commands/`](.claude/commands). To add one:
 2. Test it locally: `claude` → `/your-skill`.
 3. Document it in [`docs/skills.md` → Available skills reference](docs/skills.md#available-skills-reference).
 4. Open a PR with the skill file, the doc update, and a one-line entry in the README's [Skills section](README.md#claude-skills) if the skill is a marquee addition.
-
-## Adding an MCP server walkthrough
-
-1. Create `mcp-servers/<server-name>.md` mirroring the structure of [`mcp-servers/serena.md`](mcp-servers/serena.md): overview, prerequisites, install, examples, troubleshooting.
-2. Add a row to the "Featured MCP servers" table in [README → MCP](README.md#model-context-protocol-mcp).
-3. Update [`mcp-servers/README.md`](mcp-servers/README.md)'s comparison matrix.
 
 ## License
 
