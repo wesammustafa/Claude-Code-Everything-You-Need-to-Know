@@ -8,6 +8,23 @@ Baseline: Claude Code v2.1.285 (stable), frozen on 2026-10-05.
 
 Every change in the next edition is verified against this version, the `stable` dist-tag of [`@anthropic-ai/claude-code`](https://www.npmjs.com/package/@anthropic-ai/claude-code?activeTab=versions) on 2026-10-05. It stays frozen until the edition ships, unless a later `stable` release removes, renames or changes the default of something a lesson teaches.
 
+## v2026.10 - 2026-10-05
+
+Verified against Claude Code v2.1.285 (stable).
+
+Edition 1: the Beginner path, with checked exercises, and the structure the next two levels build on. Intermediate and Advanced are being rebuilt; copies of the previous edition's README sections on skills, hooks, subagents and parallel work, MCP and fast mode stay readable under `docs/legacy/`, labelled as not yet re-verified.
+
+### Added
+
+- The [Beginner level](docs/beginner/README.md): five lessons, from installing Claude Code to giving a project its memory, a capstone and three Electives. Every lesson and the capstone has a check you run in the [practice template](https://github.com/wesammustafa/claude-code-practice), whose `solutions` branch passes every check.
+- A front door that places you at a level, and indexes for the three levels, the [topics](docs/topics/README.md) and the [reference pages](docs/reference/README.md), including a [Feature map](docs/reference/feature-map.md) and a [glossary](docs/reference/glossary.md).
+- Pages from the previous edition, kept readable under `docs/legacy/` with a note until the lessons that replace them land.
+- Issue forms for lesson trouble, bugs and stale facts, with a "Stuck on this lesson?" link at the bottom of every lesson.
+- Checks on every pull request: internal links and anchors, page stamps, lesson structure, images, em dashes, config validation and the safety of `examples/`. Scheduled checks watch external links, expiry markers and new `stable` releases, and open an issue when something needs attention.
+- A listing policy in [CONTRIBUTING.md](CONTRIBUTING.md#listing-policy) and a form to suggest a resource.
+- Agent rules in [AGENTS.md](AGENTS.md), which a new [CLAUDE.md](CLAUDE.md) imports.
+- A rewritten [CONTRIBUTING.md](CONTRIBUTING.md), a pull request template with a claim table and a dry-run section, and a CODEOWNERS file.
+
 ### Changed
 
 - The listing freeze has ended: resource suggestions are reviewed against the [listing bar](CONTRIBUTING.md#the-listing-bar) again.
@@ -27,9 +44,3 @@ Every change in the next edition is verified against this version, the `stable` 
 
 <a id="removed-live-config"></a>
 - The repo's live Claude Code setup no longer runs anything when you clone the repo and trust the folder. Gone: the spoken Notification hook with its text-to-speech and LLM helper scripts, the 14 allow rules, the five subagent personas in `.claude/agents/`, the seven slash commands in `.claude/commands/`, and the skills catalog and workflow recipes in docs/skills.md that described them. `.claude/` keeps a deny rule for reading `.env` files, the claude-md-review skill and the stale-docs-audit workflow. To keep a spoken notification of your own, add a Notification hook to `~/.claude/settings.json`.
-
-### Added
-
-- A listing policy in [CONTRIBUTING.md](CONTRIBUTING.md#listing-policy) and a form to suggest a resource.
-- Agent rules in [AGENTS.md](AGENTS.md), which a new [CLAUDE.md](CLAUDE.md) imports.
-- A rewritten [CONTRIBUTING.md](CONTRIBUTING.md), a pull request template with a claim table and a dry-run section, and a CODEOWNERS file.
