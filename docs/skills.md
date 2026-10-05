@@ -35,7 +35,7 @@ User beats project, enterprise skills beat both, and a skill beats a same-named 
 | **Extras** | — | A whole directory for supporting files (`scripts/`, `references/`, `assets/`) |
 | **Best for** | Workflows you want to trigger explicitly | Capabilities Claude should reach for when relevant |
 
-> 💡 **Which to write?** For new work, prefer a skill in `.claude/skills/<name>/SKILL.md`: a file in `.claude/commands/` is the older format and still works, but a skill also supports supporting files ([Skills](https://code.claude.com/docs/en/skills#where-skills-live)). Add `disable-model-invocation: true` when only you should start it, or leave it off to let Claude *decide* when the workflow applies (e.g., "if the user asks about PDFs, invoke `pdf-handler`"). The wider community has converged on Agent Skills as the format for shareable capabilities: see [The skills ecosystem](#the-skills-ecosystem) below.
+> 💡 **Which to write?** For new work, prefer a skill in `.claude/skills/<name>/SKILL.md`: a file in `.claude/commands/` is the older format and still works, but a skill also supports supporting files ([Skills](https://code.claude.com/docs/en/skills#where-skills-live)). Add `disable-model-invocation: true` when only you should start it, or leave it off to let Claude *decide* when the workflow applies (e.g., "if the user asks about PDFs, invoke `pdf-handler`").
 
 Most examples in this guide are **slash skills**, the older `.claude/commands/` format, which still works. Agent Skills follow the same patterns and frontmatter, plus the `name` and `paths` fields and the `.claude/skills/<name>/SKILL.md` layout, whose folder can hold supporting files.
 
@@ -48,7 +48,6 @@ Most examples in this guide are **slash skills**, the older `.claude/commands/` 
 - [Creating custom skills](#creating-custom-skills)
 - [Troubleshooting skills](#troubleshooting-skills)
 - [Skills best practices](#skills-best-practices)
-- [The skills ecosystem](#the-skills-ecosystem)
 
 ---
 
@@ -524,138 +523,7 @@ Analyze the code at the provided file path or URL.
 
 ---
 
-## The skills ecosystem
-
-A vibrant community has formed around Agent Skills since Anthropic open-sourced the SKILL.md format. Beyond this guide, you'll find an official Anthropic catalog, multiple marketplaces with thousands of skills indexed, and curated "awesome" lists that point at high-signal contributors.
-
-### Official Anthropic resources
-
-| Resource | What it is |
-|---|---|
-| [**anthropics/skills**](https://github.com/anthropics/skills) | Anthropic's public repo of authored Agent Skills (PDF/document creation, brand guidelines, slide generation, etc.). The reference implementation for the SKILL.md format. |
-| [**agentskills.io**](https://agentskills.io/specification) | Open specification for the SKILL.md format and frontmatter contract. Source on [GitHub → `agentskills/agentskills`](https://github.com/agentskills/agentskills). |
-| [Anthropic Skills docs](https://code.claude.com/docs/en/skills) | Authoritative usage guide — invocation, scopes, packaging, sharing. |
-
-### Marketplaces & registries
-
-| Marketplace | URL | Focus |
-|---|---|---|
-| **SkillHub** | [skillhub.club](https://www.skillhub.club/) | ~100K+ AI-evaluated skills auto-indexed from public GitHub repos. Searchable by category. |
-| **SkillsMP** | [skillsmp.com](https://skillsmp.com/) | Millions of skills aggregated across GitHub (3M+ advertised as of October 4, 2026). Independent (not Anthropic-affiliated). Filters by occupation, popularity, author. |
-| **Smithery** | [smithery.ai/skills](https://smithery.ai/skills) | Originally an MCP-server registry; now covers Agent Skills too. Includes a CLI for discovery and install. |
-| **skills.sh** | [skills.sh](https://skills.sh/) | Vercel's open agent-skills ecosystem (launched January 2026). |
-
-> 📦 **Official plugin marketplaces:** Anthropic publishes [three general-purpose plugin marketplaces](https://code.claude.com/docs/en/plugins/anthropic-marketplaces) for Claude Code: *claude-plugins-official* (auto-registered on first launch), the reviewed community marketplace (`/plugin marketplace add anthropics/claude-plugins-community`), and the demo marketplace in `anthropics/claude-code`. Plugins can bundle skills, commands, agents, hooks, and MCP servers in one install. See the [plugins docs](https://code.claude.com/docs/en/plugins).
-
-> ⚠️ Marketplaces aggregate community content and don't vet every entry. Read `SKILL.md` (and any `scripts/` it references) before installing — the same care you'd apply to a shell script.
-
-### Curated "awesome" lists
-
-| List | Slant |
-|---|---|
-| [**travisvn/awesome-claude-skills**](https://github.com/travisvn/awesome-claude-skills) | Broadest community list with creation guides, security notes, and best-practice picks. |
-| [**ComposioHQ/awesome-claude-skills**](https://github.com/ComposioHQ/awesome-claude-skills) | 1000+ production-ready skills organized by category; integrates with Composio's Connect-Apps for 500+ external apps. |
-| [**jesseotremblay/claude-skills**](https://github.com/jesseotremblay/claude-skills) | Skill-creator toolkit + business-analysis library (SWOT, market sizing, [market research](https://github.com/jesseotremblay/claude-skills/tree/main/market-research)). |
-| [**mattpocock/skills**](https://github.com/mattpocock/skills) | Engineering-focused composable skills (TDD, debugging, triage). Includes the well-known [`grill-me`](https://github.com/mattpocock/skills/blob/main/skills/productivity/grill-me/SKILL.md). |
-
-### Notable community skills, by category
-
-These are skills that surface repeatedly across SkillHub, SkillsMP, and the awesome lists. Most are Agent Skills (`SKILL.md`) — install via the marketplace UI, the [`skill-installer`](#-skill-installer) skill, or by copying the folder into `.claude/skills/<name>/`.
-
-#### Engineering & development
-
-| Skill | What it adds |
-|---|---|
-| `backend-dev-guidelines` | House-style backend patterns and review checklist |
-| `nodejs-backend-patterns` | Node.js architecture, async patterns, error handling |
-| `react` | Component conventions, hook idioms, and refactoring guidance |
-| `frontend-design` | Design-system implementation aligned with brand tokens |
-| `senior-data-engineer` | Data engineering reviewer / mentor persona |
-
-#### Quality, review & debugging
-
-| Skill | What it adds |
-|---|---|
-| `github-code-review` | Structured GitHub PR reviews with inline comments |
-| `peer-review` | Multi-perspective peer review (engineering + product lenses) |
-| `docs-review` | Documentation audit — clarity, accuracy, structure |
-| `verification-quality` | Verifies output meets a defined quality bar before sign-off |
-| `evaluation` | Systematic output evaluation with rubrics |
-| `systematic-debugging` | Methodical bug investigation with hypothesis tracking |
-
-#### Skill & tool development
-
-| Skill | What it adds |
-|---|---|
-| `skill-creator` | Scaffolds a new SKILL.md with valid frontmatter |
-| <a id="-skill-installer"></a>`skill-installer` | Installs Agent Skills from a registry or repo into `.claude/skills/` |
-| `mcp-builder` | MCP server scaffolding aligned with the protocol spec |
-| `tool-design` | Designing well-shaped tool interfaces for agents |
-
-#### Reasoning & process
-
-| Skill | What it adds |
-|---|---|
-| `brainstorming` | Structured brainstorming protocols (SCAMPER, lateral, etc.) |
-| `scientific-critical-thinking` | Critical-thinking framework for claim evaluation |
-| `scientific-problem-selection` | Picking tractable, high-leverage problems |
-| `prompt-engineering-patterns` | Reusable prompting patterns and anti-patterns |
-| `behavioral-modes` | Switch Claude into focused working modes (architect, reviewer, …) |
-
-#### Research & business
-
-| Skill | What it adds |
-|---|---|
-| `market-research-reports` | Structured market research deliverable |
-| `market-sizing-analysis` | TAM / SAM / SOM methodology, defensible bottom-up |
-| `product-strategist` | Product strategy persona — positioning, GTM, prioritization |
-
-#### Memory, context & ops
-
-| Skill | What it adds |
-|---|---|
-| `memory-systems` | Long-term memory patterns for agents |
-| `context-optimization` | Manage the context window efficiently across long sessions |
-| `context-degradation` | Recover gracefully when context drift sets in |
-| `file-search` | Improved repository search heuristics |
-| `reasoningbank-agentdb` | Reasoning + agent-DB integration patterns |
-
-#### Workflow & collaboration
-
-| Skill | What it adds |
-|---|---|
-| `pair-programming` | Structured pair-programming sessions with the model |
-| `agentic-jujutsu` | Agent orchestration techniques for multi-step problems |
-| `superpowers` / `using-superpowers` | Power-user toolkit; community-maintained meta-skill |
-
-#### Output formats & creative
-
-| Skill | What it adds |
-|---|---|
-| `pptx` | Generate PowerPoint decks programmatically |
-| `algorithmic-art` | Generative-art workflows and reusable scaffolds |
-
-### Installing a community skill
-
-Three common paths, listed in order of friction:
-
-1. **Marketplace one-click install.** SkillHub, SkillsMP, and Smithery offer a copy/install button that drops the skill folder into the right place.
-2. **Install via `skill-installer`.** Once you've installed [`skill-installer`](#-skill-installer) once, ask Claude *"install the X skill from Y registry"* and it handles the rest.
-3. **Manual copy from source.** Clone the source repo and drop `<name>/SKILL.md` (plus any `scripts/`, `references/`, `assets/` subfolders) into `.claude/skills/<name>/` for project scope or `~/.claude/skills/<name>/` for user scope.
-
-```bash
-# Manual install of a community Agent Skill
-mkdir -p .claude/skills
-git clone https://github.com/<author>/<repo>.git /tmp/src
-cp -r /tmp/src/<skill-name>/ .claude/skills/<skill-name>/
-
-# Verify the skill loaded
-claude
-> /help            # custom skills appear in the command list
-> /reload-skills   # reload skill files without restarting (v2.1.152+)
-```
-
-> 💡 **Convert a slash skill to an Agent Skill.** Move `.claude/commands/<name>.md` to `.claude/skills/<name>/SKILL.md` and add a `description`. Claude will then invoke it automatically when the description matches the request, on top of you still being able to type `/<name>`.
+<a id="the-skills-ecosystem"></a><a id="official-anthropic-resources"></a><a id="marketplaces--registries"></a><a id="curated-awesome-lists"></a><a id="notable-community-skills-by-category"></a><a id="engineering--development"></a><a id="quality-review--debugging"></a><a id="skill--tool-development"></a><a id="-skill-installer"></a><a id="reasoning--process"></a><a id="research--business"></a><a id="memory-context--ops"></a><a id="workflow--collaboration"></a><a id="output-formats--creative"></a><a id="installing-a-community-skill"></a>Removed: third-party skill registries, curated lists and community skill names that no lesson uses. To find more skills, start with Anthropic's [plugin marketplaces](https://code.claude.com/docs/en/plugins/anthropic-marketplaces). See the [CHANGELOG](../CHANGELOG.md#removed-listings).
 
 <a id="frontmatter-reference"></a>
 

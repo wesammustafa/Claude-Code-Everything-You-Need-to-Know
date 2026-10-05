@@ -10,6 +10,7 @@ Every change in the next edition is verified against this version, the `stable` 
 
 ### Changed
 
+- The listing freeze has ended: resource suggestions are reviewed against the [listing bar](CONTRIBUTING.md#the-listing-bar) again.
 - The guide has its own mark, three trail blazes climbing a post, in place of the mascot image, so it no longer uses a likeness of an Anthropic character. A new social card goes with it, carrying nothing that can go stale.
 - The reference pages are rewritten for lookup: [Models and effort](docs/reference/models.md), [Commands by level](docs/reference/commands.md) and [Further learning](docs/reference/further-reading.md). They carry no prices, plan limits or model specifications, and link the official pages for those.
 
@@ -17,6 +18,9 @@ Every change in the next edition is verified against this version, the `stable` 
 
 <a id="removed-changelog-mirror"></a>
 - The guide's summary of Claude Code releases, docs/reference/changelog.md, is now a stub that points to the official [CHANGELOG](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md) and [What's new](https://code.claude.com/docs/en/whats-new).
+
+<a id="removed-listings"></a>
+- Third-party listings that no lesson uses: the skills ecosystem catalog (registries, curated lists and community skill names), the MCP server tables and the MCP ecosystem survey, the four MCP server walkthroughs in `mcp-servers/`, the SuperClaude and BMAD frameworks, and the ten role prompts and nine role descriptions in `specialized-agents/`. The [listing policy](CONTRIBUTING.md#listing-policy) says what the guide lists now. Old links to these pages and sections land on a line that says so.
 
 <a id="removed-further-reading-listings"></a>
 - From Further learning: model announcements, a token calculator, third-party MCP server examples and an MCP authentication post, hook and workflow collections, terminal and note-taking tools, another coding assistant, and an agent-interoperability announcement. No lesson uses them.

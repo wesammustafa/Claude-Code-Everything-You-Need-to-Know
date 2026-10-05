@@ -102,7 +102,7 @@ Spawn a teammate using the security-reviewer agent type to audit the auth module
 
 The teammate honors that definition's `tools` allowlist and `model`, and the definition's body is **appended** to the teammate's system prompt rather than replacing it. Team coordination tools (`SendMessage`, task management) stay available even when `tools` restricts everything else.
 
-So the role prompts in [`specialized-agents/`](../specialized-agents) work in both directions: delegate to them as subagents, or staff a team with them. Define the role once.
+So the subagents you define work in both directions: delegate to them as subagents, or staff a team with them. Define the role once.
 
 > ⚠️ The `skills` and `mcpServers` frontmatter fields are **not applied** when a definition runs as a teammate. Teammates load skills and MCP servers from your project and user settings, like a regular session.
 
@@ -344,7 +344,7 @@ The honest list, as of v2.1.178+:
 - [Official agent teams docs](https://code.claude.com/docs/en/agent-teams) — authoritative reference
 - [Run agents in parallel](https://code.claude.com/docs/en/agents) — subagents vs agent view vs teams vs workflows
 - [Dynamic Workflows](workflows.md) — when the job outgrows a handful of peers
-- [Subagents](../README.md#ai-agents) — the lighter primitive, and this repo's 10 role prompts
+- [Subagents](../README.md#ai-agents): the lighter primitive
 - [Agent team token costs](https://code.claude.com/docs/en/costs#agent-team-token-costs)
 
 ---

@@ -125,8 +125,6 @@ The guide does not teach behavior that no Tier 1 or Tier 2 source documents. If 
 <a id="adding-an-mcp-server-walkthrough"></a>
 ## Listing policy
 
-**Freeze:** since 2026-10-04, listing changes are frozen while the guide is reworked. Suggestions made through the [Suggest a resource form](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=suggest-resource.yml) stay open for the next content review.
-
 A listing is an external item the guide points you to as something to use or read: a tool, MCP server, skill, plugin, course or article.
 
 ### Where listings appear
@@ -323,7 +321,7 @@ The folder layout changes while the guide is reworked into three levels, so this
 
 ## Anchor compatibility
 
-Listed anchors and page paths from `main` as it was when the rework started keep resolving: [`.github/compat/anchors.txt`](.github/compat/anchors.txt) lists the anchors of `README.md`, the `docs/` pages and `mcp-servers/README.md`, and [`.github/compat/paths.txt`](.github/compat/paths.txt) the paths of the `docs/` and `mcp-servers/` pages, each of which must stay a page or a Stub. Only pull requests that add Stubs edit the two lists.
+Listed anchors and page paths from `main` as it was when the rework started keep resolving: [`.github/compat/anchors.txt`](.github/compat/anchors.txt) lists the anchors of `README.md`, the `docs/` pages and `mcp-servers/README.md`, and [`.github/compat/paths.txt`](.github/compat/paths.txt) the paths of the `docs/` and `mcp-servers/` pages, plus the `specialized-agents/README.md` Stub that stands in for the removed `specialized-agents/` folder, each of which must stay a page or a Stub. Only pull requests that add Stubs edit the two lists.
 
 When you rename or remove a heading:
 
