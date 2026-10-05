@@ -19,7 +19,7 @@ A teammate filed the bug report in `capstone/beginner-bug.md` in your practice c
 3. While the plan is on screen, save `git status --porcelain` to `.practice/capstone-before.txt`, and the files the plan will change, one per line, to `.practice/capstone-plan.txt`.
 4. Approve the plan. Add a test that fails before the fix, then make it pass.
 5. Review the diff, ask for at least one correction, and make sure `npm test` passes.
-6. Make sure the committed `CLAUDE.md` names the test command, `npm test`. If you did lesson 5, it does.
+6. Make sure the committed `CLAUDE.md` names the test command, `npm test`. If you did lesson 5, it does. If you skipped it, run `/init`, check that the file names `npm test`, and commit it on its own, before the fix: the check accepts only planned files in the fix commit.
 7. Commit the fix, then save the commit with `git rev-parse HEAD > .practice/capstone-commit.txt`.
 
 Keep the session on track as you go: check `/context`, and compact or rewind when it helps.
