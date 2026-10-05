@@ -185,6 +185,22 @@ Each pull request carries one change. Fill in every section of the [pull request
 - **Images.** Capture hygiene and contrast ([Diagrams and images](#diagrams-and-images)) are review items in the template, because CI cannot judge them.
 - **Review.** The maintainer reviews and merges every pull request ([CODEOWNERS](.github/CODEOWNERS)).
 
+### Checks
+
+Before you open a pull request, run the guide's checks on your working tree, from the repo root:
+
+```bash
+node .github/scripts/check.mjs
+```
+
+It needs Node.js LTS and [lychee](https://github.com/lycheeverse/lychee) 0.24 on your `PATH` (or set `LYCHEE` to its path). Each rule prints `PASS`, `FAIL` or `SKIP` with its name, and the command exits non-zero if any rule fails. Pull request CI runs the same command with `--base` set to the target branch; diff-scoped rules compare against `origin/main` locally.
+
+Each rule has known-bad fixtures under `.github/scripts/fixtures/`, one folder per case: `fixture.json` names the rule and the expected result, `tree/` holds the files, `base/` the state before a change, and `generate.mjs` writes anything that would be live Claude Code config if committed. If you change a rule, run the self-test too:
+
+```bash
+node --test '.github/scripts/test/**/*.test.mjs'
+```
+
 ## Doc style guide
 
 The guide is moving to lessons in three levels: Beginner, Intermediate and Advanced. New pages follow these rules. Pages from the previous edition are brought in line when they are rewritten.

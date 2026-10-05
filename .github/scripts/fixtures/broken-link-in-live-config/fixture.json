@@ -1,0 +1,5 @@
+{
+  "rule": "internal-links",
+  "expect": "fail",
+  "about": "A broken link inside the live .claude/ folder. The folder is generated at test time, because a committed .claude/ would be live config."
+}

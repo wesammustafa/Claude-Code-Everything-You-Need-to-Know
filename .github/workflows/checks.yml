@@ -1,0 +1,31 @@
+name: Guide checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Install lychee
+        run: .github/scripts/install-lychee.sh
+      - name: Self-test the checks against their fixtures
+        run: node --test '.github/scripts/test/**/*.test.mjs'
+      - name: Run the checks
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ -n "$BASE_REF" ]; then base="origin/$BASE_REF"; else base="HEAD^"; fi
+          node .github/scripts/check.mjs --mode pr --base "$base"
