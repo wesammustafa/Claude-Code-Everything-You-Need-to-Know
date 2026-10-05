@@ -6,7 +6,9 @@ What Claude Code may do without asking, and how to keep it away from what it sho
 
 ## Lessons
 
-This topic's lessons are linked here in level order, with its Electives, as they are published.
+- Beginner: [Permission modes and plan mode](../beginner/02-permission-modes-and-plan-mode.md)
+
+Later lessons on this topic are linked here in level order, with its Electives, as they are published.
 
 ## Official docs
 
