@@ -20,7 +20,7 @@ Before lesson 1, make your own copy of the [practice template](https://github.co
 
 1. [Install, sign in and look around](01-install-and-look-around.md)
 2. [Permission modes and plan mode](02-permission-modes-and-plan-mode.md)
-3. Your first change, from request to commit
+3. [Your first change, from request to commit](03-first-change.md)
 4. Keep a session on track
 5. Project memory with CLAUDE.md
 
