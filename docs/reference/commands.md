@@ -17,8 +17,8 @@ The built-in commands and bundled skills the lessons use, grouped by the level t
 - `/compact`: summarize the conversation so far to free context. [Keep a session on track](../beginner/04-keep-a-session-on-track.md)
 - `/rewind`: go back to an earlier point in the conversation, the code, or both ([Checkpointing](https://code.claude.com/docs/en/checkpointing)). [Keep a session on track](../beginner/04-keep-a-session-on-track.md)
 - `/resume`: pick up an earlier conversation ([Manage sessions](https://code.claude.com/docs/en/sessions)). [Keep a session on track](../beginner/04-keep-a-session-on-track.md)
-- `/init`: write a starting `CLAUDE.md` for the project. *Project memory with CLAUDE.md*
-- `/memory`: edit `CLAUDE.md` files and manage auto memory. *Project memory with CLAUDE.md*
+- `/init`: write a starting `CLAUDE.md` for the project. [Project memory with CLAUDE.md](../beginner/05-project-memory.md)
+- `/memory`: edit `CLAUDE.md` files and manage auto memory. [Project memory with CLAUDE.md](../beginner/05-project-memory.md)
 
 Electives: `/powerup` and `/output-style` (the built-in teachers).
 
