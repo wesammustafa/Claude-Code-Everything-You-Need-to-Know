@@ -6,6 +6,7 @@ Pages to look things up in. Each one adds a table or decision aid that the offic
 
 - [Models and effort](models.md)
 - [Commands by level](commands.md)
+- [Feature map](feature-map.md): every feature's stability label and who gets it.
 - [Further learning](further-reading.md)
 - [Glossary](glossary.md): the guide's own words.
 

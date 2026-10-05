@@ -10,17 +10,13 @@ export const PRE_REWORK = [
   'docs/reference/faq.md',
 ];
 
-// Exempt until the reference layer rewrites them; that pull request removes
-// the three rewritten pages from this list and moves changelog.md to STUBS.
-export const AWAITING_REWRITE = [
-  'docs/reference/models.md',
-  'docs/reference/commands.md',
-  'docs/reference/further-reading.md',
-  'docs/reference/changelog.md',
-];
+// Pages exempt until a pull request rewrites them.
+export const AWAITING_REWRITE = [];
 
 // Stub pages inside the stamped folders.
-export const STUBS = [];
+export const STUBS = [
+  'docs/reference/changelog.md',
+];
 
 const STAMPED = /^docs\/(beginner|intermediate|advanced)\/.+\.md$|^docs\/topics\/[^/]+\.md$|^docs\/reference\/[^/]+\.md$/;
 

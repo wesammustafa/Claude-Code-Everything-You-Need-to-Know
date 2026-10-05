@@ -1,100 +1,62 @@
-# Slash Commands — Cheatsheet
+<a id="slash-commands--cheatsheet"></a>
+# Commands by level
 
-*[← Back to README](../../README.md#claude-commands)*
+<sub>Verified against Claude Code v2.1.285 (stable) on 2026-10-05</sub>
 
-The most useful built-in slash commands, plus the file-format spec for custom commands (skills). This is a curated cheatsheet — for the canonical, always-current list see the [official commands reference](https://code.claude.com/docs/en/commands). For workflows and recipes built around slash commands, see [`docs/skills.md`](../skills.md).
+The built-in commands and bundled skills the lessons use, grouped by the level that teaches them. It is not the full list: the official [commands reference](https://code.claude.com/docs/en/commands#all-commands) has every command and its options, and typing `/` in a session shows the commands available to you. Each lesson name below becomes a link when the lesson is published.
 
----
+<a id="common-built-in-slash-commands"></a>
+## Beginner
 
-## Common built-in slash commands
+- `/status`: your version, model, account and connectivity. *Install, sign in and look around*
+- `/exit`: end the session. *Install, sign in and look around*
+- `/plan`: enter plan mode from the prompt, optionally with the task. *Permission modes and plan mode*
+- `/diff`: review the changes in your working tree, including Claude's edits. *Your first change, from request to commit*
+- `/context`: how full the context window is, as a colored grid. *Keep a session on track*
+- `/clear`: start a new conversation with empty context. *Keep a session on track*
+- `/compact`: summarize the conversation so far to free context. *Keep a session on track*
+- `/rewind`: go back to an earlier point in the conversation, the code, or both ([Checkpointing](https://code.claude.com/docs/en/checkpointing)). *Keep a session on track*
+- `/resume`: pick up an earlier conversation ([Manage sessions](https://code.claude.com/docs/en/sessions)). *Keep a session on track*
+- `/init`: write a starting `CLAUDE.md` for the project. *Project memory with CLAUDE.md*
+- `/memory`: edit `CLAUDE.md` files and manage auto memory. *Project memory with CLAUDE.md*
 
-| Command | Purpose |
-|---|---|
-| `/add-dir` | Add additional working directories |
-| `/batch` | Orchestrate a large change in parallel — researches the codebase, decomposes the work into 5–30 independent units, presents a plan, then spawns one background subagent per unit **in its own git worktree**, each opening a PR |
-| `/cd` | Change the session's working directory |
-| `/clear` | Clear conversation history |
-| `/code-review [level]` | Review the current diff (`low`–`max`, or `ultra` for a multi-agent cloud review); `--fix` applies findings, `--comment` posts them to the PR. `/ultrareview` is an alias for the ultra tier |
-| `/compact [instructions]` | Compact conversation with optional focus instructions |
-| `/config` | View or modify configuration (`/config key=value` sets directly) |
-| `/debug` | Troubleshoot current session and configuration |
-| `/deep-research <question>` | Bundled [workflow](../workflows.md) — fans web searches across several angles, cross-checks sources, votes on each claim, returns a cited report. Needs the WebSearch tool |
-| `/desktop` *(alias `/app`)* | Hand the current CLI session to the desktop app (macOS/Windows) |
-| `/doctor` | Check the health of your Claude Code installation |
-| `/fork` | Copy the current conversation into a new background session and keep working here. Pass a prompt and the copy starts on it immediately |
-| `/effort` | Set reasoning effort (`low` / `medium` / `high` / `xhigh` / `max` / `ultracode`); no args opens an interactive slider; `/effort auto` resets to the model default. See [Effort levels](effort-levels.md) |
-| `/fast` | Toggle [Fast Mode](https://code.claude.com/docs/en/fast-mode) — Opus 5.5 by default (v2.1.280 and later) at 2× price for up to 2.5× output speed |
-| `/goal` | Set a standing goal for the session |
-| `/help` | Get usage help |
-| `/hooks` | Interactive menu for hook configuration |
-| `/init` | Initialize project with a `CLAUDE.md` guide |
-| `/login` / `/logout` | Sign in / out of your Anthropic account (also: `claude auth login\|status\|logout` from the shell) |
-| `/loop` | Run a prompt or skill on a recurring interval (local scheduling) |
-| `/mcp` | Manage MCP server connections and OAuth authentication |
-| `/memory` | Manage memory files (`CLAUDE.md` and auto memory) |
-| `/model` | Switch models — your selection persists as the default for new sessions since v2.1.153 (press `s` for session-only) |
-| `/permissions` | View or update [permissions](https://code.claude.com/docs/en/iam) |
-| `/plugin` | Manage plugins and plugin marketplaces (`/plugin list`, `/plugin marketplace add …`) |
-| `/reload-skills` | Reload skill files without restarting the session |
-| `/rename` | Auto-generate descriptive session names |
-| `/review` | Request code review |
-| `/rewind` | Rewind the session — can resume from before a `/clear` (v2.1.191+) |
-| `/schedule` *(alias `/routines`)* | Manage scheduled cloud agents on Anthropic-managed infrastructure |
-| `/scroll-speed` | Adjust terminal scroll speed |
-| `/simplify` | Cleanup-only review — reuse, simplification, efficiency (no bug hunting) |
-| `/status` | View account and system statuses |
-| `/subtask` | Fork a subagent that inherits your **full conversation context** instead of starting fresh (with agent view off, this is `/fork` instead) |
-| `/tasks` | List the current session's background work — subagents, workflows, background commands — and attach to or stop any of it |
-| `/teleport` *(alias `/tp`)* | Pull a cloud session into this terminal |
-| `/terminal-setup` | Configure terminal key bindings (iTerm2/VSCode) |
-| `/usage` | Show token and plan usage (merged `/cost` + `/stats` in v2.1.118) |
-| `/usage-credits` | Manage usage credits (renamed from `/extra-usage` in v2.1.144) |
-| `/workflows` | List and watch [dynamic workflow](../workflows.md) runs — drill into phases and agents, pause, stop, or press `s` to save a run's script as a reusable command |
+Electives: `/powerup` and `/output-style` (the built-in teachers).
 
-> 💡 **Day 1 essentials:** start with `/init`, `/help`, `/clear`, `/usage`, and `/model`.
->
-> ℹ️ The `/agents` setup wizard was removed in v2.1.198 — define subagents by editing `.claude/agents/` directly, or ask Claude to write one.
+## Intermediate
 
----
+- `/skills`: list the skills available in this session. *Turn a repeated workflow into a skill*
+- `/doctor`: check your setup; `/doctor prompt-audit` checks your instruction files. *Organize project memory and see what loaded*
+- `/model`: switch the model and save it as your default; for models that support it, the left and right arrow keys adjust effort. *Pick the model and effort*
+- `/effort`: set the effort level. *Pick the model and effort*
+- `/permissions`: manage allow, ask and deny rules. *Permissions, settings scopes and the sandbox*
+- `/sandbox`: turn the sandbox on or off. *Permissions, settings scopes and the sandbox*
+- `/hooks`: see which hooks are configured. *Enforce a rule with a hook*
+- `/agents`: a reminder of how to create and manage subagents. *Delegate to a custom subagent*
+- `/mcp`: manage MCP server connections and sign-ins. *Connect a tool with MCP*
+- `/plugin`: browse, install and manage plugins. *Install and manage plugins*
 
-## Custom slash commands (skills)
+Electives: `/statusline` (the status line); `/chrome` (Claude in Chrome); `/fast` (fast mode).
 
-Custom slash commands let you define frequently-used prompts as markdown files that Claude Code can execute. They're scoped (project-specific or personal), support namespacing through directories, and are now officially the same system as Agent Skills — `.claude/commands/optimize.md` and `.claude/skills/optimize/SKILL.md` both create `/optimize`.
+## Advanced
 
-**Quick demo:**
+- `/workflows`: watch, pause, resume and save dynamic workflows. *Run and save a dynamic workflow*
+- `/install-github-app`: install the Claude GitHub App for a repository, with optional workflow and secret setup. *GitHub Actions*
+- `/usage`: the session's cost, your plan's usage limits and activity stats. *Put bounds on autonomous runs*
 
-```bash
-mkdir -p .claude/commands
-echo "Analyze this code for performance issues and suggest optimizations:" \
-  > .claude/commands/optimize.md
-```
+Electives: `/background` (agent view) and `/tasks` (background work in this session); `/goal`, `/loop` and `/schedule` (`/goal`, `/loop` and routines).
 
-**Realistic example** — `.claude/commands/pull-request.md`:
+<a id="custom-slash-commands-skills"></a>
+## Your own commands
 
-```markdown
-# Create Pull Request Command
+A command you write yourself is a skill: a `SKILL.md` file in `.claude/skills/<name>/`, or a Markdown file in `.claude/commands/`, the older format ([Extend Claude with skills](https://code.claude.com/docs/en/skills)). The Intermediate lesson *Turn a repeated workflow into a skill* teaches them.
 
-Create a new branch, commit changes, and submit a pull request.
+## Shortcuts and cheat sheets
 
-## Behavior
-- Creates a new branch based on current changes
-- Formats modified files using Biome
-- Analyzes changes and automatically splits into logical commits when appropriate
-- Each commit focuses on a single logical change or feature
-- Creates descriptive commit messages for each logical unit
-- Pushes branch to remote
-- Creates pull request with proper summary and test plan
-
-## Guidelines for Automatic Commit Splitting
-- Split commits by feature, component, or concern
-- Keep related file changes together in the same commit
-- Separate refactoring from feature additions
-- Ensure each commit can be understood independently
-- Multiple unrelated changes should be split into separate commits
-```
-
-> 💡 **Next level:** for workflows, recipes, and best practices, see [`docs/skills.md`](../skills.md).
+- [Interactive mode](https://code.claude.com/docs/en/interactive-mode): keyboard shortcuts, input modes and interactive features.
+- [Claude Code cheatsheet](https://support.claude.com/en/articles/14553413-claude-code-cheatsheet): the commands and shortcuts worth learning first.
 
 ---
 
-[← Back to README](../../README.md#claude-commands) · [Skills guide](../skills.md) · [FAQ](faq.md)
+<sub>Sources: [Commands](https://code.claude.com/docs/en/commands) · [Checkpointing](https://code.claude.com/docs/en/checkpointing) · [Manage sessions](https://code.claude.com/docs/en/sessions) · [Extend Claude with skills](https://code.claude.com/docs/en/skills) · [Interactive mode](https://code.claude.com/docs/en/interactive-mode) · [Claude Code cheatsheet](https://support.claude.com/en/articles/14553413-claude-code-cheatsheet)</sub>
+
+<sub>Up: [Reference](README.md)</sub>

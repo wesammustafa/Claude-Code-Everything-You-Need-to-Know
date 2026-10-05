@@ -1,95 +1,53 @@
-# Further reading
+<a id="further-reading"></a>
+# Further learning
 
-*[← Back to README](../../README.md#references)*
+<sub>Verified against Claude Code v2.1.285 (stable) on 2026-10-05</sub>
 
-Curated links to official docs, deep-dives, and community resources for Claude Code, MCP, agents, and the broader ecosystem.
+Courses, docs and posts that go deeper than the guide, grouped by the level where they help most. Lessons link the pages they rely on; this page collects the rest. Every item is published by Anthropic, except the Agent Skills specification, an open standard that Anthropic started.
 
----
+Listings checked against the listing bar on 2026-10-05.
 
-## Official Claude & Anthropic resources
+<a id="official-claude--anthropic-resources"></a><a id="official"></a><a id="claude-code-documentation"></a><a id="claude-models--api"></a><a id="model-announcements-2026"></a>
+## Start anywhere
 
-### Claude Code documentation
+- [Claude Code overview](https://code.claude.com/docs/en/overview): what it is and where it runs.
+- [Best practices](https://code.claude.com/docs/en/best-practices): Anthropic's advice for working with Claude Code.
+- [What's new](https://code.claude.com/docs/en/whats-new): a weekly digest of notable new features.
+- [CLI reference](https://code.claude.com/docs/en/cli-reference): every command-line flag.
+- [Claude Code user FAQ](https://support.claude.com/en/articles/14554922-claude-code-user-faq): answers from Anthropic's Help Center.
+- [Models overview](https://platform.claude.com/docs/en/about-claude/models/overview) and [plans and pricing](https://claude.com/pricing). The guide's own [Models and effort](models.md) page covers the aliases and effort levels.
 
-- [Claude Code overview](https://code.claude.com/docs/en/overview)
-- [Quick start guide](https://code.claude.com/docs/en/quickstart)
-- [CLI reference](https://code.claude.com/docs/en/cli-reference)
-- [Slash commands](https://code.claude.com/docs/en/commands)
-- [Hooks reference](https://code.claude.com/docs/en/hooks)
-- [Best practices](https://code.claude.com/docs/en/best-practices)
-- [What's new — weekly digests](https://code.claude.com/docs/en/whats-new/)
-- [How Anthropic teams use Claude Code](https://claude.com/blog/how-anthropic-teams-use-claude-code)
+## Beginner
 
-### Claude models & API
+- [Quickstart](https://code.claude.com/docs/en/quickstart): from install to a first change.
+- [Commands](https://code.claude.com/docs/en/commands): every built-in command. The guide's [Commands by level](commands.md) lists the ones the lessons use.
 
-- [Models overview](https://platform.claude.com/docs/en/about-claude/models/overview)
-- [API pricing](https://claude.com/pricing)
-- [Fast mode](https://platform.claude.com/docs/en/build-with-claude/fast-mode)
-- [Token calculator](https://claude-tokenizer.vercel.app/)
+<a id="hooks--automation"></a><a id="workflows--tutorials"></a><a id="model-context-protocol-mcp"></a><a id="mcp-server-examples"></a>
+## Intermediate
 
-### Model announcements (2026)
+- [Hooks reference](https://code.claude.com/docs/en/hooks): every hook event and its input and output.
+- [Troubleshooting](https://code.claude.com/docs/en/troubleshooting) and the [error reference](https://code.claude.com/docs/en/errors): when a setup doesn't behave.
+- [Fast mode](https://platform.claude.com/docs/en/build-with-claude/fast-mode): the API side of fast mode.
+- [How Anthropic teams use Claude Code](https://claude.com/blog/how-anthropic-teams-use-claude-code): how teams inside Anthropic work with it.
+- [Onboarding Claude Code like a new developer](https://claude.com/blog/onboarding-claude-code-like-a-new-developer-lessons-from-17-years-of-development): how one open source project set Claude Code up for its large codebase.
+- [Maximizing the value of your Claude Code sessions](https://claude.com/blog/maximizing-the-value-of-your-claude-code-sessions) and [Claude Code power user tips](https://support.claude.com/en/articles/14554000-claude-code-power-user-tips).
+- [How Claude Code is used in practice](https://www.anthropic.com/research/claude-code-expertise): Anthropic's research on how people work with it.
+- For MCP, the [MCP topic page](../topics/mcp.md) lists the official docs.
 
-- [Introducing Claude Sonnet 5](https://www.anthropic.com/news/claude-sonnet-5)
-- [Introducing Claude Opus 4.8](https://www.anthropic.com/news/claude-opus-4-8)
-- [Introducing Claude Fable 5 and Claude Mythos 5](https://www.anthropic.com/news/claude-fable-5-mythos-5)
+<a id="agent-development"></a>
+## Advanced
 
-### Agent development
+- [Building effective agents](https://www.anthropic.com/engineering/building-effective-agents): Anthropic's patterns for agent systems.
+- [Agent Skills specification](https://agentskills.io/specification): the open format that Claude Code skills follow.
+- [Set up Claude Code in a monorepo or large codebase](https://code.claude.com/docs/en/large-codebases): nested CLAUDE.md files, sparse worktrees and per-package skills.
+- [How Anthropic runs large-scale code migrations with Claude Code](https://claude.com/blog/ai-code-migration).
+- [Code w/ Claude talks](https://claude.com/blog/code-w-claude-sf-2026-sf): the recap and recorded sessions.
 
-- [Building effective agents (Anthropic engineering)](https://www.anthropic.com/engineering/building-effective-agents)
-- [Agent Skills open standard](https://agentskills.io)
-
----
-
-## Model Context Protocol (MCP)
-
-### Official
-
-- **[Official MCP Registry (preview)](https://registry.modelcontextprotocol.io/)** · [About the registry](https://modelcontextprotocol.io/registry/about)
-- [MCP getting started](https://modelcontextprotocol.io/docs/getting-started/intro)
-- [MCP roadmap](https://modelcontextprotocol.io/development/roadmap)
-- [Official MCP servers (GitHub)](https://github.com/modelcontextprotocol/servers)
-- [Registry announcement](https://blog.modelcontextprotocol.io/posts/2025-09-08-mcp-registry-preview/)
-- [The 2026-07-28 specification](https://blog.modelcontextprotocol.io/posts/2026-07-28/)
-- [Donation to the Agentic AI Foundation](https://www.anthropic.com/news/donating-the-model-context-protocol-and-establishing-of-the-agentic-ai-foundation)
-- [MCP auth specifications](https://auth0.com/blog/mcp-specs-update-all-about-auth/)
-
-### MCP server examples
-
-- [Playwright MCP](https://github.com/microsoft/playwright-mcp)
-- [MCP agent implementation](https://github.com/lastmile-ai/mcp-agent)
-- [Serena — semantic code intelligence](https://github.com/oraios/serena)
+<a id="development-tools--adjacent-resources"></a><a id="agent-interoperability"></a>
+The third-party tools, model announcements and agent-interoperability links this page used to list were removed; see the [CHANGELOG](../../CHANGELOG.md#removed-further-reading-listings).
 
 ---
 
-## Hooks & automation
+<sub>Sources: the pages linked above, each checked on 2026-10-05.</sub>
 
-- [Hooks examples (community)](https://github.com/disler/claude-code-hooks-mastery)
-- [Hooks guide (eesel)](https://www.eesel.ai/blog/hooks-in-claude-code)
-
----
-
-## Workflows & tutorials
-
-- [Claude Code workflows (community)](https://github.com/OneRedOak/claude-code-workflows)
-- [Fast Mode analysis (Simon Willison, Feb 2026)](https://simonwillison.net/2026/Feb/7/claude-fast-mode/)
-
----
-
-## Development tools & adjacent resources
-
-*Community-maintained, not Anthropic projects.*
-
-- [Tmux cheatsheet](https://tmuxcheatsheet.com/)
-- [Obsidian — markdown viewer](https://obsidian.md/)
-- [Repomix — repository packaging tool](https://github.com/yamadashy/repomix)
-- [Cline — alternative AI coding assistant](https://github.com/cline/cline)
-- [Darkmoon — autonomous AI pentest platform and MCP host (GPL-3.0)](https://github.com/ASCIT31/Dark-Moon), covering web, API, Active Directory, and Kubernetes
-
----
-
-## Agent interoperability
-
-- [Agent-to-agent communication (Google for Developers)](https://developers.googleblog.com/en/a2a-a-new-era-of-agent-interoperability/)
-
----
-
-[← Back to README](../../README.md#references) · [Changelog](changelog.md) · [FAQ](faq.md)
+<sub>Up: [Reference](README.md)</sub>

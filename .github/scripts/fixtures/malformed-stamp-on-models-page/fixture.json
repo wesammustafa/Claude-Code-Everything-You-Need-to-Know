@@ -1,0 +1,5 @@
+{
+  "rule": "stamps",
+  "expect": "fail",
+  "about": "The models page is out of its exemption now that the reference layer is rewritten, so a malformed Stamp there fails."
+}
