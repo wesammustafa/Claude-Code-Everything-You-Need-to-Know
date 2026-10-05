@@ -37,6 +37,24 @@ export function slug(text) {
 
 // Every id on the page, in document order. Heading slugs come first in their
 // own line; explicit anchors are listed where they appear.
+// The lines outside fenced code blocks, each with its 1-based number. A fence
+// closes only on a line of the same character, at least as long, as
+// CommonMark has it, so a ``` line inside a ~~~ block stays code.
+export function outsideFences(markdown) {
+  const out = [];
+  let fence = null;
+  markdown.split(/\r?\n/).forEach((line, i) => {
+    const f = line.match(FENCE);
+    if (fence) {
+      if (f && f[1][0] === fence[0] && f[1].length >= fence.length && /^\s*[`~]+\s*$/.test(line)) fence = null;
+      return;
+    }
+    if (f) { fence = f[1]; return; }
+    out.push({ n: i + 1, line });
+  });
+  return out;
+}
+
 export function pageIds(markdown) {
   const ids = [];
   const seen = new Map();

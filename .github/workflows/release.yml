@@ -1,0 +1,26 @@
+name: Edition gate
+
+# Fails when a pushed v* tag's stamped pages do not match it: on vYYYY.MM every
+# stamped page carries the edition's version, and on vYYYY.MM.N every stamped
+# page changed since the previous tag is re-stamped.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Install lychee
+        run: .github/scripts/install-lychee.sh
+      - name: Run the checks in release mode
+        run: node .github/scripts/check.mjs --mode release --tag "$GITHUB_REF_NAME"

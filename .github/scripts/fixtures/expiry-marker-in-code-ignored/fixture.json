@@ -1,0 +1,7 @@
+{
+  "rule": "expiry",
+  "expect": "pass",
+  "mode": "scheduled",
+  "today": "2026-10-21",
+  "about": "A marker shown as an example inside code is not a marker, even when its date has passed."
+}

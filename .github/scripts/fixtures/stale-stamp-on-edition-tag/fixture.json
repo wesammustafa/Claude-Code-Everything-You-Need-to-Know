@@ -1,0 +1,9 @@
+{
+  "rule": "edition-gate",
+  "expect": "fail",
+  "mode": "release",
+  "tag": "v2026.10",
+  "tags": { "v2026.10": "head" },
+  "today": "2026-10-20",
+  "about": "On an edition tag one stamped page still carries the frozen baseline's Stamp instead of the edition's version."
+}

@@ -1,0 +1,6 @@
+{
+  "rule": "expiry",
+  "expect": "warn",
+  "today": "2026-10-05",
+  "about": "An expiry marker due within 30 days warns on a pull request without failing it."
+}
