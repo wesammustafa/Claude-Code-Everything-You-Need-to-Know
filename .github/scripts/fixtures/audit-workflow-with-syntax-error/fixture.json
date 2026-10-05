@@ -1,0 +1,5 @@
+{
+  "rule": "static-validation",
+  "expect": "fail",
+  "about": "A copy of the repo's stale-docs-audit workflow with an injected syntax error, generated under .claude/workflows/ because a committed copy would be live."
+}

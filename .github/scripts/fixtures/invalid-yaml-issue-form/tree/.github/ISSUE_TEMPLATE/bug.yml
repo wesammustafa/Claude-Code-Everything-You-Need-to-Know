@@ -1,0 +1,6 @@
+name: Bug
+description: Report a broken link
+body:
+  - type: input
+    attributes:
+      label: [Page

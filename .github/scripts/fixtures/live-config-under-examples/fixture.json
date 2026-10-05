@@ -1,0 +1,5 @@
+{
+  "rule": "inertness",
+  "expect": "fail",
+  "about": "A real .claude/ folder under examples/, which Claude Code can load. Generated, never committed."
+}

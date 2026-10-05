@@ -1,0 +1,5 @@
+{
+  "rule": "smoke-tests",
+  "expect": "pass",
+  "about": "On a pull request that does not touch examples/, smoke tests do not run, even if one would fail."
+}

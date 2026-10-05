@@ -204,7 +204,22 @@ Before you open a pull request, run the guide's checks on your working tree, fro
 node .github/scripts/check.mjs
 ```
 
-It needs Node.js LTS and [lychee](https://github.com/lycheeverse/lychee) 0.24 on your `PATH` (or set `LYCHEE` to its path). Each rule prints `PASS`, `FAIL` or `SKIP` with its name, and the command exits non-zero if any rule fails. Pull request CI runs the same command with `--base` set to the target branch; diff-scoped rules compare against `origin/main` locally.
+It needs Node.js LTS, git, Ruby (for YAML), jq (for the examples' smoke tests), [shellcheck](https://github.com/koalaman/shellcheck) and [lychee](https://github.com/lycheeverse/lychee) 0.24 on your `PATH`; set `LYCHEE` or `SHELLCHECK` to point at a binary elsewhere. Each rule prints `PASS`, `FAIL`, `WARN` or `SKIP` with its name, and the command exits non-zero if any rule fails. Pull request CI runs the same command with `--base` set to the target branch; diff-scoped rules compare against `origin/main` locally.
+
+| Rule | Fails when |
+|---|---|
+| `internal-links` | A link or fragment inside the repo does not resolve |
+| `anchor-diff` | An anchor in `anchors.txt`, or on the base branch, is gone |
+| `stub-paths` | A page path in `paths.txt` is gone |
+| `stamps` | A stamped page's Stamp is missing or malformed, or the trust strip disagrees with the CHANGELOG |
+| `edition-gate` | On a release tag only: a stamped page does not match the release |
+| `expiry` | Never on a pull request, where it warns about markers due within 30 days |
+| `em-dash` | An added line has an em dash outside code and double quotes |
+| `images` | An image lacks alt text, a Mermaid block lacks its accessibility lines, or a file under `assets/` breaks the naming, reference or size rules |
+| `lesson-lint` | A lesson or Elective breaks the [lesson anatomy](#lessons) |
+| `static-validation` | JSON, YAML, skill or agent frontmatter, a workflow script or a shell script does not parse or lint |
+| `inertness` | `examples/` holds a path Claude Code can load on its own |
+| `smoke-tests` | An example's `test.sh` fails (only when the change touches `examples/`) |
 
 Each rule has known-bad fixtures under `.github/scripts/fixtures/`, one folder per case: `fixture.json` names the rule and the expected result, `tree/` holds the files, `base/` the state before a change, and `generate.mjs` writes anything that would be live Claude Code config if committed. If you change a rule, run the self-test too:
 
