@@ -227,6 +227,23 @@ Each rule has known-bad fixtures under `.github/scripts/fixtures/`, one folder p
 node --test '.github/scripts/test/**/*.test.mjs'
 ```
 
+## Maintainer routine
+
+Scheduled checks keep watch between editions. Each opens or updates one tracking issue and never opens a pull request:
+
+| Workflow | Runs | Issue |
+|---|---|---|
+| Weekly external links | Mondays | Broken external links |
+| Daily expiry markers | Daily | Expired facts in the guide |
+| Weekly version drift | Mondays | New Claude Code stable release |
+
+Every month, the maintainer:
+
+1. Runs the stale-docs audit in a Claude Code session at the repo root, `/stale-docs-audit`, and files the `issueBody` it returns as one issue. It sorts every volatile claim in README, the docs pages and the example READMEs as stale, unverifiable or ok.
+2. Runs `gh workflow list --all` and turns any disabled scheduled workflow back on with `gh workflow enable <workflow>`. In a public repository, GitHub disables scheduled workflows after 60 days without repository activity ([Disabling and enabling a workflow](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/disable-and-enable-workflows)).
+
+Every two weeks, the maintainer runs `.github/scripts/traffic-snapshot.sh` and keeps its output. It records how many visitors go from the repo page to each level, the stars added in the last 30 days, search referrers and lesson-feedback issues. It needs the maintainer's own `gh` login, because the traffic API needs push access, and it records a level outside GitHub's top 10 paths as "below the 10th" ([Repository traffic](https://docs.github.com/en/rest/metrics/traffic)).
+
 ## Doc style guide
 
 The guide is moving to lessons in three levels: Beginner, Intermediate and Advanced. New pages follow these rules. Pages from the previous edition are brought in line when they are rewritten.

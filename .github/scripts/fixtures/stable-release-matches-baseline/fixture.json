@@ -1,0 +1,7 @@
+{
+  "rule": "drift",
+  "expect": "pass",
+  "mode": "scheduled",
+  "env": { "CHECKS_STABLE_VERSION": "2.1.285" },
+  "about": "npm's stable dist-tag still equals the frozen baseline."
+}

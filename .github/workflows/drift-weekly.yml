@@ -1,0 +1,34 @@
+name: Weekly version drift
+
+# Runs the drift check in scheduled mode. On a problem it opens, or updates,
+# one tracking issue titled "New Claude Code stable release". It never opens a pull request.
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Run the check
+        id: check
+        run: |
+          set +e
+          node .github/scripts/check.mjs --mode scheduled --only drift > "$RUNNER_TEMP/check.txt" 2>&1
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+          cat "$RUNNER_TEMP/check.txt"
+      - name: Open or update the tracking issue
+        if: steps.check.outputs.code != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: .github/scripts/tracking-issue.sh "New Claude Code stable release" "$RUNNER_TEMP/check.txt"

@@ -1,0 +1,6 @@
+{
+  "rule": "external-links",
+  "expect": "fail",
+  "mode": "scheduled",
+  "about": "A link whose server refuses the connection (a closed local port, so the result never depends on the network), so the weekly external run reports it."
+}

@@ -1,32 +1,31 @@
-// Run with: /stale-docs-audit            (audits this repo's default doc set)
+// Run with: /stale-docs-audit            (audits README.md, docs/ and the example READMEs)
 //           /stale-docs-audit on README.md docs/skills.md
+//           /stale-docs-audit with args { "dryRun": true }   (lists the pages and stops)
 //
-// Shape: fan one reader agent per file, then have independent skeptics try to
-// REFUTE each claim before it's reported. The refute-by-default framing is what
-// keeps plausible-but-wrong findings out of the result.
+// Shape: one agent lists the pages, one reader agent per page extracts the
+// claims that can go stale, then independent verifiers check each claim
+// against its authoritative source and sort it as stale, unverifiable or ok.
+// An unverifiable claim is a defect too: cite it or cut it. The result is the
+// body of one tracking issue for the maintainer; nothing edits a page.
 
 export const meta = {
   name: 'stale-docs-audit',
-  description: "Find version- or date-pinned claims in this repo's docs that no longer match official Claude Code documentation",
+  description: "Sort the volatile claims in this repo's docs as stale, unverifiable or ok against official sources, and draft one tracking issue",
   phases: [
-    { title: 'Scan', detail: 'one agent per file extracts pinned claims' },
-    { title: 'Verify', detail: 'independent skeptics try to refute each claim' },
+    { title: 'Discover', detail: 'list README.md, every docs page and every example README' },
+    { title: 'Scan', detail: 'one agent per page extracts volatile claims' },
+    { title: 'Verify', detail: 'independent verifiers sort each claim' },
   ],
 }
 
-const DEFAULT_TARGETS = [
-  'README.md',
-  'docs/workflows.md',
-  'docs/agent-teams.md',
-  'docs/skills.md',
-  'docs/reference/changelog.md',
-  'docs/reference/commands.md',
-  'docs/reference/effort-levels.md',
-  'docs/reference/models.md',
-  'docs/reference/faq.md',
-]
+const LIST_PAGES = "git ls-files -- README.md ':(glob)docs/**/*.md' ':(glob)examples/**/README.md'"
+const options = Array.isArray(args) ? { targets: args } : (args ?? {})
 
-const targets = Array.isArray(args) && args.length ? args : DEFAULT_TARGETS
+const PAGES_SCHEMA = {
+  type: 'object',
+  required: ['paths'],
+  properties: { paths: { type: 'array', items: { type: 'string' } } },
+}
 
 const CLAIMS_SCHEMA = {
   type: 'object',
@@ -38,7 +37,7 @@ const CLAIMS_SCHEMA = {
         type: 'object',
         required: ['claim', 'line'],
         properties: {
-          claim: { type: 'string', description: 'The pinned claim, quoted from the file' },
+          claim: { type: 'string', description: 'The claim, quoted from the page' },
           line: { type: 'integer', description: '1-indexed line the claim appears on' },
         },
       },
@@ -48,41 +47,78 @@ const CLAIMS_SCHEMA = {
 
 const VERDICT_SCHEMA = {
   type: 'object',
-  required: ['stale', 'reason'],
+  required: ['verdict', 'reason'],
   properties: {
-    stale: { type: 'boolean', description: 'True only if the claim is provably wrong today' },
-    reason: { type: 'string', description: 'What the current official docs say instead' },
-    source: { type: 'string', description: 'URL that settles it' },
-    correction: { type: 'string', description: 'Suggested replacement text' },
+    verdict: {
+      type: 'string',
+      enum: ['stale', 'unverifiable', 'ok'],
+      description: 'stale: an authoritative source shows it is wrong today. ok: an authoritative source confirms it. unverifiable: neither.',
+    },
+    reason: { type: 'string', description: 'What the source says, or what you checked and could not find' },
+    source: { type: 'string', description: 'URL that settles it, or the closest page you checked' },
+    correction: { type: 'string', description: 'Suggested replacement text, for a stale claim' },
   },
 }
 
+phase('Discover')
+let pages = options.targets
+if (!pages?.length) {
+  const listed = await agent(
+    `In this repository, run exactly this command and return every path it prints, unchanged:\n\n${LIST_PAGES}`,
+    { label: 'list pages', phase: 'Discover', schema: PAGES_SCHEMA },
+  )
+  pages = listed?.paths ?? []
+}
+log(`Auditing ${pages.length} page(s).`)
+
+const bucket = (title, items, line) =>
+  `### ${title}\n\n${items.length ? items.map(line).join('\n') : 'None.'}\n`
+
+if (options.dryRun) {
+  return {
+    pages,
+    issueBody: [
+      '## Stale-docs audit (dry run)',
+      '',
+      `Would audit ${pages.length} page(s):`,
+      '',
+      ...pages.map(p => `- \`${p}\``),
+      '',
+      bucket('Stale', [], () => ''),
+      bucket('Unverifiable', [], () => ''),
+      bucket('Ok', [], () => ''),
+    ].join('\n'),
+  }
+}
+
 phase('Scan')
-log(`Auditing ${targets.length} file(s).`)
-
 const results = await pipeline(
-  targets,
+  pages,
 
-  // Stage 1 — extract only claims that CAN go stale. Prose and opinion are noise here.
+  // Stage 1: extract only the claims that can go stale. Prose and opinion are noise here.
   (_, file) => agent(
-    `Read ${file} in this repository. Extract every factual claim pinned to a version, ` +
-    `date, price, numeric limit, command name, file path, or setting key — the kinds of ` +
-    `claim that can silently go stale. Skip prose, opinion, mental models, and advice. ` +
-    `Quote each claim verbatim and give its 1-indexed line number.`,
+    `Read ${file} in this repository. Extract every volatile claim: a version or date; a price, ` +
+    `plan availability, or usage or rate limit; a model name, model ID or default; the name or ` +
+    `behavior of a command, flag, setting, environment variable, hook event, tool or frontmatter ` +
+    `field; a stability label; any count or statistic; or a third-party status fact (owner, ` +
+    `license, archived). Skip mental models, analogies and advice. Quote each claim verbatim and ` +
+    `give its 1-indexed line number.`,
     { label: file, phase: 'Scan', schema: CLAIMS_SCHEMA },
   ),
 
-  // Stage 2 — verify each claim from this file as soon as the file is scanned.
-  // No barrier: file B is still scanning while file A's claims are being checked.
+  // Stage 2: verify each claim from this page as soon as the page is scanned.
+  // No barrier: page B is still scanning while page A's claims are being checked.
   (scan, file) => parallel(
     (scan?.claims ?? []).map(c => () =>
       agent(
-        `Try to REFUTE this documentation claim from ${file}:\n\n"${c.claim}"\n\n` +
-        `Check it against current official sources (code.claude.com/docs, ` +
-        `platform.claude.com/docs, anthropic.com/news, the anthropics/claude-code CHANGELOG). ` +
-        `Set stale:true ONLY if you can show it is wrong today and cite the source that ` +
-        `settles it. If you cannot verify it either way, set stale:false — an unverified ` +
-        `claim is not a stale claim, and a false report costs more than a missed one.`,
+        `Check this claim from ${file}:\n\n"${c.claim}"\n\n` +
+        `Use the authoritative source for its domain: code.claude.com/docs for Claude Code behavior; ` +
+        `the anthropics/claude-code CHANGELOG and the npm dist-tags of @anthropic-ai/claude-code for ` +
+        `versions; platform.claude.com/docs for models; claude.com/pricing and support.claude.com plan ` +
+        `articles for plans; modelcontextprotocol.io for MCP; docs.github.com for GitHub; a tool's own ` +
+        `docs for that tool. Answer stale only if the source shows the claim is wrong today, and ok ` +
+        `only if the source confirms it. Otherwise answer unverifiable and say what you checked: the ` +
+        `guide cites or cuts claims nobody can verify.`,
         { label: `${file}:${c.line}`, phase: 'Verify', schema: VERDICT_SCHEMA },
       ).then(v => ({ file, line: c.line, claim: c.claim, ...v })),
     ),
@@ -90,12 +126,30 @@ const results = await pipeline(
 )
 
 const checked = results.flat().filter(Boolean)
-const stale = checked.filter(r => r.stale)
+const byPlace = (a, b) => a.file.localeCompare(b.file) || a.line - b.line
+const sorted = verdict => checked.filter(r => r.verdict === verdict).sort(byPlace)
+const stale = sorted('stale')
+const unverifiable = sorted('unverifiable')
+const ok = sorted('ok')
 
-log(`${checked.length} claim(s) verified · ${stale.length} confirmed stale.`)
+log(`${checked.length} claim(s) checked: ${stale.length} stale, ${unverifiable.length} unverifiable, ${ok.length} ok.`)
+
+const where = r => `\`${r.file}:${r.line}\``
+const issueBody = [
+  '## Stale-docs audit',
+  '',
+  `Audited ${pages.length} page(s) and ${checked.length} claim(s): ${stale.length} stale, ${unverifiable.length} unverifiable, ${ok.length} ok.`,
+  '',
+  bucket('Stale', stale, r => `- ${where(r)}: "${r.claim}". ${r.reason}${r.source ? ` Source: ${r.source}` : ''}${r.correction ? ` Suggested: ${r.correction}` : ''}`),
+  bucket('Unverifiable', unverifiable, r => `- ${where(r)}: "${r.claim}". ${r.reason}${r.source ? ` Checked: ${r.source}` : ''}`),
+  '### Ok',
+  '',
+  ok.length ? `<details><summary>${ok.length} claim(s) confirmed</summary>\n\n${ok.map(r => `- ${where(r)}: ${r.source ?? ''}`).join('\n')}\n\n</details>\n` : 'None.\n',
+].join('\n')
 
 return {
-  filesAudited: targets.length,
-  claimsVerified: checked.length,
-  stale: stale.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line),
+  pagesAudited: pages.length,
+  claimsChecked: checked.length,
+  counts: { stale: stale.length, unverifiable: unverifiable.length, ok: ok.length },
+  issueBody,
 }
