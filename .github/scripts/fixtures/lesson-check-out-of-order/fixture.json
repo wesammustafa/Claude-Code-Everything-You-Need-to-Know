@@ -1,0 +1,5 @@
+{
+  "rule": "lesson-lint",
+  "expect": "fail",
+  "about": "A lesson whose Check slot puts the npm run check line before the task list."
+}

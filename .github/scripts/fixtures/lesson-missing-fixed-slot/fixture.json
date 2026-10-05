@@ -1,0 +1,5 @@
+{
+  "rule": "lesson-lint",
+  "expect": "fail",
+  "about": "A lesson without its The idea slot."
+}

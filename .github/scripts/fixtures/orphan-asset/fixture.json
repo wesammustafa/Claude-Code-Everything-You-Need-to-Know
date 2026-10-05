@@ -1,0 +1,5 @@
+{
+  "rule": "images",
+  "expect": "fail",
+  "about": "A file under assets/lessons/ that no page references."
+}

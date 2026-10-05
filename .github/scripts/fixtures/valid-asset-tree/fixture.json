@@ -1,0 +1,5 @@
+{
+  "rule": "images",
+  "expect": "pass",
+  "about": "Referenced, kebab-case assets within budget; the mark pair behind a picture element; the card and its source as allowed orphans; Mermaid with accTitle and accDescr."
+}

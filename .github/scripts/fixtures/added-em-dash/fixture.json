@@ -1,0 +1,5 @@
+{
+  "rule": "em-dash",
+  "expect": "fail",
+  "about": "A pull request adds a prose line with an em dash."
+}

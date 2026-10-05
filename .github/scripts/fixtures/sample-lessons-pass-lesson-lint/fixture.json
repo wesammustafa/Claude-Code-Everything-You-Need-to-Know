@@ -1,0 +1,5 @@
+{
+  "rule": "lesson-lint",
+  "expect": "pass",
+  "about": "The three sample lessons from the rework's design work (Beginner 2, Intermediate 5, Advanced 3), placed at their lesson paths with full navigation."
+}

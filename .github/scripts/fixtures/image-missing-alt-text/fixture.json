@@ -1,0 +1,5 @@
+{
+  "rule": "images",
+  "expect": "fail",
+  "about": "A Markdown image with empty alt text."
+}

@@ -1,0 +1,5 @@
+{
+  "rule": "images",
+  "expect": "fail",
+  "about": "An SVG under assets/ larger than the 50 KB budget. The file is generated, to keep the fixture small."
+}

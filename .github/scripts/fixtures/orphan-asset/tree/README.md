@@ -1,0 +1,3 @@
+# Fixture
+
+No images here.

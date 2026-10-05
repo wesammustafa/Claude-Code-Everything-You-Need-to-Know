@@ -52,3 +52,27 @@ export function previousTag(root, tag) {
 export function changedBetween(root, from, to) {
   return git(root, ['diff', '--name-only', from, to]).split('\n').filter((f) => f && !isExcluded(f));
 }
+
+// The lines each changed file adds relative to the base, as 1-based line
+// numbers in the working tree: { path: Set(lines) }. Untracked files count as
+// wholly added.
+export function addedLines(root, sha) {
+  const added = new Map();
+  let file = null;
+  let line = 0;
+  const diff = git(root, ['diff', '-U0', '--no-color', '--no-ext-diff', sha, '--']);
+  for (const row of diff.split('\n')) {
+    if (row.startsWith('+++ ')) {
+      file = row === '+++ /dev/null' ? null : row.slice(6);
+      if (file && !added.has(file)) added.set(file, new Set());
+    } else if (row.startsWith('@@')) {
+      line = Number(row.match(/\+(\d+)/)[1]);
+    } else if (file && row.startsWith('+')) {
+      added.get(file).add(line++);
+    }
+  }
+  const untracked = git(root, ['ls-files', '--others', '--exclude-standard', '-z']).split('\0').filter(Boolean);
+  for (const path of untracked) added.set(path, 'all');
+  for (const path of [...added.keys()]) if (isExcluded(path)) added.delete(path);
+  return added;
+}
