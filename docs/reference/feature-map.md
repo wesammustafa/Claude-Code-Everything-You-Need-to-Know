@@ -15,8 +15,8 @@ How to read it:
 | Feature | Label | Who gets it |
 |---|---|---|
 | [Terminal](https://code.claude.com/docs/en/quickstart); taught in [Install, sign in and look around](../beginner/01-install-and-look-around.md) | – | Every provider |
-| [VS Code](https://code.claude.com/docs/en/vs-code) | – | Every provider |
-| [JetBrains IDEs](https://code.claude.com/docs/en/jetbrains) | The page has no label sentence, but its settings path reads "Claude Code [Beta]" | Every provider |
+| [VS Code](https://code.claude.com/docs/en/vs-code); taught in [IDE extensions](../beginner/electives/ide-extensions.md) | – | Every provider |
+| [JetBrains IDEs](https://code.claude.com/docs/en/jetbrains); taught in [IDE extensions](../beginner/electives/ide-extensions.md) | The page has no label sentence, but its settings path reads "Claude Code [Beta]" | Every provider |
 | [Desktop app](https://code.claude.com/docs/en/desktop) | On Linux: "Linux support for the Claude desktop app is in beta." ([Linux](https://code.claude.com/docs/en/desktop-linux)) | A Claude subscription; on Bedrock, Agent Platform and Foundry through Claude Desktop on those providers |
 | [Cloud sessions on the web](https://code.claude.com/docs/en/claude-code-on-the-web) | – | Pro, Max and Team; Enterprise with a premium or Chat + Claude Code seat |
 | [Mobile](https://code.claude.com/docs/en/mobile) | – | A Claude subscription |
@@ -37,10 +37,10 @@ How to read it:
 | [Checkpointing and rewind](https://code.claude.com/docs/en/checkpointing); taught in [Keep a session on track](../beginner/04-keep-a-session-on-track.md) | – | Every provider |
 | [CLAUDE.md memory](https://code.claude.com/docs/en/memory); taught in [Project memory with CLAUDE.md](../beginner/05-project-memory.md) | – | Every provider |
 | [Sandbox](https://code.claude.com/docs/en/sandboxing) | – | Every provider |
-| [Output styles](https://code.claude.com/docs/en/output-styles) | – | Every provider |
+| [Output styles](https://code.claude.com/docs/en/output-styles); taught in [the built-in teachers](../beginner/electives/built-in-teachers.md) | – | Every provider |
 | [Status line](https://code.claude.com/docs/en/statusline) | – | Every provider |
 | [`/goal`](https://code.claude.com/docs/en/goal) | – | Every provider |
-| [`/powerup`](https://code.claude.com/docs/en/commands) | – | The docs state no limit |
+| [`/powerup`](https://code.claude.com/docs/en/commands); taught in [the built-in teachers](../beginner/electives/built-in-teachers.md) | – | The docs state no limit |
 | [Fast mode](https://code.claude.com/docs/en/fast-mode) | "Fast mode is in research preview." | A Claude subscription, paid for with usage credits (an Owner turns it on for Team and Enterprise), and Console organizations with access provisioned; not Claude Platform on AWS, Bedrock, Agent Platform or Foundry |
 | [Advisor](https://code.claude.com/docs/en/advisor) | "The advisor tool is experimental and requires the Anthropic API." | A Claude subscription and the Console |
 | [Web search](https://code.claude.com/docs/en/tools-reference#websearch-tool-behavior) | – | A Claude subscription, the Console and Claude Platform on AWS; not Bedrock; limited on Agent Platform and Foundry |
