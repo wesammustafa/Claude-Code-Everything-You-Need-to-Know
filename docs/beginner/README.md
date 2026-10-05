@@ -42,9 +42,9 @@ Each lesson takes 10 to 20 minutes. Lessons are linked here as they are publishe
 
 Optional lessons beside the core path:
 
-- IDE extensions
-- Screenshots and images
-- The built-in teachers: `/powerup`, the Learning and Explanatory output styles, and the `claude-code-guide` subagent
+- [IDE extensions](electives/ide-extensions.md)
+- [Screenshots and images](electives/screenshots-and-images.md)
+- [The built-in teachers](electives/built-in-teachers.md): `/powerup`, the Learning and Explanatory output styles, and the `claude-code-guide` subagent
 
 ## Official companions
 
