@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Bug in Claude Code itself
+    url: https://github.com/anthropics/claude-code/issues
+    about: Report problems with the Claude Code tool to Anthropic. This guide can't fix the tool.
+  - name: "Help using Claude Code: official docs"
+    url: https://code.claude.com/docs
+    about: Anthropic's documentation for setting up and using Claude Code.
+  - name: "Help using Claude Code: community"
+    url: https://claude.com/community
+    about: Ask other Claude users in the Claude Community's channels and events.

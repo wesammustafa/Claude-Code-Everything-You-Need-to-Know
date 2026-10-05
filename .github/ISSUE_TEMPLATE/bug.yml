@@ -16,3 +16,11 @@ body:
       description: What you ran/clicked and what you got instead of the expected result
     validations:
       required: true
+  - type: input
+    id: claude-code-version
+    attributes:
+      label: Claude Code version
+      description: If the problem involves running Claude Code, paste the output of `claude --version`.
+      placeholder: "2.1.289 (Claude Code)"
+    validations:
+      required: false

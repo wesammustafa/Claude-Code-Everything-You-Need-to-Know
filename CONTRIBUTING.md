@@ -7,6 +7,7 @@ Thanks for your interest in improving this guide. This is a learning resource â€
 | You want to | Do this |
 |---|---|
 | Report a stale or wrong fact | Open a [stale-content issue](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=stale-content.yml) with a link to a source that shows the current fact. |
+| Get stuck on a lesson | Use the lesson's "Stuck on this lesson?" link, which opens a [lesson-feedback issue](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml) with the lesson filled in. |
 | Report a broken link, script or example | Open a [bug report](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=bug.yml). |
 | Suggest a third-party tool, MCP server, skill, plugin, course or article | Use the [Suggest a resource form](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=suggest-resource.yml). Unsolicited pull requests that add listings are closed; see the [Listing policy](#listing-policy). |
 | Improve an explanation or fix a fact | Open a pull request. Follow [Sources and citations](#sources-and-citations), [Pull requests](#pull-requests) and the [Doc style guide](#doc-style-guide). |
@@ -19,7 +20,7 @@ The guide is being reworked into lessons in three levels.
 - Fixes to content the rework keeps are welcome and reviewed as usual.
 - A pull request that changes content scheduled for removal is closed with thanks and the one-line reason for the cut.
 - Pull requests that add listings are closed under the [Listing policy](#listing-policy).
-- Stale-content issues get a first response within 7 days: a correction, or the Tier 1 source that settles it.
+- Stale-content issues get a first response within 7 days: a correction, or the Tier 1 source that settles it. Lesson-feedback issues get a first response within 7 days too.
 
 ## Sources and citations
 

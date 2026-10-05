@@ -24,4 +24,12 @@ body:
       description: Link to the official doc/announcement showing the current fact
       placeholder: "https://code.claude.com/docs/en/…"
     validations:
+      required: true
+  - type: input
+    id: checked-against
+    attributes:
+      label: Claude Code version or date you checked
+      description: The output of `claude --version`, or the full date you read the source.
+      placeholder: "2.1.289 (Claude Code) or 2026-10-04"
+    validations:
       required: false
