@@ -1,6 +1,6 @@
 # Beginner
 
-<sub>**Beginner** · about 1 hour 45 minutes · Verified against Claude Code v2.1.285 (stable) on 2026-10-05</sub>
+<sub>**Beginner** · about 2 to 2½ hours · Verified against Claude Code v2.1.285 (stable) on 2026-10-05</sub>
 
 One session, one change. You install Claude Code, decide what it may do without asking, take one change from request to commit, keep a long session on track, and give it a project memory.
 
@@ -24,7 +24,7 @@ Before lesson 1, make your own copy of the [practice template](https://github.co
 4. [Keep a session on track](04-keep-a-session-on-track.md)
 5. [Project memory with CLAUDE.md](05-project-memory.md)
 
-Each lesson takes 10 to 20 minutes. Lessons are linked here as they are published.
+Each lesson takes 15 to 20 minutes, and the capstone 30 to 60.
 
 ## Capstone
 
