@@ -6,7 +6,9 @@ What Claude Code knows at the start of a session and what fills its context as y
 
 ## Lessons
 
-This topic's lessons are linked here in level order, with its Electives, as they are published.
+- Beginner: [Keep a session on track](../beginner/04-keep-a-session-on-track.md)
+
+Later lessons on this topic are linked here in level order, with its Electives, as they are published.
 
 ## Official docs
 

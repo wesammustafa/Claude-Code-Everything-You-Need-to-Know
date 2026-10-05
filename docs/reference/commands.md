@@ -12,11 +12,11 @@ The built-in commands and bundled skills the lessons use, grouped by the level t
 - `/exit`: end the session. [Install, sign in and look around](../beginner/01-install-and-look-around.md)
 - `/plan`: enter plan mode from the prompt, optionally with the task. [Permission modes and plan mode](../beginner/02-permission-modes-and-plan-mode.md)
 - `/diff`: review the changes in your working tree, including Claude's edits. [Your first change, from request to commit](../beginner/03-first-change.md)
-- `/context`: how full the context window is, as a colored grid. *Keep a session on track*
-- `/clear`: start a new conversation with empty context. *Keep a session on track*
-- `/compact`: summarize the conversation so far to free context. *Keep a session on track*
-- `/rewind`: go back to an earlier point in the conversation, the code, or both ([Checkpointing](https://code.claude.com/docs/en/checkpointing)). *Keep a session on track*
-- `/resume`: pick up an earlier conversation ([Manage sessions](https://code.claude.com/docs/en/sessions)). *Keep a session on track*
+- `/context`: how full the context window is, as a colored grid. [Keep a session on track](../beginner/04-keep-a-session-on-track.md)
+- `/clear`: start a new conversation with empty context. [Keep a session on track](../beginner/04-keep-a-session-on-track.md)
+- `/compact`: summarize the conversation so far to free context. [Keep a session on track](../beginner/04-keep-a-session-on-track.md)
+- `/rewind`: go back to an earlier point in the conversation, the code, or both ([Checkpointing](https://code.claude.com/docs/en/checkpointing)). [Keep a session on track](../beginner/04-keep-a-session-on-track.md)
+- `/resume`: pick up an earlier conversation ([Manage sessions](https://code.claude.com/docs/en/sessions)). [Keep a session on track](../beginner/04-keep-a-session-on-track.md)
 - `/init`: write a starting `CLAUDE.md` for the project. *Project memory with CLAUDE.md*
 - `/memory`: edit `CLAUDE.md` files and manage auto memory. *Project memory with CLAUDE.md*
 
