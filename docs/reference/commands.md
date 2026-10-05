@@ -8,8 +8,8 @@ The built-in commands and bundled skills the lessons use, grouped by the level t
 <a id="common-built-in-slash-commands"></a>
 ## Beginner
 
-- `/status`: your version, model, account and connectivity. *Install, sign in and look around*
-- `/exit`: end the session. *Install, sign in and look around*
+- `/status`: your version, model, account and connectivity. [Install, sign in and look around](../beginner/01-install-and-look-around.md)
+- `/exit`: end the session. [Install, sign in and look around](../beginner/01-install-and-look-around.md)
 - `/plan`: enter plan mode from the prompt, optionally with the task. *Permission modes and plan mode*
 - `/diff`: review the changes in your working tree, including Claude's edits. *Your first change, from request to commit*
 - `/context`: how full the context window is, as a colored grid. *Keep a session on track*
