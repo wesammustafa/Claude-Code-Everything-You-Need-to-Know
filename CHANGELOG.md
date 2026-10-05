@@ -10,6 +10,7 @@ Every change in the next edition is verified against this version, the `stable` 
 
 ### Changed
 
+- The guide has its own mark, three trail blazes climbing a post, in place of the mascot image, so it no longer uses a likeness of an Anthropic character. A new social card goes with it, carrying nothing that can go stale.
 - The reference pages are rewritten for lookup: [Models and effort](docs/reference/models.md), [Commands by level](docs/reference/commands.md) and [Further learning](docs/reference/further-reading.md). They carry no prices, plan limits or model specifications, and link the official pages for those.
 
 ### Removed
