@@ -1,0 +1,7 @@
+{
+  "rule": "drift",
+  "expect": "fail",
+  "mode": "scheduled",
+  "env": { "CHECKS_STABLE_VERSION": "2.1.290" },
+  "about": "npm's stable dist-tag has moved past the frozen baseline, so the weekly drift check reports it."
+}

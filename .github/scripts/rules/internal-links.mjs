@@ -7,12 +7,16 @@ export const id = 'internal-links';
 export const modes = ['pr', 'release'];
 
 export function run(ctx) {
+  return lychee(ctx, ['--offline', '--include-fragments']);
+}
+
+// Runs lychee over every Markdown page in the tree with the given options.
+export function lychee(ctx, options) {
   const pages = ctx.files.filter((f) => f.endsWith('.md'));
   if (pages.length === 0) return { status: 'pass', summary: 'no Markdown files' };
-  const lychee = process.env.LYCHEE || 'lychee';
   const result = spawnSync(
-    lychee,
-    ['--no-progress', '--offline', '--include-fragments', '--format', 'json', '--root-dir', ctx.root, ...pages],
+    process.env.LYCHEE || 'lychee',
+    ['--no-progress', ...options, '--format', 'json', '--root-dir', ctx.root, ...pages],
     { cwd: ctx.root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 },
   );
   if (result.error?.code === 'ENOENT') {

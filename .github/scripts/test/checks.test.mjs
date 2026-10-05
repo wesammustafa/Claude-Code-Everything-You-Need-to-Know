@@ -23,6 +23,7 @@ for (const name of readdirSync(fixturesDir).sort()) {
         base: tree.base,
         tag: spec.tag,
         today: spec.today,
+        env: spec.env,
       });
       if (spec.expect === 'fail') {
         assert.notEqual(code, 0, output);
