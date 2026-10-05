@@ -66,4 +66,4 @@ Optional lessons beside the core path:
 
 <sub>Sources: [Quickstart](https://code.claude.com/docs/en/quickstart) · [Advanced setup](https://code.claude.com/docs/en/setup) · [Terminal guide for new users](https://code.claude.com/docs/en/terminal-guide) · [Troubleshoot installation](https://code.claude.com/docs/en/troubleshoot-install) · [Commands](https://code.claude.com/docs/en/commands) · [Output styles](https://code.claude.com/docs/en/output-styles) · [Create custom subagents](https://code.claude.com/docs/en/sub-agents)</sub>
 
-<sub>Up: [Claude Code: Everything You Need to Know](../../README.md)</sub>
+<sub>Up: [Claude Code: Everything You Need to Know](../../README.md#pick-your-level)</sub>

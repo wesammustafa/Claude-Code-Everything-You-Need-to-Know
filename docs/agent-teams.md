@@ -1,5 +1,8 @@
 # Agent Teams — The Complete Guide
 
+> [!NOTE]
+> From the previous edition, not yet re-verified. The guide is being rebuilt as lessons; this page keeps the earlier material reachable until they land.
+
 *~15 min read · [← Back to README](../README.md#agent-teams-experimental)*
 
 > ⚠️ **Experimental and disabled by default.** Without `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`, no team is set up at session start, no team directories are written, and Claude will not spawn or propose teammates. There are real [limitations](#limitations) around session resumption, task coordination, and shutdown.

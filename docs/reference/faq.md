@@ -1,5 +1,8 @@
 # FAQ — Claude Code & Claude Plans
 
+> [!NOTE]
+> From the previous edition, not yet re-verified. The guide is being rebuilt as lessons; this page keeps the earlier material reachable until they land.
+
 *[← Back to README](../../README.md#faq)*
 
 A consolidated FAQ covering models, pricing, tokens, plans, Fast Mode, worktrees, and Pro-plan optimization. For Skills-specific questions, see [`docs/skills.md` → Skills FAQ](../skills.md#skills-faq).

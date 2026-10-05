@@ -1,5 +1,8 @@
 # Dynamic Workflows — Orchestrating Agents at Scale
 
+> [!NOTE]
+> From the previous edition, not yet re-verified. The guide is being rebuilt as lessons; this page keeps the earlier material reachable until they land.
+
 *~12 min read · [← Back to README](../README.md#dynamic-workflows)*
 
 > **Mental model:** A dynamic workflow is a **JavaScript script that orchestrates subagents**. Claude writes the script for the task you describe, and a runtime executes it in the background while your session stays responsive. The difference from every other multi-agent feature: **the script holds the plan**, not Claude's turn-by-turn judgement.

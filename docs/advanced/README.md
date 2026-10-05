@@ -60,4 +60,4 @@ Optional lessons beside the core path:
 
 <sub>Sources: [Run agents in parallel](https://code.claude.com/docs/en/agents) · [The AI-native SDLC playbook](https://academy.claude.com/courses/ai-native-sdlc-playbook)</sub>
 
-<sub>Up: [Claude Code: Everything You Need to Know](../../README.md)</sub>
+<sub>Up: [Claude Code: Everything You Need to Know](../../README.md#pick-your-level)</sub>
