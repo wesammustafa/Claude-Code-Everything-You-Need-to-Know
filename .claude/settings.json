@@ -1,34 +1,5 @@
 {
   "permissions": {
-    "allow": [
-      "Bash(mkdir:*)",
-      "Bash(uv:*)",
-      "Bash(find:*)",
-      "Bash(mv:*)",
-      "Bash(grep:*)",
-      "Bash(npm:*)",
-      "Bash(ls:*)",
-      "Bash(cp:*)",
-      "Write",
-      "Edit",
-      "Bash(chmod:*)",
-      "Bash(touch:*)",
-      "mcp__playwright__browser_take_screenshot",
-      "mcp__playwright__browser_resize"
-    ],
-    "deny": []
-  },
-  "hooks": {
-    "Notification": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "uv run \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/notification.py --notify"
-          }
-        ]
-      }
-    ]
+    "deny": ["Read(.env)", "Read(.env.*)"]
   }
 }

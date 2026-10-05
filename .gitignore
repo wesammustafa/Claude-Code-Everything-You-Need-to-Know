@@ -21,3 +21,16 @@ logs/
 
 # Claude Code local configuration
 .claude.json
+
+# Secrets and personal Claude Code files
+.env
+.env.*
+!.env.example
+CLAUDE.local.md
+
+# The repo's own Claude Code config is tracked, even when a global rule ignores
+# the .claude directory (a .claude/* or .claude/** rule would still hide its
+# files); its local settings and worktrees are not.
+!.claude/
+.claude/settings.local.json
+.claude/worktrees/

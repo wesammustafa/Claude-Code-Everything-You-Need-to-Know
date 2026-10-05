@@ -149,20 +149,19 @@ Creates a project-level instruction file that Claude reads on every session — 
 <a id="steal-this-setup"></a>
 #### 5. (Bonus) Steal this repo's setup
 
-This repo's [`.claude/`](.claude/) directory is a **working, runnable** Claude Code project — one of each extension point, not screenshots of one. Every path below is something you can copy into your own project today:
+This repo's [`.claude/`](.claude/) folder holds the maintainer's own tooling. It has no hooks and no allow rules, so cloning the repo and trusting the folder runs nothing by itself; its skill and workflow run only when invoked. Each path below is something you can copy into your own project:
 
 | Path | What you get | Copy it when… |
 |---|---|---|
-| [`.claude/commands/`](.claude/commands) | 7 slash skills — `/pr`, `/review`, `/tdd`, `/test`, `/five`, `/ux`, `/todo` | You want PR hygiene and review rigor without writing the prompts |
 | [`.claude/skills/`](.claude/skills) | An Agent Skill — `/claude-md-review` audits a `CLAUDE.md` for vagueness, dead paths, and bloat | You want a worked example of the [frontmatter contract](docs/skills.md#frontmatter-reference) |
-| [`.claude/agents/`](.claude/agents) | 5 subagents, plus [10 more role prompts](#3-specialized-subagents--drop-in-role-prompts) in `specialized-agents/` | You want specialists without authoring role prompts — they double as [Agent Teams](#agent-teams-experimental) teammates |
 | [`.claude/workflows/`](.claude/workflows) | A [dynamic workflow](#dynamic-workflows) — `/stale-docs-audit` fans agents across your docs, then refutes its own findings | You want a real script to read before writing your own |
-| [`.claude/hooks/`](.claude/hooks) | A Python hook — `notification.py` speaks an alert when Claude Code needs your input, such as a permission prompt | You want [lifecycle automation](#hooks) (needs [`uv`](https://docs.astral.sh/uv/getting-started/installation/)) |
-| [`.claude/settings.json`](.claude/settings.json) | Permissions + hook wiring | You're copying the hooks (they call `uv run` with `$CLAUDE_PROJECT_DIR`, so `uv` just needs to be on your `PATH`) |
+| [`.claude/settings.json`](.claude/settings.json) | A deny rule that stops Claude's file tools from reading `.env` and `.env.*` files under the folder where you start Claude Code | You want the same guard on your own secrets |
+
+The slash commands, subagents and hook this table used to list were removed; see the [CHANGELOG](CHANGELOG.md#removed-live-config).
 
 ```bash
 git clone --depth 1 https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know /tmp/cc-guide
-cp -r /tmp/cc-guide/.claude/commands/pr.md  your-project/.claude/commands/   # take what you want
+cp -r /tmp/cc-guide/.claude/skills/claude-md-review  your-project/.claude/skills/   # take what you want
 ```
 
 > ⚠️ **Read before you copy.** Skills, hooks, agents, and workflows are executable instructions that run with your permissions — including from *this* repo. Copy file by file and read each one, the same way you'd review a shell script before sourcing it. Don't `cp -r` a whole `.claude/` you haven't opened.
@@ -281,7 +280,7 @@ echo "Analyze this code for performance issues and suggest optimizations:" \
   > .claude/commands/optimize.md
 ```
 
-> 💡 **Next level:** custom slash commands and Skills are the same thing. Head to [Claude Skills](#claude-skills) for the deep dive — built-in skills, the 7 custom skills in this repo, workflow recipes, and how to write your own.
+> 💡 **Next level:** custom slash commands and Skills are the same thing. Head to [Claude Skills](#claude-skills) for the deep dive: built-in skills, the Agent Skill in this repo, and how to write your own.
 
 ---
 
@@ -328,10 +327,9 @@ That's it — a working slash skill. Promote it to an Agent Skill later by movin
 
 The [full Skills guide in `docs/skills.md`](docs/skills.md) covers:
 
-- The 8 skills shipped here: `/pr`, `/review`, `/tdd`, `/test`, `/five`, `/ux`, `/todo`, plus the Agent Skill [`/claude-md-review`](.claude/skills/claude-md-review/SKILL.md)
+- The Agent Skill shipped here, [`/claude-md-review`](.claude/skills/claude-md-review/SKILL.md)
 - Bundled built-in skills (e.g. `/dataviz`, `/debug`, `/keybindings-help`)
 - Slash skills vs Agent Skills, and the [full frontmatter reference](docs/skills.md#frontmatter-reference) — including why `allowed-tools` **grants** permission rather than restricting it
-- Workflow recipes — feature dev with TDD + PR, bug investigation, UX-first dev
 - How to write your own skills (file format, scope, examples)
 - Skills FAQ, troubleshooting, and best practices
 
@@ -391,23 +389,6 @@ Hooks live in settings files at four scopes (later overrides earlier):
 
 ```bash
 /hooks    # browse, enable, configure hooks without touching JSON
-```
-
-**Manual setup** — for the hook scripts in this repo:
-
-1. Copy `.claude/hooks/` into your project's `.claude/` folder.
-2. Delete the hook scripts you don't need; keep the rest.
-3. Install [`uv`](https://docs.astral.sh/uv/getting-started/installation/) (required to run the Python hook scripts).
-4. Copy `.claude/settings.json` into your project's `.claude/` folder.
-5. Make sure `uv` is on your `PATH`: the hook commands in `settings.json` run `uv run "$CLAUDE_PROJECT_DIR"/.claude/hooks/...`, so no paths need editing.
-
-```text
-project-root/
-└── .claude/
-    ├── hooks/
-    │   ├── notification.py
-    │   └── utils/
-    └── settings.json
 ```
 
 #### Hook Events
@@ -559,7 +540,7 @@ secrets in code, authZ/authN gaps, and unsafe input handling. Report
 findings by severity with concrete fixes.
 ```
 
-The `description` is what the main session uses to decide when to delegate — keep it to a couple of sentences of when-to-use criteria; the body below the frontmatter is the agent's system prompt. This repo's [`.claude/agents/`](.claude/agents) holds five working examples.
+The `description` is what the main session uses to decide when to delegate: keep it to a couple of sentences of when-to-use criteria; the body below the frontmatter is the agent's system prompt.
 
 **This repo ships 10 production-ready specialist prompts** you can drop into `.claude/agents/`:
 
@@ -625,7 +606,7 @@ The debate structure *is* the mechanism. Sequential investigation anchors: once 
 
 #### Staff a team with the role prompts you already have
 
-A teammate can be spawned **from a subagent definition** — so this repo's [`.claude/agents/`](.claude/agents) and [10 specialist prompts](#3-specialized-subagents--drop-in-role-prompts) work as teammates, not just as subagents:
+A teammate can be spawned **from a subagent definition**, so this repo's [10 specialist prompts](#3-specialized-subagents--drop-in-role-prompts) work as teammates, not just as subagents:
 
 ```text
 Spawn a teammate using the security-reviewer agent type to audit the auth module.
