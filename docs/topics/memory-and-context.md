@@ -7,6 +7,7 @@ What Claude Code knows at the start of a session and what fills its context as y
 ## Lessons
 
 - Beginner: [Keep a session on track](../beginner/04-keep-a-session-on-track.md)
+- Beginner: [Project memory with CLAUDE.md](../beginner/05-project-memory.md)
 
 Later lessons on this topic are linked here in level order, with its Electives, as they are published.
 
