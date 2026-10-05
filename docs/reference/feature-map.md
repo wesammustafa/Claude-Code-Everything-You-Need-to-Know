@@ -34,7 +34,7 @@ How to read it:
 |---|---|---|
 | [Plan mode](https://code.claude.com/docs/en/permission-modes); taught in [Permission modes and plan mode](../beginner/02-permission-modes-and-plan-mode.md) | – | Every provider |
 | [Auto mode](https://code.claude.com/docs/en/permission-modes); taught in [Permission modes and plan mode](../beginner/02-permission-modes-and-plan-mode.md) | – | A Claude subscription, the Console and Claude Platform on AWS; on Bedrock, Agent Platform and Foundry with newer models only. Team and Enterprise admins can turn it off |
-| [Checkpointing and rewind](https://code.claude.com/docs/en/checkpointing) | – | Every provider |
+| [Checkpointing and rewind](https://code.claude.com/docs/en/checkpointing); taught in [Keep a session on track](../beginner/04-keep-a-session-on-track.md) | – | Every provider |
 | [CLAUDE.md memory](https://code.claude.com/docs/en/memory) | – | Every provider |
 | [Sandbox](https://code.claude.com/docs/en/sandboxing) | – | Every provider |
 | [Output styles](https://code.claude.com/docs/en/output-styles) | – | Every provider |
