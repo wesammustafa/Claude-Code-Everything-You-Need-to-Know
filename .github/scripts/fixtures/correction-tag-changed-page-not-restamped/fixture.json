@@ -1,0 +1,9 @@
+{
+  "rule": "edition-gate",
+  "expect": "fail",
+  "mode": "release",
+  "tag": "v2026.10.1",
+  "tags": { "v2026.10": "base", "v2026.10.1": "head" },
+  "today": "2026-10-23",
+  "about": "A correction changes a page but leaves its Stamp dated before the previous tag."
+}

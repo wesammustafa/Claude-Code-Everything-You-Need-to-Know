@@ -51,6 +51,11 @@ for (const rule of rules) {
   const label = result.status.toUpperCase();
   console.log(`${label} ${rule.id}${result.summary ? `: ${result.summary}` : ''}`);
   for (const problem of result.problems ?? []) console.log(`  ${problem}`);
+  // In GitHub Actions, also surface each problem as an annotation on the run.
+  const level = { fail: 'error', warn: 'warning' }[result.status];
+  if (process.env.GITHUB_ACTIONS === 'true' && level) {
+    for (const problem of result.problems ?? []) console.log(`::${level} title=${rule.id}::${problem.replace(/%/g, '%25').replace(/\r?\n/g, '%0A')}`);
+  }
   if (result.status === 'fail') failed = true;
 }
 process.exit(failed ? 1 : 0);

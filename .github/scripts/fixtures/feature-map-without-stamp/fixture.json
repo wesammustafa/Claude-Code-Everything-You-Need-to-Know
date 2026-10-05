@@ -1,0 +1,5 @@
+{
+  "rule": "stamps",
+  "expect": "fail",
+  "about": "The Feature map is never exempt from the Stamp, even while the other reference pages are."
+}

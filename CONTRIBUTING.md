@@ -84,7 +84,7 @@ Sources: [Skills](https://code.claude.com/docs/en/skills), [Permissions](https:/
 
 - No prices, promos, plan limits, retirement dates, model spec tables or "as of" prose. A page's stamp carries the date for everything on it. Any other figure a lesson truly needs is written with the full date in the sentence (`on <full date>, ...`) plus its link.
 - Stability labels are quoted word for word in a `> [!NOTE]` alert under the heading, never in the heading text.
-- A future date is rare. It gets a full date, a Tier 1 link, and an expiry marker after the sentence: `<!-- expires: YYYY-MM-DD -->`.
+- A future date is rare. It gets a full date, a Tier 1 link, and an expiry marker after the sentence: `<!-- expires: YYYY-MM-DD -->`. The pull request checks warn, without failing, once a marker is due within 30 days.
 
 ### The stamp
 
@@ -95,6 +95,17 @@ Verified against Claude Code vX.Y.Z (stable) on YYYY-MM-DD
 ```
 
 It certifies that on that date every volatile claim on the page was checked against its Tier 1 source at that `stable` version, and that the page's exercise and check, if any, were dry-run there. It does not certify third-party items beyond the [listing bar](#the-listing-bar), or behavior on other release channels and surfaces. The README, the community files, stubs and pages from the previous edition carry no stamp.
+
+The `stamps` rule in the [checks](#checks) fails on a stamped page whose Stamp is missing or malformed. Once README carries a trust strip, it also fails if the strip's version differs from the latest edition entry in [CHANGELOG.md](CHANGELOG.md).
+
+### Editions and corrections
+
+Each release has an entry in [CHANGELOG.md](CHANGELOG.md), newest first:
+
+- an edition: `## vYYYY.MM - YYYY-MM-DD`, with the line `Verified against Claude Code vX.Y.Z (stable).` under it;
+- a correction: `## vYYYY.MM.N - YYYY-MM-DD`.
+
+Pushing a `v*` tag runs the edition gate. On an edition tag, every stamped page's Stamp must name the edition's version. On a correction tag, every stamped page changed since the previous tag must carry a Stamp dated after that tag's entry.
 
 ### Numbers, benchmarks and estimates
 

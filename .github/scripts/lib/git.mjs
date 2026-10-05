@@ -38,3 +38,17 @@ export function readAt(root, sha, path) {
     return null;
   }
 }
+
+// The nearest tag matching v[0-9]* that git describe finds from the first
+// parent of `tag`, or null for the first one.
+export function previousTag(root, tag) {
+  try {
+    return git(root, ['describe', '--tags', '--abbrev=0', '--match', 'v[0-9]*', `${tag}^`]).trim();
+  } catch {
+    return null;
+  }
+}
+
+export function changedBetween(root, from, to) {
+  return git(root, ['diff', '--name-only', from, to]).split('\n').filter((f) => f && !isExcluded(f));
+}

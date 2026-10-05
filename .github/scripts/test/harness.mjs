@@ -59,11 +59,15 @@ export async function materialize(fixtureDir, spec) {
   return { root, base, cleanup: () => rmSync(root, { recursive: true, force: true }) };
 }
 
-export function runChecks(root, { only, mode = 'pr', base, tag } = {}) {
+// `today` pins the date that date-based rules compare against, so fixtures
+// keep their verdict as time passes.
+export function runChecks(root, { only, mode = 'pr', base, tag, today } = {}) {
   const args = [checkScript, '--root', root, '--mode', mode];
   if (only) args.push('--only', only);
   if (base) args.push('--base', base);
   if (tag) args.push('--tag', tag);
-  const result = spawnSync(process.execPath, args, { encoding: 'utf8' });
+  const env = { ...process.env };
+  if (today) env.CHECKS_TODAY = today;
+  const result = spawnSync(process.execPath, args, { encoding: 'utf8', env });
   return { code: result.status, output: `${result.stdout}${result.stderr}` };
 }

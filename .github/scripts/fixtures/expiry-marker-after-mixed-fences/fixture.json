@@ -1,0 +1,7 @@
+{
+  "rule": "expiry",
+  "expect": "fail",
+  "mode": "scheduled",
+  "today": "2026-10-21",
+  "about": "A backtick line inside a tilde-fenced block doesn't close it, so a past-due marker after the block is still found."
+}

@@ -1,0 +1,5 @@
+{
+  "rule": "stamps",
+  "expect": "fail",
+  "about": "README's trust strip names a different version from the latest edition entry in CHANGELOG.md."
+}

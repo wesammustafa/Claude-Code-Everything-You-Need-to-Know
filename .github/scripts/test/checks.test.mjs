@@ -22,10 +22,14 @@ for (const name of readdirSync(fixturesDir).sort()) {
         mode: spec.mode ?? 'pr',
         base: tree.base,
         tag: spec.tag,
+        today: spec.today,
       });
       if (spec.expect === 'fail') {
         assert.notEqual(code, 0, output);
         assert.match(output, new RegExp(`^FAIL ${spec.rule}\\b`, 'm'), output);
+      } else if (spec.expect === 'warn') {
+        assert.equal(code, 0, output);
+        assert.match(output, new RegExp(`^WARN ${spec.rule}\\b`, 'm'), output);
       } else {
         assert.equal(code, 0, output);
         assert.doesNotMatch(output, /^FAIL /m, output);

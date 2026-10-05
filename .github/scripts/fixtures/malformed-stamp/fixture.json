@@ -1,0 +1,5 @@
+{
+  "rule": "stamps",
+  "expect": "fail",
+  "about": "A lesson's header line carries a Stamp without the v prefix and the (stable) channel."
+}

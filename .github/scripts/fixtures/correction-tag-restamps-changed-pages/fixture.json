@@ -1,0 +1,9 @@
+{
+  "rule": "edition-gate",
+  "expect": "pass",
+  "mode": "release",
+  "tag": "v2026.10.1",
+  "tags": { "v2026.10": "base", "v2026.10.1": "head" },
+  "today": "2026-10-23",
+  "about": "A correction re-stamps only the page it changed; the unchanged page keeps the edition's Stamp."
+}
