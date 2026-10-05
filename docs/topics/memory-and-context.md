@@ -1,0 +1,21 @@
+# Memory and context
+
+<sub>Topic · Verified against Claude Code v2.1.285 (stable) on 2026-10-05</sub>
+
+What Claude Code knows at the start of a session and what fills its context as you work.
+
+## Lessons
+
+This topic's lessons are linked here in level order, with its Electives, as they are published.
+
+## Official docs
+
+- [How Claude remembers your project](https://code.claude.com/docs/en/memory)
+- [Explore the context window](https://code.claude.com/docs/en/context-window)
+- [Explore the .claude directory](https://code.claude.com/docs/en/claude-directory)
+
+---
+
+<sub>Sources: [How Claude remembers your project](https://code.claude.com/docs/en/memory) · [Explore the context window](https://code.claude.com/docs/en/context-window) · [Explore the .claude directory](https://code.claude.com/docs/en/claude-directory)</sub>
+
+<sub>Up: [Topics](README.md)</sub>

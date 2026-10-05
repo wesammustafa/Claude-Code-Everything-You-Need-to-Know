@@ -1,0 +1,5 @@
+{
+  "rule": "lesson-lint",
+  "expect": "pass",
+  "about": "The lesson template in .github/lesson-template.md, copied to a lesson path, passes the Lesson lint. The copy is made at test time so the fixture always tests the current template."
+}
