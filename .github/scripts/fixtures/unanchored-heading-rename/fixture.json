@@ -1,0 +1,5 @@
+{
+  "rule": "anchor-diff",
+  "expect": "fail",
+  "about": "A heading is renamed without keeping its old slug, so links to the old fragment break."
+}

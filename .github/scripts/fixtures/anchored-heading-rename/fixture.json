@@ -1,0 +1,5 @@
+{
+  "rule": "anchor-diff",
+  "expect": "pass",
+  "about": "A renamed heading keeps its old slug as an <a id> on the line above, so old links still land."
+}

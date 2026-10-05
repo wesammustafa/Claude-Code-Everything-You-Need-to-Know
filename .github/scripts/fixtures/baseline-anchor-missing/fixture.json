@@ -1,0 +1,5 @@
+{
+  "rule": "anchor-diff",
+  "expect": "fail",
+  "about": "An anchor in the committed baseline list no longer exists, even with no base to diff against."
+}

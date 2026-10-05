@@ -7,6 +7,7 @@ import { parseArgs } from 'node:util';
 import { resolve } from 'node:path';
 import { rules } from './rules/index.mjs';
 import { listFiles } from './lib/tree.mjs';
+import { resolveBase } from './lib/git.mjs';
 
 const MODES = ['pr', 'release', 'scheduled'];
 
@@ -36,7 +37,7 @@ const only = args.only ? args.only.split(',') : null;
 for (const name of only ?? []) if (!known.has(name)) usage(`unknown rule: ${name}`);
 
 const root = resolve(args.root);
-const ctx = { root, mode: args.mode, tag: args.tag, files: listFiles(root) };
+const ctx = { root, mode: args.mode, tag: args.tag, files: listFiles(root), base: resolveBase(root, args.base) };
 
 let failed = false;
 for (const rule of rules) {

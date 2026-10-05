@@ -1,0 +1,40 @@
+// Read-only git access for diff-scoped rules: what a file looked like at the
+// base, and which lines a change adds. "Head" is the working tree, so
+// uncommitted and untracked files count as part of the change.
+import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { isExcluded } from './tree.mjs';
+
+function git(root, args) {
+  return execFileSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] });
+}
+
+// The commit a change is compared against: the merge base of `ref` and HEAD,
+// so commits that landed on the base branch later are not counted as removals.
+export function resolveBase(root, ref) {
+  if (!existsSync(join(root, '.git'))) return { sha: null, note: 'not a git repository' };
+  const wanted = ref ?? 'origin/main';
+  try {
+    git(root, ['rev-parse', '--verify', '--quiet', `${wanted}^{commit}`]);
+  } catch {
+    return { sha: null, note: `base ${wanted} not found` };
+  }
+  try {
+    return { sha: git(root, ['merge-base', wanted, 'HEAD']).trim(), ref: wanted };
+  } catch {
+    return { sha: null, note: `no merge base between ${wanted} and HEAD` };
+  }
+}
+
+export function filesAt(root, sha) {
+  return git(root, ['ls-tree', '-r', '--name-only', sha]).split('\n').filter((f) => f && !isExcluded(f));
+}
+
+export function readAt(root, sha, path) {
+  try {
+    return git(root, ['show', `${sha}:${path}`]);
+  } catch {
+    return null;
+  }
+}
