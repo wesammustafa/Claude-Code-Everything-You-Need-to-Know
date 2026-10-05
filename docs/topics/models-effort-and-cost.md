@@ -6,7 +6,9 @@ Which model and effort level a task needs, and what a session costs.
 
 ## Lessons
 
-This topic's lessons are linked here in level order, with its Electives, as they are published.
+- Beginner: [Install, sign in and look around](../beginner/01-install-and-look-around.md)
+
+Later lessons on this topic are linked here in level order, with its Electives, as they are published.
 
 ## Reference
 

@@ -14,7 +14,7 @@ How to read it:
 
 | Feature | Label | Who gets it |
 |---|---|---|
-| [Terminal](https://code.claude.com/docs/en/quickstart) | – | Every provider |
+| [Terminal](https://code.claude.com/docs/en/quickstart); taught in [Install, sign in and look around](../beginner/01-install-and-look-around.md) | – | Every provider |
 | [VS Code](https://code.claude.com/docs/en/vs-code) | – | Every provider |
 | [JetBrains IDEs](https://code.claude.com/docs/en/jetbrains) | The page has no label sentence, but its settings path reads "Claude Code [Beta]" | Every provider |
 | [Desktop app](https://code.claude.com/docs/en/desktop) | On Linux: "Linux support for the Claude desktop app is in beta." ([Linux](https://code.claude.com/docs/en/desktop-linux)) | A Claude subscription; on Bedrock, Agent Platform and Foundry through Claude Desktop on those providers |

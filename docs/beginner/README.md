@@ -18,7 +18,7 @@ Before lesson 1, make your own copy of the [practice template](https://github.co
 
 ## Lessons
 
-1. Install, sign in and look around
+1. [Install, sign in and look around](01-install-and-look-around.md)
 2. Permission modes and plan mode
 3. Your first change, from request to commit
 4. Keep a session on track
