@@ -11,7 +11,7 @@ The built-in commands and bundled skills the lessons use, grouped by the level t
 - `/status`: your version, model, account and connectivity. [Install, sign in and look around](../beginner/01-install-and-look-around.md)
 - `/exit`: end the session. [Install, sign in and look around](../beginner/01-install-and-look-around.md)
 - `/plan`: enter plan mode from the prompt, optionally with the task. [Permission modes and plan mode](../beginner/02-permission-modes-and-plan-mode.md)
-- `/diff`: review the changes in your working tree, including Claude's edits. *Your first change, from request to commit*
+- `/diff`: review the changes in your working tree, including Claude's edits. [Your first change, from request to commit](../beginner/03-first-change.md)
 - `/context`: how full the context window is, as a colored grid. *Keep a session on track*
 - `/clear`: start a new conversation with empty context. *Keep a session on track*
 - `/compact`: summarize the conversation so far to free context. *Keep a session on track*

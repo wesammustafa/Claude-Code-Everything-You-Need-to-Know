@@ -7,6 +7,7 @@ What Claude Code may do without asking, and how to keep it away from what it sho
 ## Lessons
 
 - Beginner: [Permission modes and plan mode](../beginner/02-permission-modes-and-plan-mode.md)
+- Beginner: [Your first change, from request to commit](../beginner/03-first-change.md)
 
 Later lessons on this topic are linked here in level order, with its Electives, as they are published.
 
