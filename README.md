@@ -26,7 +26,7 @@ macOS, Linux, and WSL. For Windows and other install methods, see the [official 
 |---|---|---|
 | 🚀 **New to Claude Code** | [Setup](#claude-code-setup) → [Prompt Engineering](#prompt-engineering-deep-dive) → [Your First Skill](#claude-skills) | ~15 min |
 | ⚡ **Already using it, want depth** | [Skills](#claude-skills) · [Hooks](#hooks) · [MCP](#model-context-protocol-mcp) | ~30 min each |
-| 🧠 **Building teams or automation** | [Dynamic Workflows](#dynamic-workflows) · [Agent Teams](#agent-teams-experimental) · [BMAD](#the-bmad-method--ai-agent-framework) | varies |
+| 🧠 **Building teams or automation** | [Dynamic Workflows](#dynamic-workflows) · [Agent Teams](#agent-teams-experimental) | varies |
 
 ---
 
@@ -54,7 +54,7 @@ The five extension points in Claude Code, side by side:
 
 **Multi-agent & integration** — [Subagents](#ai-agents) · [Dynamic Workflows](#dynamic-workflows) · [Agent Teams](#agent-teams-experimental) · [Automation surface](#beyond-one-terminal--the-2026-automation-surface) · [MCP](#model-context-protocol-mcp)
 
-**Productivity & frameworks** — [Effort levels](#effort-levels) · [Fast Mode](#fast-mode) · [Super Claude](#super-claude-framework) · [BMAD Method](#the-bmad-method--ai-agent-framework)
+**Productivity**: [Effort levels](#effort-levels) · [Fast Mode](#fast-mode)
 
 **Reference** — [Slash Command Cheatsheet](#built-in-slash-commands) · [Effort levels](docs/reference/effort-levels.md) · [Workflows](docs/workflows.md) · [Agent Teams](docs/agent-teams.md) · [Skills](docs/skills.md) · [FAQ](#faq) · [Updates & Deprecations](#updates--deprecations) · [Further Reading](#references)
 
@@ -333,17 +333,7 @@ The [full Skills guide in `docs/skills.md`](docs/skills.md) covers:
 - How to write your own skills (file format, scope, examples)
 - Skills FAQ, troubleshooting, and best practices
 
-#### Beyond your own skills — the ecosystem
-
-The community has built an enormous catalog of Agent Skills. Three places to start browsing:
-
-| Resource | What it offers |
-|---|---|
-| [**anthropics/skills**](https://github.com/anthropics/skills) | Anthropic's official skills — PDF, slides, brand guidelines, document creation (158k+ ⭐) |
-| [**SkillHub**](https://www.skillhub.club/) · [**SkillsMP**](https://skillsmp.com/) · [**Smithery**](https://smithery.ai/skills) · [**skills.sh**](https://skills.sh/) | Searchable marketplaces — community Agent Skills indexed from GitHub at massive scale |
-| [`travisvn/awesome-claude-skills`](https://github.com/travisvn/awesome-claude-skills) · [`ComposioHQ/awesome-claude-skills`](https://github.com/ComposioHQ/awesome-claude-skills) | Curated lists for high-signal picks |
-
-Notable community skills: `skill-creator`, `skill-installer`, `mcp-builder`, `systematic-debugging`, `pair-programming`, `github-code-review`, `pptx`, `react`, `frontend-design`, `prompt-engineering-patterns`, `superpowers`, `brainstorming`, `market-research-reports`, `senior-data-engineer`, and many more — see [the full ecosystem section in `docs/skills.md`](docs/skills.md#the-skills-ecosystem) for categorized tables and install paths.
+<a id="beyond-your-own-skills--the-ecosystem"></a>Removed: this listed third-party skill catalogs and marketplaces that no lesson uses. To find more skills, start with Anthropic's [plugin marketplaces](https://code.claude.com/docs/en/plugins/anthropic-marketplaces). See the [CHANGELOG](CHANGELOG.md#removed-listings).
 
 <!-- Anchor compatibility: deep-section anchors now live in docs/skills.md -->
 <a id="what-are-skills"></a>
@@ -522,54 +512,7 @@ Ultrathink.
 ![The same spawn prompt typed into three separate sessions](Images/agents-prompt.png)
 ![Each session running five subagents concurrently, each with its own tool calls and token count](Images/Subagents.png)
 
-#### 3. Specialized subagents — drop-in role prompts
-
-Specialized agents are pre-written role prompts you drop into `.claude/agents/`. Each one carries its own focus and tooling, so a `security-reviewer` agent stays focused on threats instead of also opining on code style.
-
-An agent is just a markdown file with YAML frontmatter — create `.claude/agents/security-reviewer.md` (or ask Claude to write it; the old `/agents` wizard was removed in v2.1.198):
-
-```markdown
----
-name: security-reviewer
-description: Use after changes touching auth, input handling, or secrets — reviews diffs for vulnerabilities.
-tools: Read, Grep, Glob
----
-
-You are a security engineer. Review the changes for injection risks,
-secrets in code, authZ/authN gaps, and unsafe input handling. Report
-findings by severity with concrete fixes.
-```
-
-The `description` is what the main session uses to decide when to delegate: keep it to a couple of sentences of when-to-use criteria; the body below the frontmatter is the agent's system prompt.
-
-**This repo ships 10 production-ready specialist prompts** you can drop into `.claude/agents/`:
-
-| Role | System prompt | Role description |
-|---|---|---|
-| Backend Engineer | [prompt](specialized-agents/system-prompts/backend-engineer-prompt.md) | [description](specialized-agents/Descriptions/backend-engineer-description.md) |
-| Frontend Engineer | [prompt](specialized-agents/system-prompts/frontend-engineer-prompt.md) | [description](specialized-agents/Descriptions/frontend-engineer-description.md) |
-| Database Engineer | [prompt](specialized-agents/system-prompts/database-engineer-prompt.md) | [description](specialized-agents/Descriptions/database-engineer-description.md) |
-| Tech Lead | [prompt](specialized-agents/system-prompts/tech-lead-prompt.md) | [description](specialized-agents/Descriptions/tech-lead-description.md) |
-| Code Reviewer | [prompt](specialized-agents/system-prompts/code-reviewer-prompt.md) | [description](specialized-agents/Descriptions/code-reviewer-description.md) |
-| Security Reviewer | [prompt](specialized-agents/system-prompts/security-reviewer-prompt.md) | [description](specialized-agents/Descriptions/security-reviewer-description.md) |
-| UX Engineer | [prompt](specialized-agents/system-prompts/ux-engineer-prompt.md) | [description](specialized-agents/Descriptions/ux-engineer-description.md) |
-| Design Reviewer | [prompt](specialized-agents/system-prompts/design-reviewer.md) | — |
-| Project Manager | [prompt](specialized-agents/system-prompts/project-manager-prompt.md) | [description](specialized-agents/Descriptions/project-manager-description.md) |
-| Business Analyst | [prompt](specialized-agents/system-prompts/business-analyst-prompt.md) | [description](specialized-agents/Descriptions/business-analyst-description.md) |
-
-#### Orchestrating specialists from the main session
-
-Once you have specialized agents, the main session orchestrates them by name:
-
-```markdown
-Have backend-engineer suggest UI improvements; have frontend-engineer
-implement them; have code-reviewer review the changes; have
-frontend-engineer address the review feedback.
-```
-
-<img src="Images/Orchestration.png" alt="Canvas board of the ten role prompts, fanning out from a general-purpose agent" width="600">
-
-> 💡 The same prompts work as **Agent Teams teammates** — see [Agent Teams](#agent-teams-experimental).
+<a id="3-specialized-subagents--drop-in-role-prompts"></a><a id="orchestrating-specialists-from-the-main-session"></a>Removed: the ten role prompts this section listed. To write a subagent of your own, see [Create custom subagents](https://code.claude.com/docs/en/sub-agents). See the [CHANGELOG](CHANGELOG.md#removed-listings).
 
 ---
 
@@ -606,7 +549,7 @@ The debate structure *is* the mechanism. Sequential investigation anchors: once 
 
 #### Staff a team with the role prompts you already have
 
-A teammate can be spawned **from a subagent definition**, so this repo's [10 specialist prompts](#3-specialized-subagents--drop-in-role-prompts) work as teammates, not just as subagents:
+A teammate can be spawned **from a subagent definition**, so the subagents you define work as teammates, not just as subagents:
 
 ```text
 Spawn a teammate using the security-reviewer agent type to audit the auth module.
@@ -699,39 +642,7 @@ Subagents got sharper too: they run **in the background by default** (v2.1.198),
 
 > **Mental model:** MCP is a universal translator that lets any AI tool talk to any data source through one open protocol — USB-C for AI integrations.
 
-#### Featured MCP servers
-
-Full setup walkthroughs in [`mcp-servers/`](./mcp-servers/). New to MCP? [`mcp-servers/playwright.md`](./mcp-servers/playwright.md) has a working three-line setup.
-
-| Server | What it adds | Walkthrough |
-|---|---|---|
-| **Serena** | Symbol-level code navigation and editing across many languages | [serena.md](./mcp-servers/serena.md) |
-| **Sequential Thinking** | Step-by-step reasoning that breaks complex problems into manageable steps | [sequential-thinking.md](./mcp-servers/sequential-thinking.md) |
-| **Memory** | Persistent context across sessions | [memory.md](./mcp-servers/memory.md) |
-| **Playwright** | Browser automation — interaction, scraping, testing, accessibility | [playwright.md](./mcp-servers/playwright.md) |
-
-See [`mcp-servers/README.md`](./mcp-servers/README.md) for the comparison matrix, install commands, and troubleshooting.
-
-#### More MCP servers worth knowing
-
-Install from the [registry](https://registry.modelcontextprotocol.io/) or follow the source link. No walkthrough yet — source READMEs cover setup.
-
-**General-purpose:**
-
-| Server | What it adds | Source |
-|---|---|---|
-| **Context7** | Live, version-pinned library docs piped into the prompt — grounds answers in current API surfaces instead of training-cutoff guesses | [upstash/context7](https://github.com/upstash/context7) |
-| **Tavily** | Web search, page extraction, and research designed for AI agents | [tavily-ai/tavily-mcp](https://github.com/tavily-ai/tavily-mcp) |
-| **Chrome DevTools** | Drives a real Chrome instance — DOM inspection, network logs, console, performance traces, screenshots | [ChromeDevTools/chrome-devtools-mcp](https://github.com/ChromeDevTools/chrome-devtools-mcp) |
-| **mem0** | Hosted long-term memory with semantic recall across sessions and projects (richer than the local-only Memory server above) | [mem0ai/mem0](https://github.com/mem0ai/mem0) |
-
-**Specialized — reach for these when the workflow fits:**
-
-| Server | What it adds | When to reach for it | Source |
-|---|---|---|---|
-| **context-mode** | Curates and ships project context (rules, files, conventions) on demand | Multi-repo setups wanting consistent context without hand-rolled CLAUDE.md plumbing | [mksglu/context-mode](https://github.com/mksglu/context-mode) |
-| **Shadcn** | Pulls shadcn/ui component source into the session for accurate scaffolding | Frontend work in a shadcn/ui codebase | [ui.shadcn.com/docs/mcp](https://ui.shadcn.com/docs/mcp) |
-| **TrustGraph** | Knowledge-graph-backed RAG with multi-source ingestion and graph-aware retrieval | Advanced RAG where flat vector search isn't enough — entity-rich corpora, agentic retrieval | [trustgraph-ai/trustgraph](https://github.com/trustgraph-ai/trustgraph) |
+<a id="featured-mcp-servers"></a><a id="more-mcp-servers-worth-knowing"></a>Removed: the tables of MCP servers. To find a server, see [Connect Claude Code to tools via MCP](https://code.claude.com/docs/en/mcp). See the [CHANGELOG](CHANGELOG.md#removed-listings).
 
 #### The N×M problem MCP solves
 
@@ -753,21 +664,7 @@ Each pillar makes ownership explicit, so it's always clear who's driving:
 
 The [official MCP Registry](https://registry.modelcontextprotocol.io/) (public preview since September 2025) is the app-store-equivalent for MCP servers. An agent that needs to check Grafana logs but doesn't have a Grafana tool wired up can ping the registry, find the verified server, install it, and continue — teaching itself a new capability on the fly.
 
-#### The MCP ecosystem today
-
-- **Vendor-neutral governance** — MCP was donated to the [Agentic AI Foundation](https://www.anthropic.com/news/donating-the-model-context-protocol-and-establishing-of-the-agentic-ai-foundation) (a Linux Foundation directed fund) in December 2025, alongside Block's goose and OpenAI's AGENTS.md.
-- **Registry** — search official and community servers at [registry.modelcontextprotocol.io](https://registry.modelcontextprotocol.io/) (still officially in preview).
-- **MCP Apps** — the first official MCP extension (January 2026): servers can ship interactive UI components in sandboxed iframes, not just text tools.
-- **Spec cadence**: the current spec is 2026-07-28, [released on July 28, 2026](https://blog.modelcontextprotocol.io/posts/2026-07-28/) (stateless core, official extensions), the largest revision since launch; it succeeded 2025-11-25.
-- **Scale** — 97M+ monthly SDK downloads and ~10,000 active servers as of December 2025.
-
-```bash
-claude mcp add <server> npx '@<package>@latest'   # install a server
-claude mcp login <server>                          # OAuth sign-in (v2.1.186+)
-/mcp                                               # list connected servers
-```
-
-📚 References: [MCP roadmap](https://modelcontextprotocol.io/development/roadmap) · [Official servers](https://github.com/modelcontextprotocol/servers).
+<a id="the-mcp-ecosystem-today"></a>Removed: a survey of the MCP ecosystem that no lesson uses. See the [CHANGELOG](CHANGELOG.md#removed-listings).
 
 ---
 
@@ -793,31 +690,7 @@ claude mcp login <server>                          # OAuth sign-in (v2.1.186+)
 
 ---
 
-### Super Claude Framework
-
-> An open-source framework that bolts pre-built personas, commands, and workflows on top of Claude Code.
-
-**What it is.** [Super Claude](https://github.com/SuperClaude-Org/SuperClaude_Framework) ships 15+ ready-made specialist agents (architect, security, performance, frontend, etc.) plus a library of structured slash commands (`/sc:analyze`, `/sc:improve`, `/sc:design`) and behavioral flags. It installs into `~/.claude/` as a drop-in extension to Claude Code.
-
-**Why pair it with Claude Code.** Skips the "write your own role prompts" phase. You get a curated library of expert personas and commands the community has already iterated on — useful as both a daily tool and a reference for how to write your own skills.
-
-**When to reach for it.** You want pre-built specialist agents without building them yourself, or you're learning prompt patterns by reading well-crafted examples.
-
-→ [Source on GitHub](https://github.com/SuperClaude-Org/SuperClaude_Framework)
-
----
-
-### The BMAD METHOD — AI Agent Framework
-
-> A multi-agent framework that walks a project from idea to working software using a team of Claude agents in defined roles.
-
-**What it is.** [BMAD](https://github.com/bmad-code-org/BMAD-METHOD) (Breakthrough Method of Agile AI-driven Development) coordinates specialist agents — analyst, PM, architect, developer, QA, scrum master — through a full SDLC. Each role produces specific artifacts (PRD, architecture doc, story file) that the next role consumes. Works as a Claude Code extension via skills and agents.
-
-**Why pair it with Claude Code.** Gives you a documented, repeatable workflow for greenfield builds. Instead of asking Claude "build me an app," you walk through analyst → PM → architect → developer → QA, each agent producing structured output the next one consumes.
-
-**When to reach for it.** Greenfield projects, large feature builds, or any time you want planning rigor before code. Overkill for a quick fix or a one-file refactor.
-
-→ [Source on GitHub](https://github.com/bmad-code-org/BMAD-METHOD)
+<a id="super-claude-framework"></a><a id="the-bmad-method--ai-agent-framework"></a>Removed: two third-party agent frameworks, SuperClaude and BMAD, that no lesson uses. See the [CHANGELOG](CHANGELOG.md#removed-listings).
 
 ---
 
