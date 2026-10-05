@@ -1,0 +1,58 @@
+name: 🙋 Stuck on a lesson
+description: A lesson's steps or check did not work for you, or part of it was unclear
+labels: ["lesson-feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for telling us where a lesson lost you. Every report is read and gets a first answer within 7 days.
+
+        For a problem with Claude Code itself, rather than with this guide, use the [Claude Code issue tracker](https://github.com/anthropics/claude-code/issues).
+  - type: input
+    id: lesson
+    attributes:
+      label: Lesson
+      description: The lesson id, such as b-2. The lesson's "Stuck on this lesson?" link fills it in.
+      placeholder: "b-2"
+    validations:
+      required: true
+  - type: dropdown
+    id: slot
+    attributes:
+      label: Where it went wrong
+      options:
+        - You need (setup)
+        - The idea
+        - Worked example
+        - Your turn
+        - Check
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: The step you were on, what you did, what you expected and what you saw. If you ran `npm run check`, paste its output.
+    validations:
+      required: true
+  - type: input
+    id: claude-code-version
+    attributes:
+      label: Claude Code version
+      description: The output of `claude --version`.
+      placeholder: "2.1.285 (Claude Code)"
+    validations:
+      required: false
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Where you practiced
+      options:
+        - macOS
+        - Linux
+        - WSL2
+        - Windows (native)
+        - Codespaces
+    validations:
+      required: false
