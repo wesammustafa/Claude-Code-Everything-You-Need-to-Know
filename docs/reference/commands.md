@@ -24,7 +24,7 @@ Electives: `/powerup` and `/output-style` ([the built-in teachers](../beginner/e
 
 ## Intermediate
 
-- `/skills`: list the skills available in this session. *Turn a repeated workflow into a skill*
+- `/skills`: list the skills available in this session. [Turn a repeated workflow into a skill](../intermediate/01-first-skill.md)
 - `/doctor`: check your setup; `/doctor prompt-audit` checks your instruction files. *Organize project memory and see what loaded*
 - `/model`: switch the model and save it as your default; for models that support it, the left and right arrow keys adjust effort. *Pick the model and effort*
 - `/effort`: set the effort level. *Pick the model and effort*
@@ -48,7 +48,7 @@ Electives: `/background` (agent view) and `/tasks` (background work in this sess
 <a id="custom-slash-commands-skills"></a>
 ## Your own commands
 
-A command you write yourself is a skill: a `SKILL.md` file in `.claude/skills/<name>/`, or a Markdown file in `.claude/commands/`, the older format ([Extend Claude with skills](https://code.claude.com/docs/en/skills)). The Intermediate lesson *Turn a repeated workflow into a skill* teaches them.
+A command you write yourself is a skill: a `SKILL.md` file in `.claude/skills/<name>/`, or a Markdown file in `.claude/commands/`, the older format ([Extend Claude with skills](https://code.claude.com/docs/en/skills)). The Intermediate lesson [Turn a repeated workflow into a skill](../intermediate/01-first-skill.md) teaches them.
 
 ## Shortcuts and cheat sheets
 

@@ -49,7 +49,7 @@ How to read it:
 
 | Feature | Label | Who gets it |
 |---|---|---|
-| [Skills](https://code.claude.com/docs/en/skills) | – | Every provider |
+| [Skills](https://code.claude.com/docs/en/skills); taught in [Turn a repeated workflow into a skill](../intermediate/01-first-skill.md) | – | Every provider |
 | [Hooks](https://code.claude.com/docs/en/hooks-guide) | – | Every provider |
 | [Agent hooks](https://code.claude.com/docs/en/hooks-guide#agent-based-hooks) | "Agent hooks are experimental." | As for hooks |
 | [Subagents](https://code.claude.com/docs/en/sub-agents) | – | Every provider |
