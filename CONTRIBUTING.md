@@ -71,7 +71,10 @@ Mental models, analogies, the guide's own advice, and how-to steps whose command
 ### How to cite
 
 - Link the Tier 1 page inline at the first mention of each volatile claim on a page, not at every repeat.
-- Give each page a one-line `Sources:` footer that lists the pages it relies on. It ends the page, except on a lesson, where the navigation links follow it.
+- Each page that carries a [stamp](#the-stamp), and this file, ends with a one-line `Sources:` footer, except that on a lesson the navigation links follow it. The footer lists every page the page's statements rely on: each page linked as the source of a fact it states.
+  - Links that back no statement need not be listed: further reading (Go further, Official companions, Related pages), download and install pages, this repo's issue forms and the practice template, and pointers that say where to look, such as the sites in the Tier 1 table.
+  - A page that is itself a list of links, such as Further learning, may say "the pages linked above". A page that relies on no outside page needs no footer.
+  - README, the other community files, stubs and pages from the previous edition cite inline only.
 - Anchor date-sensitive claims to a version (`v2.1.x`) or a full date.
 - Do not add access dates inline.
 
@@ -360,4 +363,4 @@ The root `.claude/` is reserved for maintainer tooling. Do not add skills or oth
 
 By contributing, you agree your contributions are licensed under the MIT license (see [`LICENSE`](LICENSE)).
 
-Sources: [Extend Claude with skills](https://code.claude.com/docs/en/skills), [Advanced setup](https://code.claude.com/docs/en/setup), [Environment variables](https://code.claude.com/docs/en/env-vars), [Settings](https://code.claude.com/docs/en/settings), [Output styles](https://code.claude.com/docs/en/output-styles), [Your first day in Claude Code](https://support.claude.com/en/articles/14552382-your-first-day-in-claude-code), [The MCP Registry](https://modelcontextprotocol.io/registry/about), [official plugin `marketplace.json`](https://github.com/anthropics/claude-plugins-official/blob/main/.claude-plugin/marketplace.json), [Basic writing and formatting syntax](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)
+Sources: [Extend Claude with skills](https://code.claude.com/docs/en/skills), [Advanced setup](https://code.claude.com/docs/en/setup), [Environment variables](https://code.claude.com/docs/en/env-vars), [Settings](https://code.claude.com/docs/en/settings), [Output styles](https://code.claude.com/docs/en/output-styles), [Your first day in Claude Code](https://support.claude.com/en/articles/14552382-your-first-day-in-claude-code), [The MCP Registry](https://modelcontextprotocol.io/registry/about), [official plugin `marketplace.json`](https://github.com/anthropics/claude-plugins-official/blob/main/.claude-plugin/marketplace.json), [Basic writing and formatting syntax](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax), [Disabling and enabling a workflow](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/disable-and-enable-workflows), [REST API endpoints for repository traffic](https://docs.github.com/en/rest/metrics/traffic)
