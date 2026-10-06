@@ -28,8 +28,8 @@ Electives: `/powerup` and `/output-style` ([the built-in teachers](../beginner/e
 - `/doctor`: check your setup; `/doctor prompt-audit` checks your instruction files. [Organize project memory and see what loaded](../intermediate/02-organize-memory.md)
 - `/model`: switch the model and save it as your default; for models that support it, the left and right arrow keys adjust effort. [Pick the model and effort](../intermediate/03-model-and-effort.md)
 - `/effort`: set the effort level. [Pick the model and effort](../intermediate/03-model-and-effort.md)
-- `/permissions`: manage allow, ask and deny rules. *Permissions, settings scopes and the sandbox*
-- `/sandbox`: turn the sandbox on or off. *Permissions, settings scopes and the sandbox*
+- `/permissions`: manage allow, ask and deny rules. [Permissions, settings scopes and the sandbox](../intermediate/04-permissions-and-sandbox.md)
+- `/sandbox`: turn the sandbox on or off. [Permissions, settings scopes and the sandbox](../intermediate/04-permissions-and-sandbox.md)
 - `/hooks`: see which hooks are configured. *Enforce a rule with a hook*
 - `/agents`: a reminder of how to create and manage subagents. *Delegate to a custom subagent*
 - `/mcp`: manage MCP server connections and sign-ins. *Connect a tool with MCP*
