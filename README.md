@@ -1,4 +1,4 @@
-# Claude Code: Everything You Need to Know <picture><source media="(prefers-color-scheme: dark)" srcset="assets/brand/mark-dark.svg"><img src="assets/brand/mark-light.svg" width="44" height="44" alt="Trail blazes: three painted marks climbing a post, the mark of this guide" align="right"></picture>
+# Claude Code: Everything You Need to Know <img src="assets/brand/claude-jumping.svg" width="44" height="40" alt="Animated Claude" align="right" />
 
 **Learn Claude Code in three levels, from your first session to unattended multi-agent runs.**
 
@@ -65,6 +65,8 @@ macOS, Linux and WSL. For Windows and other installers, see the [official setup 
 Found something stale? [Report it with a source](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=stale-content.yml). Stuck on a lesson? Use the link at the bottom of that lesson. Claude Code is a product of Anthropic.
 
 [MIT License](LICENSE) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
+
+*Mascot: [`assets/brand/claude-jumping.svg`](assets/brand/claude-jumping.svg) comes from [shanraisshan/claude-code-best-practice](https://github.com/shanraisshan/claude-code-best-practice), Copyright (c) 2025-2026 Shayan Rais, used under the [MIT License](https://github.com/shanraisshan/claude-code-best-practice/blob/main/LICENSE).*
 
 ### Links from the previous edition
 

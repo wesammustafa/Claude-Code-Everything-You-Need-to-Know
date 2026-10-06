@@ -8,6 +8,10 @@ Baseline: Claude Code v2.1.285 (stable), frozen on 2026-10-05.
 
 Every change in the next edition is verified against this version, the `stable` dist-tag of [`@anthropic-ai/claude-code`](https://www.npmjs.com/package/@anthropic-ai/claude-code?activeTab=versions) on 2026-10-05. It stays frozen until the edition ships, unless a later `stable` release removes, renames or changes the default of something a lesson teaches.
 
+### Changed
+
+- The animated Claude mascot is back beside README's title, and the social card shows it in place of the trail blazes. It comes from [shanraisshan/claude-code-best-practice](https://github.com/shanraisshan/claude-code-best-practice) under the MIT License.
+
 ## v2026.10 - 2026-10-05
 
 Verified against Claude Code v2.1.285 (stable).
