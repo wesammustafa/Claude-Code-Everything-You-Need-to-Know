@@ -50,7 +50,7 @@ How to read it:
 | Feature | Label | Who gets it |
 |---|---|---|
 | [Skills](https://code.claude.com/docs/en/skills); taught in [Turn a repeated workflow into a skill](../intermediate/01-first-skill.md) | – | Every provider |
-| [Hooks](https://code.claude.com/docs/en/hooks-guide) | – | Every provider |
+| [Hooks](https://code.claude.com/docs/en/hooks-guide); taught in [Enforce a rule with a hook](../intermediate/05-hooks.md) | – | Every provider |
 | [Agent hooks](https://code.claude.com/docs/en/hooks-guide#agent-based-hooks) | "Agent hooks are experimental." | As for hooks |
 | [Subagents](https://code.claude.com/docs/en/sub-agents) | – | Every provider |
 | [MCP](https://code.claude.com/docs/en/mcp) | – | Every provider; claude.ai connectors only when you sign in with a Claude subscription |

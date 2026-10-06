@@ -15,3 +15,4 @@ Every executable example follows the guide's [safety contract](../CONTRIBUTING.m
 Each example is listed here, with its lesson, platforms and test line, when the lesson that uses it is published.
 
 - [`intermediate/01-first-skill/`](intermediate/01-first-skill/README.md): the `five-whys` skill and the unfinished `tdd` skill, for [Turn a repeated workflow into a skill](../docs/intermediate/01-first-skill.md). Any platform. Tested in Claude Code v2.1.285 (stable) on macOS, 2026-10-06.
+- [`intermediate/05-hooks/`](intermediate/05-hooks/README.md): three teaching hooks (protect-files, format-after-edit and desktop-notify) and the settings that register them, for [Enforce a rule with a hook](../docs/intermediate/05-hooks.md). macOS, Linux and WSL 2, with bash, jq and python3. Tested in Claude Code v2.1.285 (stable) on macOS, 2026-10-06.
