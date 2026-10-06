@@ -33,7 +33,7 @@ Electives: `/powerup` and `/output-style` ([the built-in teachers](../beginner/e
 - `/hooks`: see which hooks are configured. [Enforce a rule with a hook](../intermediate/05-hooks.md)
 - `/agents`: a reminder of how to create and manage subagents. [Delegate to a custom subagent](../intermediate/06-subagents.md)
 - `/mcp`: manage MCP server connections and sign-ins. [Connect a tool with MCP](../intermediate/07-mcp.md)
-- `/plugin`: browse, install and manage plugins. *Install and manage plugins*
+- `/plugin`: browse, install and manage plugins. [Install and manage plugins](../intermediate/08-plugins.md)
 
 Electives: `/statusline` (the status line); `/chrome` (Claude in Chrome); `/fast` (fast mode).
 

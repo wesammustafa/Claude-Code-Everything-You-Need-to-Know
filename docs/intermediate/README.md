@@ -34,7 +34,7 @@ Five of the ways to extend Claude Code; [Extend Claude Code](https://code.claude
 - **Dynamic workflows:** the job needs more agents than one conversation can coordinate. A saved project workflow lives in `.claude/workflows/` ([Workflows](https://code.claude.com/docs/en/workflows); previous edition: [Dynamic workflows](../workflows.md)).
 - **MCP servers:** Claude needs tools or data outside your files, such as a browser, a database or an API. A project-scope server is listed in `.mcp.json` at the project root ([Connect Claude Code to tools via MCP](https://code.claude.com/docs/en/mcp); lesson: [Connect a tool with MCP](07-mcp.md)).
 
-They combine: a [plugin](https://code.claude.com/docs/en/plugins) packages skills, agents, hooks and MCP servers so they install as one unit.
+They combine: a [plugin](https://code.claude.com/docs/en/plugins) packages skills, agents, hooks and MCP servers so they install as one unit ([Install and manage plugins](08-plugins.md)).
 
 ## Lessons
 
@@ -45,7 +45,7 @@ They combine: a [plugin](https://code.claude.com/docs/en/plugins) packages skill
 5. [Enforce a rule with a hook](05-hooks.md)
 6. [Delegate to a custom subagent](06-subagents.md)
 7. [Connect a tool with MCP](07-mcp.md)
-8. Install and manage plugins
+8. [Install and manage plugins](08-plugins.md)
 
 Each lesson takes 10 to 20 minutes. Lessons are linked here as they are published.
 
