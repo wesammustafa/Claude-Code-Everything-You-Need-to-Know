@@ -16,11 +16,19 @@ One developer's setup. You shape Claude Code to your own project: skills, projec
 
 Practice in your own repository: shaping Claude Code to your project is the point of this level. Run each check from your copy of the [practice template](https://github.com/wesammustafa/claude-code-practice) as `npm run check -- <lesson-id> --dir <your repo>`. If you'd rather not change your own repository, use the template copy itself; the capstone runs there.
 
+A copy you made for the Beginner level may not have the Intermediate checks: `npm run check` then lists no `i-` lessons. Bring them in from the template, in your copy:
+
+```bash
+git fetch https://github.com/wesammustafa/claude-code-practice main
+git checkout FETCH_HEAD -- checks capstone
+git commit -m "Add the Intermediate checks"
+```
+
 ## When to use what
 
-Five of the ways to extend Claude Code; [Extend Claude Code](https://code.claude.com/docs/en/features-overview) lists the rest. Until this level's lessons land, each links the previous edition's page as well, which is not yet re-verified.
+Five of the ways to extend Claude Code; [Extend Claude Code](https://code.claude.com/docs/en/features-overview) lists the rest. Each links its lesson, or until that lesson lands, the previous edition's page, which is not yet re-verified.
 
-- **Skills:** you give Claude the same instructions or workflow again and again. A project skill lives in `.claude/skills/<name>/SKILL.md` ([Extend Claude with skills](https://code.claude.com/docs/en/skills); previous edition: [Skills](../legacy/skills.md)).
+- **Skills:** you give Claude the same instructions or workflow again and again. A project skill lives in `.claude/skills/<name>/SKILL.md` ([Extend Claude with skills](https://code.claude.com/docs/en/skills); lesson: [Turn a repeated workflow into a skill](01-first-skill.md)).
 - **Hooks:** something must happen every time at a set point in a session, such as before a tool runs, whatever Claude decides. Hooks are defined in a settings file such as `.claude/settings.json` ([Hooks](https://code.claude.com/docs/en/hooks); previous edition: [Hooks](../legacy/hooks.md)).
 - **Subagents:** a side task should run in its own context window and report back. A project subagent lives in `.claude/agents/` ([Create custom subagents](https://code.claude.com/docs/en/sub-agents); previous edition: [Subagents and parallel work](../legacy/subagents-and-parallel-work.md)).
 - **Dynamic workflows:** the job needs more agents than one conversation can coordinate. A saved project workflow lives in `.claude/workflows/` ([Workflows](https://code.claude.com/docs/en/workflows); previous edition: [Dynamic workflows](../workflows.md)).
@@ -30,7 +38,7 @@ They combine: a [plugin](https://code.claude.com/docs/en/plugins) packages skill
 
 ## Lessons
 
-1. Turn a repeated workflow into a skill
+1. [Turn a repeated workflow into a skill](01-first-skill.md)
 2. Organize project memory and see what loaded
 3. Pick the model and effort
 4. Permissions, settings scopes and the sandbox
