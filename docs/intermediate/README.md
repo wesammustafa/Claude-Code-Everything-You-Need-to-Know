@@ -51,7 +51,7 @@ Each lesson takes 10 to 20 minutes. Lessons are linked here as they are publishe
 
 ## Capstone
 
-Shape the practice template for a teammate: a skill, a hook that protects a folder, a read-only reviewer subagent, a project-scope MCP server and an official plugin, with project settings that keep secrets out of reach and turn the sandbox on.
+[Get a repository ready for a new teammate](capstone.md): a skill, a hook that protects a folder, a read-only reviewer subagent, a project-scope MCP server and an official plugin, with project settings that keep secrets out of reach and turn the sandbox on.
 
 ## By the end of this level you can
 
