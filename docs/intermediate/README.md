@@ -66,10 +66,10 @@ Each lesson takes 10 to 20 minutes. Lessons are linked here as they are publishe
 
 Optional lessons beside the core path:
 
-- Skill patterns
-- Claude in Chrome
-- The status line
-- Fast mode
+- [Skill patterns](electives/skill-patterns.md): live data, supporting files and a context of its own.
+- [Claude in Chrome](electives/claude-in-chrome.md): verify UI changes in your own browser.
+- [The status line](electives/status-line.md): show the model, the folder and the context in a bar of your own.
+- [Fast mode](electives/fast-mode.md): faster Opus answers, paid for beyond your plan.
 
 ## Official companions
 

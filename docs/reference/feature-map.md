@@ -23,7 +23,7 @@ How to read it:
 | [Remote Control](https://code.claude.com/docs/en/remote-control) | – | Pro and Max; Team and Enterprise once an admin turns it on |
 | [Claude Code in Slack](https://code.claude.com/docs/en/slack) | – | Pro, Max, Team or Enterprise with Claude Code access; on Team and Enterprise it is being retired in favor of Claude Tag |
 | [Claude Tag](https://claude.com/docs/claude-tag/overview) | Marked "Public Beta" on its page | Team and Enterprise, on Anthropic's own service |
-| [Claude in Chrome](https://code.claude.com/docs/en/chrome) | – | Pro, Max, Team or Enterprise |
+| [Claude in Chrome](https://code.claude.com/docs/en/chrome); taught in [Claude in Chrome](../intermediate/electives/claude-in-chrome.md) | – | Pro, Max, Team or Enterprise |
 | [Computer use](https://code.claude.com/docs/en/computer-use) | "Computer use is a research preview on macOS that requires a Pro or Max plan." | Pro and Max |
 | [Dispatch](https://code.claude.com/docs/en/desktop#sessions-from-dispatch) | – | Pro and Max |
 | [Voice dictation](https://code.claude.com/docs/en/voice-dictation) | – | A Claude subscription |
@@ -38,10 +38,10 @@ How to read it:
 | [CLAUDE.md memory](https://code.claude.com/docs/en/memory); taught in [Project memory with CLAUDE.md](../beginner/05-project-memory.md) and [Organize project memory and see what loaded](../intermediate/02-organize-memory.md) | – | Every provider |
 | [Sandbox](https://code.claude.com/docs/en/sandboxing); taught in [Permissions, settings scopes and the sandbox](../intermediate/04-permissions-and-sandbox.md) | – | Every provider |
 | [Output styles](https://code.claude.com/docs/en/output-styles); taught in [the built-in teachers](../beginner/electives/built-in-teachers.md) | – | Every provider |
-| [Status line](https://code.claude.com/docs/en/statusline) | – | Every provider |
+| [Status line](https://code.claude.com/docs/en/statusline); taught in [The status line](../intermediate/electives/status-line.md) | – | Every provider |
 | [`/goal`](https://code.claude.com/docs/en/goal) | – | Every provider |
 | [`/powerup`](https://code.claude.com/docs/en/commands); taught in [the built-in teachers](../beginner/electives/built-in-teachers.md) | – | The docs state no limit |
-| [Fast mode](https://code.claude.com/docs/en/fast-mode) | "Fast mode is in research preview." | A Claude subscription, paid for with usage credits (an Owner turns it on for Team and Enterprise), and Console organizations with access provisioned; not Claude Platform on AWS, Bedrock, Agent Platform or Foundry |
+| [Fast mode](https://code.claude.com/docs/en/fast-mode); taught in [Fast mode](../intermediate/electives/fast-mode.md) | "Fast mode is in research preview." | A Claude subscription, paid for with usage credits (an Owner turns it on for Team and Enterprise), and Console organizations with access provisioned; not Claude Platform on AWS, Bedrock, Agent Platform or Foundry |
 | [Advisor](https://code.claude.com/docs/en/advisor) | "The advisor tool is experimental and requires the Anthropic API." | A Claude subscription and the Console |
 | [Web search](https://code.claude.com/docs/en/tools-reference#websearch-tool-behavior) | – | A Claude subscription, the Console and Claude Platform on AWS; not Bedrock; limited on Agent Platform and Foundry |
 
@@ -49,7 +49,7 @@ How to read it:
 
 | Feature | Label | Who gets it |
 |---|---|---|
-| [Skills](https://code.claude.com/docs/en/skills); taught in [Turn a repeated workflow into a skill](../intermediate/01-first-skill.md) | – | Every provider |
+| [Skills](https://code.claude.com/docs/en/skills); taught in [Turn a repeated workflow into a skill](../intermediate/01-first-skill.md) and [Skill patterns](../intermediate/electives/skill-patterns.md) | – | Every provider |
 | [Hooks](https://code.claude.com/docs/en/hooks-guide); taught in [Enforce a rule with a hook](../intermediate/05-hooks.md) | – | Every provider |
 | [Agent hooks](https://code.claude.com/docs/en/hooks-guide#agent-based-hooks) | "Agent hooks are experimental." | As for hooks |
 | [Subagents](https://code.claude.com/docs/en/sub-agents); taught in [Delegate to a custom subagent](../intermediate/06-subagents.md) | – | Every provider |

@@ -35,7 +35,7 @@ Electives: `/powerup` and `/output-style` ([the built-in teachers](../beginner/e
 - `/mcp`: manage MCP server connections and sign-ins. [Connect a tool with MCP](../intermediate/07-mcp.md)
 - `/plugin`: browse, install and manage plugins. [Install and manage plugins](../intermediate/08-plugins.md)
 
-Electives: `/statusline` (the status line); `/chrome` (Claude in Chrome); `/fast` (fast mode).
+Electives: `/statusline` ([The status line](../intermediate/electives/status-line.md)); `/chrome` ([Claude in Chrome](../intermediate/electives/claude-in-chrome.md)); `/fast` ([Fast mode](../intermediate/electives/fast-mode.md)).
 
 ## Advanced
 
