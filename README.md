@@ -86,8 +86,8 @@ The previous edition's README sections moved. If a link brought you here, find i
 - <a id="beyond-one-terminal--the-2026-automation-surface"></a>Moved to [Feature map](docs/reference/feature-map.md).
 - <a id="model-context-protocol-mcp"></a><a id="the-nm-problem-mcp-solves"></a><a id="three-pillars"></a><a id="the-mcp-registry--self-discovering-agents"></a><a id="the-mcp-ecosystem-today"></a>Moved to [MCP (previous edition)](docs/legacy/mcp.md).
 - <a id="fast-mode"></a><a id="fast-mode-"></a>Moved to [Fast mode (previous edition)](docs/legacy/fast-mode.md).
-- <a id="beyond-your-own-skills--the-ecosystem"></a><a id="3-specialized-subagents--drop-in-role-prompts"></a><a id="featured-mcp-servers"></a><a id="more-mcp-servers-worth-knowing"></a><a id="super-claude-framework"></a><a id="the-bmad-method--ai-agent-framework"></a>Removed: listings no lesson uses. See the [CHANGELOG](CHANGELOG.md#removed-listings).
-- <a id="updates--deprecations-february-2026"></a><a id="updates--deprecations"></a><a id="updates--deprecations-as-of-july-2026"></a>Removed: the guide's summaries of Claude Code releases. See the [CHANGELOG](CHANGELOG.md#removed-changelog-mirror).
+- <a id="beyond-your-own-skills--the-ecosystem"></a><a id="3-specialized-subagents--drop-in-role-prompts"></a><a id="featured-mcp-servers"></a><a id="more-mcp-servers-worth-knowing"></a><a id="super-claude-framework"></a><a id="the-bmad-method--ai-agent-framework"></a>Removed in edition v2026.10: listings no lesson uses. See the [CHANGELOG](CHANGELOG.md#removed-listings).
+- <a id="updates--deprecations-february-2026"></a><a id="updates--deprecations"></a><a id="updates--deprecations-as-of-july-2026"></a>Removed in edition v2026.10: the guide's summaries of Claude Code releases. See the [CHANGELOG](CHANGELOG.md#removed-changelog-mirror).
 - <a id="faq"></a>Moved to [FAQ (previous edition)](docs/reference/faq.md).
 - <a id="references"></a>Moved to [Further learning](docs/reference/further-reading.md).
 - <a id="steal-this-setup"></a><a id="5-bonus-steal-this-repos-setup"></a>Moved to [Examples](examples/README.md).

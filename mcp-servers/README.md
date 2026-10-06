@@ -1,7 +1,7 @@
 <a id="mcp-servers-documentation"></a>
 # MCP servers
 
-Removed: this page and its four walkthroughs covered MCP servers that no lesson uses. To connect a server, see [Connect Claude Code to tools via MCP](https://code.claude.com/docs/en/mcp) and [Connect to MCP servers](https://code.claude.com/docs/en/mcp-quickstart). See the [CHANGELOG](../CHANGELOG.md#removed-listings).
+Removed in edition v2026.10: this page and its four walkthroughs covered MCP servers that no lesson uses. To connect a server, see [Connect Claude Code to tools via MCP](https://code.claude.com/docs/en/mcp) and [Connect to MCP servers](https://code.claude.com/docs/en/mcp-quickstart). See the [CHANGELOG](../CHANGELOG.md#removed-listings).
 
 <a id="troubleshooting"></a><a id="general-troubleshooting"></a><a id="server-shows-failed-to-connect"></a><a id="command-not-found-errors"></a>For connection problems, see [Connect Claude Code to tools via MCP](https://code.claude.com/docs/en/mcp).
 
