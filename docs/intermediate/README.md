@@ -39,7 +39,7 @@ They combine: a [plugin](https://code.claude.com/docs/en/plugins) packages skill
 ## Lessons
 
 1. [Turn a repeated workflow into a skill](01-first-skill.md)
-2. Organize project memory and see what loaded
+2. [Organize project memory and see what loaded](02-organize-memory.md)
 3. Pick the model and effort
 4. Permissions, settings scopes and the sandbox
 5. Enforce a rule with a hook

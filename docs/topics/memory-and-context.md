@@ -9,6 +9,7 @@ What Claude Code knows at the start of a session and what fills its context as y
 - Beginner: [Keep a session on track](../beginner/04-keep-a-session-on-track.md)
 - Beginner: [Project memory with CLAUDE.md](../beginner/05-project-memory.md)
 - Beginner Electives: [IDE extensions](../beginner/electives/ide-extensions.md), [Screenshots and images](../beginner/electives/screenshots-and-images.md), [The built-in teachers](../beginner/electives/built-in-teachers.md)
+- Intermediate: [Organize project memory and see what loaded](../intermediate/02-organize-memory.md)
 
 Later lessons on this topic are linked here in level order, with its Electives, as they are published.
 

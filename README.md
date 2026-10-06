@@ -46,7 +46,7 @@ macOS, Linux and WSL. For Windows and other installers, see the [official setup 
 
 **Beginner Electives:** [IDE extensions](docs/beginner/electives/ide-extensions.md) · [Screenshots and images](docs/beginner/electives/screenshots-and-images.md) · [The built-in teachers](docs/beginner/electives/built-in-teachers.md)
 
-**Intermediate** (being rebuilt): [Level index](docs/intermediate/README.md) · [Turn a repeated workflow into a skill](docs/intermediate/01-first-skill.md)
+**Intermediate** (being rebuilt): [Level index](docs/intermediate/README.md) · [Turn a repeated workflow into a skill](docs/intermediate/01-first-skill.md) · [Organize project memory and see what loaded](docs/intermediate/02-organize-memory.md)
 
 **Advanced** (being rebuilt): [Level index](docs/advanced/README.md)
 
