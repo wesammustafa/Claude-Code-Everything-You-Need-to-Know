@@ -6,7 +6,9 @@ Bundles of skills, agents, hooks and MCP servers that you install from a marketp
 
 ## Lessons
 
-This topic's lessons are linked here in level order, with its Electives, as they are published.
+- Intermediate: [Install and manage plugins](../intermediate/08-plugins.md)
+
+More of this topic's lessons and Electives are linked here as they are published.
 
 ## Official docs
 
