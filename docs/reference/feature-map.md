@@ -35,7 +35,7 @@ How to read it:
 | [Plan mode](https://code.claude.com/docs/en/permission-modes); taught in [Permission modes and plan mode](../beginner/02-permission-modes-and-plan-mode.md) | – | Every provider |
 | [Auto mode](https://code.claude.com/docs/en/permission-modes); taught in [Permission modes and plan mode](../beginner/02-permission-modes-and-plan-mode.md) | – | A Claude subscription, the Console and Claude Platform on AWS; on Bedrock, Agent Platform and Foundry with newer models only. Team and Enterprise admins can turn it off |
 | [Checkpointing and rewind](https://code.claude.com/docs/en/checkpointing); taught in [Keep a session on track](../beginner/04-keep-a-session-on-track.md) | – | Every provider |
-| [CLAUDE.md memory](https://code.claude.com/docs/en/memory); taught in [Project memory with CLAUDE.md](../beginner/05-project-memory.md) | – | Every provider |
+| [CLAUDE.md memory](https://code.claude.com/docs/en/memory); taught in [Project memory with CLAUDE.md](../beginner/05-project-memory.md) and [Organize project memory and see what loaded](../intermediate/02-organize-memory.md) | – | Every provider |
 | [Sandbox](https://code.claude.com/docs/en/sandboxing) | – | Every provider |
 | [Output styles](https://code.claude.com/docs/en/output-styles); taught in [the built-in teachers](../beginner/electives/built-in-teachers.md) | – | Every provider |
 | [Status line](https://code.claude.com/docs/en/statusline) | – | Every provider |

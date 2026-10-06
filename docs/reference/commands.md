@@ -25,7 +25,7 @@ Electives: `/powerup` and `/output-style` ([the built-in teachers](../beginner/e
 ## Intermediate
 
 - `/skills`: list the skills available in this session. [Turn a repeated workflow into a skill](../intermediate/01-first-skill.md)
-- `/doctor`: check your setup; `/doctor prompt-audit` checks your instruction files. *Organize project memory and see what loaded*
+- `/doctor`: check your setup; `/doctor prompt-audit` checks your instruction files. [Organize project memory and see what loaded](../intermediate/02-organize-memory.md)
 - `/model`: switch the model and save it as your default; for models that support it, the left and right arrow keys adjust effort. *Pick the model and effort*
 - `/effort`: set the effort level. *Pick the model and effort*
 - `/permissions`: manage allow, ask and deny rules. *Permissions, settings scopes and the sandbox*
