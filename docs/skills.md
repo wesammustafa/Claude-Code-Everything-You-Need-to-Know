@@ -526,7 +526,7 @@ Analyze the code at the provided file path or URL.
 
 ---
 
-<a id="the-skills-ecosystem"></a><a id="official-anthropic-resources"></a><a id="marketplaces--registries"></a><a id="curated-awesome-lists"></a><a id="notable-community-skills-by-category"></a><a id="engineering--development"></a><a id="quality-review--debugging"></a><a id="skill--tool-development"></a><a id="-skill-installer"></a><a id="reasoning--process"></a><a id="research--business"></a><a id="memory-context--ops"></a><a id="workflow--collaboration"></a><a id="output-formats--creative"></a><a id="installing-a-community-skill"></a>Removed: third-party skill registries, curated lists and community skill names that no lesson uses. To find more skills, start with Anthropic's [plugin marketplaces](https://code.claude.com/docs/en/plugins/anthropic-marketplaces). See the [CHANGELOG](../CHANGELOG.md#removed-listings).
+<a id="the-skills-ecosystem"></a><a id="official-anthropic-resources"></a><a id="marketplaces--registries"></a><a id="curated-awesome-lists"></a><a id="notable-community-skills-by-category"></a><a id="engineering--development"></a><a id="quality-review--debugging"></a><a id="skill--tool-development"></a><a id="-skill-installer"></a><a id="reasoning--process"></a><a id="research--business"></a><a id="memory-context--ops"></a><a id="workflow--collaboration"></a><a id="output-formats--creative"></a><a id="installing-a-community-skill"></a>Removed in edition v2026.10: third-party skill registries, curated lists and community skill names that no lesson uses. To find more skills, start with Anthropic's [plugin marketplaces](https://code.claude.com/docs/en/plugins/anthropic-marketplaces). See the [CHANGELOG](../CHANGELOG.md#removed-listings).
 
 <a id="frontmatter-reference"></a>
 
