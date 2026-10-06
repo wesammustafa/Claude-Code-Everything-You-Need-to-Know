@@ -287,7 +287,7 @@ Callouts are GitHub alerts, at most two per lesson, each with one meaning:
 - A screen capture is allowed only when recognizing the real interface is the point and text cannot show it: at most three across the Beginner level. Each is taken in the practice template, cropped to the relevant interface (no startup banner, no Anthropic logo), scrubbed of personal paths, usernames, account emails, org names and tokens, given a 1px border, and captioned `Claude Code vX.Y.Z (stable), YYYY-MM-DD`.
 - Every image has alt text that says what the reader should learn from it, not "screenshot" and not a repeat of the caption.
 - Text in a diagram or image reaches 4.5:1 contrast in GitHub's light and dark themes; other marks reach 3:1.
-- No third-party images (logos, icons, slides, product screenshots), no animation and no embedded video.
+- No third-party images (logos, icons, slides, product screenshots), no animation and no embedded video. The one exception is the Claude mascot, [`assets/brand/claude-jumping.svg`](assets/brand/claude-jumping.svg) (MIT, credited in README), which jumps beside README's title and appears on the social card in its own colors.
 - The `images` check enforces the alt text, the Mermaid lines, and the names, references and budget below.
 - New images go under `assets/`: `assets/brand/` for the guide's identity and `assets/lessons/<lesson-id>/` for captures. Names are kebab-case, and paths are explicit and relative. Budget: an SVG up to 50 KB, a capture up to 200 KB. Every image that is not a capture ships its editable source beside it. Hand-drawn SVG is for the guide's identity pieces only.
 

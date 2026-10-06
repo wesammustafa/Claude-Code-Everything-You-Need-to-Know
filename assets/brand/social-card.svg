@@ -1,10 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640" role="img" aria-label="Claude Code: Everything You Need to Know. Learn it in three levels: Beginner, Intermediate, Advanced. Independent community guide, not affiliated with Anthropic.">
-  <!-- Source for social-card.png. Faces: Zilla Slab and Atkinson Hyperlegible Next (SIL OFL 1.1). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640" role="img" aria-label="Claude Code: Everything You Need to Know. Learn it in three levels: Beginner, Intermediate, Advanced. Independent community guide, not affiliated with Anthropic. Beside the title, the Claude mascot jumps with its arms up.">
+  <!-- Source for social-card.png. Faces: Zilla Slab and Atkinson Hyperlegible Next (SIL OFL 1.1). The mascot is drawn from claude-jumping.svg, Copyright (c) 2025-2026 Shayan Rais, used under the MIT License (full text in that file). -->
   <rect width="1280" height="640" fill="#1d2b36"/>
-  <rect x="190" y="70" width="18" height="500" rx="4" fill="#3b4b57"/>
-  <rect x="96" y="410" width="150" height="58" rx="8" fill="#f2c230"/>
-  <rect x="136" y="300" width="150" height="58" rx="8" fill="#f2c230"/>
-  <rect x="176" y="190" width="150" height="58" rx="8" fill="#f2c230"/>
+  <g transform="translate(60 185) scale(2.8)">
+    <ellipse cx="50" cy="82" rx="16" ry="4" fill="#000" opacity="0.3"/>
+    <g transform="translate(0 -10)" fill="#E07C4C">
+      <rect x="22" y="8" width="8" height="16"/>
+      <rect x="70" y="8" width="8" height="16"/>
+      <rect x="18" y="24" width="64" height="4"/>
+      <rect x="14" y="28" width="72" height="32"/>
+      <rect x="2" y="36" width="12" height="8" transform="rotate(25 14 40)"/>
+      <rect x="86" y="36" width="12" height="8" transform="rotate(-25 86 40)"/>
+      <rect x="24" y="60" width="12" height="14"/>
+      <rect x="64" y="60" width="12" height="14"/>
+      <rect x="30" y="34" width="8" height="10" fill="#000"/>
+      <rect x="62" y="34" width="8" height="10" fill="#000"/>
+    </g>
+  </g>
   <text x="380" y="210" fill="#ffffff" font-family="Zilla Slab, Rockwell, Georgia, serif" font-weight="700" font-size="74">Claude Code:</text>
   <text x="380" y="292" fill="#ffffff" font-family="Zilla Slab, Rockwell, Georgia, serif" font-weight="700" font-size="74">Everything You Need</text>
   <text x="380" y="374" fill="#ffffff" font-family="Zilla Slab, Rockwell, Georgia, serif" font-weight="700" font-size="74">to Know</text>
