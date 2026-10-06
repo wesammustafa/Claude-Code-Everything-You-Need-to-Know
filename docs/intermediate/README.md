@@ -47,7 +47,7 @@ They combine: a [plugin](https://code.claude.com/docs/en/plugins) packages skill
 7. [Connect a tool with MCP](07-mcp.md)
 8. [Install and manage plugins](08-plugins.md)
 
-Each lesson takes 10 to 20 minutes. Lessons are linked here as they are published.
+Each lesson takes 10 to 20 minutes.
 
 ## Capstone
 
