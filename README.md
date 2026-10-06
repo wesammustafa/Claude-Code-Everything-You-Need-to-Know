@@ -48,13 +48,15 @@ macOS, Linux and WSL. For Windows and other installers, see the [official setup 
 
 **Intermediate** (being rebuilt): [Level index](docs/intermediate/README.md) · [Turn a repeated workflow into a skill](docs/intermediate/01-first-skill.md) · [Organize project memory and see what loaded](docs/intermediate/02-organize-memory.md) · [Pick the model and effort](docs/intermediate/03-model-and-effort.md) · [Permissions, settings scopes and the sandbox](docs/intermediate/04-permissions-and-sandbox.md) · [Enforce a rule with a hook](docs/intermediate/05-hooks.md) · [Delegate to a custom subagent](docs/intermediate/06-subagents.md) · [Connect a tool with MCP](docs/intermediate/07-mcp.md) · [Install and manage plugins](docs/intermediate/08-plugins.md) · [Capstone](docs/intermediate/capstone.md)
 
+**Intermediate Electives:** [Skill patterns](docs/intermediate/electives/skill-patterns.md) · [Claude in Chrome](docs/intermediate/electives/claude-in-chrome.md) · [The status line](docs/intermediate/electives/status-line.md) · [Fast mode](docs/intermediate/electives/fast-mode.md)
+
 **Advanced** (being rebuilt): [Level index](docs/advanced/README.md)
 
 **Topics:** [All topics](docs/topics/README.md) · [Permissions and safety](docs/topics/permissions-and-safety.md) · [Memory and context](docs/topics/memory-and-context.md) · [Models, effort and cost](docs/topics/models-effort-and-cost.md) · [Skills](docs/topics/skills.md) · [Hooks](docs/topics/hooks.md) · [Subagents and parallel work](docs/topics/subagents-and-parallel-work.md) · [MCP](docs/topics/mcp.md) · [Plugins](docs/topics/plugins.md) · [Automation](docs/topics/automation.md)
 
 **Reference:** [Reference index](docs/reference/README.md) · [Models and effort](docs/reference/models.md) · [Commands by level](docs/reference/commands.md) · [Feature map](docs/reference/feature-map.md) · [Further learning](docs/reference/further-reading.md) · [Glossary](docs/reference/glossary.md) · [Changelog](docs/reference/changelog.md)
 
-**From the previous edition, not yet re-verified:** [Subagents and parallel work](docs/legacy/subagents-and-parallel-work.md) · [Fast mode](docs/legacy/fast-mode.md) · [Skills in depth](docs/skills.md) · [Agent teams](docs/agent-teams.md) · [Dynamic workflows](docs/workflows.md) · [FAQ](docs/reference/faq.md)
+**From the previous edition, not yet re-verified:** [Subagents and parallel work](docs/legacy/subagents-and-parallel-work.md) · [Agent teams](docs/agent-teams.md) · [Dynamic workflows](docs/workflows.md) · [FAQ](docs/reference/faq.md)
 
 **Examples:** [How to use the examples](examples/README.md)
 
@@ -80,7 +82,7 @@ The previous edition's README sections moved. If a link brought you here, find i
 - <a id="effort-levels"></a><a id="4-effort-levels--how-hard-claude-thinks"></a>Moved to [Pick the model and effort](docs/intermediate/03-model-and-effort.md).
 - <a id="claude-commands"></a><a id="built-in-slash-commands"></a><a id="day-1-essentials"></a>Moved to [Commands by level](docs/reference/commands.md).
 - <a id="custom-slash-commands"></a><a id="claude-skills"></a><a id="your-first-skill-in-3-minutes"></a><a id="want-more-depth"></a><a id="what-are-skills"></a><a id="built-in-vs-custom-skills"></a><a id="skills-faq"></a><a id="creating-custom-skills"></a>Moved to [Turn a repeated workflow into a skill](docs/intermediate/01-first-skill.md).
-- <a id="troubleshooting-skills"></a><a id="skills-best-practices"></a>Moved to [Skills in depth (previous edition)](docs/skills.md).
+- <a id="troubleshooting-skills"></a><a id="skills-best-practices"></a>Moved to [Skill patterns](docs/intermediate/electives/skill-patterns.md).
 - <a id="available-skills-reference"></a><a id="using-skills-in-workflow"></a>Moved to [Skills topic](docs/topics/skills.md).
 - <a id="hooks"></a><a id="setting-up-claude-hooks"></a><a id="setting-up-hooks"></a><a id="hook-events"></a><a id="hook-input"></a><a id="hook-output"></a><a id="security-considerations"></a><a id="hook-execution-details-and-debugging"></a><a id="execution--debugging"></a>Moved to [Enforce a rule with a hook](docs/intermediate/05-hooks.md).
 - <a id="ai-agents"></a>Moved to [Subagents and parallel work topic](docs/topics/subagents-and-parallel-work.md).
@@ -90,7 +92,7 @@ The previous edition's README sections moved. If a link brought you here, find i
 - <a id="dynamic-workflows"></a><a id="try-it-in-2-minutes--no-script-required"></a><a id="starting-your-own"></a>Moved to [Dynamic workflows (previous edition)](docs/workflows.md).
 - <a id="beyond-one-terminal--the-2026-automation-surface"></a>Moved to [Feature map](docs/reference/feature-map.md).
 - <a id="model-context-protocol-mcp"></a><a id="the-nm-problem-mcp-solves"></a><a id="three-pillars"></a><a id="the-mcp-registry--self-discovering-agents"></a><a id="the-mcp-ecosystem-today"></a>Moved to [Connect a tool with MCP](docs/intermediate/07-mcp.md).
-- <a id="fast-mode"></a><a id="fast-mode-"></a>Moved to [Fast mode (previous edition)](docs/legacy/fast-mode.md).
+- <a id="fast-mode"></a><a id="fast-mode-"></a>Moved to [Fast mode](docs/intermediate/electives/fast-mode.md).
 - <a id="beyond-your-own-skills--the-ecosystem"></a><a id="featured-mcp-servers"></a><a id="more-mcp-servers-worth-knowing"></a><a id="super-claude-framework"></a><a id="the-bmad-method--ai-agent-framework"></a>Removed in edition v2026.10: listings no lesson uses. See the [CHANGELOG](CHANGELOG.md#removed-listings).
 - <a id="updates--deprecations-february-2026"></a><a id="updates--deprecations"></a><a id="updates--deprecations-as-of-july-2026"></a>Removed in edition v2026.10: the guide's summaries of Claude Code releases. See the [CHANGELOG](CHANGELOG.md#removed-changelog-mirror).
 - <a id="faq"></a>Moved to [FAQ (previous edition)](docs/reference/faq.md).

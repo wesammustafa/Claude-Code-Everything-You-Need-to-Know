@@ -66,7 +66,7 @@ Effort controls how much the model reasons on each step. Lower effort answers so
 <a id="fast-mode"></a>
 ## Related pages
 
-- Fast mode, which the docs mark "in research preview": a faster configuration of supported Opus models that subscription plans pay for with usage credits only. See [Fast mode](https://code.claude.com/docs/en/fast-mode).
+- Fast mode, which the docs mark "in research preview": a faster configuration of supported Opus models that subscription plans pay for with usage credits only. See [Fast mode](https://code.claude.com/docs/en/fast-mode), and the [Fast mode](../intermediate/electives/fast-mode.md) Elective.
 - Choosing a model and effort for a task: Anthropic's [Choosing a Claude model and effort level in Claude Code](https://claude.com/blog/claude-model-and-effort-level-in-claude-code).
 - Retirement dates: [Model deprecations](https://platform.claude.com/docs/en/about-claude/model-deprecations).
 
