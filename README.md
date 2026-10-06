@@ -46,7 +46,7 @@ macOS, Linux and WSL. For Windows and other installers, see the [official setup 
 
 **Beginner Electives:** [IDE extensions](docs/beginner/electives/ide-extensions.md) · [Screenshots and images](docs/beginner/electives/screenshots-and-images.md) · [The built-in teachers](docs/beginner/electives/built-in-teachers.md)
 
-**Intermediate** (being rebuilt): [Level index](docs/intermediate/README.md) · [Turn a repeated workflow into a skill](docs/intermediate/01-first-skill.md) · [Organize project memory and see what loaded](docs/intermediate/02-organize-memory.md)
+**Intermediate** (being rebuilt): [Level index](docs/intermediate/README.md) · [Turn a repeated workflow into a skill](docs/intermediate/01-first-skill.md) · [Organize project memory and see what loaded](docs/intermediate/02-organize-memory.md) · [Pick the model and effort](docs/intermediate/03-model-and-effort.md)
 
 **Advanced** (being rebuilt): [Level index](docs/advanced/README.md)
 
@@ -54,7 +54,7 @@ macOS, Linux and WSL. For Windows and other installers, see the [official setup 
 
 **Reference:** [Reference index](docs/reference/README.md) · [Models and effort](docs/reference/models.md) · [Commands by level](docs/reference/commands.md) · [Feature map](docs/reference/feature-map.md) · [Further learning](docs/reference/further-reading.md) · [Glossary](docs/reference/glossary.md) · [Changelog](docs/reference/changelog.md)
 
-**From the previous edition, not yet re-verified:** [Hooks](docs/legacy/hooks.md) · [Subagents and parallel work](docs/legacy/subagents-and-parallel-work.md) · [MCP](docs/legacy/mcp.md) · [Fast mode](docs/legacy/fast-mode.md) · [Skills in depth](docs/skills.md) · [Agent teams](docs/agent-teams.md) · [Dynamic workflows](docs/workflows.md) · [Effort levels](docs/reference/effort-levels.md) · [FAQ](docs/reference/faq.md)
+**From the previous edition, not yet re-verified:** [Hooks](docs/legacy/hooks.md) · [Subagents and parallel work](docs/legacy/subagents-and-parallel-work.md) · [MCP](docs/legacy/mcp.md) · [Fast mode](docs/legacy/fast-mode.md) · [Skills in depth](docs/skills.md) · [Agent teams](docs/agent-teams.md) · [Dynamic workflows](docs/workflows.md) · [FAQ](docs/reference/faq.md)
 
 **Examples:** [How to use the examples](examples/README.md)
 
@@ -76,7 +76,8 @@ The previous edition's README sections moved. If a link brought you here, find i
 - <a id="prompt-engineering-deep-dive"></a><a id="1-explore--plan--code--commit"></a><a id="2-test-driven-workflow-write-tests--code--commit"></a>Moved to [Your first change, from request to commit](docs/beginner/03-first-change.md).
 - <a id="4-optional-generate-a-claudemd"></a>Moved to [Project memory with CLAUDE.md](docs/beginner/05-project-memory.md).
 - <a id="3-visual-iteration-code--screenshot--iterate--commit"></a>Moved to [Give Claude a screenshot](docs/beginner/electives/screenshots-and-images.md).
-- <a id="claude-opus-46-the-latest-powerhouse"></a><a id="claude-opus-47-the-latest-flagship"></a><a id="the-claude-5-era-todays-model-lineup"></a><a id="effort-levels"></a><a id="4-effort-levels--how-hard-claude-thinks"></a>Moved to [Models and effort](docs/reference/models.md).
+- <a id="claude-opus-46-the-latest-powerhouse"></a><a id="claude-opus-47-the-latest-flagship"></a><a id="the-claude-5-era-todays-model-lineup"></a>Moved to [Models and effort](docs/reference/models.md).
+- <a id="effort-levels"></a><a id="4-effort-levels--how-hard-claude-thinks"></a>Moved to [Pick the model and effort](docs/intermediate/03-model-and-effort.md).
 - <a id="claude-commands"></a><a id="built-in-slash-commands"></a><a id="day-1-essentials"></a>Moved to [Commands by level](docs/reference/commands.md).
 - <a id="custom-slash-commands"></a><a id="claude-skills"></a><a id="your-first-skill-in-3-minutes"></a><a id="want-more-depth"></a><a id="what-are-skills"></a><a id="built-in-vs-custom-skills"></a><a id="skills-faq"></a><a id="creating-custom-skills"></a>Moved to [Turn a repeated workflow into a skill](docs/intermediate/01-first-skill.md).
 - <a id="troubleshooting-skills"></a><a id="skills-best-practices"></a>Moved to [Skills in depth (previous edition)](docs/skills.md).
