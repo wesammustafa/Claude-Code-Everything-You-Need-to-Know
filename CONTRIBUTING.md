@@ -71,10 +71,10 @@ Mental models, analogies, the guide's own advice, and how-to steps whose command
 ### How to cite
 
 - Link the Tier 1 page inline at the first mention of each volatile claim on a page, not at every repeat.
-- Each page that carries a [stamp](#the-stamp), and this file, ends with a one-line `Sources:` footer, except that on a lesson the navigation links follow it. The footer lists every page the page's statements rely on: each page linked as the source of a fact it states.
+- Each page that carries a [stamp](#the-stamp), and this file, has a one-line `Sources:` footer after its content. Only the navigation line follows it: on a lesson, the one [Lessons](#lessons) describes; on other pages, the `Up:` link. The footer lists every page the page's statements rely on: each page linked as the source of a fact it states.
   - Links that back no statement need not be listed: further reading (Go further, Official companions, Related pages), download and install pages, this repo's issue forms and the practice template, and pointers that say where to look, such as the sites in the Tier 1 table.
-  - A page that is itself a list of links, such as Further learning, may say "the pages linked above". A page that relies on no outside page needs no footer.
-  - README, the other community files, stubs and pages from the previous edition cite inline only.
+  - A page made of links to its sources may name them in summary, as Further learning ("the pages linked above") and the Feature map ("each feature's linked page") do. A page that relies on no outside page needs no footer.
+  - README, the other community files, stubs and pages from the previous edition need no footer.
 - Anchor date-sensitive claims to a version (`v2.1.x`) or a full date.
 - Do not add access dates inline.
 
