@@ -32,7 +32,7 @@ Five of the ways to extend Claude Code; [Extend Claude Code](https://code.claude
 - **Hooks:** something must happen every time at a set point in a session, such as before a tool runs, whatever Claude decides. Hooks are defined in a settings file such as `.claude/settings.json` ([Hooks](https://code.claude.com/docs/en/hooks); lesson: [Enforce a rule with a hook](05-hooks.md)).
 - **Subagents:** a side task should run in its own context window and report back. A project subagent lives in `.claude/agents/` ([Create custom subagents](https://code.claude.com/docs/en/sub-agents); lesson: [Delegate to a custom subagent](06-subagents.md)).
 - **Dynamic workflows:** the job needs more agents than one conversation can coordinate. A saved project workflow lives in `.claude/workflows/` ([Workflows](https://code.claude.com/docs/en/workflows); previous edition: [Dynamic workflows](../workflows.md)).
-- **MCP servers:** Claude needs tools or data outside your files, such as a browser, a database or an API. A project-scope server is listed in `.mcp.json` at the project root ([Connect Claude Code to tools via MCP](https://code.claude.com/docs/en/mcp); previous edition: [MCP](../legacy/mcp.md)).
+- **MCP servers:** Claude needs tools or data outside your files, such as a browser, a database or an API. A project-scope server is listed in `.mcp.json` at the project root ([Connect Claude Code to tools via MCP](https://code.claude.com/docs/en/mcp); lesson: [Connect a tool with MCP](07-mcp.md)).
 
 They combine: a [plugin](https://code.claude.com/docs/en/plugins) packages skills, agents, hooks and MCP servers so they install as one unit.
 
@@ -44,7 +44,7 @@ They combine: a [plugin](https://code.claude.com/docs/en/plugins) packages skill
 4. [Permissions, settings scopes and the sandbox](04-permissions-and-sandbox.md)
 5. [Enforce a rule with a hook](05-hooks.md)
 6. [Delegate to a custom subagent](06-subagents.md)
-7. Connect a tool with MCP
+7. [Connect a tool with MCP](07-mcp.md)
 8. Install and manage plugins
 
 Each lesson takes 10 to 20 minutes. Lessons are linked here as they are published.

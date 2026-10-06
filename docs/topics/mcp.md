@@ -6,7 +6,9 @@ Connecting Claude Code to outside tools and data with the Model Context Protocol
 
 ## Lessons
 
-This topic's lessons are linked here in level order, with its Electives, as they are published.
+- Intermediate: [Connect a tool with MCP](../intermediate/07-mcp.md)
+
+More of this topic's lessons and Electives are linked here as they are published.
 
 ## Official docs
 
