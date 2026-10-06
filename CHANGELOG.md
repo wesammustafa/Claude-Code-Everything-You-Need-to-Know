@@ -8,9 +8,25 @@ Baseline: Claude Code v2.1.285 (stable), frozen on 2026-10-05.
 
 Every change in the next edition is verified against this version, the `stable` dist-tag of [`@anthropic-ai/claude-code`](https://www.npmjs.com/package/@anthropic-ai/claude-code?activeTab=versions) on 2026-10-05. It stays frozen until the edition ships, unless a later `stable` release removes, renames or changes the default of something a lesson teaches.
 
+Edition 2: the Intermediate path, with checked exercises. Advanced is still being rebuilt.
+
+### Added
+
+- The [Intermediate level](docs/intermediate/README.md): eight lessons, from a first skill to plugins, by way of project memory, model and effort, permissions and the sandbox, hooks, subagents and MCP, and a capstone that sets a repository up for a new teammate. Every lesson and the capstone has a check in the [practice template](https://github.com/wesammustafa/claude-code-practice). You can run the lesson checks against your own repository with `--dir`; the capstone runs in the template copy.
+- Four Intermediate Electives: [skill patterns](docs/intermediate/electives/skill-patterns.md), [Claude in Chrome](docs/intermediate/electives/claude-in-chrome.md), [the status line](docs/intermediate/electives/status-line.md) and [fast mode](docs/intermediate/electives/fast-mode.md).
+- [Examples](examples/README.md) for the Intermediate lessons: two skills, three hook scripts, a read-only reviewer subagent and a pinned Chrome DevTools MCP configuration. Each one is inert until you copy it into a project, and has a smoke test.
+
 ### Changed
 
 - The animated Claude mascot is back beside README's title, and the social card shows it in place of the trail blazes. It comes from [shanraisshan/claude-code-best-practice](https://github.com/shanraisshan/claude-code-best-practice) under the MIT License.
+- The topic pages, [Commands by level](docs/reference/commands.md) and the [Feature map](docs/reference/feature-map.md) link the Intermediate lessons and Electives.
+- docs/reference/effort-levels.md and docs/skills.md are now stubs that point to the lessons and reference pages that replace them, and the `mcp-servers/` and `specialized-agents/` stubs point to the MCP and subagent lessons.
+
+### Removed
+
+<a id="removed-legacy-intermediate"></a>
+- The previous edition's pages on skills, hooks, MCP and fast mode under `docs/legacy/`, and the subagents section of the subagents and parallel work page: the Intermediate lessons and Electives replace them. Links to the previous edition's README sections land on a line that points to the new page.
+- The skill-resolution diagram, which no page used any more.
 
 ## v2026.10 - 2026-10-05
 
