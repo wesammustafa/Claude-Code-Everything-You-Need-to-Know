@@ -46,7 +46,7 @@ macOS, Linux and WSL. For Windows and other installers, see the [official setup 
 
 **Beginner Electives:** [IDE extensions](docs/beginner/electives/ide-extensions.md) · [Screenshots and images](docs/beginner/electives/screenshots-and-images.md) · [The built-in teachers](docs/beginner/electives/built-in-teachers.md)
 
-**Intermediate** (being rebuilt): [Level index](docs/intermediate/README.md) · [Turn a repeated workflow into a skill](docs/intermediate/01-first-skill.md) · [Organize project memory and see what loaded](docs/intermediate/02-organize-memory.md) · [Pick the model and effort](docs/intermediate/03-model-and-effort.md) · [Permissions, settings scopes and the sandbox](docs/intermediate/04-permissions-and-sandbox.md)
+**Intermediate** (being rebuilt): [Level index](docs/intermediate/README.md) · [Turn a repeated workflow into a skill](docs/intermediate/01-first-skill.md) · [Organize project memory and see what loaded](docs/intermediate/02-organize-memory.md) · [Pick the model and effort](docs/intermediate/03-model-and-effort.md) · [Permissions, settings scopes and the sandbox](docs/intermediate/04-permissions-and-sandbox.md) · [Enforce a rule with a hook](docs/intermediate/05-hooks.md)
 
 **Advanced** (being rebuilt): [Level index](docs/advanced/README.md)
 
@@ -54,7 +54,7 @@ macOS, Linux and WSL. For Windows and other installers, see the [official setup 
 
 **Reference:** [Reference index](docs/reference/README.md) · [Models and effort](docs/reference/models.md) · [Commands by level](docs/reference/commands.md) · [Feature map](docs/reference/feature-map.md) · [Further learning](docs/reference/further-reading.md) · [Glossary](docs/reference/glossary.md) · [Changelog](docs/reference/changelog.md)
 
-**From the previous edition, not yet re-verified:** [Hooks](docs/legacy/hooks.md) · [Subagents and parallel work](docs/legacy/subagents-and-parallel-work.md) · [MCP](docs/legacy/mcp.md) · [Fast mode](docs/legacy/fast-mode.md) · [Skills in depth](docs/skills.md) · [Agent teams](docs/agent-teams.md) · [Dynamic workflows](docs/workflows.md) · [FAQ](docs/reference/faq.md)
+**From the previous edition, not yet re-verified:** [Subagents and parallel work](docs/legacy/subagents-and-parallel-work.md) · [MCP](docs/legacy/mcp.md) · [Fast mode](docs/legacy/fast-mode.md) · [Skills in depth](docs/skills.md) · [Agent teams](docs/agent-teams.md) · [Dynamic workflows](docs/workflows.md) · [FAQ](docs/reference/faq.md)
 
 **Examples:** [How to use the examples](examples/README.md)
 
@@ -82,7 +82,7 @@ The previous edition's README sections moved. If a link brought you here, find i
 - <a id="custom-slash-commands"></a><a id="claude-skills"></a><a id="your-first-skill-in-3-minutes"></a><a id="want-more-depth"></a><a id="what-are-skills"></a><a id="built-in-vs-custom-skills"></a><a id="skills-faq"></a><a id="creating-custom-skills"></a>Moved to [Turn a repeated workflow into a skill](docs/intermediate/01-first-skill.md).
 - <a id="troubleshooting-skills"></a><a id="skills-best-practices"></a>Moved to [Skills in depth (previous edition)](docs/skills.md).
 - <a id="available-skills-reference"></a><a id="using-skills-in-workflow"></a>Moved to [Skills topic](docs/topics/skills.md).
-- <a id="hooks"></a><a id="setting-up-claude-hooks"></a><a id="setting-up-hooks"></a><a id="hook-events"></a><a id="hook-input"></a><a id="hook-output"></a><a id="security-considerations"></a><a id="hook-execution-details-and-debugging"></a><a id="execution--debugging"></a>Moved to [Hooks (previous edition)](docs/legacy/hooks.md).
+- <a id="hooks"></a><a id="setting-up-claude-hooks"></a><a id="setting-up-hooks"></a><a id="hook-events"></a><a id="hook-input"></a><a id="hook-output"></a><a id="security-considerations"></a><a id="hook-execution-details-and-debugging"></a><a id="execution--debugging"></a>Moved to [Enforce a rule with a hook](docs/intermediate/05-hooks.md).
 - <a id="ai-agents"></a>Moved to [Subagents and parallel work topic](docs/topics/subagents-and-parallel-work.md).
 - <a id="running-agents-in-parallel"></a><a id="subagents--running-agents-in-parallel"></a><a id="1-git-worktrees--parallel-branches-parallel-sessions"></a><a id="2-general-purpose-subagents--when-one-claude-isnt-enough"></a><a id="orchestrating-specialists-from-the-main-session"></a>Moved to [Subagents and parallel work (previous edition)](docs/legacy/subagents-and-parallel-work.md).
 - <a id="agent-teams-experimental---2026"></a><a id="agent-teams-experimental"></a><a id="enable-it"></a><a id="the-example-that-justifies-the-cost"></a><a id="staff-a-team-with-the-role-prompts-you-already-have"></a><a id="three-things-that-catch-people-out"></a><a id="monitoring-and-the-naming-trap"></a><a id="best-practices"></a>Moved to [Agent teams (previous edition)](docs/agent-teams.md).

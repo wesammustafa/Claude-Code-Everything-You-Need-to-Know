@@ -6,7 +6,9 @@ Commands that run at fixed points in a session, so a rule holds without relying 
 
 ## Lessons
 
-This topic's lessons are linked here in level order, with its Electives, as they are published.
+- Intermediate: [Enforce a rule with a hook](../intermediate/05-hooks.md)
+
+More of this topic's lessons and Electives are linked here as they are published.
 
 ## Official docs
 
