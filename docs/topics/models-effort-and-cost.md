@@ -7,6 +7,7 @@ Which model and effort level a task needs, and what a session costs.
 ## Lessons
 
 - Beginner: [Install, sign in and look around](../beginner/01-install-and-look-around.md)
+- Intermediate: [Pick the model and effort](../intermediate/03-model-and-effort.md)
 
 Later lessons on this topic are linked here in level order, with its Electives, as they are published.
 
