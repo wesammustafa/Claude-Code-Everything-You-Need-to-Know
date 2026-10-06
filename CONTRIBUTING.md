@@ -319,6 +319,8 @@ Callouts are GitHub alerts, at most two per lesson, each with one meaning:
 
 The folder layout changes while the guide is reworked into three levels, so this file does not list it yet. For examples, see [Adding a skill](#adding-a-skill).
 
+A pull request that adds a page under `docs/` also adds it to the "Everything in the guide" index in [README.md](README.md), so every page stays reachable from the front door.
+
 ## Anchor compatibility
 
 Listed anchors and page paths from `main` as it was when the rework started keep resolving: [`.github/compat/anchors.txt`](.github/compat/anchors.txt) lists the anchors of `README.md`, the `docs/` pages and `mcp-servers/README.md`, and [`.github/compat/paths.txt`](.github/compat/paths.txt) the paths of the `docs/` and `mcp-servers/` pages, plus the `specialized-agents/README.md` Stub that stands in for the removed `specialized-agents/` folder, each of which must stay a page or a Stub. Only pull requests that add Stubs edit the two lists.
