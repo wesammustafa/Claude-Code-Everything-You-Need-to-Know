@@ -10,7 +10,7 @@ Claude Code has **four** ways to run agents at once. They're easy to confuse, so
 
 | Surface | Who coordinates | Reach for it when… |
 |---|---|---|
-| **Subagents** *(below)* | Claude, turn by turn, inside one session | A side task would flood your main conversation with search results, logs, or file contents you'll never reference again |
+| **[Subagents](../intermediate/06-subagents.md)** | Claude, turn by turn, inside one session | A side task would flood your main conversation with search results, logs, or file contents you'll never reference again |
 | **Agent view**: `claude agents` *(research preview)* | **You**: hand off, check back later | You have several independent tasks and want to dispatch them, glance at status, and step in only when one needs you. Each dispatched session gets **its own worktree automatically** |
 | **[Agent Teams](../../README.md#agent-teams-experimental)** *(experimental)* | A lead agent supervising peer sessions | Workers need to **talk to each other**: share findings, challenge each other, self-claim from a shared task list |
 | **[Dynamic Workflows](../../README.md#dynamic-workflows)** | **A script**, not Claude's judgement | The job outgrows a handful of subagents, or you want findings cross-checked against each other: codebase-wide audits, 500-file migrations |
@@ -41,16 +41,7 @@ git worktree remove ../feature-a              # clean up when done
 > [!TIP]
 > Prefer not to manage them by hand? `claude agents` (agent view) puts **each dispatched session in its own worktree automatically**, and `/batch` does the same per unit of work.
 
-<a id="2-general-purpose-subagents--when-one-claude-isnt-enough"></a>
-## 2. General-purpose subagents: when one Claude isn't enough
-
-From your main session, ask Claude to spawn subagents for a parallel sub-task. Each subagent runs in its own context window and reports a summary back, so the main session stays focused.
-
-```markdown
-Analyze the implementation of the payment feature.
-Spawn 5 subagents to accelerate the work.
-Ultrathink.
-```
+Subagents now have their own lesson: [Delegate to a custom subagent](../intermediate/06-subagents.md).
 
 ---
 

@@ -52,7 +52,7 @@ How to read it:
 | [Skills](https://code.claude.com/docs/en/skills); taught in [Turn a repeated workflow into a skill](../intermediate/01-first-skill.md) | – | Every provider |
 | [Hooks](https://code.claude.com/docs/en/hooks-guide); taught in [Enforce a rule with a hook](../intermediate/05-hooks.md) | – | Every provider |
 | [Agent hooks](https://code.claude.com/docs/en/hooks-guide#agent-based-hooks) | "Agent hooks are experimental." | As for hooks |
-| [Subagents](https://code.claude.com/docs/en/sub-agents) | – | Every provider |
+| [Subagents](https://code.claude.com/docs/en/sub-agents); taught in [Delegate to a custom subagent](../intermediate/06-subagents.md) | – | Every provider |
 | [MCP](https://code.claude.com/docs/en/mcp) | – | Every provider; claude.ai connectors only when you sign in with a Claude subscription |
 | [Plugins and marketplaces](https://code.claude.com/docs/en/plugins/overview) | – | Every provider |
 | [Channels](https://code.claude.com/docs/en/channels) | "Channels are in research preview." | A Claude subscription (Team and Enterprise once an admin turns them on) and the Console; not Claude Platform on AWS, Bedrock, Agent Platform or Foundry |
