@@ -53,16 +53,20 @@ Each lesson takes 10 to 20 minutes, plus the time an agent run takes.
 
 Optional lessons beside the core path:
 
-- Agent teams
-- Agent view
-- `/goal`, `/loop` and routines
-- Testing and publishing a plugin
-- Dev containers
+- [Agent teams](electives/agent-teams.md): a lead and teammates that message each other, staffed from your own subagent definitions.
+- [Agent view](electives/agent-view.md): hand tasks to background sessions from one screen, and step in only when one needs you.
+- [`/goal`, `/loop` and routines](electives/goal-loop-routines.md): keep Claude working toward a condition, on an interval, or on a schedule in the cloud.
+- [Testing and publishing a plugin](electives/publish-a-plugin.md): check a plugin's files and behavior, then publish it in your own marketplace.
+- [Dev containers](electives/dev-containers.md): run Claude Code in a container with a firewall, keep your sign-in, and let it work unattended.
 
 ## Official companions
 
 - [Run agents in parallel](https://code.claude.com/docs/en/agents): Anthropic's comparison of the ways Claude Code takes on several tasks at once.
 - [The AI-native SDLC playbook](https://academy.claude.com/courses/ai-native-sdlc-playbook): Claude Academy's course on reshaping a team's development lifecycle around AI.
+
+## Beyond this guide
+
+[Beyond this guide](beyond-this-guide.md): building your own agents and MCP servers, and running and rolling out Claude Code for an organization.
 
 ---
 

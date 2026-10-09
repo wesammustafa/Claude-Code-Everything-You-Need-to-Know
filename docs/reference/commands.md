@@ -48,7 +48,7 @@ Electives: `/statusline` ([The status line](../intermediate/electives/status-lin
 - `claude plugin validate <dir>`: check a marketplace or a plugin folder before you share it; `--strict` also fails on warnings ([Plugin commands reference](https://code.claude.com/docs/en/plugins/cli-reference#plugin-validate)). [Share your setup with a team](../advanced/06-share-your-setup.md)
 - `/usage`: the session's cost, your plan's usage limits and activity stats. [Put bounds on autonomous runs](../advanced/07-bounded-runs.md)
 
-Electives: `/background` (agent view); `/goal`, `/loop` and `/schedule` (`/goal`, `/loop` and routines).
+Electives: `claude agents` and `/background` ([Agent view](../advanced/electives/agent-view.md)); `/goal`, `/loop` and `/schedule` ([`/goal`, `/loop` and routines](../advanced/electives/goal-loop-routines.md)); `claude plugin eval` ([Testing and publishing a plugin](../advanced/electives/publish-a-plugin.md)).
 
 <a id="custom-slash-commands-skills"></a>
 ## Your own commands

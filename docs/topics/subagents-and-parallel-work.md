@@ -10,19 +10,19 @@ Ways to split work across contexts and sessions: subagents, worktrees, dynamic w
 - Advanced: [Parallel sessions with worktrees](../advanced/01-parallel-sessions.md)
 - Advanced: [Choose an orchestration pattern](../advanced/02-orchestration-patterns.md)
 - Advanced: [Run and save a dynamic workflow](../advanced/03-dynamic-workflows.md)
-
-More of this topic's lessons and Electives are linked here as they are published.
+- Advanced Electives: [Agent teams](../advanced/electives/agent-teams.md), [Agent view](../advanced/electives/agent-view.md)
 
 ## Official docs
 
 - [Create custom subagents](https://code.claude.com/docs/en/sub-agents)
 - [Run agents in parallel](https://code.claude.com/docs/en/agents)
+- [Manage multiple agents with agent view](https://code.claude.com/docs/en/agent-view)
 - [Run parallel sessions with worktrees](https://code.claude.com/docs/en/worktrees)
 - [Orchestrate subagents at scale with dynamic workflows](https://code.claude.com/docs/en/workflows)
 - [Orchestrate teams of Claude Code sessions](https://code.claude.com/docs/en/agent-teams)
 
 ---
 
-<sub>Sources: [Create custom subagents](https://code.claude.com/docs/en/sub-agents) · [Run agents in parallel](https://code.claude.com/docs/en/agents) · [Run parallel sessions with worktrees](https://code.claude.com/docs/en/worktrees) · [Orchestrate subagents at scale with dynamic workflows](https://code.claude.com/docs/en/workflows) · [Orchestrate teams of Claude Code sessions](https://code.claude.com/docs/en/agent-teams)</sub>
+<sub>Sources: [Create custom subagents](https://code.claude.com/docs/en/sub-agents) · [Run agents in parallel](https://code.claude.com/docs/en/agents) · [Manage multiple agents with agent view](https://code.claude.com/docs/en/agent-view) · [Run parallel sessions with worktrees](https://code.claude.com/docs/en/worktrees) · [Orchestrate subagents at scale with dynamic workflows](https://code.claude.com/docs/en/workflows) · [Orchestrate teams of Claude Code sessions](https://code.claude.com/docs/en/agent-teams)</sub>
 
 <sub>Up: [Topics](README.md)</sub>
