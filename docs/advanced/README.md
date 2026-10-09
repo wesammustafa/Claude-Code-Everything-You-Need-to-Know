@@ -28,7 +28,7 @@ git commit -m "Add the Advanced checks"
 ## Lessons
 
 1. [Parallel sessions with worktrees](01-parallel-sessions.md)
-2. Choose an orchestration pattern
+2. [Choose an orchestration pattern](02-orchestration-patterns.md)
 3. Run and save a dynamic workflow
 4. Script Claude Code with `claude -p`
 5. GitHub Actions
