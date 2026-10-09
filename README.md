@@ -48,7 +48,7 @@ macOS, Linux and WSL. For Windows and other installers, see the [official setup 
 
 **Intermediate Electives:** [Skill patterns](docs/intermediate/electives/skill-patterns.md) · [Claude in Chrome](docs/intermediate/electives/claude-in-chrome.md) · [The status line](docs/intermediate/electives/status-line.md) · [Fast mode](docs/intermediate/electives/fast-mode.md)
 
-**Advanced** (being rebuilt): [Level index](docs/advanced/README.md) · [Parallel sessions with worktrees](docs/advanced/01-parallel-sessions.md) · [Choose an orchestration pattern](docs/advanced/02-orchestration-patterns.md) · [Run and save a dynamic workflow](docs/advanced/03-dynamic-workflows.md) · [Script Claude Code with `claude -p`](docs/advanced/04-headless.md) · [GitHub Actions](docs/advanced/05-github-actions.md)
+**Advanced** (being rebuilt): [Level index](docs/advanced/README.md) · [Parallel sessions with worktrees](docs/advanced/01-parallel-sessions.md) · [Choose an orchestration pattern](docs/advanced/02-orchestration-patterns.md) · [Run and save a dynamic workflow](docs/advanced/03-dynamic-workflows.md) · [Script Claude Code with `claude -p`](docs/advanced/04-headless.md) · [GitHub Actions](docs/advanced/05-github-actions.md) · [Share your setup with a team](docs/advanced/06-share-your-setup.md)
 
 **Topics:** [All topics](docs/topics/README.md) · [Permissions and safety](docs/topics/permissions-and-safety.md) · [Memory and context](docs/topics/memory-and-context.md) · [Models, effort and cost](docs/topics/models-effort-and-cost.md) · [Skills](docs/topics/skills.md) · [Hooks](docs/topics/hooks.md) · [Subagents and parallel work](docs/topics/subagents-and-parallel-work.md) · [MCP](docs/topics/mcp.md) · [Plugins](docs/topics/plugins.md) · [Automation](docs/topics/automation.md)
 
@@ -96,6 +96,6 @@ The previous edition's README sections moved. If a link brought you here, find i
 - <a id="updates--deprecations-february-2026"></a><a id="updates--deprecations"></a><a id="updates--deprecations-as-of-july-2026"></a>Removed in edition v2026.10: the guide's summaries of Claude Code releases. See the [CHANGELOG](CHANGELOG.md#removed-changelog-mirror).
 - <a id="faq"></a>Moved to [FAQ](docs/reference/faq.md), which says where each answer went.
 - <a id="references"></a>Moved to [Further learning](docs/reference/further-reading.md).
-- <a id="steal-this-setup"></a><a id="5-bonus-steal-this-repos-setup"></a>Moved to [Examples](examples/README.md).
+- <a id="steal-this-setup"></a><a id="5-bonus-steal-this-repos-setup"></a>Moved to [Share your setup with a team](docs/advanced/06-share-your-setup.md).
 - <a id="-when-to-use-what"></a>Moved to [When to use what](docs/intermediate/README.md#when-to-use-what).
 
