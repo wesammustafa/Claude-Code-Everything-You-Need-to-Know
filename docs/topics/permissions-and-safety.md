@@ -10,8 +10,7 @@ What Claude Code may do without asking, and how to keep it away from what it sho
 - Beginner: [Your first change, from request to commit](../beginner/03-first-change.md)
 - Intermediate: [Permissions, settings scopes and the sandbox](../intermediate/04-permissions-and-sandbox.md)
 - Advanced: [Put bounds on autonomous runs](../advanced/07-bounded-runs.md)
-
-Later lessons on this topic are linked here in level order, with its Electives, as they are published.
+- Advanced Elective: [Dev containers](../advanced/electives/dev-containers.md)
 
 ## Official docs
 

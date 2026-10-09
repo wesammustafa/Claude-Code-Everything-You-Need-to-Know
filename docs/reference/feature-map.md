@@ -39,7 +39,7 @@ How to read it:
 | [Sandbox](https://code.claude.com/docs/en/sandboxing); taught in [Permissions, settings scopes and the sandbox](../intermediate/04-permissions-and-sandbox.md) | – | Every provider |
 | [Output styles](https://code.claude.com/docs/en/output-styles); taught in [the built-in teachers](../beginner/electives/built-in-teachers.md) | – | Every provider |
 | [Status line](https://code.claude.com/docs/en/statusline); taught in [The status line](../intermediate/electives/status-line.md) | – | Every provider |
-| [`/goal`](https://code.claude.com/docs/en/goal) | – | Every provider |
+| [`/goal`](https://code.claude.com/docs/en/goal); taught in [`/goal`, `/loop` and routines](../advanced/electives/goal-loop-routines.md) | – | Every provider |
 | [`/powerup`](https://code.claude.com/docs/en/commands); taught in [the built-in teachers](../beginner/electives/built-in-teachers.md) | – | The docs state no limit |
 | [Fast mode](https://code.claude.com/docs/en/fast-mode); taught in [Fast mode](../intermediate/electives/fast-mode.md) | "Fast mode is in research preview." | A Claude subscription, paid for with usage credits (an Owner turns it on for Team and Enterprise), and Console organizations with access provisioned; not Claude Platform on AWS, Bedrock, Agent Platform or Foundry |
 | [Advisor](https://code.claude.com/docs/en/advisor) | "The advisor tool is experimental and requires the Anthropic API." | A Claude subscription and the Console |
@@ -54,9 +54,9 @@ How to read it:
 | [Agent hooks](https://code.claude.com/docs/en/hooks-guide#agent-based-hooks) | "Agent hooks are experimental." | As for hooks |
 | [Subagents](https://code.claude.com/docs/en/sub-agents); taught in [Delegate to a custom subagent](../intermediate/06-subagents.md) | – | Every provider |
 | [MCP](https://code.claude.com/docs/en/mcp); taught in [Connect a tool with MCP](../intermediate/07-mcp.md) | – | Every provider; claude.ai connectors only when you sign in with a Claude subscription |
-| [Plugins and marketplaces](https://code.claude.com/docs/en/plugins/overview); taught in [Install and manage plugins](../intermediate/08-plugins.md) and [Share your setup with a team](../advanced/06-share-your-setup.md) | – | Every provider |
+| [Plugins and marketplaces](https://code.claude.com/docs/en/plugins/overview); taught in [Install and manage plugins](../intermediate/08-plugins.md), [Share your setup with a team](../advanced/06-share-your-setup.md) and [Testing and publishing a plugin](../advanced/electives/publish-a-plugin.md) | – | Every provider |
 | [Channels](https://code.claude.com/docs/en/channels) | "Channels are in research preview." | A Claude subscription (Team and Enterprise once an admin turns them on) and the Console; not Claude Platform on AWS, Bedrock, Agent Platform or Foundry |
-| [Dev containers](https://code.claude.com/docs/en/devcontainer) | – | Every provider |
+| [Dev containers](https://code.claude.com/docs/en/devcontainer); taught in [Dev containers](../advanced/electives/dev-containers.md) | – | Every provider |
 
 ## Parallel and unattended work
 
@@ -64,12 +64,12 @@ How to read it:
 |---|---|---|
 | [Worktrees](https://code.claude.com/docs/en/worktrees); taught in [Parallel sessions with worktrees](../advanced/01-parallel-sessions.md) | – | Every provider |
 | [Dynamic workflows](https://code.claude.com/docs/en/workflows); taught in [Run and save a dynamic workflow](../advanced/03-dynamic-workflows.md) | – | Every provider; on Pro, turn them on in `/config` |
-| [Agent view](https://code.claude.com/docs/en/agent-view) | "Agent view is in research preview." | Every provider |
-| [Agent teams](https://code.claude.com/docs/en/agent-teams) | "Agent teams are experimental and disabled by default." | Every provider |
+| [Agent view](https://code.claude.com/docs/en/agent-view); taught in [Agent view](../advanced/electives/agent-view.md) | "Agent view is in research preview." | Every provider ([Settings and provider](https://code.claude.com/docs/en/agent-view#settings-and-provider)) |
+| [Agent teams](https://code.claude.com/docs/en/agent-teams); taught in [Agent teams](../advanced/electives/agent-teams.md) | "Agent teams are experimental and disabled by default." | Every provider |
 | [Cross-session messaging](https://code.claude.com/docs/en/cross-session-messaging) | – | A Claude subscription; elsewhere between sessions on the same machine only |
 | [Projects](https://code.claude.com/docs/en/claude-projects) | "Projects are in public beta on Pro and Max plans and rolling out gradually …" | Pro and Max; not yet Team or Enterprise |
-| [`/loop` and scheduled prompts](https://code.claude.com/docs/en/scheduled-tasks) | – | Every provider |
-| [Routines](https://code.claude.com/docs/en/routines) | "Routines are in research preview." | Pro, Max, Team and Enterprise |
+| [`/loop` and scheduled prompts](https://code.claude.com/docs/en/scheduled-tasks); taught in [`/goal`, `/loop` and routines](../advanced/electives/goal-loop-routines.md) | – | Every provider |
+| [Routines](https://code.claude.com/docs/en/routines); taught in [`/goal`, `/loop` and routines](../advanced/electives/goal-loop-routines.md) | "Routines are in research preview." | Pro, Max, Team and Enterprise |
 | [Running Claude Code from scripts](https://code.claude.com/docs/en/headless); taught in [Script Claude Code with `claude -p`](../advanced/04-headless.md) and [Put bounds on autonomous runs](../advanced/07-bounded-runs.md) | – | Every provider |
 | [GitHub Actions](https://code.claude.com/docs/en/github-actions); taught in [GitHub Actions](../advanced/05-github-actions.md) | – | A Claude subscription, the Console, Bedrock, Agent Platform and Foundry; not Claude Platform on AWS |
 | [GitLab CI/CD](https://code.claude.com/docs/en/gitlab-ci-cd) | "Claude Code for GitLab CI/CD is currently in beta." | Every provider except Microsoft Foundry |

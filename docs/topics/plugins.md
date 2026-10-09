@@ -8,17 +8,18 @@ Bundles of skills, agents, hooks and MCP servers that you install from a marketp
 
 - Intermediate: [Install and manage plugins](../intermediate/08-plugins.md)
 - Advanced: [Share your setup with a team](../advanced/06-share-your-setup.md)
-
-More of this topic's lessons and Electives are linked here as they are published.
+- Advanced Elective: [Testing and publishing a plugin](../advanced/electives/publish-a-plugin.md)
 
 ## Official docs
 
 - [Plugins overview](https://code.claude.com/docs/en/plugins/overview)
 - [Install and manage plugins](https://code.claude.com/docs/en/plugins/install)
 - [Anthropic's marketplaces](https://code.claude.com/docs/en/plugins/anthropic-marketplaces)
+- [Test plugins with evals](https://code.claude.com/docs/en/plugin-evals)
+- [Publish and distribute a plugin](https://code.claude.com/docs/en/plugins/publish)
 
 ---
 
-<sub>Sources: [Plugins overview](https://code.claude.com/docs/en/plugins/overview) · [Install and manage plugins](https://code.claude.com/docs/en/plugins/install) · [Anthropic's marketplaces](https://code.claude.com/docs/en/plugins/anthropic-marketplaces)</sub>
+<sub>Sources: [Plugins overview](https://code.claude.com/docs/en/plugins/overview) · [Install and manage plugins](https://code.claude.com/docs/en/plugins/install) · [Anthropic's marketplaces](https://code.claude.com/docs/en/plugins/anthropic-marketplaces) · [Test plugins with evals](https://code.claude.com/docs/en/plugin-evals) · [Publish and distribute a plugin](https://code.claude.com/docs/en/plugins/publish)</sub>
 
 <sub>Up: [Topics](README.md)</sub>
