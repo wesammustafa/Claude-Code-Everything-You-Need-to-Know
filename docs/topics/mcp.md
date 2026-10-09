@@ -9,8 +9,6 @@ Connecting Claude Code to outside tools and data with the Model Context Protocol
 - Intermediate: [Connect a tool with MCP](../intermediate/07-mcp.md)
 - Intermediate Elective: [Claude in Chrome](../intermediate/electives/claude-in-chrome.md)
 
-More of this topic's lessons and Electives are linked here as they are published.
-
 ## Official docs
 
 - [Connect to MCP servers](https://code.claude.com/docs/en/mcp-quickstart)

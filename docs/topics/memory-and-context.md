@@ -11,8 +11,6 @@ What Claude Code knows at the start of a session and what fills its context as y
 - Beginner Electives: [IDE extensions](../beginner/electives/ide-extensions.md), [Screenshots and images](../beginner/electives/screenshots-and-images.md), [The built-in teachers](../beginner/electives/built-in-teachers.md)
 - Intermediate: [Organize project memory and see what loaded](../intermediate/02-organize-memory.md)
 
-Later lessons on this topic are linked here in level order, with its Electives, as they are published.
-
 ## Official docs
 
 - [How Claude remembers your project](https://code.claude.com/docs/en/memory)

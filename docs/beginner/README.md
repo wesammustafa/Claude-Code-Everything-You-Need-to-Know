@@ -60,7 +60,7 @@ Optional lessons beside the core path:
 
 ## Next level
 
-[Intermediate](../intermediate/README.md): one developer's setup. Its lessons aren't published yet. The Intermediate index lists them, links each one as it is published, and links official courses to take meanwhile.
+[Intermediate](../intermediate/README.md): one developer's setup.
 
 ---
 

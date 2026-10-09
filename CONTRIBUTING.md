@@ -13,14 +13,10 @@ Thanks for your interest in improving this guide. This is a learning resource â€
 | Improve an explanation or fix a fact | Open a pull request. Follow [Sources and citations](#sources-and-citations), [Pull requests](#pull-requests) and the [Doc style guide](#doc-style-guide). |
 | Expand a thin section | Open a pull request. SDLC walkthroughs, new workflow recipes, and copy-ready examples for a lesson (see [Adding a skill](#adding-a-skill)) are all high-value. |
 
-### While the guide is reworked
+<a id="while-the-guide-is-reworked"></a>
+### Response times
 
-The guide is being reworked into lessons in three levels.
-
-- Fixes to content the rework keeps are welcome and reviewed as usual.
-- A pull request that changes content scheduled for removal is closed with thanks and the one-line reason for the cut.
-- Pull requests that add listings are closed under the [Listing policy](#listing-policy).
-- Stale-content issues get a first response within 7 days: a correction, or the Tier 1 source that settles it. Lesson-feedback issues get a first response within 7 days too.
+Stale-content issues get a first response within 7 days: a correction, or the Tier 1 source that settles it. Lesson-feedback issues get a first response within 7 days too.
 
 ## Sources and citations
 
@@ -74,7 +70,7 @@ Mental models, analogies, the guide's own advice, and how-to steps whose command
 - Each page that carries a [stamp](#the-stamp), and this file, has a one-line `Sources:` footer after its content. Only the navigation line follows it: on a lesson, the one [Lessons](#lessons) describes; on other pages, the `Up:` link. The footer lists every page the page's statements rely on: each page linked as the source of a fact it states.
   - Links that back no statement need not be listed: further reading (Go further, Official companions, Related pages), download and install pages, this repo's issue forms and the practice template, and pointers that say where to look, such as the sites in the Tier 1 table.
   - A page made of links to its sources may name them in summary, as Further learning ("the pages linked above") and the Feature map ("each feature's linked page") do. A page that relies on no outside page needs no footer.
-  - README, the other community files, stubs and pages from the previous edition need no footer.
+  - README, the other community files and stubs need no footer.
 - Anchor date-sensitive claims to a version (`v2.1.x`) or a full date.
 - Do not add access dates inline.
 
@@ -98,7 +94,7 @@ Lessons, Electives, capstones, level indexes, topic indexes and reference pages 
 Verified against Claude Code vX.Y.Z (stable) on YYYY-MM-DD
 ```
 
-It certifies that on that date every volatile claim on the page was checked against its Tier 1 source at that `stable` version, and that the page's exercise and check, if any, were dry-run there. It does not certify third-party items beyond the [listing bar](#the-listing-bar), or behavior on other release channels and surfaces. The README, the community files, stubs and pages from the previous edition carry no stamp.
+It certifies that on that date every volatile claim on the page was checked against its Tier 1 source at that `stable` version, and that the page's exercise and check, if any, were dry-run there. It does not certify third-party items beyond the [listing bar](#the-listing-bar), or behavior on other release channels and surfaces. The README, the community files and stubs carry no stamp.
 
 The `stamps` rule in the [checks](#checks) fails on a stamped page whose Stamp is missing or malformed. Once README carries a trust strip, it also fails if the strip's version differs from the latest edition entry in [CHANGELOG.md](CHANGELOG.md).
 
@@ -248,7 +244,7 @@ Every two weeks, the maintainer runs `.github/scripts/traffic-snapshot.sh` and k
 
 ## Doc style guide
 
-The guide is moving to lessons in three levels: Beginner, Intermediate and Advanced. New pages follow these rules. Pages from the previous edition are brought in line when they are rewritten.
+The guide is organized as lessons in three levels: Beginner, Intermediate and Advanced. New and changed pages follow these rules.
 
 ### Lessons
 
@@ -320,7 +316,7 @@ Callouts are GitHub alerts, at most two per lesson, each with one meaning:
 
 ## File layout
 
-The folder layout changes while the guide is reworked into three levels, so this file does not list it yet. For examples, see [Adding a skill](#adding-a-skill).
+For where examples go, see [Adding a skill](#adding-a-skill).
 
 A pull request that adds a page under `docs/` also adds it to the "Everything in the guide" index in [README.md](README.md), so every page stays reachable from the front door.
 

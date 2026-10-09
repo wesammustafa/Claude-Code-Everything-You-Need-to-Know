@@ -10,8 +10,6 @@ Which model and effort level a task needs, and what a session costs.
 - Intermediate: [Pick the model and effort](../intermediate/03-model-and-effort.md)
 - Intermediate Electives: [The status line](../intermediate/electives/status-line.md), [Fast mode](../intermediate/electives/fast-mode.md)
 
-Later lessons on this topic are linked here in level order, with its Electives, as they are published.
-
 ## Reference
 
 - [Models and effort](../reference/models.md)

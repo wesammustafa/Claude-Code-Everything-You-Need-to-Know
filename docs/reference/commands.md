@@ -3,7 +3,7 @@
 
 <sub>Verified against Claude Code v2.1.285 (stable) on 2026-10-05</sub>
 
-The built-in commands, bundled skills and workflows, and `claude` command-line forms the lessons use, grouped by the level that teaches them. It is not the full list: the official [commands reference](https://code.claude.com/docs/en/commands#all-commands) has every command and its options, the [CLI reference](https://code.claude.com/docs/en/cli-reference#cli-flags) has the command-line flags, and typing `/` in a session shows the commands available to you. Each lesson name below becomes a link when the lesson is published.
+The built-in commands, bundled skills and workflows, and `claude` command-line forms the lessons use, grouped by the level that teaches them. It is not the full list: the official [commands reference](https://code.claude.com/docs/en/commands#all-commands) has every command and its options, the [CLI reference](https://code.claude.com/docs/en/cli-reference#cli-flags) has the command-line flags, and typing `/` in a session shows the commands available to you.
 
 <a id="common-built-in-slash-commands"></a>
 ## Beginner

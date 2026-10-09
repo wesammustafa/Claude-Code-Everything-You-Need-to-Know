@@ -8,7 +8,7 @@ body:
         Read the [listing policy](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/main/CONTRIBUTING.md#listing-policy) first. Each field below asks for evidence the listing bar checks.
 
         - This form is the only way to suggest a listing. Unsolicited pull requests that add one are closed.
-        - Suggestions that clear the bar are added at the next content review, not one by one. While listing changes are frozen (see the policy), nothing is added before that review.
+        - Suggestions that clear the bar are added at the next content review, not one by one.
         - Suggesting your own project is fine if you disclose your affiliation below. It faces the same bar as any other suggestion.
   - type: input
     id: url
