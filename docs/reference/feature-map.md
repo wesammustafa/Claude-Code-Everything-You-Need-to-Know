@@ -70,7 +70,7 @@ How to read it:
 | [Projects](https://code.claude.com/docs/en/claude-projects) | "Projects are in public beta on Pro and Max plans and rolling out gradually …" | Pro and Max; not yet Team or Enterprise |
 | [`/loop` and scheduled prompts](https://code.claude.com/docs/en/scheduled-tasks) | – | Every provider |
 | [Routines](https://code.claude.com/docs/en/routines) | "Routines are in research preview." | Pro, Max, Team and Enterprise |
-| [Running Claude Code from scripts](https://code.claude.com/docs/en/headless) | – | Every provider |
+| [Running Claude Code from scripts](https://code.claude.com/docs/en/headless); taught in [Script Claude Code with `claude -p`](../advanced/04-headless.md) | – | Every provider |
 | [GitHub Actions](https://code.claude.com/docs/en/github-actions) | – | A Claude subscription, the Console, Bedrock, Agent Platform and Foundry; not Claude Platform on AWS |
 | [GitLab CI/CD](https://code.claude.com/docs/en/gitlab-ci-cd) | "Claude Code for GitLab CI/CD is currently in beta." | Every provider except Microsoft Foundry |
 
