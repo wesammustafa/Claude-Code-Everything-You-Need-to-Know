@@ -1,0 +1,5 @@
+{
+  "rule": "static-validation",
+  "expect": "fail",
+  "about": "A skill inside an example marketplace's plugin whose frontmatter has a name but no description."
+}

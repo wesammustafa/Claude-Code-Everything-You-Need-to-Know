@@ -6,7 +6,8 @@ Nothing here runs on its own. Files that Claude Code would load from a project c
 
 - `dot-claude/` becomes `.claude/` in your project;
 - `dot-mcp.json` becomes `.mcp.json`;
-- `CLAUDE.example.md` becomes `CLAUDE.md`, and `AGENTS.example.md` becomes `AGENTS.md`.
+- `CLAUDE.example.md` becomes `CLAUDE.md`, and `AGENTS.example.md` becomes `AGENTS.md`;
+- `dot-claude-plugin/` becomes `.claude-plugin/` in a copied marketplace folder. Its marketplace manifest is renamed so neither the marketplace's folder nor this guide's repository can be added as a plugin marketplace by its folder path or as `owner/repo` ([Marketplace reference](https://code.claude.com/docs/en/plugins/marketplace-reference#marketplace-file)). A plugin keeps its own `.claude-plugin/plugin.json`, because Claude Code doesn't discover a plugin here on its own: it doesn't scan a project's `.claude/plugins/` directory, and nothing here sits in a `.claude/skills/` folder ([Plugin loading reference](https://code.claude.com/docs/en/plugins/loading#plugins-shared-through-a-repository)).
 
 Every executable example follows the guide's [safety contract](../CONTRIBUTING.md#adding-a-skill). Its header says what it does, when it runs, how to remove it, and whether it was tested in a Claude Code session at this edition's version. Review each file before you copy it into a project.
 

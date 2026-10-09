@@ -1,0 +1,5 @@
+{
+  "rule": "inertness",
+  "expect": "fail",
+  "about": "A .claude-plugin/ folder at the repository root, which an owner/repo marketplace add reads. Generated, never committed."
+}

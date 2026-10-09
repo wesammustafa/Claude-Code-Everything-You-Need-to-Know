@@ -1,0 +1,5 @@
+{
+  "rule": "static-validation",
+  "expect": "fail",
+  "about": "An agent inside an example marketplace's plugin whose frontmatter has a description but no name."
+}

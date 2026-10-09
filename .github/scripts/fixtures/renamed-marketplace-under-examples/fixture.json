@@ -1,0 +1,5 @@
+{
+  "rule": "inertness,static-validation",
+  "expect": "pass",
+  "about": "An example team marketplace whose manifest sits in dot-claude-plugin/, with a plugin that keeps its own .claude-plugin/plugin.json and a skill and an agent with valid frontmatter."
+}

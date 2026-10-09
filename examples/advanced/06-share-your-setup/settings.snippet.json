@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "deny": ["Read(.env)"]
+  },
+  "extraKnownMarketplaces": {
+    "team-tools": {
+      "source": { "source": "directory", "path": "./team-marketplace" }
+    }
+  },
+  "enabledPlugins": {
+    "team-kit@team-tools": true
+  }
+}

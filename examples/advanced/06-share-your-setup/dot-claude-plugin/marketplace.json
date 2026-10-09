@@ -1,0 +1,14 @@
+{
+  "name": "team-tools",
+  "description": "A demo team marketplace from the Claude Code guide. Copy it into your own repository to share the team-kit plugin with everyone who clones it.",
+  "owner": {
+    "name": "Your team"
+  },
+  "plugins": [
+    {
+      "name": "team-kit",
+      "source": "./plugins/team-kit",
+      "description": "The team's shared Claude Code skills and subagents"
+    }
+  ]
+}
