@@ -17,9 +17,17 @@ Beyond one session: parallel sessions, orchestration, unattended runs in scripts
 
 Practice in your own repository, and run each check from your copy of the [practice template](https://github.com/wesammustafa/claude-code-practice) as `npm run check -- <lesson-id> --dir <your repo>`. The GitHub Actions lesson and the capstone are the exceptions: they run in a separate template copy, which you tear down afterwards so no live credential is left behind.
 
+A copy you made for an earlier level may not have the Advanced checks: `npm run check` then lists no `a-` lessons. Bring them in from the template, in your copy:
+
+```bash
+git fetch https://github.com/wesammustafa/claude-code-practice main
+git checkout FETCH_HEAD -- checks capstone
+git commit -m "Add the Advanced checks"
+```
+
 ## Lessons
 
-1. Parallel sessions with worktrees
+1. [Parallel sessions with worktrees](01-parallel-sessions.md)
 2. Choose an orchestration pattern
 3. Run and save a dynamic workflow
 4. Script Claude Code with `claude -p`

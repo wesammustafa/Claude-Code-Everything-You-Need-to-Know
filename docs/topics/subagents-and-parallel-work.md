@@ -7,6 +7,7 @@ Ways to split work across contexts and sessions: subagents, worktrees, dynamic w
 ## Lessons
 
 - Intermediate: [Delegate to a custom subagent](../intermediate/06-subagents.md)
+- Advanced: [Parallel sessions with worktrees](../advanced/01-parallel-sessions.md)
 
 More of this topic's lessons and Electives are linked here as they are published.
 
