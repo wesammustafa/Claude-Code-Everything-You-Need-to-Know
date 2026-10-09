@@ -30,7 +30,7 @@ git commit -m "Add the Advanced checks"
 1. [Parallel sessions with worktrees](01-parallel-sessions.md)
 2. [Choose an orchestration pattern](02-orchestration-patterns.md)
 3. [Run and save a dynamic workflow](03-dynamic-workflows.md)
-4. Script Claude Code with `claude -p`
+4. [Script Claude Code with `claude -p`](04-headless.md)
 5. GitHub Actions
 6. Share your setup with a team
 7. Put bounds on autonomous runs
