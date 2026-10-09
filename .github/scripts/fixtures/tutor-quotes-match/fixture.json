@@ -1,0 +1,8 @@
+{
+  "rule": "tutor-quotes",
+  "expect": "pass",
+  "env": {
+    "TUTOR_DIR": "practice"
+  },
+  "about": "The step script's quotes, Stamp, anchor and step counts all match the lesson."
+}

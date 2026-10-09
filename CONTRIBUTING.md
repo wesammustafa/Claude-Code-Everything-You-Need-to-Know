@@ -218,6 +218,7 @@ It needs Node.js LTS, git, Ruby (for YAML), jq (for the examples' smoke tests), 
 | `static-validation` | JSON, YAML, skill or agent frontmatter, a workflow script or a shell script does not parse or lint |
 | `inertness` | `examples/` holds a path Claude Code can load on its own, or a marketplace manifest not renamed to `dot-claude-plugin/`, or the repository root holds a `.claude-plugin/` folder |
 | `smoke-tests` | An example's `test.sh` fails (only when the change touches `examples/`) |
+| `tutor-quotes` | With `TUTOR_DIR` set to a practice template checkout's `.claude/skills/tutor` folder, or in the weekly run: a quote, the title, the Stamp, a linked anchor or a step count in a `/tutor` step script no longer matches its lesson. On a pull request that changes a lesson listed in `tutor.txt`, it only warns |
 
 Each rule has known-bad fixtures under `.github/scripts/fixtures/`, one folder per case: `fixture.json` names the rule and the expected result, `tree/` holds the files, `base/` the state before a change, and `generate.mjs` writes anything that would be live Claude Code config if committed. If you change a rule, run the self-test too:
 
@@ -234,6 +235,7 @@ Scheduled checks keep watch between editions. Each opens or updates one tracking
 | Weekly external links | Mondays | Broken external links |
 | Daily expiry markers | Daily | Expired facts in the guide |
 | Weekly version drift | Mondays | New Claude Code stable release |
+| Weekly tutor quotes | Mondays | Tutor quotes drifted from a lesson |
 
 Every month, the maintainer:
 

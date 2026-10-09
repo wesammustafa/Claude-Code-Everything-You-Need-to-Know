@@ -1,0 +1,8 @@
+{
+  "rule": "tutor-quotes",
+  "expect": "warn",
+  "env": {
+    "TUTOR_DIR": ""
+  },
+  "about": "Offline, a pull request that changes a tutored lesson gets a warning to run the comparison locally."
+}

@@ -1,0 +1,8 @@
+{
+  "rule": "tutor-quotes",
+  "expect": "fail",
+  "env": {
+    "TUTOR_DIR": "practice"
+  },
+  "about": "The lesson was restamped, so the step script must be re-verified and restamped too."
+}

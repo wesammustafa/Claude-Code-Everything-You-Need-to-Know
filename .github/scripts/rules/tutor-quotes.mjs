@@ -1,0 +1,107 @@
+// The practice template's /tutor skill quotes lessons word for word, from one
+// step script per lesson; .github/compat/tutor.txt lists them. This rule fails
+// when a quote, the title, the Stamp, a linked anchor or a step count in a step
+// script no longer matches its lesson, whatever the step script's line endings. It needs the template's step scripts: with
+// TUTOR_DIR set to a template checkout's .claude/skills/tutor folder, any mode
+// reads them there; the weekly scheduled run fetches them from the template's
+// main branch. A pull request run without TUTOR_DIR stays offline and only
+// warns when the change touches a listed lesson.
+import { existsSync, readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import { readText } from '../lib/tree.mjs';
+import { changedFiles } from '../lib/git.mjs';
+import { outsideFences, pageIds } from '../lib/markdown.mjs';
+import { STAMP } from '../lib/stamps.mjs';
+
+export const id = 'tutor-quotes';
+export const modes = ['pr', 'scheduled'];
+
+const LIST = '.github/compat/tutor.txt';
+const RAW = 'https://raw.githubusercontent.com/wesammustafa/claude-code-practice/main/.claude/skills/tutor';
+// Step script keys whose value is lesson text in double quotes.
+const QUOTES = new Set(['do', 'rule', 'expect', 'note', 'after', 'own-repo', 'self', 'goal', 'quote', 'bottom', 'on-hint']);
+const flat = (text) => text.replace(/\s+/g, ' ').trim();
+
+function listed(root) {
+  if (!existsSync(join(root, LIST))) return [];
+  return readText(root, LIST).split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#'))
+    .map((l) => { const [lesson, page] = l.split(/\s+/); return { lesson, page }; });
+}
+
+async function stepScript(root, lesson) {
+  const dir = process.env.TUTOR_DIR;
+  if (dir) return readFileSync(join(resolve(root, dir), 'steps', `${lesson}.md`), 'utf8');
+  const res = await fetch(`${RAW}/steps/${lesson}.md`, { signal: AbortSignal.timeout(20_000) });
+  if (!res.ok) throw new Error(`the template's steps/${lesson}.md returned ${res.status}`);
+  return res.text();
+}
+
+// The number of top-level numbered steps under a `## <name>` heading.
+function stepCount(text, name) {
+  let inside = false;
+  let count = 0;
+  for (const { line } of outsideFences(text)) {
+    if (/^## /.test(line)) inside = line.trim() === `## ${name}`;
+    else if (inside && /^\d+\. /.test(line)) count += 1;
+  }
+  return count;
+}
+
+function compare(lesson, page, rawPage, rawScript) {
+  const pageText = rawPage.replace(/\r\n?/g, '\n');
+  const script = rawScript.replace(/\r\n?/g, '\n');
+  const problems = [];
+  const say = (msg) => problems.push(`${page}: the tutor's steps/${lesson}.md ${msg}`);
+  const body = flat(pageText);
+  const stamp = pageText.match(STAMP)?.[0];
+  const theirs = script.match(/^stamp: "(.*)"$/m)?.[1];
+  if (theirs !== stamp) say(`is stamped "${theirs}", but the lesson is stamped "${stamp}". Re-verify the step script and copy the new Stamp.`);
+  const title = script.match(/^title: "(.*)"$/m)?.[1];
+  const h1 = pageText.match(/^# (.+)$/m)?.[1]?.trim();
+  if (title !== undefined && title !== h1) say(`is titled "${title}", but the lesson's heading is "${h1}".`);
+  const ids = pageIds(pageText);
+  const recounted = new Set();
+  let heading = '(front matter)';
+  for (const line of script.split('\n')) {
+    const h = line.match(/^### (.+)$/);
+    if (h) {
+      heading = h[1];
+      const counted = h[1].match(/(Worked example|Your turn) step \d+ of (\d+)/);
+      if (counted && !recounted.has(counted[1]) && stepCount(pageText, counted[1]) !== Number(counted[2])) {
+        recounted.add(counted[1]);
+        say(`counts ${counted[2]} steps in ${counted[1]}, but the lesson has ${stepCount(pageText, counted[1])}.`);
+      }
+      continue;
+    }
+    const q = line.match(/^- ([a-z-]+): "(.*)"$/);
+    if (q && QUOTES.has(q[1]) && !body.includes(flat(q[2]))) say(`quotes "${q[2]}" (${heading}), which is no longer in the lesson.`);
+    const a = line.match(/^- anchor: (\S+)$/);
+    if (a && !ids.includes(a[1])) say(`links #${a[1]} (${heading}), which the lesson no longer has.`);
+  }
+  return problems;
+}
+
+export async function run(ctx) {
+  const lessons = listed(ctx.root);
+  if (!lessons.length) return { status: 'pass', summary: `no lessons listed in ${LIST}` };
+  if (!process.env.TUTOR_DIR && ctx.mode === 'pr') {
+    if (!ctx.base.sha) return { status: 'skip', summary: `diff-scoped: ${ctx.base.note}` };
+    const changed = new Set(changedFiles(ctx.root, ctx.base.sha));
+    const touched = lessons.filter((l) => changed.has(l.page));
+    if (!touched.length) return { status: 'pass', summary: `${lessons.length} tutored lesson(s), none changed; the weekly run compares the quotes` };
+    return {
+      status: 'warn',
+      problems: touched.map((l) => `${l.page} changed, and the practice template's /tutor quotes it in .claude/skills/tutor/steps/${l.lesson}.md. Before you merge, run TUTOR_DIR=<template checkout>/.claude/skills/tutor node .github/scripts/check.mjs --only tutor-quotes, and if it fails, update the step script in the template first.`),
+    };
+  }
+  const problems = [];
+  for (const { lesson, page } of lessons) {
+    if (!existsSync(join(ctx.root, page))) {
+      problems.push(`${LIST} lists ${page}, which doesn't exist`);
+      continue;
+    }
+    problems.push(...compare(lesson, page, readText(ctx.root, page), await stepScript(ctx.root, lesson)));
+  }
+  if (problems.length) return { status: 'fail', problems };
+  return { status: 'pass', summary: `${lessons.length} tutored lesson(s) match their step scripts` };
+}
