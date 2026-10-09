@@ -7,6 +7,7 @@ Running Claude Code without a person at the keyboard: scripts, CI and schedules.
 ## Lessons
 
 - Advanced: [Script Claude Code with `claude -p`](../advanced/04-headless.md)
+- Advanced: [GitHub Actions](../advanced/05-github-actions.md)
 
 More of this topic's lessons and Electives are linked here as they are published.
 

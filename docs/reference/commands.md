@@ -44,7 +44,7 @@ Electives: `/statusline` ([The status line](../intermediate/electives/status-lin
 - `/workflows`: watch, pause, resume and save dynamic workflows. [Run and save a dynamic workflow](../advanced/03-dynamic-workflows.md)
 - `/deep-research <question>`: a bundled workflow that fans out web searches on a question, cross-checks the sources and writes a cited report. [Run and save a dynamic workflow](../advanced/03-dynamic-workflows.md)
 - `claude -p "<prompt>"`: run one prompt without the interactive interface, print the answer and exit; a script adds `--output-format json`, `--allowedTools` and `--max-turns` ([CLI reference](https://code.claude.com/docs/en/cli-reference#cli-commands)). [Script Claude Code with `claude -p`](../advanced/04-headless.md)
-- `/install-github-app`: install the Claude GitHub App for a repository, with optional workflow and secret setup. *GitHub Actions*
+- `/install-github-app`: install the Claude GitHub App for a repository, with optional workflow and secret setup. [GitHub Actions](../advanced/05-github-actions.md)
 - `/usage`: the session's cost, your plan's usage limits and activity stats. *Put bounds on autonomous runs*
 
 Electives: `/background` (agent view); `/goal`, `/loop` and `/schedule` (`/goal`, `/loop` and routines).

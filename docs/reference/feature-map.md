@@ -71,7 +71,7 @@ How to read it:
 | [`/loop` and scheduled prompts](https://code.claude.com/docs/en/scheduled-tasks) | – | Every provider |
 | [Routines](https://code.claude.com/docs/en/routines) | "Routines are in research preview." | Pro, Max, Team and Enterprise |
 | [Running Claude Code from scripts](https://code.claude.com/docs/en/headless); taught in [Script Claude Code with `claude -p`](../advanced/04-headless.md) | – | Every provider |
-| [GitHub Actions](https://code.claude.com/docs/en/github-actions) | – | A Claude subscription, the Console, Bedrock, Agent Platform and Foundry; not Claude Platform on AWS |
+| [GitHub Actions](https://code.claude.com/docs/en/github-actions); taught in [GitHub Actions](../advanced/05-github-actions.md) | – | A Claude subscription, the Console, Bedrock, Agent Platform and Foundry; not Claude Platform on AWS |
 | [GitLab CI/CD](https://code.claude.com/docs/en/gitlab-ci-cd) | "Claude Code for GitLab CI/CD is currently in beta." | Every provider except Microsoft Foundry |
 
 ## Review and security
