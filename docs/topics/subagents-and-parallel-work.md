@@ -8,6 +8,7 @@ Ways to split work across contexts and sessions: subagents, worktrees, dynamic w
 
 - Intermediate: [Delegate to a custom subagent](../intermediate/06-subagents.md)
 - Advanced: [Parallel sessions with worktrees](../advanced/01-parallel-sessions.md)
+- Advanced: [Choose an orchestration pattern](../advanced/02-orchestration-patterns.md)
 
 More of this topic's lessons and Electives are linked here as they are published.
 

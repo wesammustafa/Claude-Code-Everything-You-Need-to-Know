@@ -48,13 +48,13 @@ macOS, Linux and WSL. For Windows and other installers, see the [official setup 
 
 **Intermediate Electives:** [Skill patterns](docs/intermediate/electives/skill-patterns.md) · [Claude in Chrome](docs/intermediate/electives/claude-in-chrome.md) · [The status line](docs/intermediate/electives/status-line.md) · [Fast mode](docs/intermediate/electives/fast-mode.md)
 
-**Advanced** (being rebuilt): [Level index](docs/advanced/README.md) · [Parallel sessions with worktrees](docs/advanced/01-parallel-sessions.md)
+**Advanced** (being rebuilt): [Level index](docs/advanced/README.md) · [Parallel sessions with worktrees](docs/advanced/01-parallel-sessions.md) · [Choose an orchestration pattern](docs/advanced/02-orchestration-patterns.md)
 
 **Topics:** [All topics](docs/topics/README.md) · [Permissions and safety](docs/topics/permissions-and-safety.md) · [Memory and context](docs/topics/memory-and-context.md) · [Models, effort and cost](docs/topics/models-effort-and-cost.md) · [Skills](docs/topics/skills.md) · [Hooks](docs/topics/hooks.md) · [Subagents and parallel work](docs/topics/subagents-and-parallel-work.md) · [MCP](docs/topics/mcp.md) · [Plugins](docs/topics/plugins.md) · [Automation](docs/topics/automation.md)
 
 **Reference:** [Reference index](docs/reference/README.md) · [Models and effort](docs/reference/models.md) · [Commands by level](docs/reference/commands.md) · [Feature map](docs/reference/feature-map.md) · [Further learning](docs/reference/further-reading.md) · [Glossary](docs/reference/glossary.md) · [Changelog](docs/reference/changelog.md)
 
-**From the previous edition, not yet re-verified:** [Subagents and parallel work](docs/legacy/subagents-and-parallel-work.md) · [Agent teams](docs/agent-teams.md) · [Dynamic workflows](docs/workflows.md)
+**From the previous edition, not yet re-verified:** [Agent teams](docs/agent-teams.md) · [Dynamic workflows](docs/workflows.md)
 
 **Examples:** [How to use the examples](examples/README.md)
 
@@ -85,7 +85,7 @@ The previous edition's README sections moved. If a link brought you here, find i
 - <a id="hooks"></a><a id="setting-up-claude-hooks"></a><a id="setting-up-hooks"></a><a id="hook-events"></a><a id="hook-input"></a><a id="hook-output"></a><a id="security-considerations"></a><a id="hook-execution-details-and-debugging"></a><a id="execution--debugging"></a>Moved to [Enforce a rule with a hook](docs/intermediate/05-hooks.md).
 - <a id="ai-agents"></a>Moved to [Subagents and parallel work topic](docs/topics/subagents-and-parallel-work.md).
 - <a id="2-general-purpose-subagents--when-one-claude-isnt-enough"></a><a id="3-specialized-subagents--drop-in-role-prompts"></a>Moved to [Delegate to a custom subagent](docs/intermediate/06-subagents.md). The drop-in role prompts were removed in edition v2026.10: see the [CHANGELOG](CHANGELOG.md#removed-listings).
-- <a id="running-agents-in-parallel"></a><a id="subagents--running-agents-in-parallel"></a><a id="orchestrating-specialists-from-the-main-session"></a>Moved to [Subagents and parallel work (previous edition)](docs/legacy/subagents-and-parallel-work.md).
+- <a id="running-agents-in-parallel"></a><a id="subagents--running-agents-in-parallel"></a><a id="orchestrating-specialists-from-the-main-session"></a>Moved to [Choose an orchestration pattern](docs/advanced/02-orchestration-patterns.md).
 - <a id="1-git-worktrees--parallel-branches-parallel-sessions"></a>Moved to [Parallel sessions with worktrees](docs/advanced/01-parallel-sessions.md).
 - <a id="agent-teams-experimental---2026"></a><a id="agent-teams-experimental"></a><a id="enable-it"></a><a id="the-example-that-justifies-the-cost"></a><a id="staff-a-team-with-the-role-prompts-you-already-have"></a><a id="three-things-that-catch-people-out"></a><a id="monitoring-and-the-naming-trap"></a><a id="best-practices"></a>Moved to [Agent teams (previous edition)](docs/agent-teams.md).
 - <a id="dynamic-workflows"></a><a id="try-it-in-2-minutes--no-script-required"></a><a id="starting-your-own"></a>Moved to [Dynamic workflows (previous edition)](docs/workflows.md).

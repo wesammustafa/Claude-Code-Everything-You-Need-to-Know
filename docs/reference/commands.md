@@ -40,11 +40,12 @@ Electives: `/statusline` ([The status line](../intermediate/electives/status-lin
 ## Advanced
 
 - `claude --worktree <name>` (`-w`): start a session in an isolated git worktree at `.claude/worktrees/<name>` ([CLI reference](https://code.claude.com/docs/en/cli-reference#cli-flags)). [Parallel sessions with worktrees](../advanced/01-parallel-sessions.md)
+- `/tasks`: view and manage background work in this session, including subagents that have finished. [Choose an orchestration pattern](../advanced/02-orchestration-patterns.md)
 - `/workflows`: watch, pause, resume and save dynamic workflows. *Run and save a dynamic workflow*
 - `/install-github-app`: install the Claude GitHub App for a repository, with optional workflow and secret setup. *GitHub Actions*
 - `/usage`: the session's cost, your plan's usage limits and activity stats. *Put bounds on autonomous runs*
 
-Electives: `/background` (agent view) and `/tasks` (background work in this session); `/goal`, `/loop` and `/schedule` (`/goal`, `/loop` and routines).
+Electives: `/background` (agent view); `/goal`, `/loop` and `/schedule` (`/goal`, `/loop` and routines).
 
 <a id="custom-slash-commands-skills"></a>
 ## Your own commands
