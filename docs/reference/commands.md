@@ -46,7 +46,7 @@ Electives: `/statusline` ([The status line](../intermediate/electives/status-lin
 - `claude -p "<prompt>"`: run one prompt without the interactive interface, print the answer and exit; a script adds `--output-format json`, `--allowedTools` and `--max-turns` ([CLI reference](https://code.claude.com/docs/en/cli-reference#cli-commands)). [Script Claude Code with `claude -p`](../advanced/04-headless.md)
 - `/install-github-app`: install the Claude GitHub App for a repository, with optional workflow and secret setup. [GitHub Actions](../advanced/05-github-actions.md)
 - `claude plugin validate <dir>`: check a marketplace or a plugin folder before you share it; `--strict` also fails on warnings ([Plugin commands reference](https://code.claude.com/docs/en/plugins/cli-reference#plugin-validate)). [Share your setup with a team](../advanced/06-share-your-setup.md)
-- `/usage`: the session's cost, your plan's usage limits and activity stats. *Put bounds on autonomous runs*
+- `/usage`: the session's cost, your plan's usage limits and activity stats. [Put bounds on autonomous runs](../advanced/07-bounded-runs.md)
 
 Electives: `/background` (agent view); `/goal`, `/loop` and `/schedule` (`/goal`, `/loop` and routines).
 
