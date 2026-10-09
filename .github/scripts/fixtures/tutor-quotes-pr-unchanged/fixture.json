@@ -1,0 +1,8 @@
+{
+  "rule": "tutor-quotes",
+  "expect": "pass",
+  "env": {
+    "TUTOR_DIR": ""
+  },
+  "about": "Offline, a pull request that leaves the tutored lessons alone passes without reading the template."
+}
