@@ -33,9 +33,9 @@ git commit -m "Add the Advanced checks"
 4. [Script Claude Code with `claude -p`](04-headless.md)
 5. [GitHub Actions](05-github-actions.md)
 6. [Share your setup with a team](06-share-your-setup.md)
-7. Put bounds on autonomous runs
+7. [Put bounds on autonomous runs](07-bounded-runs.md)
 
-Each lesson takes 10 to 20 minutes, plus the time an agent run takes. Lessons are linked here as they are published.
+Each lesson takes 10 to 20 minutes, plus the time an agent run takes.
 
 ## Capstone
 
