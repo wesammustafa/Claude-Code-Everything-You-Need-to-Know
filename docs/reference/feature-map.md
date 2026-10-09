@@ -2,7 +2,7 @@
 
 <sub>Verified against Claude Code v2.1.285 (stable) on 2026-10-05</sub>
 
-Every current Claude Code feature and surface a Learner is likely to meet, with its stability label in the docs' own words and the plans or providers that have it. Each feature links its official page; a link to the lesson that teaches it is added when that lesson is published. For what changed recently, see the official [CHANGELOG](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md) and [What's new](https://code.claude.com/docs/en/whats-new).
+Every current Claude Code feature and surface a Learner is likely to meet, with its stability label in the docs' own words and the plans or providers that have it. Each feature links its official page and, where a lesson or Elective teaches it, the guide pages that teach it. For what changed recently, see the official [CHANGELOG](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md) and [What's new](https://code.claude.com/docs/en/whats-new).
 
 How to read it:
 
@@ -36,7 +36,7 @@ How to read it:
 | [Auto mode](https://code.claude.com/docs/en/permission-modes); taught in [Permission modes and plan mode](../beginner/02-permission-modes-and-plan-mode.md) | – | A Claude subscription, the Console and Claude Platform on AWS; on Bedrock, Agent Platform and Foundry with newer models only. Team and Enterprise admins can turn it off |
 | [Checkpointing and rewind](https://code.claude.com/docs/en/checkpointing); taught in [Keep a session on track](../beginner/04-keep-a-session-on-track.md) | – | Every provider |
 | [CLAUDE.md memory](https://code.claude.com/docs/en/memory); taught in [Project memory with CLAUDE.md](../beginner/05-project-memory.md) and [Organize project memory and see what loaded](../intermediate/02-organize-memory.md) | – | Every provider |
-| [Sandbox](https://code.claude.com/docs/en/sandboxing); taught in [Permissions, settings scopes and the sandbox](../intermediate/04-permissions-and-sandbox.md) | – | Every provider |
+| [Sandbox](https://code.claude.com/docs/en/sandboxing); taught in [Permissions, settings scopes and the sandbox](../intermediate/04-permissions-and-sandbox.md) and [Put bounds on autonomous runs](../advanced/07-bounded-runs.md) | – | Every provider |
 | [Output styles](https://code.claude.com/docs/en/output-styles); taught in [the built-in teachers](../beginner/electives/built-in-teachers.md) | – | Every provider |
 | [Status line](https://code.claude.com/docs/en/statusline); taught in [The status line](../intermediate/electives/status-line.md) | – | Every provider |
 | [`/goal`](https://code.claude.com/docs/en/goal); taught in [`/goal`, `/loop` and routines](../advanced/electives/goal-loop-routines.md) | – | Every provider |
@@ -52,7 +52,7 @@ How to read it:
 | [Skills](https://code.claude.com/docs/en/skills); taught in [Turn a repeated workflow into a skill](../intermediate/01-first-skill.md) and [Skill patterns](../intermediate/electives/skill-patterns.md) | – | Every provider |
 | [Hooks](https://code.claude.com/docs/en/hooks-guide); taught in [Enforce a rule with a hook](../intermediate/05-hooks.md) | – | Every provider |
 | [Agent hooks](https://code.claude.com/docs/en/hooks-guide#agent-based-hooks) | "Agent hooks are experimental." | As for hooks |
-| [Subagents](https://code.claude.com/docs/en/sub-agents); taught in [Delegate to a custom subagent](../intermediate/06-subagents.md) | – | Every provider |
+| [Subagents](https://code.claude.com/docs/en/sub-agents); taught in [Delegate to a custom subagent](../intermediate/06-subagents.md) and [Choose an orchestration pattern](../advanced/02-orchestration-patterns.md) | – | Every provider |
 | [MCP](https://code.claude.com/docs/en/mcp); taught in [Connect a tool with MCP](../intermediate/07-mcp.md) | – | Every provider; claude.ai connectors only when you sign in with a Claude subscription |
 | [Plugins and marketplaces](https://code.claude.com/docs/en/plugins/overview); taught in [Install and manage plugins](../intermediate/08-plugins.md), [Share your setup with a team](../advanced/06-share-your-setup.md) and [Testing and publishing a plugin](../advanced/electives/publish-a-plugin.md) | – | Every provider |
 | [Channels](https://code.claude.com/docs/en/channels) | "Channels are in research preview." | A Claude subscription (Team and Enterprise once an admin turns them on) and the Console; not Claude Platform on AWS, Bedrock, Agent Platform or Foundry |

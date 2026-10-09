@@ -8,25 +8,33 @@ Baseline: Claude Code v2.1.285 (stable), frozen on 2026-10-05.
 
 Every change in the next edition is verified against this version, the `stable` dist-tag of [`@anthropic-ai/claude-code`](https://www.npmjs.com/package/@anthropic-ai/claude-code?activeTab=versions) on 2026-10-05. It stays frozen until the edition ships, unless a later `stable` release removes, renames or changes the default of something a lesson teaches.
 
-Edition 2: the Intermediate path, with checked exercises. Advanced is still being rebuilt.
+Editions 2 and 3: the Intermediate and Advanced paths, with checked exercises. Every level is now rebuilt, and no page from the previous edition remains.
 
 ### Added
 
 - The [Intermediate level](docs/intermediate/README.md): eight lessons, from a first skill to plugins, by way of project memory, model and effort, permissions and the sandbox, hooks, subagents and MCP, and a capstone that sets a repository up for a new teammate. Every lesson and the capstone has a check in the [practice template](https://github.com/wesammustafa/claude-code-practice). You can run the lesson checks against your own repository with `--dir`; the capstone runs in the template copy.
 - Four Intermediate Electives: [skill patterns](docs/intermediate/electives/skill-patterns.md), [Claude in Chrome](docs/intermediate/electives/claude-in-chrome.md), [the status line](docs/intermediate/electives/status-line.md) and [fast mode](docs/intermediate/electives/fast-mode.md).
 - [Examples](examples/README.md) for the Intermediate lessons: two skills, three hook scripts, a read-only reviewer subagent and a pinned Chrome DevTools MCP configuration. Each one is inert until you copy it into a project, and has a smoke test.
+- The [Advanced level](docs/advanced/README.md): seven lessons, from parallel sessions in worktrees to bounds on autonomous runs, by way of orchestration patterns, dynamic workflows, `claude -p` scripts, GitHub Actions and a setup shared with a team, and a capstone that adds CI review a team can share. Every lesson and the capstone has a check in the [practice template](https://github.com/wesammustafa/claude-code-practice). Most lesson checks run against your own repository with `--dir`; the GitHub Actions lesson and the capstone run in a separate template copy that you tear down afterwards.
+- Five Advanced Electives: [agent teams](docs/advanced/electives/agent-teams.md), [agent view](docs/advanced/electives/agent-view.md), [`/goal`, `/loop` and routines](docs/advanced/electives/goal-loop-routines.md), [testing and publishing a plugin](docs/advanced/electives/publish-a-plugin.md) and [dev containers](docs/advanced/electives/dev-containers.md).
+- [Beyond this guide](docs/advanced/beyond-this-guide.md): where to go next for building your own agents and MCP servers, and for running and rolling out Claude Code in an organization.
+- [Examples](examples/README.md) for the Advanced level: the `team-tools` marketplace with its `team-kit` plugin (the `onboard` skill and the read-only `config-reviewer` subagent) and the settings that share it, and the read-only `security-reviewer` and `test-reviewer` subagents for the agent teams Elective. Each one is inert until you copy it into a project, and has a smoke test.
 
 ### Changed
 
 - The animated Claude mascot is back beside README's title, and the social card shows it in place of the trail blazes. It comes from [shanraisshan/claude-code-best-practice](https://github.com/shanraisshan/claude-code-best-practice) under the MIT License.
-- The topic pages, [Commands by level](docs/reference/commands.md) and the [Feature map](docs/reference/feature-map.md) link the Intermediate lessons and Electives.
+- The topic pages, [Commands by level](docs/reference/commands.md) and the [Feature map](docs/reference/feature-map.md) link the Intermediate and Advanced lessons and Electives, and "When to use what" on the [Intermediate index](docs/intermediate/README.md#when-to-use-what) links the dynamic workflows lesson.
 - docs/reference/effort-levels.md and docs/skills.md are now stubs that point to the lessons and reference pages that replace them, and the `mcp-servers/` and `specialized-agents/` stubs point to the MCP and subagent lessons.
+- docs/agent-teams.md, docs/workflows.md and docs/reference/faq.md are now stubs that point to the lessons, Electives and reference pages that replace them.
+- The `inertness` check also fails on an example marketplace manifest that is not renamed to `dot-claude-plugin/`, and on a `.claude-plugin/` folder at the repository root. The `static-validation` check also covers the skills and agents of the plugins in an example marketplace.
 
 ### Removed
 
 <a id="removed-legacy-intermediate"></a>
 - The previous edition's pages on skills, hooks, MCP and fast mode under `docs/legacy/`, and the subagents section of the subagents and parallel work page: the Intermediate lessons and Electives replace them. Links to the previous edition's README sections land on a line that points to the new page.
 - The skill-resolution diagram, which no page used any more.
+<a id="removed-legacy-advanced"></a>
+- The previous edition's last page under `docs/legacy/`, on subagents and parallel work, and README's index row of previous-edition pages: the Advanced lessons and Electives replace them, and `docs/legacy/` is gone. Links to the previous edition's README sections land on a line that points to the new page.
 
 ## v2026.10 - 2026-10-05
 
