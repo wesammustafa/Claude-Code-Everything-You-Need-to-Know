@@ -17,29 +17,13 @@ Claude Code has **four** ways to run agents at once. They're easy to confuse, so
 
 Two supporting tools that aren't a coordination style of their own:
 
-- **[Git worktrees](#1-git-worktrees--parallel-branches-parallel-sessions)**: separate checkouts so parallel sessions never touch the same files.
+- **[Git worktrees](../advanced/01-parallel-sessions.md)**: separate checkouts, so parallel sessions each edit their own copy of the files.
 - **`/batch`**: a bundled skill that researches the codebase, splits one large change into **5–30 independent units**, and spawns a background subagent per unit **in its own worktree, each opening a PR**. It's a packaged use of subagents + worktrees, and the fastest way to feel this whole category.
 
 > [!TIP]
 > **Checking on running work** depends on what you started: `/tasks` for anything backgrounded in the current session, `claude agents` for background sessions, `/workflows` for workflow runs. Note `/agents` (removed as a wizard in v2.1.198) is a different thing entirely from `claude agents`.
 
-<a id="1-git-worktrees--parallel-branches-parallel-sessions"></a>
-## 1. Git worktrees: parallel branches, parallel sessions
-
-[Git worktrees](https://git-scm.com/docs/git-worktree) let one repo have multiple branches checked out at the same time, each in its own folder. Pair them with one Claude Code session per worktree to run independent streams of work.
-
-```bash
-git worktree add -b feature-a ../feature-a    # create the worktree
-cd ../feature-a && claude                     # start Claude in it
-# Repeat in another terminal for feature-b. Each session is independent.
-git worktree remove ../feature-a              # clean up when done
-```
-
-> [!TIP]
-> Use [tmux](https://github.com/tmux/tmux/wiki/Installing) to keep each worktree's session attached even when you close the terminal.
->
-> [!TIP]
-> Prefer not to manage them by hand? `claude agents` (agent view) puts **each dispatched session in its own worktree automatically**, and `/batch` does the same per unit of work.
+Worktrees now have their own lesson: [Parallel sessions with worktrees](../advanced/01-parallel-sessions.md).
 
 Subagents now have their own lesson: [Delegate to a custom subagent](../intermediate/06-subagents.md).
 

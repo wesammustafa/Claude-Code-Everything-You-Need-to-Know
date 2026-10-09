@@ -5,9 +5,7 @@ export const STAMP = /Verified against Claude Code v(\d+)\.(\d+)\.(\d+) \(stable
 
 // Pages from before the rework that are not yet split. They carry a
 // "From the previous edition, not yet re-verified" note instead of a Stamp.
-export const PRE_REWORK = [
-  'docs/reference/faq.md',
-];
+export const PRE_REWORK = [];
 
 // Pages exempt until a pull request rewrites them.
 export const AWAITING_REWRITE = [];
@@ -16,6 +14,7 @@ export const AWAITING_REWRITE = [];
 export const STUBS = [
   'docs/reference/changelog.md',
   'docs/reference/effort-levels.md',
+  'docs/reference/faq.md',
 ];
 
 const STAMPED = /^docs\/(beginner|intermediate|advanced)\/.+\.md$|^docs\/topics\/[^/]+\.md$|^docs\/reference\/[^/]+\.md$/;

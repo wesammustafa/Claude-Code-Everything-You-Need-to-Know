@@ -62,7 +62,7 @@ How to read it:
 
 | Feature | Label | Who gets it |
 |---|---|---|
-| [Worktrees](https://code.claude.com/docs/en/worktrees) | – | Every provider |
+| [Worktrees](https://code.claude.com/docs/en/worktrees); taught in [Parallel sessions with worktrees](../advanced/01-parallel-sessions.md) | – | Every provider |
 | [Dynamic workflows](https://code.claude.com/docs/en/workflows) | – | Every provider; on Pro, turn them on in `/config` |
 | [Agent view](https://code.claude.com/docs/en/agent-view) | "Agent view is in research preview." | Every provider |
 | [Agent teams](https://code.claude.com/docs/en/agent-teams) | "Agent teams are experimental and disabled by default." | Every provider |
