@@ -39,7 +39,7 @@ Each lesson takes 10 to 20 minutes, plus the time an agent run takes.
 
 ## Capstone
 
-Add CI review to a template copy: a GitHub Actions workflow that uses a secret, a saved workflow run from two parallel worktree sessions merged into one branch, a `claude -p` script with limits, and a local team marketplace. Then tear down the workflow, the secret and the key.
+[Add CI review your team can share](capstone.md): in a new template copy, two parallel worktree sessions, a bounded `claude -p` review script, a team marketplace, a saved dynamic workflow and a pull request review workflow with limits. Then tear down the workflow, the secret and, with an API key, the key.
 
 ## By the end of this level you can
 
