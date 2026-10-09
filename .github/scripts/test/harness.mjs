@@ -3,8 +3,8 @@
 // A fixture folder holds fixture.json, tree/ (the head state), an optional
 // base/ (the state before the change, for diff-scoped rules) and an optional
 // generate.mjs. generate.mjs writes files that would be live Claude Code
-// config if they were committed (.claude/, CLAUDE.md, AGENTS.md, .mcp.json),
-// so they exist only in the temporary copy.
+// config if they were committed (.claude/, CLAUDE.md, AGENTS.md, .mcp.json,
+// a .claude-plugin/marketplace.json), so they exist only in the temporary copy.
 import { cpSync, existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';

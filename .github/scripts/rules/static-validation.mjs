@@ -7,7 +7,9 @@
 //   different answers on different Node versions);
 // - shell scripts pass bash -n and shellcheck.
 // This covers the live .claude/ folder and the inert dot-claude/ folders
-// under examples/ alike.
+// under examples/ alike, and the skills and agents of the plugins in an
+// example marketplace: examples/**/plugins/<name>/skills/<skill>/SKILL.md and
+// examples/**/plugins/<name>/agents/<agent>.md.
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { readText } from '../lib/tree.mjs';
@@ -16,8 +18,8 @@ import { frontmatter, parseYaml } from '../lib/yaml.mjs';
 export const id = 'static-validation';
 export const modes = ['pr', 'release'];
 
-const SKILL = /(^|\/)(\.claude|dot-claude)\/skills\/[^/]+\/SKILL\.md$/;
-const AGENT = /(^|\/)(\.claude|dot-claude)\/agents\/[^/]+\.md$/;
+const SKILL = /(^|\/)(\.claude|dot-claude)\/skills\/[^/]+\/SKILL\.md$|^examples\/(.+\/)?plugins\/[^/]+\/skills\/[^/]+\/SKILL\.md$/;
+const AGENT = /(^|\/)(\.claude|dot-claude)\/agents\/[^/]+\.md$|^examples\/(.+\/)?plugins\/[^/]+\/agents\/[^/]+\.md$/;
 const WORKFLOW = /(^|\/)(\.claude|dot-claude)\/workflows\/[^/]+\.m?js$/;
 const SHEBANG = /^#!\s*\/(usr\/)?bin\/(env\s+)?(ba)?sh\b/;
 

@@ -1,0 +1,5 @@
+{
+  "name": "team-tools",
+  "owner": { "name": "Your team" },
+  "plugins": [{ "name": "team-kit", "source": "./plugins/team-kit" }]
+}
