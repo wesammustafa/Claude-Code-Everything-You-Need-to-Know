@@ -1,0 +1,8 @@
+{
+  "rule": "lesson-quotes",
+  "expect": "pass",
+  "env": {
+    "LEARN_DIR": "practice"
+  },
+  "about": "A warm-up's quotes match the earlier lesson its from line names, not the lesson that holds it."
+}
