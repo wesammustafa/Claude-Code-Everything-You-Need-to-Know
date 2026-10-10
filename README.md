@@ -2,26 +2,100 @@
 
 **Learn Claude Code in three levels, from your first session to unattended multi-agent runs.**
 
+You learn by doing: every core lesson and capstone ends with a check you run in your own practice copy, and Beginner lesson 1 runs step by step in a terminal app beside Claude Code.\
+**[Try it now](#try-it-now)** · [Pick your level](#pick-your-level) · [Every page](#everything-in-the-guide)
+
 An independent community guide. Not affiliated with or endorsed by Anthropic.
 
 [![Verified against Claude Code v2.1.285 (stable)](https://img.shields.io/badge/verified-v2.1.285_stable-2e6e57)](CHANGELOG.md#v202610---2026-10-05) [![Edition release date](https://img.shields.io/github/release-date/wesammustafa/Claude-Code-Everything-You-Need-to-Know?label=edition&color=2e6e57)](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/releases/latest) [![License: MIT](https://img.shields.io/badge/license-MIT-5b6470)](LICENSE) [![Mentioned in Awesome Claude Code](https://awesome.re/mentioned-badge.svg)](https://github.com/hesreallyhim/awesome-claude-code)
+
+<p align="center">
+  <img src="assets/readme/learn-step-turns-green.png" width="640" alt="The app noticed the saved file on its own: all three commands are ticked, the step's box turned green, and it quotes the version line it found in .practice/version.txt." />
+  <br />
+  <sub>The learning app, <code>npm run learn</code>, at Beginner lesson 1, step 3: you type in your other terminal, and the step turns green by itself. Claude Code v2.1.285 (stable), 2026-10-10.</sub>
+</p>
+
+<details>
+<summary>The same screen as text</summary>
+
+```text
+B1  Install, sign in and look around                 GUIDED   step 3 of 12
+
+in your other terminal   ✔ DONE
+
+Save the version
+Go to your practice copy and save that output for the check:
+
+  $ cd /Users/Shared/claude-code-practice           ✔
+  $ mkdir -p .practice                              ✔
+  $ claude --version > .practice/version.txt        ✔
+
+Done when .practice/version.txt holds a line such as X.Y.Z (Claude Code).
+
+Step 3 done!
+.practice/version.txt holds 2.1.285 (Claude Code)
+3 steps this session
+
+enter  next: Start, sign in, trust    b back    m map    q quit
+```
+
+</details>
+
+## Try it now
+
+1. Make your practice copy: open [claude-code-practice](https://github.com/wesammustafa/claude-code-practice), select **Use this template** > **Create a new repository**, and clone your copy. Or open your copy in a Codespace, where Node.js and Claude Code come preinstalled.
+2. In your copy, start the app. It needs Node.js LTS and git, and there is nothing to install with npm:
+
+   ```bash
+   npm run learn
+   ```
+
+3. Open a second terminal in the same folder. The app tells you what to type there, starting with installing Claude Code, and checks your work as you go:
+
+   ```text
+   this window                     your other terminal
+   npm run learn                   where you type commands
+   one step at a time,     --->    and run Claude Code
+   checks your work                (this app checks it)
+   ```
+
+The app teaches Beginner lesson 1 step by step; for the other Beginner lessons, it watches the lesson's check while you follow the page. It has no AI in it and changes none of your work: it reads your files, runs `git status` and the lesson's check, and writes only its own file.
+
+Prefer to read? Every lesson works from its page alone. Do it in your copy, then run the lesson's check, for example `npm run check -- b-1`. Each item prints `PASS` or `FAIL`, with a hint for what to fix.
+
+## Help that fades as you learn
+
+The help shrinks as you get better: GUIDED shows every command, HINTED gives the goal and a hint each time you press `h`, and CHALLENGE gives just the goal.
+
+<table>
+  <tr>
+    <td width="50%"><img src="assets/readme/learn-help-guided.png" width="380" alt="At step 1 the app names the window to type in and shows the exact install command." /></td>
+    <td width="50%"><img src="assets/readme/learn-help-challenge.png" width="380" alt="By step 11 the app gives only the goal and the lesson's rule, and reports from git status that nothing in the copy has changed yet." /></td>
+  </tr>
+  <tr>
+    <td><b>Step 1 of 12, GUIDED:</b> the exact command, and the window to type it in.</td>
+    <td><b>Step 11 of 12, CHALLENGE:</b> the goal alone, while the app watches your copy.</td>
+  </tr>
+</table>
+
+<sub>Beginner lesson 1, steps 1 and 11. Claude Code v2.1.285 (stable), 2026-10-10.</sub>
 
 <a id="-choose-your-path"></a>
 ## Pick your level
 
 ### Beginner
 **For you if** you're new to Claude Code and comfortable with a terminal and git.\
-You'll take one change from request to commit, safely, and give your project a memory. About 2½ hours.\
+You'll take one change from request to commit, safely, and give your project a memory. About 2½ hours: 5 lessons, a capstone and 3 Electives.\
 **[Start Beginner](docs/beginner/README.md)**
 
 ### Intermediate
 **Ready if** you can plan a change in plan mode, review the diff and commit it, and keep a long session on track.\
-You'll shape Claude Code to your project with skills, hooks, subagents, MCP and plugins. About 3 hours.\
+You'll shape Claude Code to your project with skills, hooks, subagents, MCP and plugins. About 3 hours: 8 lessons, a capstone and 4 Electives.\
 **[Start Intermediate](docs/intermediate/README.md)**
 
 ### Advanced
 **Ready if** you can write a project skill, enforce a rule with a hook, delegate to a subagent and connect an MCP server.\
-You'll run Claude Code in parallel, unattended in CI, and for a team, within limits you set. About 3 hours 20 minutes, plus run time.\
+You'll run Claude Code in parallel, unattended in CI, and for a team, within limits you set. About 3 hours 20 minutes, plus run time: 7 lessons, a capstone and 5 Electives.\
 **[Start Advanced](docs/advanced/README.md)**
 
 ## Install
@@ -31,6 +105,13 @@ curl -fsSL https://claude.ai/install.sh | bash
 ```
 
 macOS, Linux and WSL. For Windows and other installers, see the [official setup page](https://code.claude.com/docs/en/setup). Claude Code needs a paid Claude plan (Pro, Max, Team or Enterprise), a Claude Console account, or a supported cloud provider ([Quickstart](https://code.claude.com/docs/en/quickstart)).
+
+## How the guide stays current
+
+- Every lesson page carries a Stamp: the Claude Code `stable` version its claims were checked against, and the date ([The stamp](CONTRIBUTING.md#the-stamp)).
+- The checks are tested too: in the practice template, CI shows every check failing on its `main` branch, where no exercise is done, and passing on its reference solutions ([Assert checks](https://github.com/wesammustafa/claude-code-practice/blob/main/.github/workflows/assert-checks.yml)).
+- Scheduled checks keep watch between editions: external links and new `stable` releases weekly, expiry markers daily, and the app's quotes of the lessons weekly. Each opens a tracking issue ([Maintainer routine](CONTRIBUTING.md#maintainer-routine)).
+- The examples are inert until you copy them into a project, and they follow a [safety contract](CONTRIBUTING.md#adding-a-skill): local only (apart from the MCP lesson's pinned server), least privilege, and a smoke test that runs without Claude.
 
 <a id="-whats-inside"></a><a id="-reading-tips"></a>
 ## Everything in the guide
@@ -62,7 +143,9 @@ macOS, Linux and WSL. For Windows and other installers, see the [official setup 
 
 Found something stale? [Report it with a source](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=stale-content.yml). Stuck on a lesson? Use the link at the bottom of that lesson. Claude Code is a product of Anthropic.
 
-[MIT License](LICENSE) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
+If the guide helped you, a star helps other learners find it.
+
+[MIT License](LICENSE) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md)
 
 *Mascot: [`assets/brand/claude-jumping.svg`](assets/brand/claude-jumping.svg) comes from [shanraisshan/claude-code-best-practice](https://github.com/shanraisshan/claude-code-best-practice), Copyright (c) 2025-2026 Shayan Rais, used under the [MIT License](https://github.com/shanraisshan/claude-code-best-practice/blob/main/LICENSE).*
 

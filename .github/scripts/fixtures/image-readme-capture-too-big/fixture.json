@@ -1,0 +1,5 @@
+{
+  "rule": "images",
+  "expect": "fail",
+  "about": "A README capture of the learning app over the 200 KB capture budget."
+}
