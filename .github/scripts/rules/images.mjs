@@ -15,7 +15,7 @@ const KB = 1024;
 const KEBAB = /^[a-z0-9]+(?:-[a-z0-9]+)*(?:\.[a-z0-9]+)*$/;
 const BUDGET = [
   [/\.svg$/, 50 * KB, 'an SVG may be up to 50 KB'],
-  [/^assets\/lessons\/.+\.(png|jpe?g|webp)$/, 200 * KB, 'a capture may be up to 200 KB'],
+  [/^assets\/(lessons|readme)\/.+\.(png|jpe?g|webp)$/, 200 * KB, 'a capture may be up to 200 KB'],
   [/^assets\/brand\/social-card\.png$/, 1000 * KB, 'the social card must be under 1 MB'],
 ];
 const ALLOWED_ORPHANS = [/^assets\/brand\/[^/]+\.svg$/, /^assets\/brand\/social-card\.png$/];
