@@ -61,7 +61,7 @@ enter  next: Start, sign in, trust    b back    m map    q quit
 
 The app teaches Beginner lesson 1 step by step; for the other Beginner lessons, it watches the lesson's check while you follow the page. It has no AI in it and changes none of your work: it reads your files, runs `git status` and the lesson's check, and writes only its own file.
 
-Prefer to read? Every lesson works from its page alone. Do it in your copy, then run the lesson's check, for example `npm run check -- b-1`. Each item prints `PASS` or `FAIL`, with a hint for what to fix.
+Prefer to read? Every lesson works from its page alone. Each core lesson ends with a check you run from your practice copy, for example `npm run check -- b-1`: each item prints `PASS` or `FAIL`, with a hint for what to fix.
 
 ## Help that fades as you learn
 
