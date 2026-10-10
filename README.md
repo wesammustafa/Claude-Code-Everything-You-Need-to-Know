@@ -8,9 +8,10 @@ You learn by doing: every core lesson and capstone ends with a check you run in 
 [![Verified against Claude Code v2.1.285 (stable)](https://img.shields.io/badge/verified-v2.1.285_stable-2e6e57)](CHANGELOG.md#v202610---2026-10-05) [![Edition release date](https://img.shields.io/github/release-date/wesammustafa/Claude-Code-Everything-You-Need-to-Know?label=edition&color=2e6e57)](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/releases/latest) [![License: MIT](https://img.shields.io/badge/license-MIT-5b6470)](LICENSE) [![Mentioned in Awesome Claude Code](https://awesome.re/mentioned-badge.svg)](https://github.com/hesreallyhim/awesome-claude-code)
 
 <p align="center">
+  <!-- Captured with Claude Code v2.1.285 (stable) on 2026-10-10. -->
   <img src="assets/readme/learn-step-turns-green.png" width="640" alt="The app noticed the saved file on its own: all three commands are ticked, the step's box turned green, and it quotes the version line it found in .practice/version.txt." />
   <br />
-  <sub>The learning app, <code>npm run learn</code>, at Beginner lesson 1, step 3: you type in your other terminal, and the step turns green by itself. Claude Code v2.1.285 (stable), 2026-10-10.</sub>
+  <sub>The learning app, <code>npm run learn</code>, at Beginner lesson 1, step 3: you type in your other terminal, and the step turns green by itself.</sub>
 </p>
 
 <details>
@@ -76,7 +77,8 @@ The help shrinks as you get better: GUIDED shows every command, HINTED gives the
   </tr>
 </table>
 
-<sub>Beginner lesson 1, steps 1 and 11. Claude Code v2.1.285 (stable), 2026-10-10.</sub>
+<!-- Both captured with Claude Code v2.1.285 (stable) on 2026-10-10. -->
+<sub>Beginner lesson 1, steps 1 and 11.</sub>
 
 <a id="-choose-your-path"></a>
 ## Pick your level
