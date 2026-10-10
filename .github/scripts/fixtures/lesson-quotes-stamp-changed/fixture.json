@@ -1,0 +1,8 @@
+{
+  "rule": "lesson-quotes",
+  "expect": "fail",
+  "env": {
+    "LEARN_DIR": "practice"
+  },
+  "about": "The lesson was restamped, so the lesson file must be re-verified and restamped too."
+}

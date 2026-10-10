@@ -1,0 +1,8 @@
+{
+  "rule": "lesson-quotes",
+  "expect": "fail",
+  "env": {
+    "LEARN_DIR": "practice"
+  },
+  "about": "An unquoted title, which the app reads too, no longer matches the lesson's heading."
+}

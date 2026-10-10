@@ -1,0 +1,8 @@
+{
+  "rule": "lesson-quotes",
+  "expect": "pass",
+  "env": {
+    "LEARN_DIR": "practice"
+  },
+  "about": "Every quoted line, the title, the Stamp and the step counts match the lesson; a ladder's narrow line holds the check's words, not the lesson's."
+}

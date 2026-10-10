@@ -1,0 +1,8 @@
+{
+  "rule": "lesson-quotes",
+  "expect": "pass",
+  "env": {
+    "LEARN_DIR": ""
+  },
+  "about": "Offline, a pull request that leaves the lessons in the app alone passes without reading the template."
+}
