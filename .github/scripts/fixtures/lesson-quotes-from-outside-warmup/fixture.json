@@ -1,0 +1,8 @@
+{
+  "rule": "lesson-quotes",
+  "expect": "fail",
+  "env": {
+    "LEARN_DIR": "practice"
+  },
+  "about": "A Worked example step with a from line: only a warm-up quotes an earlier lesson, so its quotes still come from its own page."
+}

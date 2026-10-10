@@ -1,0 +1,8 @@
+{
+  "rule": "lesson-quotes",
+  "expect": "fail",
+  "env": {
+    "LEARN_DIR": "practice"
+  },
+  "about": "The capstone gained a step in The task."
+}

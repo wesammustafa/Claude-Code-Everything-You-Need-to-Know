@@ -1,16 +1,17 @@
 // The practice template's learning app, `npm run learn`, quotes lessons word
 // for word, from one lesson file per lesson (learn/lessons/<id>.md in the
 // template); .github/compat/learn.txt lists them. In a lesson file, every
-// double-quoted `- key: "…"` value is the lesson's own text. This rule fails
-// when such a quote, the title, the Stamp or a step count no longer matches
-// its lesson. It reads each line and the front matter as the app does
-// (learn/lib/content.mjs and checks/frontmatter.mjs in the template), so no
-// spacing, quoting or line ending the app accepts can hide a quote. It needs
-// the template's lesson files: with LEARN_DIR set to a template checkout's
-// learn/lessons folder, any mode reads them there; the weekly scheduled run
-// fetches them from the template's main branch. A pull request run without
-// LEARN_DIR stays offline and only warns when the change touches a listed
-// lesson.
+// double-quoted `- key: "…"` value is the lesson's own text, except in a
+// warm-up block, whose `- from: <lesson>` line points its quotes at that
+// earlier lesson's page. This rule fails when such a quote, the title, the
+// Stamp or a step count no longer matches its lesson. It reads each line and
+// the front matter as the app does (learn/lib/content.mjs and
+// checks/frontmatter.mjs in the template), so no spacing, quoting or line
+// ending the app accepts can hide a quote. It needs the template's lesson
+// files: with LEARN_DIR set to a template checkout's learn/lessons folder, any
+// mode reads them there; the weekly scheduled run fetches them from the
+// template's main branch. A pull request run without LEARN_DIR stays offline
+// and only warns when the change touches a listed lesson.
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { readText } from '../lib/tree.mjs';
@@ -106,7 +107,9 @@ function stepCount(text, name) {
   return count;
 }
 
-function compare(lesson, page, rawPage, rawFile) {
+// `pages` maps every listed lesson id to its page and text, for warm-ups;
+// `listed` holds every listed lesson id.
+function compare(lesson, page, rawPage, rawFile, pages, listed) {
   const pageText = rawPage.replace(/\r\n?/g, '\n');
   const file = rawFile.replace(/\r\n?/g, '\n');
   const problems = [];
@@ -121,19 +124,34 @@ function compare(lesson, page, rawPage, rawFile) {
   if (title !== h1) say(`is titled "${title}", but the lesson's heading is "${h1}".`);
   const recounted = new Set();
   let heading = '(front matter)';
+  let from = null;
+  let warmup = false;
   for (const line of file.split('\n')) {
     const h = line.match(/^#{2,3} (.+)$/);
     if (h) {
       heading = h[1];
-      const counted = h[1].match(/(Worked example|Your turn) step \d+ of (\d+)/);
+      from = null;
+      warmup = /^R\d+ \| Warm-up \|/.test(h[1]);
+      const counted = h[1].match(/(Worked example|Your turn|The task) step \d+ of (\d+)/);
       if (counted && !recounted.has(counted[1]) && stepCount(pageText, counted[1]) !== Number(counted[2])) {
         recounted.add(counted[1]);
         say(`counts ${counted[2]} steps in ${counted[1]}, but the lesson has ${stepCount(pageText, counted[1])}.`);
       }
       continue;
     }
+    const f = line.match(/^- from: (\S+)$/);
+    if (f) {
+      if (!warmup) say(`has a from line in ${heading}, which isn't a warm-up: only a warm-up quotes an earlier lesson.`);
+      else if (!listed.has(f[1])) say(`has a warm-up (${heading}) from ${f[1]}, which ${LIST} doesn't list.`);
+      else from = f[1];
+      continue;
+    }
     const q = line.match(/^- [a-z-]+: (.+)$/)?.[1].trim().match(/^"(.*)"$/);
-    if (q && !body.includes(flat(q[1]))) say(`quotes "${q[1]}" (${heading}), which is no longer in the lesson.`);
+    if (!q) continue;
+    if (from) {
+      const source = pages.get(from);
+      if (source && !source.body.includes(flat(q[1]))) say(`quotes "${q[1]}" (${heading}, from ${source.page}), which is no longer in that lesson.`);
+    } else if (!body.includes(flat(q[1]))) say(`quotes "${q[1]}" (${heading}), which is no longer in the lesson.`);
   }
   return problems;
 }
@@ -152,12 +170,14 @@ export async function run(ctx) {
     };
   }
   const problems = [];
+  const pages = new Map(lessons.filter((l) => existsSync(join(ctx.root, l.page)))
+    .map((l) => [l.lesson, { page: l.page, body: flat(readText(ctx.root, l.page).replace(/\r\n?/g, '\n')) }]));
   for (const { lesson, page } of lessons) {
     if (!existsSync(join(ctx.root, page))) {
       problems.push(`${LIST} lists ${page}, which doesn't exist`);
       continue;
     }
-    problems.push(...compare(lesson, page, readText(ctx.root, page), await lessonFile(ctx.root, lesson)));
+    problems.push(...compare(lesson, page, readText(ctx.root, page), await lessonFile(ctx.root, lesson), pages, new Set(lessons.map((l) => l.lesson))));
   }
   if (problems.length) return { status: 'fail', problems };
   return { status: 'pass', summary: `${lessons.length} lesson(s) in the app match their lesson files` };

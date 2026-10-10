@@ -1,0 +1,8 @@
+{
+  "rule": "lesson-quotes",
+  "expect": "fail",
+  "env": {
+    "LEARN_DIR": "practice"
+  },
+  "about": "A warm-up quotes text that is in its own lesson but no longer in the lesson its from line names."
+}
