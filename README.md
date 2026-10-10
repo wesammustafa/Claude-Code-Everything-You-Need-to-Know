@@ -69,8 +69,8 @@ The help shrinks as you get better: GUIDED shows every command, HINTED gives the
 
 <table>
   <tr>
-    <td width="50%"><img src="assets/readme/learn-help-guided.png" width="380" alt="At step 1 the app names the window to type in and shows the exact install command." /></td>
-    <td width="50%"><img src="assets/readme/learn-help-challenge.png" width="380" alt="By step 11 the app gives only the goal and the lesson's rule, and reports from git status that nothing in the copy has changed yet." /></td>
+    <td width="50%" valign="top"><img src="assets/readme/learn-help-guided.png" width="380" alt="At step 1 the app names the window to type in and shows the exact install command." /></td>
+    <td width="50%" valign="top"><img src="assets/readme/learn-help-challenge.png" width="380" alt="By step 11 the app gives only the goal and the lesson's rule, and reports from git status that nothing in the copy has changed yet." /></td>
   </tr>
   <tr>
     <td><b>Step 1 of 12, GUIDED:</b> the exact command, and the window to type it in.</td>
