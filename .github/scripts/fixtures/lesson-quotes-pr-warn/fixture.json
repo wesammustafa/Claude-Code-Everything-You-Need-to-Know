@@ -1,0 +1,8 @@
+{
+  "rule": "lesson-quotes",
+  "expect": "warn",
+  "env": {
+    "LEARN_DIR": ""
+  },
+  "about": "Offline, a pull request that changes a lesson the app quotes gets a warning to run the comparison locally."
+}

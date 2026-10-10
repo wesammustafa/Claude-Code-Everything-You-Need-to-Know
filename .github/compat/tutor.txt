@@ -1,4 +1,0 @@
-# Lessons the practice template's /tutor quotes, one per line: the lesson id,
-# then the page. The step script is .claude/skills/tutor/steps/<id>.md in the
-# template. The tutor-quotes rule compares the two.
-b-1 docs/beginner/01-install-and-look-around.md

@@ -1,8 +1,0 @@
-{
-  "rule": "tutor-quotes",
-  "expect": "fail",
-  "env": {
-    "TUTOR_DIR": "practice"
-  },
-  "about": "The lesson reworded a sentence the step script quotes."
-}

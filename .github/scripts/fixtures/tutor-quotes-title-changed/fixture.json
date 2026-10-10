@@ -1,8 +1,0 @@
-{
-  "rule": "tutor-quotes",
-  "expect": "fail",
-  "env": {
-    "TUTOR_DIR": "practice"
-  },
-  "about": "The step script's title no longer matches the lesson's heading."
-}

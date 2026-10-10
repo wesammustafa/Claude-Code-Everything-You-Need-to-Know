@@ -1,0 +1,4 @@
+# Lessons the practice template's learning app (npm run learn) quotes, one per
+# line: the lesson id, then the page. The lesson file is learn/lessons/<id>.md
+# in the template. The lesson-quotes rule compares the two.
+b-1 docs/beginner/01-install-and-look-around.md
