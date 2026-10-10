@@ -62,7 +62,7 @@ flowchart LR
    /five-whys npm run linkcheck -- samples exits with code 1
    ```
 
-   Claude reproduces the problem, asks "why" from evidence until it reaches a cause the team can change, then reports the chain, the root cause and two fixes. Your wording will differ. In a second terminal, `git status` lists only the new `.claude/` folder: the skill told Claude to change nothing.
+   Claude reproduces the problem, asks "why" from evidence until it reaches a cause the team can change, then reports the chain, the root cause and two fixes. Your wording will differ. In a second terminal, `git status` lists only new files under `.claude/`: the skill told Claude to change nothing.
 4. Run `/clear`, then ask a question that matches the description without naming the skill:
 
    ```text
