@@ -3,11 +3,14 @@
 // template); .github/compat/learn.txt lists them. In a lesson file, every
 // double-quoted `- key: "…"` value is the lesson's own text. This rule fails
 // when such a quote, the title, the Stamp or a step count no longer matches
-// its lesson, whatever the file's line endings. It needs the template's lesson
-// files: with LEARN_DIR set to a template checkout's learn/lessons folder, any
-// mode reads them there; the weekly scheduled run fetches them from the
-// template's main branch. A pull request run without LEARN_DIR stays offline
-// and only warns when the change touches a listed lesson.
+// its lesson. It reads each line and the front matter as the app does
+// (learn/lib/content.mjs and checks/frontmatter.mjs in the template), so no
+// spacing, quoting or line ending the app accepts can hide a quote. It needs
+// the template's lesson files: with LEARN_DIR set to a template checkout's
+// learn/lessons folder, any mode reads them there; the weekly scheduled run
+// fetches them from the template's main branch. A pull request run without
+// LEARN_DIR stays offline and only warns when the change touches a listed
+// lesson.
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { readText } from '../lib/tree.mjs';
@@ -21,6 +24,17 @@ export const modes = ['pr', 'scheduled'];
 const LIST = '.github/compat/learn.txt';
 const RAW = 'https://raw.githubusercontent.com/wesammustafa/claude-code-practice/main/learn/lessons';
 const flat = (text) => text.replace(/\s+/g, ' ').trim();
+
+// A front matter value as the app reads it: a trailing ` # comment` dropped,
+// then one pair of matching quotes. Undefined when the key is missing.
+function field(file, key) {
+  const fm = file.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '';
+  const raw = fm.match(new RegExp(`^${key}:(?:[ \\t]+(.*))?$`, 'm'));
+  if (!raw) return undefined;
+  const v = (raw[1] ?? '').trim();
+  const quoted = v.match(/^(['"]).*?\1/);
+  return (quoted ? quoted[0] : v.replace(/\s+#.*$/, '')).replace(/^(['"])(.*)\1$/, '$2');
+}
 
 function listed(root) {
   if (!existsSync(join(root, LIST))) return [];
@@ -54,11 +68,11 @@ function compare(lesson, page, rawPage, rawFile) {
   const say = (msg) => problems.push(`${page}: the app's learn/lessons/${lesson}.md ${msg}`);
   const body = flat(pageText);
   const stamp = pageText.match(STAMP)?.[0];
-  const theirs = file.match(/^stamp: "(.*)"$/m)?.[1];
+  const theirs = field(file, 'stamp');
   if (theirs !== stamp) say(`is stamped "${theirs}", but the lesson is stamped "${stamp}". Re-verify the lesson file and copy the new Stamp.`);
-  const title = file.match(/^title: "(.*)"$/m)?.[1];
+  const title = field(file, 'title');
   const h1 = pageText.match(/^# (.+)$/m)?.[1]?.trim();
-  if (title !== undefined && title !== h1) say(`is titled "${title}", but the lesson's heading is "${h1}".`);
+  if (title !== h1) say(`is titled "${title}", but the lesson's heading is "${h1}".`);
   const recounted = new Set();
   let heading = '(front matter)';
   for (const line of file.split('\n')) {
@@ -72,8 +86,8 @@ function compare(lesson, page, rawPage, rawFile) {
       }
       continue;
     }
-    const q = line.match(/^- ([a-z-]+): "(.*)"$/);
-    if (q && !body.includes(flat(q[2]))) say(`quotes "${q[2]}" (${heading}), which is no longer in the lesson.`);
+    const q = line.match(/^- [a-z-]+: (.+)$/)?.[1].trim().match(/^"(.*)"$/);
+    if (q && !body.includes(flat(q[1]))) say(`quotes "${q[1]}" (${heading}), which is no longer in the lesson.`);
   }
   return problems;
 }

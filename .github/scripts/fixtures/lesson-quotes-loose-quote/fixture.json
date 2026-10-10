@@ -1,0 +1,8 @@
+{
+  "rule": "lesson-quotes",
+  "expect": "fail",
+  "env": {
+    "LEARN_DIR": "practice"
+  },
+  "about": "A reworded quote with extra spaces around it, which the app still reads as a quote, no longer matches the lesson."
+}
