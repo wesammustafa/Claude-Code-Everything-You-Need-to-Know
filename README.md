@@ -5,8 +5,6 @@
 You learn by doing: every core lesson and capstone ends with a check you run in your own practice copy, and Beginner lesson 1 runs step by step in a terminal app beside Claude Code.\
 **[Try it now](#try-it-now)** · [Pick your level](#pick-your-level) · [Every page](#everything-in-the-guide)
 
-An independent community guide. Not affiliated with or endorsed by Anthropic.
-
 [![Verified against Claude Code v2.1.285 (stable)](https://img.shields.io/badge/verified-v2.1.285_stable-2e6e57)](CHANGELOG.md#v202610---2026-10-05) [![Edition release date](https://img.shields.io/github/release-date/wesammustafa/Claude-Code-Everything-You-Need-to-Know?label=edition&color=2e6e57)](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/releases/latest) [![License: MIT](https://img.shields.io/badge/license-MIT-5b6470)](LICENSE) [![Mentioned in Awesome Claude Code](https://awesome.re/mentioned-badge.svg)](https://github.com/hesreallyhim/awesome-claude-code)
 
 <p align="center">
@@ -141,7 +139,7 @@ macOS, Linux and WSL. For Windows and other installers, see the [official setup 
 
 ---
 
-Found something stale? [Report it with a source](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=stale-content.yml). Stuck on a lesson? Use the link at the bottom of that lesson. Claude Code is a product of Anthropic.
+Found something stale? [Report it with a source](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=stale-content.yml). Stuck on a lesson? Use the link at the bottom of that lesson. Claude Code is a product of Anthropic; this is an independent community guide, not affiliated with or endorsed by Anthropic.
 
 If the guide helped you, a star helps other learners find it.
 
