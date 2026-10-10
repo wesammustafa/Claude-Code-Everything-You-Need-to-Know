@@ -107,8 +107,9 @@ function stepCount(text, name) {
   return count;
 }
 
-// `pages` maps every listed lesson id to its page and text, for warm-ups.
-function compare(lesson, page, rawPage, rawFile, pages) {
+// `pages` maps every listed lesson id to its page and text, for warm-ups;
+// `listed` holds every listed lesson id.
+function compare(lesson, page, rawPage, rawFile, pages, listed) {
   const pageText = rawPage.replace(/\r\n?/g, '\n');
   const file = rawFile.replace(/\r\n?/g, '\n');
   const problems = [];
@@ -124,11 +125,13 @@ function compare(lesson, page, rawPage, rawFile, pages) {
   const recounted = new Set();
   let heading = '(front matter)';
   let from = null;
+  let warmup = false;
   for (const line of file.split('\n')) {
     const h = line.match(/^#{2,3} (.+)$/);
     if (h) {
       heading = h[1];
       from = null;
+      warmup = /^R\d+ \| Warm-up \|/.test(h[1]);
       const counted = h[1].match(/(Worked example|Your turn|The task) step \d+ of (\d+)/);
       if (counted && !recounted.has(counted[1]) && stepCount(pageText, counted[1]) !== Number(counted[2])) {
         recounted.add(counted[1]);
@@ -138,8 +141,9 @@ function compare(lesson, page, rawPage, rawFile, pages) {
     }
     const f = line.match(/^- from: (\S+)$/);
     if (f) {
-      from = f[1];
-      if (!pages.has(from)) say(`has a warm-up (${heading}) from ${from}, which ${LIST} doesn't list.`);
+      if (!warmup) say(`has a from line in ${heading}, which isn't a warm-up: only a warm-up quotes an earlier lesson.`);
+      else if (!listed.has(f[1])) say(`has a warm-up (${heading}) from ${f[1]}, which ${LIST} doesn't list.`);
+      else from = f[1];
       continue;
     }
     const q = line.match(/^- [a-z-]+: (.+)$/)?.[1].trim().match(/^"(.*)"$/);
@@ -173,7 +177,7 @@ export async function run(ctx) {
       problems.push(`${LIST} lists ${page}, which doesn't exist`);
       continue;
     }
-    problems.push(...compare(lesson, page, readText(ctx.root, page), await lessonFile(ctx.root, lesson), pages));
+    problems.push(...compare(lesson, page, readText(ctx.root, page), await lessonFile(ctx.root, lesson), pages, new Set(lessons.map((l) => l.lesson))));
   }
   if (problems.length) return { status: 'fail', problems };
   return { status: 'pass', summary: `${lessons.length} lesson(s) in the app match their lesson files` };
