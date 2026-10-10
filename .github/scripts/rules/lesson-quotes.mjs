@@ -25,15 +25,60 @@ const LIST = '.github/compat/learn.txt';
 const RAW = 'https://raw.githubusercontent.com/wesammustafa/claude-code-practice/main/learn/lessons';
 const flat = (text) => text.replace(/\s+/g, ' ').trim();
 
-// A front matter value as the app reads it: a trailing ` # comment` dropped,
-// then one pair of matching quotes. Undefined when the key is missing.
-function field(file, key) {
-  const fm = file.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '';
-  const raw = fm.match(new RegExp(`^${key}:(?:[ \\t]+(.*))?$`, 'm'));
-  if (!raw) return undefined;
-  const v = (raw[1] ?? '').trim();
+// The front matter as the app reads it: a copy of checks/frontmatter.mjs in
+// the template (`key: value` lines, quoted or not, a trailing ` # comment`,
+// folded and literal blocks, lists, and plain values on indented lines), so a
+// title or Stamp the app shows can't be read differently here.
+const unquote = (value) => value.replace(/^(['"])(.*)\1$/, '$2');
+
+function uncomment(value) {
+  const v = value.trim();
   const quoted = v.match(/^(['"]).*?\1/);
-  return (quoted ? quoted[0] : v.replace(/\s+#.*$/, '')).replace(/^(['"])(.*)\1$/, '$2');
+  if (quoted) return quoted[0];
+  return v.replace(/\s+#.*$/, '');
+}
+
+function scalar(value) {
+  const v = uncomment(value);
+  if (/^\[.*\]$/.test(v)) return v.slice(1, -1).split(',').map((s) => unquote(s.trim())).filter(Boolean);
+  return unquote(v);
+}
+
+function frontmatter(text) {
+  const lines = (text ?? '').replace(/^\uFEFF/, '').split(/\r?\n/);
+  if (lines[0].trim() !== '---') return {};
+  const end = lines.findIndex((line, i) => i > 0 && line.trim() === '---');
+  if (end === -1) return {};
+  const fields = {};
+  let key = null;
+  let block = null;
+  let plain = false;
+  for (const line of lines.slice(1, end)) {
+    if (/^\s*#/.test(line) || !line.trim()) {
+      if (block && !line.trim()) block.lines.push('');
+      continue;
+    }
+    const top = line.match(/^([A-Za-z_][\w-]*):(?:\s+(.*))?$/);
+    if (top) {
+      key = top[1];
+      const value = (top[2] ?? '').trim();
+      block = /^[|>][+-]?$/.test(uncomment(value)) ? { folded: uncomment(value).startsWith('>'), lines: [] } : null;
+      plain = false;
+      fields[key] = block ? '' : uncomment(value) === '' ? [] : scalar(value);
+      continue;
+    }
+    if (!key || !/^\s/.test(line)) continue;
+    if (block) {
+      block.lines.push(line.trim());
+      fields[key] = block.lines.join(block.folded ? ' ' : '\n').replace(/\s+$/, '');
+    } else if (!plain && Array.isArray(fields[key]) && /^\s*-\s+/.test(line)) {
+      fields[key].push(unquote(uncomment(line.replace(/^\s*-\s+/, ''))));
+    } else if (plain || (Array.isArray(fields[key]) && fields[key].length === 0)) {
+      fields[key] = plain ? `${fields[key]} ${uncomment(line)}` : unquote(uncomment(line));
+      plain = true;
+    }
+  }
+  return fields;
 }
 
 function listed(root) {
@@ -68,9 +113,10 @@ function compare(lesson, page, rawPage, rawFile) {
   const say = (msg) => problems.push(`${page}: the app's learn/lessons/${lesson}.md ${msg}`);
   const body = flat(pageText);
   const stamp = pageText.match(STAMP)?.[0];
-  const theirs = field(file, 'stamp');
+  const fields = frontmatter(rawFile);
+  const theirs = fields.stamp;
   if (theirs !== stamp) say(`is stamped "${theirs}", but the lesson is stamped "${stamp}". Re-verify the lesson file and copy the new Stamp.`);
-  const title = field(file, 'title');
+  const title = fields.title;
   const h1 = pageText.match(/^# (.+)$/m)?.[1]?.trim();
   if (title !== h1) say(`is titled "${title}", but the lesson's heading is "${h1}".`);
   const recounted = new Set();
