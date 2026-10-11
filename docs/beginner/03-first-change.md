@@ -51,10 +51,10 @@ The practice app checks Markdown links, but it skips any link with a title, such
 
    Claude Code collapses long command output to a short summary. Press `Ctrl+O` to expand it ([Interactive mode](https://code.claude.com/docs/en/interactive-mode#general-controls)), find the test summary near the end, and press `Esc` to go back. It should report `fail 0`.
 4. Review the diff. Type `/diff` to see the changes Claude made, beside anything else you haven't committed ([Interactive mode](https://code.claude.com/docs/en/interactive-mode#review-changes-with-%2Fdiff)). One of two views opens:
-   - A panel beside the conversation. Its list leaves test files out until you click the line that counts them, so click it. The panel can also open on its own once Claude edits files: if it's already open, read it there, because typing `/diff` closes it.
+   - A panel beside the conversation. Its list leaves test files out until you click the line that counts them, so click it. That line counts test and generated files together, for example `1 test/generated (show)`. The panel can also open on its own once Claude edits files: if it's already open, read it there, because typing `/diff` closes it.
    - A list above the prompt. Select a file with the arrow keys, press `Enter` to read its diff, and press `Esc` to go back.
 
-   Read each line, the test included. In a second terminal, `git diff` prints the uncommitted changes to files git already tracks. For a new file Claude created, run `git add -N <file>` first so it shows up ([git add](https://git-scm.com/docs/git-add#Documentation/git-add.txt--N)).
+   Read each line, the test included. In a second terminal, `git diff` prints the uncommitted changes to files git already tracks. For a new file Claude created, run `git add -N <file>` first so it shows up ([git add](https://git-scm.com/docs/git-add#Documentation/git-add.txt--N)). If the diff fills the screen and stops at a `:` prompt, git is showing it in a pager, usually `less`: press `q` to leave it ([git config](https://git-scm.com/docs/git-config#Documentation/git-config.txt-corepager), [less FAQ](https://www.greenwoodsoftware.com/less/faq.html#dashe)).
 5. Correct. Read the new test. If it covers only double-quoted titles, ask:
 
    ```text
@@ -111,6 +111,6 @@ If the commit changes no test file, or only tests, the code and its test didn't 
 
 ---
 
-<sub>Sources: [Best practices](https://code.claude.com/docs/en/best-practices) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Interactive mode](https://code.claude.com/docs/en/interactive-mode) · [Commands](https://code.claude.com/docs/en/commands) · [git add](https://git-scm.com/docs/git-add)</sub>
+<sub>Sources: [Best practices](https://code.claude.com/docs/en/best-practices) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Interactive mode](https://code.claude.com/docs/en/interactive-mode) · [Commands](https://code.claude.com/docs/en/commands) · [git add](https://git-scm.com/docs/git-add) · [git config](https://git-scm.com/docs/git-config) · [less FAQ](https://www.greenwoodsoftware.com/less/faq.html)</sub>
 
 <sub>← [Permission modes and plan mode](02-permission-modes-and-plan-mode.md) · [Beginner index](README.md) · [Keep a session on track](04-keep-a-session-on-track.md) → · Topic: [Permissions and safety](../topics/permissions-and-safety.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=b-3)</sub>
