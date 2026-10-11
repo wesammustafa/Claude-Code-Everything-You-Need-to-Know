@@ -63,15 +63,15 @@ Compact when you want to keep going on the same task; clear when you start a dif
    git status --porcelain > .practice/b-4-after-rewind.txt
    ```
 
-   This file is empty: the edit is gone.
-6. The rewind put your step 4 prompt back in the input box, so anything you type now is added to it. Press `Esc` twice quickly to clear it: after the first press, a hint at the bottom reads `Esc again to clear`. Then type `/clear`. The conversation starts over with empty context, and the old one stays available.
+   This file is empty: the edit is gone. If a diff panel is open beside the conversation, it may still show the edit: Claude Code refreshes the panel each time Claude edits a file or runs a shell command ([Interactive mode](https://code.claude.com/docs/en/interactive-mode#diff-panel)). The empty file shows what git sees.
+6. The rewind put your step 4 prompt back in the input box, so anything you type now is added to it. Press `Esc` twice quickly to clear it. Then type `/clear`. The conversation starts over with empty context, and the old one stays available.
 7. Type `/exit`, then reopen the most recent conversation in this folder ([Manage sessions](https://code.claude.com/docs/en/sessions)):
 
    ```bash
    claude --continue
    ```
 
-   If it opens the empty conversation from step 6, run `/resume` and pick the earlier one. Inside a session, `/resume` with no argument opens a picker of earlier conversations. The conversation you pick may still show the edit you rewound, because it was saved before the rewind. Your files stay as the rewind left them (`git status --porcelain` prints nothing), so don't ask Claude to make the edit again.
+   If it opens the empty conversation from step 6, run `/resume` and pick the earlier one. Inside a session, `/resume` with no argument opens a picker of earlier conversations. The conversation you pick may still show the edit you rewound, because it was saved before the rewind. Your files stay as the rewind left them (`git status --porcelain` prints nothing), so don't ask Claude to make the edit again. If Claude offers to redo the rewound edit, say no.
 
 ## Your turn
 
@@ -81,7 +81,7 @@ Repeat the example in your practice copy, or your own repository:
 2. Run `/compact` with a sentence about what to keep.
 3. Ask for a small edit to one file, ending the prompt with "Use your file editing tool, not a shell command.", and approve it if Claude asks. Save `git status --porcelain > .practice/b-4-before-rewind.txt`.
 4. Rewind that prompt with **Restore code and conversation**, and save `git status --porcelain > .practice/b-4-after-rewind.txt`.
-5. Press `Esc` twice to clear the restored prompt, then run `/clear`, then `/exit`, then `claude --continue`.
+5. Press `Esc` twice quickly to clear the restored prompt, then run `/clear`, then `/exit`, then `claude --continue`.
 
 ## Check
 

@@ -53,7 +53,7 @@ Plan mode is the habit to build first: you see the whole change as a plan before
    Keep the change to src/config.js and test/config.test.js. Don't add new files.
    ```
 
-   Claude revises the plan and shows the menu again. If you press `Enter` before typing, Claude Code shows `User rejected Claude's plan:` and the session stays in plan mode, waiting for you: type the correction at the prompt instead.
+   Send it with `Enter`, not `Shift+Tab`: on this menu, `Shift+Tab` approves the plan ([CHANGELOG](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md)). Claude revises the plan and shows the menu again. If you press `Enter` before typing, Claude Code shows `User rejected Claude's plan:` and the session stays in plan mode, waiting for you: type the correction at the prompt instead.
 6. When the revised plan looks right, leave it on screen and open another terminal in the same folder. Save what git sees, and the files the plan says it will change, one path per line, written the way `git status` shows them (relative to the repository root, with forward slashes):
 
    ```bash
@@ -107,6 +107,6 @@ If `.practice/b-2-before.txt` lists files, either the tree wasn't clean when You
 
 ---
 
-<sub>Sources: [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Interactive mode](https://code.claude.com/docs/en/interactive-mode) · [Commands](https://code.claude.com/docs/en/commands) · [Tools reference](https://code.claude.com/docs/en/tools-reference) · [Configure permissions](https://code.claude.com/docs/en/permissions)</sub>
+<sub>Sources: [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Interactive mode](https://code.claude.com/docs/en/interactive-mode) · [Commands](https://code.claude.com/docs/en/commands) · [Tools reference](https://code.claude.com/docs/en/tools-reference) · [Configure permissions](https://code.claude.com/docs/en/permissions) · [Claude Code CHANGELOG](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md)</sub>
 
 <sub>← [Install, sign in and look around](01-install-and-look-around.md) · [Beginner index](README.md) · [Your first change, from request to commit](03-first-change.md) → · Topic: [Permissions and safety](../topics/permissions-and-safety.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=b-2)</sub>

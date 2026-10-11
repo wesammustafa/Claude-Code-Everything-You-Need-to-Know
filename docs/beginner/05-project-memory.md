@@ -33,7 +33,7 @@ A session reads CLAUDE.md when it starts, so after you change the file, start a 
    Claude reads the code and writes a `CLAUDE.md` with the commands and conventions it found. Approve the file if it asks. In a second terminal, read it with `cat CLAUDE.md`.
 2. Open `CLAUDE.md` in your editor, or type `/memory` and choose **Project instructions**, the `./CLAUDE.md` in this folder. Don't pick the user file in `~/.claude/`: it applies to all your projects ([View and edit with `/memory`](https://code.claude.com/docs/en/memory#view-and-edit-with-%2Fmemory)). A terminal editor such as Vim takes over the terminal until you save and quit.
 
-   In the practice copy, `/init` may also describe the course's own files: `checks/`, `capstone/` and `.github/`. Delete what it says about them and about `npm run check`, including any rule that says to keep your work off `main`: that rule is for the template repository, not your copy. Keep the other commands, including `npm test`, which the [capstone](capstone.md) checks for.
+   In the practice copy, `/init` may also describe the course's own files: `checks/`, `learn/`, `capstone/` and `.github/`. Delete what it says about them and about `npm run check`, `npm run learn` and `npm run test:checks`, including any rule that says to keep your work off `main`: that rule is for the template repository, not your copy. Keep the other commands, including `npm test`, which the [capstone](capstone.md) checks for.
 
    Then add a rule that shows up in files, so you can see whether a session follows it. Put it under a `## Conventions` heading, and add that heading at the end of the file if `/init` didn't write one:
 
@@ -62,7 +62,7 @@ A session reads CLAUDE.md when it starts, so after you change the file, start a 
    Add src/stats.js with a function countLinks(markdown) that returns how many links findLinks finds. Add a test in test/stats.test.js, run the tests and commit.
    ```
 
-   Approve any permission prompts Claude shows.
+   Approve any permission prompts Claude shows. In auto mode you may see none: auto mode lets Claude work without routine permission prompts ([Choose a permission mode](https://code.claude.com/docs/en/permission-modes#eliminate-prompts-with-auto-mode)).
 6. In the second terminal, look at the first line of the new file, save the commit for the check, and confirm nothing is left over:
 
    ```bash
@@ -117,6 +117,6 @@ If CLAUDE.md isn't committed, run `git add CLAUDE.md` and commit it. If a new fi
 
 ---
 
-<sub>Sources: [How Claude remembers your project](https://code.claude.com/docs/en/memory) · [Commands](https://code.claude.com/docs/en/commands) · [Best practices](https://code.claude.com/docs/en/best-practices) · [Automate actions with hooks](https://code.claude.com/docs/en/hooks-guide)</sub>
+<sub>Sources: [How Claude remembers your project](https://code.claude.com/docs/en/memory) · [Commands](https://code.claude.com/docs/en/commands) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Best practices](https://code.claude.com/docs/en/best-practices) · [Automate actions with hooks](https://code.claude.com/docs/en/hooks-guide)</sub>
 
 <sub>← [Keep a session on track](04-keep-a-session-on-track.md) · [Beginner index](README.md) · [Beginner capstone](capstone.md) → · Topic: [Memory and context](../topics/memory-and-context.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=b-5)</sub>
