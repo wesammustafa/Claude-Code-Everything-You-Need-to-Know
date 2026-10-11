@@ -2,3 +2,8 @@
 # line: the lesson id, then the page. The lesson file is learn/lessons/<id>.md
 # in the template. The lesson-quotes rule compares the two.
 b-1 docs/beginner/01-install-and-look-around.md
+b-2 docs/beginner/02-permission-modes-and-plan-mode.md
+b-3 docs/beginner/03-first-change.md
+b-4 docs/beginner/04-keep-a-session-on-track.md
+b-5 docs/beginner/05-project-memory.md
+b-capstone docs/beginner/capstone.md
