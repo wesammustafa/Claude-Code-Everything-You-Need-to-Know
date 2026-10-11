@@ -2,7 +2,7 @@
 
 **Learn Claude Code in three levels, from your first session to unattended multi-agent runs.**
 
-You learn by doing: every core lesson and capstone ends with a check you run in your own practice copy, and the whole Beginner level runs step by step in a terminal app beside Claude Code.\
+You learn by doing: every core lesson and capstone ends with a check you run in your own practice copy, and every Beginner lesson and the capstone run step by step in a terminal app beside Claude Code.\
 **[Try it now](#try-it-now)** · [Pick your level](#pick-your-level) · [Every page](#everything-in-the-guide)
 
 [![Verified against Claude Code v2.1.285 (stable)](https://img.shields.io/badge/verified-v2.1.285_stable-2e6e57)](CHANGELOG.md#v202610---2026-10-05) [![Edition release date](https://img.shields.io/github/release-date/wesammustafa/Claude-Code-Everything-You-Need-to-Know?label=edition&color=2e6e57)](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/releases/latest) [![License: MIT](https://img.shields.io/badge/license-MIT-5b6470)](LICENSE) [![Mentioned in Awesome Claude Code](https://awesome.re/mentioned-badge.svg)](https://github.com/hesreallyhim/awesome-claude-code)
@@ -28,7 +28,7 @@ You need a paid Claude plan (Pro, Max, Team or Enterprise), a Claude Console acc
 
 3. Open a second terminal in the same folder. The app tells you what to type there, starting with installing Claude Code, and checks your work as you go.
 
-The app teaches the Beginner level, lesson by lesson. It has no AI in it and changes none of your work.
+The app teaches every Beginner lesson and the capstone. It has no AI in it and changes none of your work.
 
 For Intermediate and Advanced, or if you prefer to read, every lesson works from its page alone. Each core lesson ends with a check you run from your practice copy, for example `npm run check -- b-1`: each item prints `PASS` or `FAIL`, with a hint for what to fix.
 
@@ -122,7 +122,7 @@ If the guide helped you, a star helps other learners find it.
 
 The previous edition's README sections moved:
 
-- **What Claude Code is, setup, install, sign-in and your first prompt:** moved to [Install, sign in and look around](docs/beginner/01-install-and-look-around.md).
+- **SDLC, what LLMs and Claude Code are, setup, install, sign-in and your first prompt:** moved to [Install, sign in and look around](docs/beginner/01-install-and-look-around.md).
 - **Prompt engineering, explore-plan-code-commit and test-driven work:** moved to [Your first change, from request to commit](docs/beginner/03-first-change.md).
 - **Generating a CLAUDE.md:** moved to [Project memory with CLAUDE.md](docs/beginner/05-project-memory.md).
 - **Visual iteration with screenshots:** moved to [Give Claude a screenshot](docs/beginner/electives/screenshots-and-images.md).
