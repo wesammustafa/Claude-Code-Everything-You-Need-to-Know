@@ -16,7 +16,7 @@ New to the terminal? The official [Terminal guide for new users](https://code.cl
 
 Before lesson 1, make your own copy of the [practice template](https://github.com/wesammustafa/claude-code-practice): select **Use this template**, then **Create a new repository**, and clone your copy. Every Beginner exercise and the capstone run there.
 
-To go step by step, run `npm run learn` in your copy and use Claude Code in a second terminal beside it. The app takes you through every lesson and the capstone of this level, one step at a time, and checks your work as you go. Each page below teaches the same lesson on its own.
+To go step by step, run `npm run learn` in your copy and use Claude Code in a second terminal beside it. The app takes you through every core lesson and the capstone, one step at a time, and checks your work as you go. Each page below teaches the same lesson on its own.
 
 Each core lesson and the capstone end with a check you run in your copy as `npm run check -- <id>`, where the id is `b-1` to `b-5` for the lessons and `b-capstone` for the capstone. The Electives end with a checklist you confirm yourself. The checks need Node.js LTS, which a Codespace on your copy has preinstalled. To practice in one of your own repositories instead, keep the template copy as well: the checks run from it with `--dir`.
 
