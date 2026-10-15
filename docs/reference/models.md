@@ -34,7 +34,7 @@ Effort controls how much the model reasons on each step. Lower effort answers so
 | Level | Fits |
 |---|---|
 | `low` | Quick exchanges where you review each result: a first sketch, a rename |
-| `medium` | Day-to-day work with a clear scope, such as a new feature, on the models where it is the default; elsewhere, a cheaper level that gives up some capability |
+| `medium` | Day-to-day work with a clear scope, such as a new feature, on Opus 5.5 and Sonnet 5.5; on models with a higher default, a cheaper level that gives up some capability |
 | `high` | Work where edge cases are likely, such as fixing a bug in existing code |
 | `xhigh` | Deeper reasoning at a higher token spend |
 | `max` | Hard problems Claude works through without you; test it before relying on it, since it can overthink |

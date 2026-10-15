@@ -114,7 +114,7 @@ You are done when all of these are true:
 
 Run `npm run check -- i-1 --dir <your repo>` from your practice copy, or `npm run check -- i-1` in the copy itself.
 
-If the skill isn't committed, run `git check-ignore -v .claude/skills/tdd/SKILL.md`: an ignore rule that matches `.claude`, in a `.gitignore`, `.git/info/exclude` or your global excludes file, hides the folder from `git add`, so add the file with `git add -f`. If the second item fails, rewrite the description as what the skill does followed by "Use when" and the requests it fits, because Claude reads only the description when it decides whether to load a skill. If the commit item fails, run `/tdd` again on a new small feature and let it commit the test with the code.
+If the skill isn't committed, run `git check-ignore -v .claude/skills/tdd/SKILL.md`: an ignore rule that matches `.claude`, in a `.gitignore`, `.git/info/exclude` or your global excludes file, hides the folder from `git add`, so add the file with `git add -f`. If the second item fails, rewrite the description as what the skill does followed by "Use when" and the requests it fits, because Claude decides whether to load a skill from its description, plus any `when_to_use` text, in the skill listing, not from the skill body. If the commit item fails, run `/tdd` again on a new small feature and let it commit the test with the code.
 
 ## Watch out
 
