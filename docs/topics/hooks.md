@@ -1,6 +1,6 @@
 # Hooks
 
-<sub>Topic · Verified against Claude Code v2.1.285 (stable) on 2026-10-05</sub>
+<sub>Topic · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
 
 Commands that run at fixed points in a session, so a rule holds without relying on Claude to remember it.
 

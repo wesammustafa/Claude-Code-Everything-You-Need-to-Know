@@ -1,6 +1,6 @@
 # Beyond this guide
 
-<sub>**Advanced** · Verified against Claude Code v2.1.285 (stable) on 2026-10-09</sub>
+<sub>**Advanced** · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
 
 Where to go once you finish Advanced. The guide teaches one developer's use of Claude Code, alone or with a team. Building your own agents and MCP servers, running Claude Code for a whole organization, and getting a team to adopt it are separate jobs with their own official docs, so this page links them and doesn't teach them.
 

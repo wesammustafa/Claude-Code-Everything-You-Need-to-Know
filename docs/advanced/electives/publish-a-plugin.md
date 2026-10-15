@@ -1,6 +1,6 @@
 # Testing and publishing a plugin
 
-<sub>**Advanced** · Elective · about 20 minutes, plus run time · Needs: [Share your setup with a team](../06-share-your-setup.md) · Verified against Claude Code v2.1.285 (stable) on 2026-10-09</sub>
+<sub>**Advanced** · Elective · about 20 minutes, plus run time · Needs: [Share your setup with a team](../06-share-your-setup.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
 
 ## Goal
 

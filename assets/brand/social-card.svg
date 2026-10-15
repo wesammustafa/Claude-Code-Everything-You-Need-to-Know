@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640" role="img" aria-label="Claude Code: Everything You Need to Know. Learn it in three levels: Beginner, Intermediate, Advanced. Independent community guide, not affiliated with Anthropic. Beside the title, the Claude mascot jumps with its arms up.">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640" role="img" aria-label="Claude Code: Everything You Need to Know. Learn it in three levels, with cited facts and checked exercises: Beginner, Intermediate, Advanced. Independent community guide, not affiliated with Anthropic. Beside the title, the Claude mascot jumps with its arms up.">
   <!-- Source for social-card.png. Faces: Zilla Slab and Atkinson Hyperlegible Next (SIL OFL 1.1). The mascot is drawn from claude-jumping.svg, Copyright (c) 2025-2026 Shayan Rais, used under the MIT License (full text in that file). -->
   <rect width="1280" height="640" fill="#1d2b36"/>
   <g transform="translate(60 185) scale(2.8)">
@@ -19,7 +19,8 @@
   <text x="380" y="210" fill="#ffffff" font-family="Zilla Slab, Rockwell, Georgia, serif" font-weight="700" font-size="74">Claude Code:</text>
   <text x="380" y="292" fill="#ffffff" font-family="Zilla Slab, Rockwell, Georgia, serif" font-weight="700" font-size="74">Everything You Need</text>
   <text x="380" y="374" fill="#ffffff" font-family="Zilla Slab, Rockwell, Georgia, serif" font-weight="700" font-size="74">to Know</text>
-  <text x="382" y="452" fill="#d5dde2" font-family="Atkinson Hyperlegible Next, Segoe UI, sans-serif" font-size="36">Learn it in three levels.</text>
+  <text x="382" y="440" fill="#d5dde2" font-family="Atkinson Hyperlegible Next, Segoe UI, sans-serif" font-size="36">Learn it in three levels, with cited facts</text>
+  <text x="382" y="486" fill="#d5dde2" font-family="Atkinson Hyperlegible Next, Segoe UI, sans-serif" font-size="36">and checked exercises.</text>
   <text x="382" y="560" fill="#f2c230" font-family="Atkinson Hyperlegible Next, Segoe UI, sans-serif" font-weight="700" font-size="28">Beginner   /   Intermediate   /   Advanced</text>
   <text x="1220" y="610" text-anchor="end" fill="#8b9aa5" font-family="Atkinson Hyperlegible Next, Segoe UI, sans-serif" font-size="20">Independent community guide. Not affiliated with Anthropic.</text>
 </svg>

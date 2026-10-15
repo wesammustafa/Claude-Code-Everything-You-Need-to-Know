@@ -1,6 +1,6 @@
 # Permissions and safety
 
-<sub>Topic · Verified against Claude Code v2.1.285 (stable) on 2026-10-05</sub>
+<sub>Topic · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
 
 What Claude Code may do without asking, and how to keep it away from what it shouldn't touch.
 

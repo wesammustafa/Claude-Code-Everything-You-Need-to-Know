@@ -1,6 +1,6 @@
 # `/goal`, `/loop` and routines
 
-<sub>**Advanced** · Elective · about 20 minutes, plus run time · Needs: [Put bounds on autonomous runs](../07-bounded-runs.md) · Verified against Claude Code v2.1.285 (stable) on 2026-10-09</sub>
+<sub>**Advanced** · Elective · about 20 minutes, plus run time · Needs: [Put bounds on autonomous runs](../07-bounded-runs.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
 
 > [!NOTE]
 > "Routines are in research preview. Behavior, limits, and the API surface may change." ([Automate work with routines](https://code.claude.com/docs/en/routines))

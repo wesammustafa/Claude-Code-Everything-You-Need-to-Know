@@ -1,6 +1,6 @@
 # Intermediate capstone: get a repository ready for a new teammate
 
-<sub>**Intermediate** · Capstone · 30 to 60 minutes · Needs: the eight [Intermediate lessons](README.md), or their skills · Verified against Claude Code v2.1.285 (stable) on 2026-10-06</sub>
+<sub>**Intermediate** · Capstone · 30 to 60 minutes · Needs: the eight [Intermediate lessons](README.md), or their skills · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
 
 This task puts the whole Intermediate level together. It has no worked example: the brief says what the team needs, and you choose how to build it. The [Intermediate Exit](README.md#by-the-end-of-this-level-you-can) is the list of what you can do by the end of this level. The check reads what you commit, and you tick the rest of the Exit yourself under [What the check can't see](#what-the-check-cant-see).
 

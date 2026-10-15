@@ -1,6 +1,6 @@
 # Agent view
 
-<sub>**Advanced** · Elective · about 20 minutes, plus run time · Needs: [Parallel sessions with worktrees](../01-parallel-sessions.md) · Verified against Claude Code v2.1.285 (stable) on 2026-10-09</sub>
+<sub>**Advanced** · Elective · about 20 minutes, plus run time · Needs: [Parallel sessions with worktrees](../01-parallel-sessions.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
 
 > [!NOTE]
 > "Agent view is in research preview. The interface and keyboard shortcuts may change as the feature evolves." ([Manage multiple agents with agent view](https://code.claude.com/docs/en/agent-view))

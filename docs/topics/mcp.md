@@ -1,6 +1,6 @@
 # MCP
 
-<sub>Topic · Verified against Claude Code v2.1.285 (stable) on 2026-10-05</sub>
+<sub>Topic · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
 
 Connecting Claude Code to outside tools and data with the Model Context Protocol.
 

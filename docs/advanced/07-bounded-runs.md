@@ -1,6 +1,6 @@
 # Put bounds on autonomous runs
 
-<sub>**Advanced** · Lesson 7 of 7 · about 20 minutes, plus run time · Needs: [Script Claude Code with `claude -p`](04-headless.md), [Share your setup with a team](06-share-your-setup.md) · Verified against Claude Code v2.1.285 (stable) on 2026-10-09</sub>
+<sub>**Advanced** · Lesson 7 of 7 · about 20 minutes, plus run time · Needs: [Script Claude Code with `claude -p`](04-headless.md), [Share your setup with a team](06-share-your-setup.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
 
 ## Goal
 
