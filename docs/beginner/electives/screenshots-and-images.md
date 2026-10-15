@@ -32,7 +32,7 @@ Some things are faster to show than to describe: an error on screen, a layout, a
 
    It prints the broken link in `guide.md`, then `1 broken link(s)`.
 2. Take a screenshot of that output and copy it to the clipboard. On a Mac, press `Ctrl` as well as the usual keys, such as `Ctrl+Shift+Cmd+4`: without it, macOS saves the screenshot as a file, on your desktop by default ([Take a screenshot on Mac](https://support.apple.com/en-us/102646)).
-3. Start `claude` and paste the image. An `[Image #1]` chip appears in the prompt box ([Interactive mode](https://code.claude.com/docs/en/interactive-mode#general-controls)). If no chip appears, no image was added: drag the screenshot file into the Claude Code window, or give its path as in Your turn. Then ask:
+3. Start `claude` and paste the image. An `[Image #1]` chip appears in the prompt box ([Interactive mode](https://code.claude.com/docs/en/interactive-mode#general-controls)). If no chip appears, drag the screenshot file into the Claude Code window instead, or give its path as in Your turn. Then ask:
 
    ```text
    This is the link checker's output. Change the last line so it also says how many Markdown files were checked, like "1 broken link(s) in 2 files".
