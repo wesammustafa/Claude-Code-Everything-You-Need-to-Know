@@ -3,8 +3,10 @@
 //           /stale-docs-audit with args { "dryRun": true }   (lists the pages and stops)
 //
 // Shape: one agent lists the pages, one reader agent per page extracts the
-// claims that can go stale, then independent verifiers check each claim
-// against its authoritative source and sort it as stale, unverifiable or ok.
+// claims that can go stale, then independent verifiers check those claims, a
+// batch at a time, against their authoritative sources and sort each as stale,
+// unverifiable or ok. Batching keeps a full run far below the runtime's cap on
+// agents per workflow.
 // An unverifiable claim is a defect too: cite it or cut it. The result is the
 // body of one tracking issue for the maintainer; nothing edits a page.
 
@@ -47,8 +49,9 @@ const CLAIMS_SCHEMA = {
 
 const VERDICT_SCHEMA = {
   type: 'object',
-  required: ['verdict', 'reason'],
+  required: ['index', 'verdict', 'reason'],
   properties: {
+    index: { type: 'integer', description: 'The number the claim has in the list you were given' },
     verdict: {
       type: 'string',
       enum: ['stale', 'unverifiable', 'ok'],
@@ -59,6 +62,16 @@ const VERDICT_SCHEMA = {
     correction: { type: 'string', description: 'Suggested replacement text, for a stale claim' },
   },
 }
+
+const BATCH_SCHEMA = {
+  type: 'object',
+  required: ['verdicts'],
+  properties: { verdicts: { type: 'array', items: VERDICT_SCHEMA } },
+}
+
+const BATCH_SIZE = 10
+const batches = items =>
+  Array.from({ length: Math.ceil(items.length / BATCH_SIZE) }, (_, i) => items.slice(i * BATCH_SIZE, (i + 1) * BATCH_SIZE))
 
 phase('Discover')
 let pages = options.targets
@@ -106,26 +119,40 @@ const results = await pipeline(
     { label: file, phase: 'Scan', schema: CLAIMS_SCHEMA },
   ),
 
-  // Stage 2: verify each claim from this page as soon as the page is scanned.
-  // No barrier: page B is still scanning while page A's claims are being checked.
-  (scan, file) => parallel(
-    (scan?.claims ?? []).map(c => () =>
-      agent(
-        `Check this claim from ${file}:\n\n"${c.claim}"\n\n` +
-        `Use the authoritative source for its domain: code.claude.com/docs for Claude Code behavior; ` +
-        `the anthropics/claude-code CHANGELOG and the npm dist-tags of @anthropic-ai/claude-code for ` +
-        `versions; platform.claude.com/docs for models; claude.com/pricing and support.claude.com plan ` +
-        `articles for plans; modelcontextprotocol.io for MCP; docs.github.com for GitHub; a tool's own ` +
-        `docs for that tool. Answer stale only if the source shows the claim is wrong today, and ok ` +
-        `only if the source confirms it. Otherwise answer unverifiable and say what you checked: the ` +
-        `guide cites or cuts claims nobody can verify.`,
-        { label: `${file}:${c.line}`, phase: 'Verify', schema: VERDICT_SCHEMA },
-      ).then(v => ({ file, line: c.line, claim: c.claim, ...v })),
-    ),
-  ),
+  // Stage 2: verify this page's claims as soon as the page is scanned, one
+  // verifier per batch. No barrier: page B is still scanning while page A's
+  // claims are being checked.
+  (scan, file) => {
+    if (!scan) throw new Error(`scan of ${file} returned nothing`) // drops the page to null: reported below
+    return parallel(
+      batches(scan.claims).map((batch, b) => () =>
+        agent(
+          `Check each of these claims from ${file}:\n\n` +
+          batch.map((c, i) => `${i + 1}. (line ${c.line}) "${c.claim}"`).join('\n') + '\n\n' +
+          `Use the authoritative source for its domain: code.claude.com/docs for Claude Code behavior; ` +
+          `the anthropics/claude-code CHANGELOG and the npm dist-tags of @anthropic-ai/claude-code for ` +
+          `versions; platform.claude.com/docs for models; claude.com/pricing and support.claude.com plan ` +
+          `articles for plans; modelcontextprotocol.io for MCP; docs.github.com for GitHub; a tool's own ` +
+          `docs for that tool. Answer stale only if the source shows the claim is wrong today, and ok ` +
+          `only if the source confirms it. Otherwise answer unverifiable and say what you checked: the ` +
+          `guide cites or cuts claims nobody can verify. Return one verdict per claim, with its number.`,
+          { label: `${file} #${b + 1}`, phase: 'Verify', schema: BATCH_SCHEMA },
+        ).then(r => batch.map((c, i) => {
+          const v = r?.verdicts?.find(x => x.index === i + 1)
+          return v ? { file, line: c.line, claim: c.claim, ...v } : { file, line: c.line, claim: c.claim, verdict: 'unchecked' }
+        })),
+      ),
+    ).then(r => r.flat())
+  },
 )
 
-const checked = results.flat().filter(Boolean)
+const all = results.flat().filter(Boolean)
+const unchecked = all.filter(r => r.verdict === 'unchecked')
+const checked = all.filter(r => r.verdict !== 'unchecked')
+const failedPages = pages.filter((_, i) => results[i] === null)
+if (unchecked.length || failedPages.length) {
+  log(`Not checked: ${unchecked.length} claim(s) whose verifier returned no verdict, and ${failedPages.length} page(s) whose scan failed.`)
+}
 const byPlace = (a, b) => a.file.localeCompare(b.file) || a.line - b.line
 const sorted = verdict => checked.filter(r => r.verdict === verdict).sort(byPlace)
 const stale = sorted('stale')
@@ -141,6 +168,10 @@ const issueBody = [
   `Audited ${pages.length} page(s) and ${checked.length} claim(s): ${stale.length} stale, ${unverifiable.length} unverifiable, ${ok.length} ok.`,
   '',
   bucket('Stale', stale, r => `- ${where(r)}: "${r.claim}". ${r.reason}${r.source ? ` Source: ${r.source}` : ''}${r.correction ? ` Suggested: ${r.correction}` : ''}`),
+  ...(unchecked.length || failedPages.length ? [bucket('Not checked (rerun these)', [
+    ...failedPages.map(p => ({ page: p })),
+    ...unchecked.sort(byPlace),
+  ], r => r.page ? `- \`${r.page}\`: the scan failed` : `- ${where(r)}: "${r.claim}"`)] : []),
   bucket('Unverifiable', unverifiable, r => `- ${where(r)}: "${r.claim}". ${r.reason}${r.source ? ` Checked: ${r.source}` : ''}`),
   '### Ok',
   '',
@@ -150,6 +181,6 @@ const issueBody = [
 return {
   pagesAudited: pages.length,
   claimsChecked: checked.length,
-  counts: { stale: stale.length, unverifiable: unverifiable.length, ok: ok.length },
+  counts: { stale: stale.length, unverifiable: unverifiable.length, ok: ok.length, unchecked: unchecked.length, failedPages: failedPages.length },
   issueBody,
 }
