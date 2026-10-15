@@ -1,12 +1,17 @@
 // Run with: /stale-docs-audit            (audits README.md, docs/ and the example READMEs)
 //           /stale-docs-audit on README.md docs/skills.md
+//           /stale-docs-audit with args { "since": "<commit>" }   (only the pages changed since that commit)
 //           /stale-docs-audit with args { "dryRun": true }   (lists the pages and stops)
+//           /stale-docs-audit with args { "model": "opus" }  (scan and verify on another model; default sonnet)
 //
 // Shape: one agent lists the pages, one reader agent per page extracts the
 // claims that can go stale, then independent verifiers check those claims, a
 // batch at a time, against their authoritative sources and sort each as stale,
 // unverifiable or ok. Batching keeps a full run far below the runtime's cap on
 // agents per workflow.
+// The scan and verify agents run on Sonnet by default to spend less of the
+// maintainer's plan; the issue names the commit audited, so the next run can
+// pass it as `since` and check only what changed.
 // An unverifiable claim is a defect too: cite it or cut it. The result is the
 // body of one tracking issue for the maintainer; nothing edits a page.
 
@@ -15,18 +20,29 @@ export const meta = {
   description: "Sort the volatile claims in this repo's docs as stale, unverifiable or ok against official sources, and draft one tracking issue",
   phases: [
     { title: 'Discover', detail: 'list README.md, every docs page and every example README' },
-    { title: 'Scan', detail: 'one agent per page extracts volatile claims' },
-    { title: 'Verify', detail: 'independent verifiers sort each claim' },
+    { title: 'Scan', detail: 'one agent per page extracts volatile claims', model: 'sonnet' },
+    { title: 'Verify', detail: 'independent verifiers sort each claim, a batch at a time', model: 'sonnet' },
   ],
 }
 
-const LIST_PAGES = "git ls-files -- README.md ':(glob)docs/**/*.md' ':(glob)examples/**/README.md'"
 const options = Array.isArray(args) ? { targets: args } : (args ?? {})
+const MODEL = options.model ?? 'sonnet'
+const PAGE_PATHS = "-- README.md ':(glob)docs/**/*.md' ':(glob)examples/**/README.md'"
+// `since` goes into a shell command, so it must look like a commit, tag or branch name (`HEAD~3` too).
+if (options.since && !/^[A-Za-z0-9][A-Za-z0-9._\/~^-]*$/.test(options.since)) {
+  throw new Error(`since must be a commit, tag or branch name, not: ${options.since}`)
+}
+const LIST_PAGES = options.since
+  ? `git diff --name-only --diff-filter=d ${options.since} HEAD ${PAGE_PATHS}`
+  : `git ls-files ${PAGE_PATHS}`
 
 const PAGES_SCHEMA = {
   type: 'object',
-  required: ['paths'],
-  properties: { paths: { type: 'array', items: { type: 'string' } } },
+  required: ['paths', 'head'],
+  properties: {
+    paths: { type: 'array', items: { type: 'string' } },
+    head: { type: 'string', description: 'The full commit hash `git rev-parse HEAD` prints' },
+  },
 }
 
 const CLAIMS_SCHEMA = {
@@ -75,14 +91,26 @@ const batches = items =>
 
 phase('Discover')
 let pages = options.targets
+let head = null
 if (!pages?.length) {
   const listed = await agent(
-    `In this repository, run exactly this command and return every path it prints, unchanged:\n\n${LIST_PAGES}`,
-    { label: 'list pages', phase: 'Discover', schema: PAGES_SCHEMA },
+    `In this repository, run exactly this command and return every path it prints, unchanged:\n\n${LIST_PAGES}\n\n` +
+    `Then run \`git rev-parse HEAD\` and return the hash it prints as head.`,
+    { label: 'list pages', phase: 'Discover', schema: PAGES_SCHEMA, model: 'sonnet', effort: 'low' },
   )
-  pages = listed?.paths ?? []
+  if (!listed) throw new Error('listing the pages failed')
+  pages = listed.paths
+  head = listed.head
 }
-log(`Auditing ${pages.length} page(s).`)
+log(`Auditing ${pages.length} page(s)${options.since ? ` changed since ${options.since}` : ''} on ${MODEL}.`)
+const nextRun = head
+  ? `Audited at commit \`${head}\`. Next time, to check only the pages changed since then: \`/stale-docs-audit with args { "since": "${head}" }\`.` +
+    (options.since ? ` Pages unchanged since \`${options.since}\` were not re-checked, though their sources can still change: run a full audit now and then.` : '')
+  : ''
+
+if (!pages.length && options.since) {
+  return { pagesAudited: 0, issueBody: null, message: `No page changed since ${options.since}: nothing to audit, so file no issue.` }
+}
 
 const bucket = (title, items, line) =>
   `### ${title}\n\n${items.length ? items.map(line).join('\n') : 'None.'}\n`
@@ -116,7 +144,7 @@ const results = await pipeline(
     `field; a stability label; any count or statistic; or a third-party status fact (owner, ` +
     `license, archived). Skip mental models, analogies and advice. Quote each claim verbatim and ` +
     `give its 1-indexed line number.`,
-    { label: file, phase: 'Scan', schema: CLAIMS_SCHEMA },
+    { label: file, phase: 'Scan', schema: CLAIMS_SCHEMA, model: MODEL },
   ),
 
   // Stage 2: verify this page's claims as soon as the page is scanned, one
@@ -137,7 +165,7 @@ const results = await pipeline(
           `docs for that tool. Answer stale only if the source shows the claim is wrong today, and ok ` +
           `only if the source confirms it. Otherwise answer unverifiable and say what you checked: the ` +
           `guide cites or cuts claims nobody can verify. Return one verdict per claim, with its number.`,
-          { label: `${file} #${b + 1}`, phase: 'Verify', schema: BATCH_SCHEMA },
+          { label: `${file} #${b + 1}`, phase: 'Verify', schema: BATCH_SCHEMA, model: MODEL },
         ).then(r => batch.map((c, i) => {
           const v = r?.verdicts?.find(x => x.index === i + 1)
           return v ? { file, line: c.line, claim: c.claim, ...v } : { file, line: c.line, claim: c.claim, verdict: 'unchecked' }
@@ -173,8 +201,9 @@ const unverifiableLine = r => `- ${where(r)}: "${r.claim}"${r.source ? ` Checked
 const draftBody = (shown, compact) => [
   '## Stale-docs audit',
   '',
-  `Audited ${pages.length} page(s) and ${checked.length} claim(s): ${stale.length} stale, ${unverifiable.length} unverifiable, ${ok.length} ok.`,
+  `Audited ${pages.length} page(s)${options.since ? ` changed since \`${options.since}\`` : ''} and ${checked.length} claim(s): ${stale.length} stale, ${unverifiable.length} unverifiable, ${ok.length} ok.`,
   '',
+  ...(nextRun ? [nextRun, ''] : []),
   bucket('Stale', stale, r => compact
     ? `- ${where(r)}: "${r.claim}"`
     : `- ${where(r)}: "${r.claim}". ${r.reason}${r.source ? ` Source: ${r.source}` : ''}${r.correction ? ` Suggested: ${r.correction}` : ''}`),
