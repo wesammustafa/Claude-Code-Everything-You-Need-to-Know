@@ -161,8 +161,14 @@ const ok = sorted('ok')
 
 log(`${checked.length} claim(s) checked: ${stale.length} stale, ${unverifiable.length} unverifiable, ${ok.length} ok.`)
 
+// GitHub refuses an issue body over 65,536 characters, and a full run's reasons
+// run to several times that. The body keeps every stale claim in full, lists the
+// unverifiable ones without their reasons and counts the ok ones; `details` in the
+// result keeps every stale, unverifiable and unchecked verdict with its reason.
+const BODY_LIMIT = 65536
 const where = r => `\`${r.file}:${r.line}\``
-const issueBody = [
+const unverifiableLine = r => `- ${where(r)}: "${r.claim}"${r.source ? ` Checked: ${r.source}` : ''}`
+const draftBody = shown => [
   '## Stale-docs audit',
   '',
   `Audited ${pages.length} page(s) and ${checked.length} claim(s): ${stale.length} stale, ${unverifiable.length} unverifiable, ${ok.length} ok.`,
@@ -172,15 +178,25 @@ const issueBody = [
     ...failedPages.map(p => ({ page: p })),
     ...unchecked.sort(byPlace),
   ], r => r.page ? `- \`${r.page}\`: the scan failed` : `- ${where(r)}: "${r.claim}"`)] : []),
-  bucket('Unverifiable', unverifiable, r => `- ${where(r)}: "${r.claim}". ${r.reason}${r.source ? ` Checked: ${r.source}` : ''}`),
+  bucket('Unverifiable', shown, unverifiableLine) +
+    (shown.length < unverifiable.length ? `\n${unverifiable.length - shown.length} more in the run's \`details\`.\n` : ''),
   '### Ok',
   '',
-  ok.length ? `<details><summary>${ok.length} claim(s) confirmed</summary>\n\n${ok.map(r => `- ${where(r)}: ${r.source ?? ''}`).join('\n')}\n\n</details>\n` : 'None.\n',
+  `${ok.length} claim(s) confirmed against their sources.`,
+  '',
 ].join('\n')
+let shown = unverifiable
+let issueBody = draftBody(shown)
+while (issueBody.length > BODY_LIMIT && shown.length) {
+  shown = shown.slice(0, Math.floor(shown.length * 0.9))
+  issueBody = draftBody(shown)
+}
+if (shown.length < unverifiable.length) log(`The issue body lists ${shown.length} of ${unverifiable.length} unverifiable claim(s) to stay under GitHub's limit.`)
 
 return {
   pagesAudited: pages.length,
   claimsChecked: checked.length,
   counts: { stale: stale.length, unverifiable: unverifiable.length, ok: ok.length, unchecked: unchecked.length, failedPages: failedPages.length },
   issueBody,
+  details: { stale, unverifiable, unchecked },
 }
