@@ -124,8 +124,9 @@ const results = await pipeline(
   // claims are being checked.
   (scan, file) => {
     if (!scan) throw new Error(`scan of ${file} returned nothing`) // drops the page to null: reported below
+    const pageBatches = batches(scan.claims)
     return parallel(
-      batches(scan.claims).map((batch, b) => () =>
+      pageBatches.map((batch, b) => () =>
         agent(
           `Check each of these claims from ${file}:\n\n` +
           batch.map((c, i) => `${i + 1}. (line ${c.line}) "${c.claim}"`).join('\n') + '\n\n' +
@@ -142,7 +143,8 @@ const results = await pipeline(
           return v ? { file, line: c.line, claim: c.claim, ...v } : { file, line: c.line, claim: c.claim, verdict: 'unchecked' }
         })),
       ),
-    ).then(r => r.flat())
+    // A batch whose thunk threw comes back null: count its claims as unchecked, never drop them.
+    ).then(r => r.flatMap((verdicts, b) => verdicts ?? pageBatches[b].map(c => ({ file, line: c.line, claim: c.claim, verdict: 'unchecked' }))))
   },
 )
 
@@ -168,16 +170,18 @@ log(`${checked.length} claim(s) checked: ${stale.length} stale, ${unverifiable.l
 const BODY_LIMIT = 65536
 const where = r => `\`${r.file}:${r.line}\``
 const unverifiableLine = r => `- ${where(r)}: "${r.claim}"${r.source ? ` Checked: ${r.source}` : ''}`
-const draftBody = shown => [
+const draftBody = (shown, compact) => [
   '## Stale-docs audit',
   '',
   `Audited ${pages.length} page(s) and ${checked.length} claim(s): ${stale.length} stale, ${unverifiable.length} unverifiable, ${ok.length} ok.`,
   '',
-  bucket('Stale', stale, r => `- ${where(r)}: "${r.claim}". ${r.reason}${r.source ? ` Source: ${r.source}` : ''}${r.correction ? ` Suggested: ${r.correction}` : ''}`),
+  bucket('Stale', stale, r => compact
+    ? `- ${where(r)}: "${r.claim}"`
+    : `- ${where(r)}: "${r.claim}". ${r.reason}${r.source ? ` Source: ${r.source}` : ''}${r.correction ? ` Suggested: ${r.correction}` : ''}`),
   ...(unchecked.length || failedPages.length ? [bucket('Not checked (rerun these)', [
     ...failedPages.map(p => ({ page: p })),
     ...unchecked.sort(byPlace),
-  ], r => r.page ? `- \`${r.page}\`: the scan failed` : `- ${where(r)}: "${r.claim}"`)] : []),
+  ], r => r.page ? `- \`${r.page}\`: the scan failed` : compact ? `- ${where(r)}` : `- ${where(r)}: "${r.claim}"`)] : []),
   bucket('Unverifiable', shown, unverifiableLine) +
     (shown.length < unverifiable.length ? `\n${unverifiable.length - shown.length} more in the run's \`details\`.\n` : ''),
   '### Ok',
@@ -185,13 +189,26 @@ const draftBody = shown => [
   `${ok.length} claim(s) confirmed against their sources.`,
   '',
 ].join('\n')
+// Shrink in steps: fewer unverifiable lines, then stale and unchecked lines without
+// their reasons, then a hard cut. Everything left out is in `details`.
 let shown = unverifiable
-let issueBody = draftBody(shown)
+let compact = false
+let issueBody = draftBody(shown, compact)
 while (issueBody.length > BODY_LIMIT && shown.length) {
   shown = shown.slice(0, Math.floor(shown.length * 0.9))
-  issueBody = draftBody(shown)
+  issueBody = draftBody(shown, compact)
 }
-if (shown.length < unverifiable.length) log(`The issue body lists ${shown.length} of ${unverifiable.length} unverifiable claim(s) to stay under GitHub's limit.`)
+if (issueBody.length > BODY_LIMIT) {
+  compact = true
+  issueBody = draftBody(shown, compact)
+}
+if (issueBody.length > BODY_LIMIT) {
+  const note = "\n\nCut here to fit GitHub's limit. The rest is in the run's `details`.\n"
+  issueBody = issueBody.slice(0, BODY_LIMIT - note.length) + note
+}
+if (shown.length < unverifiable.length || compact) {
+  log(`The issue body was shortened to fit GitHub's limit: ${shown.length} of ${unverifiable.length} unverifiable claim(s) listed${compact ? ', stale and unchecked claims without their reasons' : ''}.`)
+}
 
 return {
   pagesAudited: pages.length,
