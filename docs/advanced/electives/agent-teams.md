@@ -1,6 +1,6 @@
 # Agent teams
 
-<sub>**Advanced** · Elective · about 20 minutes, plus run time · Needs: [Choose an orchestration pattern](../02-orchestration-patterns.md) · Verified against Claude Code v2.1.285 (stable) on 2026-10-09</sub>
+<sub>**Advanced** · Elective · about 20 minutes, plus run time · Needs: [Choose an orchestration pattern](../02-orchestration-patterns.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
 
 > [!NOTE]
 > "Agent teams are experimental and disabled by default." ([Orchestrate teams of Claude Code sessions](https://code.claude.com/docs/en/agent-teams))

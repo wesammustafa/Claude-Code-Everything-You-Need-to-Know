@@ -1,6 +1,6 @@
 # Script Claude Code with `claude -p`
 
-<sub>**Advanced** · Lesson 4 of 7 · about 20 minutes · Needs: [Run and save a dynamic workflow](03-dynamic-workflows.md) · Verified against Claude Code v2.1.285 (stable) on 2026-10-09</sub>
+<sub>**Advanced** · Lesson 4 of 7 · about 20 minutes · Needs: [Run and save a dynamic workflow](03-dynamic-workflows.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
 
 ## Goal
 

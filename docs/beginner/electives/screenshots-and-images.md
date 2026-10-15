@@ -1,6 +1,6 @@
 # Give Claude a screenshot
 
-<sub>**Beginner** · Elective · about 15 minutes · Needs: [Your first change, from request to commit](../03-first-change.md) · Verified against Claude Code v2.1.285 (stable) on 2026-10-05</sub>
+<sub>**Beginner** · Elective · about 15 minutes · Needs: [Your first change, from request to commit](../03-first-change.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
 
 ## Goal
 

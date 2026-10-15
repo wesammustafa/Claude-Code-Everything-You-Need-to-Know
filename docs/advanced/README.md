@@ -1,6 +1,6 @@
 # Advanced
 
-<sub>**Advanced** · about 3 hours 20 minutes, plus run time · Verified against Claude Code v2.1.285 (stable) on 2026-10-05</sub>
+<sub>**Advanced** · about 3 hours 20 minutes, plus run time · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
 
 Beyond one session: parallel sessions, orchestration, unattended runs in scripts and CI, a setup your team shares, and limits that keep an autonomous run safe.
 

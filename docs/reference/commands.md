@@ -1,7 +1,7 @@
 <a id="slash-commands--cheatsheet"></a>
 # Commands by level
 
-<sub>Verified against Claude Code v2.1.285 (stable) on 2026-10-05</sub>
+<sub>Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
 
 The built-in commands, bundled skills and workflows, and `claude` command-line forms the lessons use, grouped by the level that teaches them. It is not the full list: the official [commands reference](https://code.claude.com/docs/en/commands#all-commands) has every command and its options, the [CLI reference](https://code.claude.com/docs/en/cli-reference#cli-flags) has the command-line flags, and typing `/` in a session shows the commands available to you.
 

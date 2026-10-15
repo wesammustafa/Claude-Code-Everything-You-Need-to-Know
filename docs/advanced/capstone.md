@@ -1,6 +1,6 @@
 # Advanced capstone: add CI review your team can share
 
-<sub>**Advanced** · Capstone · 30 to 60 minutes, plus run time · Needs: the seven [Advanced lessons](README.md), or their skills · Verified against Claude Code v2.1.285 (stable) on 2026-10-09</sub>
+<sub>**Advanced** · Capstone · 30 to 60 minutes, plus run time · Needs: the seven [Advanced lessons](README.md), or their skills · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
 
 This task puts the whole Advanced level together, in a new copy of the practice template that you tear down at the end. It has no worked example: the brief says what the team needs, and you choose how to build it. The [Advanced Exit](README.md#by-the-end-of-this-level-you-can) is the list of what you can do by the end of this level. The check reads what you commit and two files you save under `.practice/`, and you tick the rest of the Exit yourself under [What the check can't see](#what-the-check-cant-see).
 

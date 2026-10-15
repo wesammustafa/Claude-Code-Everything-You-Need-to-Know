@@ -1,6 +1,6 @@
 # Feature map
 
-<sub>Verified against Claude Code v2.1.285 (stable) on 2026-10-05</sub>
+<sub>Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
 
 Every current Claude Code feature and surface a Learner is likely to meet, with its stability label in the docs' own words and the plans or providers that have it. Each feature links its official page and, where a lesson or Elective teaches it, the guide pages that teach it. For what changed recently, see the official [CHANGELOG](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md) and [What's new](https://code.claude.com/docs/en/whats-new).
 

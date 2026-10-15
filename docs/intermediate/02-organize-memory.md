@@ -1,6 +1,6 @@
 # Organize project memory and see what loaded
 
-<sub>**Intermediate** · Lesson 2 of 8 · about 20 minutes · Needs: [Turn a repeated workflow into a skill](01-first-skill.md) · Verified against Claude Code v2.1.285 (stable) on 2026-10-06</sub>
+<sub>**Intermediate** · Lesson 2 of 8 · about 20 minutes · Needs: [Turn a repeated workflow into a skill](01-first-skill.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
 
 ## Goal
 
@@ -23,7 +23,7 @@ A long `CLAUDE.md` is hard to maintain, and every line of it loads into every se
 |---|---|
 | `CLAUDE.md` at the project root, and a rule without `paths:` | When the session starts |
 | A file named in an `@path` import | With the file that imports it |
-| A rule with `paths:` | When Claude reads a matching file with its Read tool |
+| A rule with `paths:` | When Claude reads, writes or edits a matching file with its Read, Write or Edit tool |
 | Auto memory, the notes Claude keeps for itself | When the session starts: the first 200 lines or 25KB of its `MEMORY.md` index |
 
 When Claude ignores an instruction, first find out whether its file loaded. If it did, the wording is the likely problem: make it concrete, and remove any instruction that contradicts it ([Debug your configuration](https://code.claude.com/docs/en/debug-your-config#see-what-loaded-into-context)).

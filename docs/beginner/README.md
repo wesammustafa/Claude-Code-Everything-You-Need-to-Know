@@ -1,6 +1,6 @@
 # Beginner
 
-<sub>**Beginner** · about 2½ hours · Verified against Claude Code v2.1.285 (stable) on 2026-10-05</sub>
+<sub>**Beginner** · about 2½ hours · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
 
 One session, one change. You install Claude Code, decide what it may do without asking, take one change from request to commit, keep a long session on track, and give it a project memory.
 
