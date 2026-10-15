@@ -17,7 +17,7 @@ Claude Code can teach you while you work. Three aids are built in:
 
 - **`/powerup`** runs quick interactive lessons on Claude Code's features, with animated demos ([Commands](https://code.claude.com/docs/en/commands)).
 - **Output styles** change how Claude answers ([Output styles](https://code.claude.com/docs/en/output-styles)). In the **Explanatory** style, Claude adds short `Insight` blocks that explain the choices behind its code. The **Learning** style adds the same blocks and also leaves a few lines of real decisions for you to write.
-- **The guide to Claude Code**: `claude-code-guide` is a built-in helper for questions about Claude Code's own features ([Create custom subagents](https://code.claude.com/docs/en/sub-agents)). Name it in your prompt, or Claude may answer from its own knowledge instead.
+- **The guide to Claude Code**: `claude-code-guide` is a built-in helper for questions about Claude Code's own features ([Create custom subagents](https://code.claude.com/docs/en/sub-agents)). Claude usually calls it on its own when you ask about Claude Code, and when you name it in your prompt, Claude typically hands the question to it ([Invoke subagents explicitly](https://code.claude.com/docs/en/sub-agents#invoke-subagents-explicitly)).
 
 Why write some of the code yourself? In an Anthropic study, developers who learned a new library with an AI assistant scored lower, on average, on a quiz about it than developers who coded by hand. The ones who scored well used the assistant to ask questions and get explanations, not just to produce code ([How AI assistance impacts the formation of coding skills](https://www.anthropic.com/research/AI-assistance-coding-skills)). The Learning style builds that habit in.
 

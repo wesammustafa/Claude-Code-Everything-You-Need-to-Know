@@ -33,20 +33,20 @@ In VS Code:
    What happens if linkcheck.json holds an array instead of an object?
    ```
 
-4. Switch the mode at the bottom of the prompt box to Manual, then ask for a small edit, such as a comment above `parseConfig`. The edit opens side by side with the original, and Claude asks for permission in the chat panel. Choose **No** there ([Configure permissions](https://code.claude.com/docs/en/permissions#add-a-comment-when-you-answer-a-permission-prompt)). The **Reject this change** buttons inside the diff only revert one change in the proposal; they don't finish the review.
+4. Switch the mode at the bottom of the prompt box to Manual, then ask for a small edit, such as a comment above `parseConfig`. The edit opens side by side with the original, and Claude asks for permission in the chat panel. Reject the edit there ([VS Code](https://code.claude.com/docs/en/vs-code)). The **Reject this change** buttons inside the diff only revert one change in the proposal; they don't finish the review.
 
 In a JetBrains IDE:
 
 1. Install the [Claude Code plugin](https://plugins.jetbrains.com/plugin/27310-claude-code-beta-) from the JetBrains Marketplace and restart the IDE.
 2. Click the Claude Code button in the IDE, or press `Cmd+Esc` (Mac) or `Ctrl+Esc` (Windows and Linux), to start Claude Code in the IDE's terminal. If nothing happens, open the IDE's terminal and run `claude`: started there, it connects to the IDE on its own. If the IDE shows "Cannot launch Claude Code", it can't find `claude` on your `PATH`: set the full path to `claude` under **Settings** > **Tools** > **Claude Code \[Beta]** > **Claude command** ([plugin settings](https://code.claude.com/docs/en/jetbrains#general-settings)).
 3. Open `src/config.js`, select the body of `parseConfig`, and press `Cmd+Option+K` (Mac) or `Alt+Ctrl+K` (Windows and Linux). The prompt gets a reference such as `@src/config.js#L7-17`. Ask the same question.
-4. Press `Shift+Tab` until the status bar under the prompt reads `⏸ manual mode on` ([Choose a permission mode](https://code.claude.com/docs/en/permission-modes#switch-permission-modes)). On native Windows, if `Shift+Tab` does nothing, press `Alt+M` instead ([Interactive mode](https://code.claude.com/docs/en/interactive-mode)). Then ask for the same small edit: it opens in the IDE's diff viewer, and Claude asks for permission in the terminal. Choose **No**.
+4. Press `Shift+Tab` until the status bar under the prompt reads `⏸ manual mode on` ([Choose a permission mode](https://code.claude.com/docs/en/permission-modes#switch-permission-modes)). On native Windows, if `Shift+Tab` does nothing, press `Alt+M` instead ([Interactive mode](https://code.claude.com/docs/en/interactive-mode)). Then ask for the same small edit: it opens in the IDE's diff viewer, and Claude asks for permission in the terminal. Choose **No** ([Configure permissions](https://code.claude.com/docs/en/permissions#add-a-comment-when-you-answer-a-permission-prompt)).
 
 ## Your turn
 
 1. Install the extension or the plugin for the editor you use.
 2. Open `src/links.js`, select the whole `findLinks` function, and press the reference shortcut: `Option+K` (Mac) or `Alt+K` (Windows and Linux) in VS Code, `Cmd+Option+K` (Mac) or `Alt+Ctrl+K` (Windows and Linux) in JetBrains. Then ask what kinds of links it finds.
-3. Switch to Manual mode as in the Worked example, ask for a small edit, and look it over in the diff view. Then choose **No** at Claude's permission prompt: in the chat panel in VS Code, in the terminal in JetBrains.
+3. Switch to Manual mode as in the Worked example, ask for a small edit, and look it over in the diff view. Then reject the edit at Claude's permission prompt: in the chat panel in VS Code, or by choosing **No** in the terminal in JetBrains.
 
 ## Check
 
@@ -56,7 +56,7 @@ This Elective has no `npm run check`: tick each item yourself. You are done when
 - [ ] `git diff` prints nothing, because you rejected the edit.
 - [ ] Self-check (not tested): you asked a question with a reference to the lines you had selected.
 
-If `git diff` shows the edit, it was applied: the session wasn't in Manual mode, or you approved it. Discard it with `git restore <file>`, using the file `git diff` names. Then switch to Manual, ask for the edit again, and choose **No**.
+If `git diff` shows the edit, it was applied: the session wasn't in Manual mode, or you approved it. Discard it with `git restore <file>`, using the file `git diff` names. Then switch to Manual, ask for the edit again, and reject it.
 
 ## Go further
 

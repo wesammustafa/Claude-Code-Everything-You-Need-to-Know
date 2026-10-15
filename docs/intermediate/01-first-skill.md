@@ -55,7 +55,7 @@ flowchart LR
    ```
 
    followed by five numbered steps and the rule "Don't change any files."
-2. Start `claude` in the repository and run `/skills` ([Commands](https://code.claude.com/docs/en/commands)). The list includes `five-whys`, marked as a project skill.
+2. Start `claude` in the repository and run `/skills` ([Commands](https://code.claude.com/docs/en/commands)). The list includes `five-whys`, a project skill because it lives in `.claude/skills/` ([Choose where skills load](https://code.claude.com/docs/en/skills#where-skills-live)).
 3. Run the skill by name, with a problem from your repository. In the practice template:
 
    ```text
@@ -69,7 +69,7 @@ flowchart LR
    Why does the test suite pass even though samples/guide.md has a broken link? I want the root cause, not a quick fix.
    ```
 
-   Before Claude answers, the transcript shows a call to the `Skill` tool for `five-whys`: Claude loaded the skill on its own ([Tools reference](https://code.claude.com/docs/en/tools-reference)).
+   Before Claude answers, the transcript should show a call to the `Skill` tool for `five-whys`, which means Claude loaded the skill on its own ([Tools reference](https://code.claude.com/docs/en/tools-reference)).
 
 ## Your turn
 

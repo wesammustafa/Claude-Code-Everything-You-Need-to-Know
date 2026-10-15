@@ -70,7 +70,7 @@ In an interactive session, Claude Code asks you to approve a project's servers b
 
 Share the server with your team at project scope.
 
-1. Remove your local copy, which would otherwise take precedence over a project server of the same name: `claude mcp remove chrome-devtools -s local`.
+1. Remove your local copy, which would otherwise take precedence over a project server of the same name ([Scope hierarchy and precedence](https://code.claude.com/docs/en/mcp#scope-hierarchy-and-precedence)): `claude mcp remove chrome-devtools -s local`.
 2. Save this partial file as `.mcp.json` at the repository root, and replace each `TODO` with the values from the Worked example's command:
 
    ```json
