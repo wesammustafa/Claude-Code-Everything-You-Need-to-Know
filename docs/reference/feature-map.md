@@ -21,7 +21,7 @@ How to read it:
 | [Cloud sessions on the web](https://code.claude.com/docs/en/claude-code-on-the-web) | – | Pro, Max and Team; Enterprise with a premium or Chat + Claude Code seat |
 | [Mobile](https://code.claude.com/docs/en/mobile) | – | A Claude subscription |
 | [Remote Control](https://code.claude.com/docs/en/remote-control) | – | Pro and Max; Team and Enterprise once an admin turns it on |
-| [Claude Code in Slack](https://code.claude.com/docs/en/slack) | – | Pro, Max, Team or Enterprise with Claude Code access; on Team and Enterprise it is being retired in favor of Claude Tag |
+| [Claude Code in Slack](https://code.claude.com/docs/en/slack) | – | Pro and Max, in a Slack workspace no organization has connected to Claude Tag; Team and Enterprise use Claude Tag |
 | [Claude Tag](https://claude.com/docs/claude-tag/overview) | Marked "Public Beta" on its page | Team and Enterprise, on Anthropic's own service |
 | [Claude in Chrome](https://code.claude.com/docs/en/chrome); taught in [Claude in Chrome](../intermediate/electives/claude-in-chrome.md) | – | Pro, Max, Team or Enterprise |
 | [Computer use](https://code.claude.com/docs/en/computer-use) | "Computer use is a research preview on macOS that requires a Pro or Max plan." | Pro and Max |
@@ -43,7 +43,7 @@ How to read it:
 | [`/powerup`](https://code.claude.com/docs/en/commands); taught in [the built-in teachers](../beginner/electives/built-in-teachers.md) | – | The docs state no limit |
 | [Fast mode](https://code.claude.com/docs/en/fast-mode); taught in [Fast mode](../intermediate/electives/fast-mode.md) | "Fast mode is in research preview." | A Claude subscription, paid for with usage credits (an Owner turns it on for Team and Enterprise), and Console organizations with access provisioned; not Claude Platform on AWS, Bedrock, Agent Platform or Foundry |
 | [Advisor](https://code.claude.com/docs/en/advisor) | "The advisor tool is experimental and requires the Anthropic API." | A Claude subscription and the Console |
-| [Web search](https://code.claude.com/docs/en/tools-reference#websearch-tool-behavior) | – | A Claude subscription, the Console and Claude Platform on AWS; not Bedrock; limited on Agent Platform and Foundry |
+| [Web search](https://code.claude.com/docs/en/tools-reference#websearch-tool-behavior) | – | A Claude subscription, the Console, Claude Platform on AWS and Foundry; on Agent Platform with Opus 4, Sonnet 4, Haiku 4.5 and later models; not Bedrock |
 
 ## Extending Claude Code
 
