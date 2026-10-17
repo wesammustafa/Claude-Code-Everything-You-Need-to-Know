@@ -1,0 +1,8 @@
+{
+  "rule": "images",
+  "expect": "fail",
+  "about": "A GIF outside assets/readme/: only README may show an animated capture.",
+  "output": [
+    "assets/lessons/b-1/demo\\.gif: only SVG, PNG, JPEG and WebP files belong under assets/, and one GIF in assets/readme/"
+  ]
+}

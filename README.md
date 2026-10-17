@@ -9,7 +9,7 @@ You learn by doing: every core lesson and capstone ends with a check you run in 
 
 <p align="center">
   <!-- Captured with Claude Code v2.1.292 (stable) on 2026-10-17. -->
-  <img src="assets/readme/learn-welcome.png" width="640" alt="You keep two terminals open side by side: this one runs npm run learn, shows one step at a time and checks your work, and in the other you type commands and run Claude Code." />
+  <img src="assets/readme/learn-welcome.gif" width="640" alt="Pip, the app's mascot, wakes, looks left, right and up, and smiles, then rests beside the welcome. You keep two terminals open side by side: this one runs npm run learn, shows one step at a time and checks your work, and in the other you type commands and run Claude Code." />
   <br />
   <sub>The learning app, <code>npm run learn</code>, on its first run.</sub>
 </p>

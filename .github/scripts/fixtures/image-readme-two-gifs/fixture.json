@@ -1,0 +1,8 @@
+{
+  "rule": "images",
+  "expect": "fail",
+  "about": "Two GIFs in assets/readme/: README may show one animated capture.",
+  "output": [
+    "assets/readme/ holds 2 GIFs \\(assets/readme/learn-one\\.gif, assets/readme/learn-two\\.gif\\); README may show one animated capture"
+  ]
+}

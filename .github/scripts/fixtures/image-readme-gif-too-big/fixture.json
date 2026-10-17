@@ -1,0 +1,8 @@
+{
+  "rule": "images",
+  "expect": "fail",
+  "about": "README's animated capture over its 1000 KB budget.",
+  "output": [
+    "assets/readme/learn-big\\.gif: 1002 KB; README's animated capture may be up to 1000 KB"
+  ]
+}
