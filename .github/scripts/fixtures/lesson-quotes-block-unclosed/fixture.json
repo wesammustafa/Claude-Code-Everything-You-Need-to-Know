@@ -1,0 +1,8 @@
+{
+  "rule": "lesson-quotes",
+  "expect": "fail",
+  "env": {
+    "LEARN_DIR": "practice"
+  },
+  "about": "A code block in the lesson file opens on four backticks and never closes: a three-backtick line inside it is the block's own line, not its end."
+}
