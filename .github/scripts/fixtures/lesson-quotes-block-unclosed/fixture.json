@@ -4,5 +4,8 @@
   "env": {
     "LEARN_DIR": "practice"
   },
-  "about": "A code block in the lesson file opens on four backticks and never closes: a three-backtick line inside it is the block's own line, not its end."
+  "about": "A code block in the lesson file opens on four backticks and never closes: a three-backtick line inside it is the block's own line, not its end.",
+  "output": [
+    "b-1\\.md has a code block \\(W1 \\| Worked example step 1 of 2 \\| Look at /status\\) with no closing fence\\."
+  ]
 }

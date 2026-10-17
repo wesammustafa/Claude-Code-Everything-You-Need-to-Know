@@ -1,5 +1,6 @@
 // Self-test for the guide checks: every committed fixture must get the
-// verdict it declares from the rule it names, and the real tree must pass.
+// verdict it declares from the rule it names, with any output it lists, and
+// the real tree must pass.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
@@ -35,6 +36,9 @@ for (const name of readdirSync(fixturesDir).sort()) {
         assert.equal(code, 0, output);
         assert.doesNotMatch(output, /^FAIL /m, output);
       }
+      // `output` lists patterns the run's output must also match, so a fixture
+      // fails for its own reason, not for any problem the rule finds.
+      for (const pattern of spec.output ?? []) assert.match(output, new RegExp(pattern), output);
     } finally {
       tree.cleanup();
     }

@@ -58,7 +58,10 @@ export function outsideFences(markdown) {
 // The lines of each fenced code block, without its fences, less the indent
 // its opening fence has, as CommonMark reads them: a fence three spaces in,
 // inside a numbered step, drops up to three spaces from each of its lines. A
-// block left open runs to the end of the page.
+// block left open runs to the end of the page. Like outsideFences, it sees
+// only a fence indented at most three spaces and outside a blockquote, so a
+// fence four or more spaces in (as under step 10 or a nested bullet) or in an
+// alert isn't a block here, though GitHub shows it as one.
 export function fencedBlocks(markdown) {
   const blocks = [];
   let fence = null;

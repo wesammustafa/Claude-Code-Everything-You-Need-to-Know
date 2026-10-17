@@ -4,5 +4,9 @@
   "env": {
     "LEARN_DIR": "practice"
   },
-  "about": "The lesson changed a line of a fenced block that the lesson file shows as a code block."
+  "about": "The lesson changed a line of a fenced block that the lesson file shows as a code block, and that a later lesson's warm-up shows from it, though the later lesson's own page still has the old block.",
+  "output": [
+    "b-1\\.md shows a code block starting \"#!/bin/bash\" \\(W2 \\| Worked example step 2 of 3 \\| A script\\), which is no longer in the lesson\\.",
+    "b-2\\.md shows a code block starting \"#!/bin/bash\" \\(R1 \\| Warm-up \\| The script, from docs/beginner/01-demo\\.md\\), which is no longer in that lesson\\."
+  ]
 }

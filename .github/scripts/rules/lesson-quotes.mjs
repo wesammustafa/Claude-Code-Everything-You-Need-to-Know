@@ -29,10 +29,11 @@ const LIST = '.github/compat/learn.txt';
 const RAW = 'https://raw.githubusercontent.com/wesammustafa/claude-code-practice/main/learn/lessons';
 const flat = (text) => text.replace(/\s+/g, ' ').trim();
 // A code block in a lesson file opens on a fence at the first column, three
-// backticks or tildes or more with the page's info string, and closes on a
-// fence of the same character, at least as long, as the app reads it
-// (learn/lib/content.mjs in the template).
-const FENCE = /^(`{3,}|~{3,})([^`]*)$/;
+// backticks or tildes or more, and closes on a fence of the same character,
+// at least as long, as the app reads it (learn/lib/content.mjs in the
+// template). The app never shows the fence's info string, so only the
+// block's lines are compared.
+const LESSON_FENCE = /^(`{3,}|~{3,})([^`]*)$/;
 const closes = (fence, line) => {
   const m = line.match(/^(`{3,}|~{3,})[ \t]*$/);
   return Boolean(m) && m[1][0] === fence[0] && m[1].length >= fence.length;
@@ -120,14 +121,14 @@ function stepCount(text, name) {
   return count;
 }
 
-// `pages` maps every listed lesson id to its page and text, for warm-ups;
-// `listed` holds every listed lesson id.
+// `pages` maps every listed lesson id whose page exists to its page, text and
+// fenced blocks, for the lesson itself and for warm-ups; `listed` holds every
+// listed lesson id.
 function compare(lesson, page, rawPage, rawFile, pages, listed) {
   const pageText = rawPage.replace(/\r\n?/g, '\n');
   const file = rawFile.replace(/\r\n?/g, '\n');
   const problems = [];
   const say = (msg) => problems.push(`${page}: the app's learn/lessons/${lesson}.md ${msg}`);
-  const body = flat(pageText);
   const stamp = pageText.match(STAMP)?.[0];
   const fields = frontmatter(rawFile);
   const theirs = fields.stamp;
@@ -139,11 +140,15 @@ function compare(lesson, page, rawPage, rawFile, pages, listed) {
   let heading = '(front matter)';
   let from = null;
   let warmup = false;
-  const blocks = fencedBlocks(pageText);
   const lines = file.split('\n');
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
-    const open = line.match(FENCE);
+    // What a block or quote on this line is compared with: the lesson's own
+    // page, or in a warm-up the earlier lesson its `from` line names.
+    const source = pages.get(from ?? lesson);
+    const where = from ? `, from ${source?.page}` : '';
+    const that = from ? 'that lesson' : 'the lesson';
+    const open = line.match(LESSON_FENCE);
     if (open) {
       const end = lines.findIndex((l, k) => k > i && closes(open[1], l));
       if (end === -1) {
@@ -152,10 +157,10 @@ function compare(lesson, page, rawPage, rawFile, pages, listed) {
       }
       const block = lines.slice(i + 1, end);
       i = end;
-      if (from) {
-        const source = pages.get(from);
-        if (source && !source.blocks.some((b) => sameLines(b, block))) say(`shows a code block starting "${block[0]}" (${heading}, from ${source.page}), which is no longer in that lesson.`);
-      } else if (!blocks.some((b) => sameLines(b, block))) say(`shows a code block starting "${block[0]}" (${heading}), which is no longer in the lesson.`);
+      if (source && !source.blocks.some((b) => sameLines(b, block))) {
+        const first = block.find((l) => l.trim());
+        say(`shows ${first === undefined ? 'an empty code block' : `a code block starting "${first}"`} (${heading}${where}), which is no longer in ${that}.`);
+      }
       continue;
     }
     const h = line.match(/^#{2,3} (.+)$/);
@@ -178,11 +183,7 @@ function compare(lesson, page, rawPage, rawFile, pages, listed) {
       continue;
     }
     const q = line.match(/^- [a-z-]+: (.+)$/)?.[1].trim().match(/^"(.*)"$/);
-    if (!q) continue;
-    if (from) {
-      const source = pages.get(from);
-      if (source && !source.body.includes(flat(q[1]))) say(`quotes "${q[1]}" (${heading}, from ${source.page}), which is no longer in that lesson.`);
-    } else if (!body.includes(flat(q[1]))) say(`quotes "${q[1]}" (${heading}), which is no longer in the lesson.`);
+    if (q && source && !source.body.includes(flat(q[1]))) say(`quotes "${q[1]}" (${heading}${where}), which is no longer in ${that}.`);
   }
   return problems;
 }

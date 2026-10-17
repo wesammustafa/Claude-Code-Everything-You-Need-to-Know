@@ -26,6 +26,15 @@ npm test
 ```
 ````
 
+A warm-up in a lesson file names the lesson it comes from:
+
+~~~markdown
+- from: b-0
+```bash
+npm test
+```
+~~~
+
 ## Your turn
 
 1. Ask a question of your own.
