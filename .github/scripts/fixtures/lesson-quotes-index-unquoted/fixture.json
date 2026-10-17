@@ -1,0 +1,11 @@
+{
+  "rule": "lesson-quotes",
+  "expect": "pass",
+  "env": {
+    "LEARN_DIR": "practice"
+  },
+  "about": "learn.txt lists a level index that no warm-up quotes, and the summary says so.",
+  "output": [
+    "PASS lesson-quotes: 1 lesson\\(s\\) in the app match their lesson files, and 0 warm-up\\(s\\) quote one of the 1 level index\\(es\\) listed"
+  ]
+}

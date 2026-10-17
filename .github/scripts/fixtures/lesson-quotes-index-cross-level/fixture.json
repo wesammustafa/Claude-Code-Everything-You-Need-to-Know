@@ -1,0 +1,11 @@
+{
+  "rule": "lesson-quotes",
+  "expect": "pass",
+  "env": {
+    "LEARN_DIR": "practice"
+  },
+  "about": "An Intermediate warm-up quotes the Beginner index: a warm-up may quote any listed level index, as it may quote a lesson from another level.",
+  "output": [
+    "PASS lesson-quotes: 1 lesson\\(s\\) in the app match their lesson files, and 1 warm-up\\(s\\) quote one of the 1 level index\\(es\\) listed"
+  ]
+}
