@@ -3,8 +3,11 @@
 // template); .github/compat/learn.txt lists them. In a lesson file, every
 // double-quoted `- key: "…"` value is the lesson's own text, except in a
 // warm-up block, whose `- from: <lesson>` line points its quotes at that
-// earlier lesson's page. This rule fails when such a quote, the title, the
-// Stamp or a step count no longer matches its lesson. It reads each line and
+// earlier lesson's page. A fenced code block in a lesson file is a block of
+// that page, line for line, less the indent the page's fence has, and the
+// lines inside it are code, never quotes or headings. This rule fails when
+// such a quote or block, the title, the Stamp or a step count no longer
+// matches its lesson, or a block doesn't close. It reads each line and
 // the front matter as the app does (learn/lib/content.mjs and
 // checks/frontmatter.mjs in the template), so no spacing, quoting or line
 // ending the app accepts can hide a quote. It needs the template's lesson
@@ -16,7 +19,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { readText } from '../lib/tree.mjs';
 import { changedFiles } from '../lib/git.mjs';
-import { outsideFences } from '../lib/markdown.mjs';
+import { fencedBlocks, outsideFences } from '../lib/markdown.mjs';
 import { STAMP } from '../lib/stamps.mjs';
 
 export const id = 'lesson-quotes';
@@ -25,6 +28,17 @@ export const modes = ['pr', 'scheduled'];
 const LIST = '.github/compat/learn.txt';
 const RAW = 'https://raw.githubusercontent.com/wesammustafa/claude-code-practice/main/learn/lessons';
 const flat = (text) => text.replace(/\s+/g, ' ').trim();
+// A code block in a lesson file opens on a fence at the first column, three
+// backticks or tildes or more, and closes on a fence of the same character,
+// at least as long, as the app reads it (learn/lib/content.mjs in the
+// template). The app never shows the fence's info string, so only the
+// block's lines are compared.
+const LESSON_FENCE = /^(`{3,}|~{3,})([^`]*)$/;
+const closes = (fence, line) => {
+  const m = line.match(/^(`{3,}|~{3,})[ \t]*$/);
+  return Boolean(m) && m[1][0] === fence[0] && m[1].length >= fence.length;
+};
+const sameLines = (a, b) => a.length === b.length && a.every((line, i) => line === b[i]);
 
 // The front matter as the app reads it: a copy of checks/frontmatter.mjs in
 // the template (`key: value` lines, quoted or not, a trailing ` # comment`,
@@ -107,14 +121,14 @@ function stepCount(text, name) {
   return count;
 }
 
-// `pages` maps every listed lesson id to its page and text, for warm-ups;
-// `listed` holds every listed lesson id.
+// `pages` maps every listed lesson id whose page exists to its page, text and
+// fenced blocks, for the lesson itself and for warm-ups; `listed` holds every
+// listed lesson id.
 function compare(lesson, page, rawPage, rawFile, pages, listed) {
   const pageText = rawPage.replace(/\r\n?/g, '\n');
   const file = rawFile.replace(/\r\n?/g, '\n');
   const problems = [];
   const say = (msg) => problems.push(`${page}: the app's learn/lessons/${lesson}.md ${msg}`);
-  const body = flat(pageText);
   const stamp = pageText.match(STAMP)?.[0];
   const fields = frontmatter(rawFile);
   const theirs = fields.stamp;
@@ -126,7 +140,29 @@ function compare(lesson, page, rawPage, rawFile, pages, listed) {
   let heading = '(front matter)';
   let from = null;
   let warmup = false;
-  for (const line of file.split('\n')) {
+  const lines = file.split('\n');
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    // What a block or quote on this line is compared with: the lesson's own
+    // page, or in a warm-up the earlier lesson its `from` line names.
+    const source = pages.get(from ?? lesson);
+    const where = from ? `, from ${source?.page}` : '';
+    const that = from ? 'that lesson' : 'the lesson';
+    const open = line.match(LESSON_FENCE);
+    if (open) {
+      const end = lines.findIndex((l, k) => k > i && closes(open[1], l));
+      if (end === -1) {
+        say(`has a code block (${heading}) with no closing fence.`);
+        break;
+      }
+      const block = lines.slice(i + 1, end);
+      i = end;
+      if (source && !source.blocks.some((b) => sameLines(b, block))) {
+        const first = block.find((l) => l.trim());
+        say(`shows ${first === undefined ? 'an empty code block' : `a code block starting "${first}"`} (${heading}${where}), which is no longer in ${that}.`);
+      }
+      continue;
+    }
     const h = line.match(/^#{2,3} (.+)$/);
     if (h) {
       heading = h[1];
@@ -147,11 +183,7 @@ function compare(lesson, page, rawPage, rawFile, pages, listed) {
       continue;
     }
     const q = line.match(/^- [a-z-]+: (.+)$/)?.[1].trim().match(/^"(.*)"$/);
-    if (!q) continue;
-    if (from) {
-      const source = pages.get(from);
-      if (source && !source.body.includes(flat(q[1]))) say(`quotes "${q[1]}" (${heading}, from ${source.page}), which is no longer in that lesson.`);
-    } else if (!body.includes(flat(q[1]))) say(`quotes "${q[1]}" (${heading}), which is no longer in the lesson.`);
+    if (q && source && !source.body.includes(flat(q[1]))) say(`quotes "${q[1]}" (${heading}${where}), which is no longer in ${that}.`);
   }
   return problems;
 }
@@ -171,7 +203,10 @@ export async function run(ctx) {
   }
   const problems = [];
   const pages = new Map(lessons.filter((l) => existsSync(join(ctx.root, l.page)))
-    .map((l) => [l.lesson, { page: l.page, body: flat(readText(ctx.root, l.page).replace(/\r\n?/g, '\n')) }]));
+    .map((l) => {
+      const text = readText(ctx.root, l.page).replace(/\r\n?/g, '\n');
+      return [l.lesson, { page: l.page, body: flat(text), blocks: fencedBlocks(text) }];
+    }));
   for (const { lesson, page } of lessons) {
     if (!existsSync(join(ctx.root, page))) {
       problems.push(`${LIST} lists ${page}, which doesn't exist`);

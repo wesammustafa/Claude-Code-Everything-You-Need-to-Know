@@ -1,0 +1,8 @@
+{
+  "rule": "lesson-quotes",
+  "expect": "pass",
+  "env": {
+    "LEARN_DIR": "practice"
+  },
+  "about": "Each code block equals a fenced block of its lesson, less the indent of a fence inside a numbered step, blank lines included; a warm-up's block matches the earlier lesson; a tilde block holds a three-backtick line; and a heading or a from line inside a block is code, not the lesson file's own."
+}
