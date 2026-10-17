@@ -7,3 +7,10 @@ b-3 docs/beginner/03-first-change.md
 b-4 docs/beginner/04-keep-a-session-on-track.md
 b-5 docs/beginner/05-project-memory.md
 b-capstone docs/beginner/capstone.md
+
+# Level indexes a warm-up may quote, in the same form: the id <level>-index,
+# then the page. A warm-up whose from line names one quotes that page; an
+# index has no lesson file of its own.
+beginner-index docs/beginner/README.md
+intermediate-index docs/intermediate/README.md
+advanced-index docs/advanced/README.md

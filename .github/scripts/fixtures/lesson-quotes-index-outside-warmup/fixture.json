@@ -1,0 +1,12 @@
+{
+  "rule": "lesson-quotes",
+  "expect": "fail",
+  "env": {
+    "LEARN_DIR": "practice"
+  },
+  "about": "A Worked example step with a from line naming its level index: only a warm-up quotes a level index, so the step's quote still comes from its own page.",
+  "output": [
+    "i-1\\.md has a from line in W1 \\| Worked example step 1 of 1 \\| A skill, which isn't a warm-up: only a warm-up quotes an earlier lesson or a level index\\.",
+    "i-1\\.md quotes \"\\*\\*Skills:\\*\\* you give Claude the same instructions or workflow again and again\\.\" \\(W1 \\| Worked example step 1 of 1 \\| A skill\\), which is no longer in the lesson\\."
+  ]
+}

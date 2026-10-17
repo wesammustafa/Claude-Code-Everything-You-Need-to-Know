@@ -3,18 +3,19 @@
 // template); .github/compat/learn.txt lists them. In a lesson file, every
 // double-quoted `- key: "…"` value is the lesson's own text, except in a
 // warm-up block, whose `- from: <lesson>` line points its quotes at that
-// earlier lesson's page. A fenced code block in a lesson file is a block of
-// that page, line for line, less the indent the page's fence has, and the
-// lines inside it are code, never quotes or headings. This rule fails when
-// such a quote or block, the title, the Stamp or a step count no longer
-// matches its lesson, or a block doesn't close. It reads each line and
-// the front matter as the app does (learn/lib/content.mjs and
-// checks/frontmatter.mjs in the template), so no spacing, quoting or line
+// earlier lesson's page, or whose `- from: <level>-index` line points them at
+// that level's index page, which learn.txt also lists. A fenced code block in
+// a lesson file is a block of that page, line for line, less the indent the
+// page's fence has, and the lines inside it are code, never quotes or
+// headings. This rule fails when such a quote or block, the title, the Stamp
+// or a step count no longer matches its lesson, or a block doesn't close. It
+// reads each line and the front matter as the app does (learn/lib/content.mjs
+// and checks/frontmatter.mjs in the template), so no spacing, quoting or line
 // ending the app accepts can hide a quote. It needs the template's lesson
 // files: with LEARN_DIR set to a template checkout's learn/lessons folder, any
 // mode reads them there; the weekly scheduled run fetches them from the
 // template's main branch. A pull request run without LEARN_DIR stays offline
-// and only warns when the change touches a listed lesson.
+// and only warns when the change touches a listed lesson or level index.
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { readText } from '../lib/tree.mjs';
@@ -96,6 +97,10 @@ function frontmatter(text) {
   return fields;
 }
 
+// A `<level>-index` id names a level's index page (docs/<level>/README.md),
+// which warm-ups may quote; it has no lesson file of its own.
+const isIndex = (id) => /^[a-z]+-index$/.test(id);
+
 function listed(root) {
   if (!existsSync(join(root, LIST))) return [];
   return readText(root, LIST).split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#'))
@@ -121,9 +126,9 @@ function stepCount(text, name) {
   return count;
 }
 
-// `pages` maps every listed lesson id whose page exists to its page, text and
-// fenced blocks, for the lesson itself and for warm-ups; `listed` holds every
-// listed lesson id.
+// `pages` maps every listed lesson or level index id whose page exists to
+// its page, text and fenced blocks, for the lesson itself and for warm-ups;
+// `listed` holds every listed id.
 function compare(lesson, page, rawPage, rawFile, pages, listed) {
   const pageText = rawPage.replace(/\r\n?/g, '\n');
   const file = rawFile.replace(/\r\n?/g, '\n');
@@ -144,10 +149,11 @@ function compare(lesson, page, rawPage, rawFile, pages, listed) {
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
     // What a block or quote on this line is compared with: the lesson's own
-    // page, or in a warm-up the earlier lesson its `from` line names.
+    // page, or in a warm-up the earlier lesson or level index its `from`
+    // line names.
     const source = pages.get(from ?? lesson);
     const where = from ? `, from ${source?.page}` : '';
-    const that = from ? 'that lesson' : 'the lesson';
+    const that = !from ? 'the lesson' : isIndex(from) ? 'that level index' : 'that lesson';
     const open = line.match(LESSON_FENCE);
     if (open) {
       const end = lines.findIndex((l, k) => k > i && closes(open[1], l));
@@ -177,9 +183,12 @@ function compare(lesson, page, rawPage, rawFile, pages, listed) {
     }
     const f = line.match(/^- from: (\S+)$/);
     if (f) {
-      if (!warmup) say(`has a from line in ${heading}, which isn't a warm-up: only a warm-up quotes an earlier lesson.`);
-      else if (!listed.has(f[1])) say(`has a warm-up (${heading}) from ${f[1]}, which ${LIST} doesn't list.`);
-      else from = f[1];
+      if (!warmup) say(`has a from line in ${heading}, which isn't a warm-up: only a warm-up quotes an earlier lesson or a level index.`);
+      else if (!listed.has(f[1])) {
+        const known = [...listed].filter(isIndex);
+        const hint = !isIndex(f[1]) ? '' : known.length ? `; the level indexes it lists are ${known.join(', ')}` : '; it lists no level index';
+        say(`has a warm-up (${heading}) from ${f[1]}, which ${LIST} doesn't list${hint}.`);
+      } else from = f[1];
       continue;
     }
     const q = line.match(/^- [a-z-]+: (.+)$/)?.[1].trim().match(/^"(.*)"$/);
@@ -189,31 +198,35 @@ function compare(lesson, page, rawPage, rawFile, pages, listed) {
 }
 
 export async function run(ctx) {
-  const lessons = listed(ctx.root);
+  const entries = listed(ctx.root);
+  const lessons = entries.filter((l) => !isIndex(l.lesson));
+  const indexes = entries.filter((l) => isIndex(l.lesson));
   if (!lessons.length) return { status: 'pass', summary: `no lessons listed in ${LIST}` };
   if (!process.env.LEARN_DIR && ctx.mode === 'pr') {
     if (!ctx.base.sha) return { status: 'skip', summary: `diff-scoped: ${ctx.base.note}` };
     const changed = new Set(changedFiles(ctx.root, ctx.base.sha));
-    const touched = lessons.filter((l) => changed.has(l.page));
+    const touched = entries.filter((l) => changed.has(l.page));
     if (!touched.length) return { status: 'pass', summary: `${lessons.length} lesson(s) in the app, none changed; the weekly run compares the quotes` };
     return {
       status: 'warn',
-      problems: touched.map((l) => `${l.page} changed, and the practice template's learning app quotes it in learn/lessons/${l.lesson}.md. Before you merge, run LEARN_DIR=<template checkout>/learn/lessons node .github/scripts/check.mjs --only lesson-quotes, and if it fails, update the lesson file in the template first.`),
+      problems: touched.map((l) => `${l.page} changed, and the practice template's learning app ${isIndex(l.lesson) ? `can quote it in a warm-up from ${l.lesson}` : `quotes it in learn/lessons/${l.lesson}.md`}. Before you merge, run LEARN_DIR=<template checkout>/learn/lessons node .github/scripts/check.mjs --only lesson-quotes, and if it fails, update the lesson file in the template first.`),
     };
   }
   const problems = [];
-  const pages = new Map(lessons.filter((l) => existsSync(join(ctx.root, l.page)))
+  const pages = new Map(entries.filter((l) => existsSync(join(ctx.root, l.page)))
     .map((l) => {
       const text = readText(ctx.root, l.page).replace(/\r\n?/g, '\n');
       return [l.lesson, { page: l.page, body: flat(text), blocks: fencedBlocks(text) }];
     }));
-  for (const { lesson, page } of lessons) {
+  for (const { lesson, page } of entries) {
     if (!existsSync(join(ctx.root, page))) {
       problems.push(`${LIST} lists ${page}, which doesn't exist`);
       continue;
     }
-    problems.push(...compare(lesson, page, readText(ctx.root, page), await lessonFile(ctx.root, lesson), pages, new Set(lessons.map((l) => l.lesson))));
+    if (isIndex(lesson)) continue;
+    problems.push(...compare(lesson, page, readText(ctx.root, page), await lessonFile(ctx.root, lesson), pages, new Set(entries.map((l) => l.lesson))));
   }
   if (problems.length) return { status: 'fail', problems };
-  return { status: 'pass', summary: `${lessons.length} lesson(s) in the app match their lesson files` };
+  const also = indexes.length ? `, and their warm-ups match the ${indexes.length} level index(es) listed` : '';
+  return { status: 'pass', summary: `${lessons.length} lesson(s) in the app match their lesson files${also}` };
 }
