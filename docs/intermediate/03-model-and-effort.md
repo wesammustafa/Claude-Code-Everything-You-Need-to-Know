@@ -41,7 +41,7 @@ Where a choice applies decides how you set it. The [Models and effort](../refere
 
 1. Start `claude` in your repository. Run `/status`: it shows the model. Run `/effort status`: it prints the effort level in force ([Commands](https://code.claude.com/docs/en/commands)).
 2. Switch the model for this session only: run `/model`, move to Sonnet and press `s`. `/status` now shows Sonnet, and your default for new sessions is unchanged ([Setting your model](https://code.claude.com/docs/en/model-config#setting-your-model)).
-3. Ask for deeper reasoning on one turn, without changing the effort level:
+3. Ask for deeper reasoning on one turn, without changing the effort level. In the practice template:
 
    ```text
    ultrathink: which links could linkcheck report as broken although their file exists?
