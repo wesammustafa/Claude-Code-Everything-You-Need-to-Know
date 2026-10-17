@@ -1,0 +1,11 @@
+{
+  "rule": "lesson-quotes",
+  "expect": "warn",
+  "env": {
+    "LEARN_DIR": ""
+  },
+  "about": "Offline, a pull request that changes a level index the app's warm-ups can quote gets a warning to run the comparison locally.",
+  "output": [
+    "docs/intermediate/README\\.md changed, and the practice template's learning app can quote it in a warm-up from intermediate-index\\. Before you merge, run LEARN_DIR="
+  ]
+}

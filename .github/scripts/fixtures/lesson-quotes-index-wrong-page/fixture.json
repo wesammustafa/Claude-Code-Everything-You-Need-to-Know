@@ -1,0 +1,11 @@
+{
+  "rule": "lesson-quotes",
+  "expect": "fail",
+  "env": {
+    "LEARN_DIR": ""
+  },
+  "about": "learn.txt pairs a level index id with another level's page. It fails offline too, since it needs no lesson file.",
+  "output": [
+    "\\.github/compat/learn\\.txt lists beginner-index as docs/intermediate/README\\.md, but a level index's page is docs/beginner/README\\.md"
+  ]
+}

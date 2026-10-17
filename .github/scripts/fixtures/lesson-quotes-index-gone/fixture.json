@@ -1,0 +1,12 @@
+{
+  "rule": "lesson-quotes",
+  "expect": "fail",
+  "env": {
+    "LEARN_DIR": "practice"
+  },
+  "about": "The level index reworded a line and a code block that a warm-up quotes from it, though the warm-up's own lesson still has the old line.",
+  "output": [
+    "i-1\\.md quotes \"\\*\\*Hooks:\\*\\* something must happen every time at a set point in a session\\.\" \\(R1 \\| Warm-up \\| Which one, when, from docs/intermediate/README\\.md\\), which is no longer in that level index\\.",
+    "i-1\\.md shows a code block starting \"git fetch https://github\\.com/wesammustafa/claude-code-practice main\" \\(R2 \\| Warm-up \\| Bring the checks in, from docs/intermediate/README\\.md\\), which is no longer in that level index\\."
+  ]
+}

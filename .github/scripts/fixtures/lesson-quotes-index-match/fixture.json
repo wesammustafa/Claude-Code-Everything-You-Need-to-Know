@@ -1,0 +1,11 @@
+{
+  "rule": "lesson-quotes",
+  "expect": "pass",
+  "env": {
+    "LEARN_DIR": "practice"
+  },
+  "about": "A warm-up whose from line names a level index quotes the index page and shows one of its code blocks; the index has no lesson file of its own.",
+  "output": [
+    "PASS lesson-quotes: 1 lesson\\(s\\) in the app match their lesson files, and 2 warm-up\\(s\\) quote one of the 1 level index\\(es\\) listed"
+  ]
+}

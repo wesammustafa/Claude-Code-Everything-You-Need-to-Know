@@ -1,0 +1,11 @@
+{
+  "rule": "lesson-quotes",
+  "expect": "fail",
+  "env": {
+    "LEARN_DIR": "practice"
+  },
+  "about": "A warm-up's from line names a level index that learn.txt doesn't list, though the quote is on the listed index.",
+  "output": [
+    "i-1\\.md has a warm-up \\(R1 \\| Warm-up \\| Which one, when\\) from expert-index, which \\.github/compat/learn\\.txt doesn't list; the level indexes it lists are intermediate-index\\."
+  ]
+}

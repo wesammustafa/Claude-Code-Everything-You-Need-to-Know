@@ -4,5 +4,8 @@
   "env": {
     "LEARN_DIR": "practice"
   },
-  "about": "A Worked example step with a from line: only a warm-up quotes an earlier lesson, so its quotes still come from its own page."
+  "about": "A Worked example step with a from line: only a warm-up quotes an earlier lesson, so its quotes still come from its own page.",
+  "output": [
+    "b-2\\.md has a from line in W1 \\| Worked example step 1 of 1 \\| Plan mode, which isn't a warm-up: only a warm-up quotes an earlier lesson or a level index\\."
+  ]
 }
