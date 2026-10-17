@@ -8,7 +8,7 @@ You learn by doing: every core lesson and capstone ends with a check you run in 
 [![Verified against Claude Code v2.1.285 (stable)](https://img.shields.io/badge/verified-v2.1.285_stable-2e6e57)](CHANGELOG.md#v202610---2026-10-05) [![Edition release date](https://img.shields.io/github/release-date/wesammustafa/Claude-Code-Everything-You-Need-to-Know?label=edition&color=2e6e57)](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/releases/latest) [![License: MIT](https://img.shields.io/badge/license-MIT-5b6470)](LICENSE) [![Mentioned in Awesome Claude Code](https://awesome.re/mentioned-badge.svg)](https://github.com/hesreallyhim/awesome-claude-code)
 
 <p align="center">
-  <!-- Captured with Claude Code v2.1.292 (stable) on 2026-10-16. -->
+  <!-- Captured with Claude Code v2.1.292 (stable) on 2026-10-17. -->
   <img src="assets/readme/learn-welcome.png" width="640" alt="You keep two terminals open side by side: this one runs npm run learn, shows one step at a time and checks your work, and in the other you type commands and run Claude Code." />
   <br />
   <sub>The learning app, <code>npm run learn</code>, on its first run.</sub>
@@ -47,7 +47,7 @@ The help shrinks each time a skill comes back: GUIDED shows every command, HINTE
   </tr>
 </table>
 
-<!-- Both captured with Claude Code v2.1.292 (stable) on 2026-10-16. -->
+<!-- Both captured with Claude Code v2.1.292 (stable) on 2026-10-17. -->
 <sub>Beginner lesson 1, steps 1 and 11.</sub>
 
 <a id="-choose-your-path"></a>
