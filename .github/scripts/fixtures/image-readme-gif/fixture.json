@@ -1,0 +1,8 @@
+{
+  "rule": "images",
+  "expect": "pass",
+  "about": "README's one animated capture: a GIF in assets/readme/, referenced and within its budget.",
+  "output": [
+    "PASS images"
+  ]
+}

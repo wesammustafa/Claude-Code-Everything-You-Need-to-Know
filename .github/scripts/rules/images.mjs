@@ -3,7 +3,8 @@
 // - every Mermaid block declares accTitle and accDescr;
 // - files under assets/ have kebab-case names, an allowed type, fit the size
 //   budget, and are referenced by a page (the brand sources and the social
-//   card are the only allowed orphans).
+//   card are the only allowed orphans);
+// - README may show one animated capture: a single GIF in assets/readme/.
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { readText } from '../lib/tree.mjs';
@@ -13,10 +14,13 @@ export const modes = ['pr', 'release'];
 
 const KB = 1024;
 const KEBAB = /^[a-z0-9]+(?:-[a-z0-9]+)*(?:\.[a-z0-9]+)*$/;
+// README's one animated capture of the learning app.
+const README_GIF = /^assets\/readme\/[^/]+\.gif$/;
 const BUDGET = [
   [/\.svg$/, 50 * KB, 'an SVG may be up to 50 KB'],
   [/^assets\/(lessons|readme)\/.+\.(png|jpe?g|webp)$/, 200 * KB, 'a capture may be up to 200 KB'],
   [/^assets\/brand\/social-card\.png$/, 1000 * KB, 'the social card must be under 1 MB'],
+  [README_GIF, 1000 * KB, 'README\'s animated capture may be up to 1000 KB'],
 ];
 const ALLOWED_ORPHANS = [/^assets\/brand\/[^/]+\.svg$/, /^assets\/brand\/social-card\.png$/];
 
@@ -96,7 +100,7 @@ export function run(ctx) {
   for (const asset of assets) {
     const bad = asset.split('/').slice(1).find((part) => !KEBAB.test(part));
     if (bad) problems.push(`${asset}: "${bad}" is not kebab-case`);
-    if (!/\.(svg|png|jpe?g|webp)$/.test(asset)) problems.push(`${asset}: only SVG, PNG, JPEG and WebP files belong under assets/`);
+    if (!/\.(svg|png|jpe?g|webp)$/.test(asset) && !README_GIF.test(asset)) problems.push(`${asset}: only SVG, PNG, JPEG and WebP files belong under assets/, and one GIF in assets/readme/`);
     const size = statSync(join(ctx.root, asset)).size;
     for (const [pattern, limit, rule] of BUDGET) {
       if (pattern.test(asset) && size > limit) problems.push(`${asset}: ${Math.ceil(size / KB)} KB; ${rule}`);
@@ -105,6 +109,9 @@ export function run(ctx) {
       problems.push(`${asset}: no page references it; delete it or use it`);
     }
   }
+
+  const gifs = assets.filter((asset) => README_GIF.test(asset));
+  if (gifs.length > 1) problems.push(`assets/readme/ holds ${gifs.length} GIFs (${gifs.join(', ')}); README may show one animated capture`);
 
   if (problems.length) return { status: 'fail', problems };
   return { status: 'pass', summary: `${pages.length} pages, ${assets.length} files under assets/` };
