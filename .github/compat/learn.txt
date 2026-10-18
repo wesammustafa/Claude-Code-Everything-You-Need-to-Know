@@ -7,6 +7,15 @@ b-3 docs/beginner/03-first-change.md
 b-4 docs/beginner/04-keep-a-session-on-track.md
 b-5 docs/beginner/05-project-memory.md
 b-capstone docs/beginner/capstone.md
+i-1 docs/intermediate/01-first-skill.md
+i-2 docs/intermediate/02-organize-memory.md
+i-3 docs/intermediate/03-model-and-effort.md
+i-4 docs/intermediate/04-permissions-and-sandbox.md
+i-5 docs/intermediate/05-hooks.md
+i-6 docs/intermediate/06-subagents.md
+i-7 docs/intermediate/07-mcp.md
+i-8 docs/intermediate/08-plugins.md
+i-capstone docs/intermediate/capstone.md
 
 # Level indexes a warm-up may quote, in the same form: the id <level>-index,
 # then the page, which must be docs/<level>/README.md. A warm-up of any level
