@@ -16,13 +16,17 @@ One developer's setup. You shape Claude Code to your own project: skills, projec
 
 Practice in your own repository: shaping Claude Code to your project is the point of this level. Run each check from your copy of the [practice template](https://github.com/wesammustafa/claude-code-practice) as `npm run check -- <lesson-id> --dir <your repo>`. If you'd rather not change your own repository, use the template copy itself; the capstone runs there.
 
-A copy you made for the Beginner level may not have the Intermediate checks: `npm run check` then lists no `i-` lessons. Bring them in from the template, in your copy:
+To go step by step, run `npm run learn` in your copy and use Claude Code in a second terminal beside it. The app takes you through every lesson and the capstone, one step at a time, asks which folder you practice in, and checks your work as you go. Each page below teaches the same lesson on its own.
+
+A copy you made for the Beginner level may not have the Intermediate checks or lessons: `npm run check` then lists no `i-` lessons. Bring them in from the template, in your copy:
 
 ```bash
 git fetch https://github.com/wesammustafa/claude-code-practice main
-git checkout FETCH_HEAD -- checks capstone
-git commit -m "Add the Intermediate checks"
+git checkout FETCH_HEAD -- checks capstone learn
+git commit -m "Add the Intermediate checks and lessons"
 ```
+
+A copy older than the app has no `learn` script, so `npm run learn` says `Missing script: "learn"`: run `node learn/app.mjs` instead.
 
 ## When to use what
 
