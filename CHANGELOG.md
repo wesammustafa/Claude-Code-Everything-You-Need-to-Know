@@ -22,6 +22,7 @@ Editions 2 and 3: the Intermediate and Advanced paths, with checked exercises. E
 
 ### Changed
 
+- The Beginner lessons and capstone use code review, plan review, recovery and project instructions as practice tasks. The learning app's questions focus on decisions, and its checks read available evidence directly from files, git and the installed CLI.
 - The animated Claude mascot is back beside README's title, and the social card shows it in place of the trail blazes. It comes from [shanraisshan/claude-code-best-practice](https://github.com/shanraisshan/claude-code-best-practice) under the MIT License.
 - Every stamped page is re-verified against Claude Code v2.1.292 (stable), and the social card carries the full tagline, "Learn it in three levels, with cited facts and checked exercises."
 - The topic pages, [Commands by level](docs/reference/commands.md) and the [Feature map](docs/reference/feature-map.md) link the Intermediate and Advanced lessons and Electives, and "When to use what" on the [Intermediate index](docs/intermediate/README.md#when-to-use-what) links the dynamic workflows lesson.

@@ -1,6 +1,6 @@
 # Choose who approves what: permission modes and plan mode
 
-<sub>**Beginner** · Lesson 2 of 5 · about 20 minutes · Needs: [Install, sign in and look around](01-install-and-look-around.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
+<sub>**Beginner** · Lesson 2 of 5 · about 25 minutes · Needs: [Install, sign in and look around](01-install-and-look-around.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-19</sub>
 
 ## Goal
 
@@ -8,7 +8,7 @@ By the end of this lesson you can pick a permission mode for a task, switch mode
 
 ## You need
 
-- Your copy of the practice template, cloned, with no uncommitted changes, and Node.js LTS for its checks (a Codespace on your copy has both). To practice in one of your own repositories instead, commit or stash your work there first so it has no uncommitted changes either, and keep the template copy as well: the check runs from it. Set up the repository's `.practice/` folder as [lesson 1](01-install-and-look-around.md#you-need) describes, if you haven't yet.
+- Your copy of the practice template, cloned, with no uncommitted changes, and Node.js LTS for its checks (a Codespace on your copy has both). This lesson runs in the practice copy: Your turn works a ticket that comes with it.
 - Usage: light.
 
 > [!NOTE]
@@ -16,61 +16,49 @@ By the end of this lesson you can pick a permission mode for a task, switch mode
 
 ## The idea
 
-A [permission mode](https://code.claude.com/docs/en/permission-modes) decides which actions Claude can take without asking you first. You switch modes with `Shift+Tab`, and the status bar under the prompt always shows the one in force.
+A [permission mode](https://code.claude.com/docs/en/permission-modes) decides which actions Claude takes without asking you first. A new session starts in auto mode, where a second model, the classifier, reviews actions instead of you and blocks anything that escalates beyond your request. Ordinary source-file edits in your working directory don't reach the classifier: auto mode approves them ([How the classifier evaluates actions](https://code.claude.com/docs/en/permission-modes#how-the-classifier-evaluates-actions)). Whether an edit belongs in the change is yours to judge. `Shift+Tab` switches modes, and the status bar under the prompt shows the one in force:
 
-Four modes matter now:
+- **Auto**, `⏵⏵ auto mode on`: no routine prompts. For most work, where you trust the general direction.
+- **Plan**, `⏸ plan mode on`: Claude explores and writes a plan, and can't edit your files until you approve it. For a change you want to agree on first.
+- **Manual**, `⏸ manual mode on`: Claude asks before edits and most commands. For sensitive work, or whenever approving each step is the point.
+- **Accept edits**, `⏵⏵ accept edits on`: file edits and common file commands, such as `mkdir` and `mv`, run without asking. For code you will review with `git diff` ([git diff](https://git-scm.com/docs/git-diff)) afterwards.
 
-| Status bar shows | Mode | Claude does this without asking |
-|---|---|---|
-| `⏸ manual mode on` | Manual | Reads only |
-| `⏵⏵ accept edits on` | Accept edits | Reads, edits files, runs common file commands |
-| `⏸ plan mode on` | Plan | Reads, plus commands a background safety check approves when auto mode is available, then writes a plan. It can't edit your files until you approve the plan |
-| `⏵⏵ auto mode on` | Auto | Everything, with background safety checks |
-
-Manual suits sensitive work and unfamiliar code, where you want to review every action yourself. Auto suits long tasks, where it saves you from approving every step.
-
-Plan mode is the habit to build first: you see the whole change as a plan before Claude edits any of your files.
+The habit to build: plan first, and approve only a plan you would merge.
 
 ## Worked example
 
-1. Start `claude` in your practice copy and look at the status bar. A new session usually starts in auto mode.
-2. Press `Shift+Tab` until the status bar reads `⏸ plan mode on`. From auto, the first press gives Manual, then Accept edits, then Plan.
+1. Start `claude` in your practice copy. The status bar reads `⏵⏵ auto mode on`, unless a setting or your organization starts your sessions in another mode, or auto mode isn't available to you ([Which mode a session starts in](https://code.claude.com/docs/en/permission-modes#which-mode-a-session-starts-in)).
+2. Press `Shift+Tab` until the status bar reads `⏸ plan mode on`. Each press moves to the next mode, and the status bar names it.
 3. Ask for the change:
 
    ```text
    Make parseConfig in src/config.js reject an empty file with a clear error message, and add a test for it.
    ```
 
-4. Claude reads files and may run commands to explore, but doesn't edit your files. If it needs a decision from you first, it asks a [multiple-choice question](https://code.claude.com/docs/en/tools-reference#askuserquestion-tool-behavior): pick an option or type your own answer, and it keeps planning. Then it shows a plan and asks how to proceed, with three choices:
+4. Claude reads files and may run commands to explore, but doesn't edit your files. If it needs a decision from you first, it asks a [multiple-choice question](https://code.claude.com/docs/en/tools-reference#askuserquestion-tool-behavior): pick an option or type your own answer, and it keeps planning. Then it shows a plan and asks how to proceed, with these choices:
    - **Yes, and use auto mode** (it reads **Yes, auto-accept edits** if auto mode isn't available to you)
    - **Yes, manually approve edits**
-   - A text field that reads **Tell Claude what to change** (the [docs](https://code.claude.com/docs/en/permission-modes#review-and-approve-a-plan) call this choice **No, keep planning**)
+   - A choice to keep planning and revise the plan (the [docs](https://code.claude.com/docs/en/permission-modes#review-and-approve-a-plan) call this choice **No, keep planning**)
 
-   The first choice is highlighted when the menu opens. Until you choose, the session stays in plan mode.
-5. Send the plan back once, even if it already looks right, so you practice it. Use `Down arrow` to move the highlight to **Tell Claude what to change**, type this correction on that line, and press `Enter`:
+   Check which choice is highlighted before you press `Enter`: **Yes, and use auto mode** approves the plan and switches to auto mode. Until you approve, the session stays in plan mode.
+5. Read the plan the way you would read a teammate's: which files change, and what each change does. Say you want the error to name the file, so whoever sees it knows what to fix. The plan is the cheapest place to change your mind, because nothing is edited yet. Use the plan menu to send this revision, then press `Enter`:
 
    ```text
-   Keep the change to src/config.js and test/config.test.js. Don't add new files.
+   Make the error say "linkcheck.json is empty", and keep the change to src/config.js and test/config.test.js.
    ```
 
-   Send it with `Enter`, not `Shift+Tab`: on this menu, `Shift+Tab` approves the plan ([CHANGELOG](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md)). Claude revises the plan and shows the menu again. If you press `Enter` before typing, Claude Code shows `User rejected Claude's plan:` and the session stays in plan mode, waiting for you: type the correction at the prompt instead.
-6. When the revised plan looks right, leave it on screen and open another terminal in the same folder. Save what git sees, and the files the plan says it will change, one path per line, written the way `git status` shows them (relative to the repository root, with forward slashes):
+   Send it with `Enter`, not `Shift+Tab`: on this menu, `Shift+Tab` approves the plan ([CHANGELOG](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md)). Claude revises the plan and shows the menu again. Your change can be below the top of the plan, so scroll to find it.
+6. Leave the revised plan on screen, open another terminal in the same folder and run `git status` ([git status](https://git-scm.com/docs/git-status)). It says `nothing to commit, working tree clean`: plan mode hasn't changed a file.
+7. Back in Claude Code, use `Down arrow` to move the highlight to **Yes, manually approve edits** and press `Enter`. Here approving each step is the point: you watch the plan land. After a plan you trust, **Yes, and use auto mode** is the everyday choice. The session switches to Manual mode, so Claude asks before each edit and before most shell commands, such as running the tests. Read each request:
+   - An edit or a command the plan needs: **Yes**.
+   - The test command, `npm test`: **Yes**, or **Yes, and don't ask again** if you would rather not be asked about it again. That saves a rule for this repository in `.claude/settings.local.json` ([Configure permissions](https://code.claude.com/docs/en/permissions#permission-system)), so keep it for commands whose effects you know.
+   - A command that does more than the plan needs, such as `npm test && git add -A` ([git add](https://git-scm.com/docs/git-add)): **No**. To say what to do instead, move the highlight to **No**, press `Tab`, type it and press `Enter` ([Add a comment](https://code.claude.com/docs/en/permissions#add-a-comment-when-you-answer-a-permission-prompt)).
 
-   ```bash
-   git status --porcelain > .practice/b-2-before.txt
-   printf '%s\n' src/config.js test/config.test.js > .practice/b-2-plan.txt
-   ```
+   A Bash command's request can also offer **Yes, and switch to auto mode** ([Switch permission modes](https://code.claude.com/docs/en/permission-modes#switch-permission-modes)). Skip it here: it approves the command and ends the step-by-step review.
 
-   **Windows:** `'src/config.js','test/config.test.js' | Set-Content .practice/b-2-plan.txt` replaces the `printf` line.
-7. Back in Claude Code, use `Down arrow` to move the highlight to **Yes, manually approve edits** and press `Enter`. Pressing `Enter` on the highlighted first choice would let Claude edit without asking you. The session leaves plan mode for Manual mode, so Claude asks before each edit and before most shell commands, such as running the tests.
-
-   Read each request and answer with plain **Yes**: the other Yes choices stop Claude asking again for that kind of action, or switch the session to Accept edits or auto mode ([Configure permissions](https://code.claude.com/docs/en/permissions#permission-system)). If a command does more than the plan needs, choose **No** and tell Claude what to do instead. When Claude is done, save what git sees now, in the other terminal:
-
-   ```bash
-   git status --porcelain > .practice/b-2-after.txt
-   ```
-
-8. Set the example's change aside so Your turn starts clean. Git ignores `.practice/`, so your snapshots stay:
+   Answer with the arrow keys and `Enter`, not `Shift+Tab`: on an edit request, `Shift+Tab` picks the choice that allows edits for the rest of the session, where the request offers one ([Interactive mode](https://code.claude.com/docs/en/interactive-mode#general-controls)).
+8. When Claude is done, run `git status` in the other terminal again. It lists `src/config.js` and `test/config.test.js`, the two files the plan named. If it lists another file, look in the session for the edit or command that wrote it.
+9. Set the example's change aside so Your turn starts clean ([git stash](https://git-scm.com/docs/git-stash)):
 
    ```bash
    git stash push --include-untracked -m b-2-example
@@ -78,35 +66,60 @@ Plan mode is the habit to build first: you see the whole change as a plan before
 
 ## Your turn
 
-Repeat the example in your practice copy, or your own repository, with a small change of your own:
+A teammate filed `practice/b-2/ticket.md` in your practice copy. Work it in plan mode, and approve only what this change should ship.
 
-1. Switch to plan mode with `Shift+Tab` until the status bar reads `⏸ plan mode on`.
-2. Ask for the change, and answer any question Claude asks.
-3. Send the plan back once: type one correction in **Tell Claude what to change** and press `Enter`.
-4. While the final plan is on screen, run step 6's commands in another terminal, with your plan's file list.
-5. Approve with **Yes, manually approve edits**, read and approve each edit and command as in step 7, then save `git status --porcelain > .practice/b-2-after.txt`.
+1. Read the ticket yourself first.
+2. Start a fresh conversation for the new task: type `/exit`, then start `claude` again. To enter plan mode and start the task in one step, type `/plan` before it ([Commands](https://code.claude.com/docs/en/commands)):
 
-Stop before committing. The next lesson starts from a clean tree and takes a new change to a commit.
+   ```text
+   /plan Work the ticket in practice/b-2/ticket.md
+   ```
+
+   Check that the status bar reads `⏸ plan mode on`, and answer any question Claude asks.
+3. Read the plan as its reviewer. For each change, ask whether you would merge it as part of this ticket. Use the plan menu to send back anything you wouldn't merge, in your own words, with your reason, until the plan is one you would approve.
+4. While the final plan is on screen, save what git sees, and the files the plan says it will change, in the other terminal. Write each path the way `git status` shows it: relative to the repository root, with forward slashes, one per line. For a plan that changed `src/links.js` and `test/links.test.js`, it would be:
+
+   ```bash
+   mkdir -p .practice
+   git status --porcelain > .practice/b-2-before.txt
+   printf '%s\n' src/links.js test/links.test.js > .practice/b-2-plan.txt
+   ```
+
+   **Windows:** `New-Item -ItemType Directory -Force .practice` replaces the `mkdir` line, and `'src/links.js','test/links.test.js' | Set-Content .practice/b-2-plan.txt` replaces the `printf` line.
+5. Approve with **Yes, manually approve edits**, and read each request as in step 7 of the example.
+6. When Claude is done, save what git sees now:
+
+   ```bash
+   git status --porcelain > .practice/b-2-after.txt
+   ```
+
+Stop before committing. The next lesson sets this change aside with `git stash push --include-untracked -m b-2` and starts from a clean tree; this lesson's check still finds the change in that stash.
 
 ## Check
 
 You are done when all of these are true:
 
-- [ ] `.practice/b-2-before.txt`, saved while the plan was on screen, lists no files. `cat .practice/b-2-before.txt` prints nothing.
-- [ ] Every path in `.practice/b-2-after.txt` appears in `.practice/b-2-plan.txt`.
-- [ ] Self-check (not tested): say, in one sentence, when you would pick Manual instead of Auto.
+- [ ] `.practice/b-2-before.txt`, saved while the plan was on screen, lists no changed files
+- [ ] Every file in `.practice/b-2-after.txt` is listed in `.practice/b-2-plan.txt`
+- [ ] An unknown key in `linkcheck.json`, such as `ignores`, makes the tool exit with code 2 and name the key
+- [ ] A broken link still makes the tool exit with code 1 and report the link
 
-In the other terminal, run `npm run check -- b-2` in your practice copy. In your own repository, run `npm run check -- b-2 --dir <your repo>` from your practice copy instead.
+In the other terminal, run `npm run check -- b-2` in your practice copy.
 
-If `.practice/b-2-before.txt` lists files, either the tree wasn't clean when Your turn started (the worked example's files there mean step 8 was skipped; in your own repository, they are your uncommitted work), or Claude wrote a file before you approved: check that the status bar read `⏸ plan mode on` when you sent the prompt, and look in the session for a command Claude ran that wrote a file. Either way, set the changes aside with `git stash push --include-untracked` (or commit your own work), then repeat Your turn from step 1 so the snapshots are saved again. If a changed path is missing from `.practice/b-2-plan.txt`, check that the plan file writes it the way `git status` does, then compare the plan you approved with what Claude changed.
+If `.practice/b-2-before.txt` lists files, either the tree wasn't clean when Your turn started (the example's files there mean step 9 was skipped), or Claude wrote a file before you approved: check that the status bar read `⏸ plan mode on`, and look in the session for a command Claude ran that wrote a file. Set the changes aside with `git stash push --include-untracked`, then repeat Your turn from step 2. If a file in `.practice/b-2-after.txt` is missing from `.practice/b-2-plan.txt`, check that the plan file writes it the way `git status` does, then compare the plan you approved with what Claude changed. If the unknown-key item fails, compare what Claude changed with the ticket's first request, and tell Claude what is missing. If a broken link no longer fails the tool, the plan you approved carried the ticket's last request. A build that passes with broken links hides the problem the tool exists to find, and the teammate's real trouble was the typo: once linkcheck catches it, `"ignore": ["vendor/"]` skips the links into `vendor/`. Ask Claude to undo that part, then save `.practice/b-2-after.txt` again. A flag or a config key that turns the failure off goes back too, though the check can't see one, because CI would only need to add it.
+
+## Watch out
+
+- A limit you state in the conversation, such as "don't push", makes auto mode's classifier block matching actions, but it can be lost when the conversation is compacted ([Boundaries you state in conversation](https://code.claude.com/docs/en/permission-modes#boundaries-you-state-in-conversation)).
 
 ## Go further
 
-- Type `/plan <your task>` to enter plan mode and start the task in one step ([Commands](https://code.claude.com/docs/en/commands)).
-- [Analyze before you edit with plan mode](https://code.claude.com/docs/en/permission-modes#analyze-before-you-edit-with-plan-mode): planning in more depth, including editing a plan before you approve it.
+- While a plan is on screen, press `Ctrl+G` to open it in your default text editor and edit it before Claude proceeds ([Review and approve a plan](https://code.claude.com/docs/en/permission-modes#review-and-approve-a-plan)).
+- When auto mode blocks an action, `/permissions` lists it under **Recently denied**, where you can press `r` to retry it with your approval ([When auto mode falls back](https://code.claude.com/docs/en/permission-modes#when-auto-mode-falls-back)).
+- [Analyze before you edit with plan mode](https://code.claude.com/docs/en/permission-modes#analyze-before-you-edit-with-plan-mode): what plan mode lets Claude run while it plans.
 
 ---
 
-<sub>Sources: [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Interactive mode](https://code.claude.com/docs/en/interactive-mode) · [Commands](https://code.claude.com/docs/en/commands) · [Tools reference](https://code.claude.com/docs/en/tools-reference) · [Configure permissions](https://code.claude.com/docs/en/permissions) · [Claude Code CHANGELOG](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md)</sub>
+<sub>Sources: [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Interactive mode](https://code.claude.com/docs/en/interactive-mode) · [Commands](https://code.claude.com/docs/en/commands) · [Tools reference](https://code.claude.com/docs/en/tools-reference) · [Configure permissions](https://code.claude.com/docs/en/permissions) · [Claude Code CHANGELOG](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md) · [git diff](https://git-scm.com/docs/git-diff) · [git status](https://git-scm.com/docs/git-status) · [git add](https://git-scm.com/docs/git-add) · [git stash](https://git-scm.com/docs/git-stash)</sub>
 
 <sub>← [Install, sign in and look around](01-install-and-look-around.md) · [Beginner index](README.md) · [Your first change, from request to commit](03-first-change.md) → · Topic: [Permissions and safety](../topics/permissions-and-safety.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=b-2)</sub>
