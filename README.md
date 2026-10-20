@@ -39,16 +39,16 @@ The help shrinks each time a skill comes back: GUIDED shows every command, HINTE
 <table>
   <tr>
     <td width="50%" valign="top"><img src="assets/readme/learn-help-guided.png" width="380" alt="At step 1 the app names the window to type in, says why in the lesson page's words, and shows the exact install command." /></td>
-    <td width="50%" valign="top"><img src="assets/readme/learn-help-challenge.png" width="380" alt="By step 11 the app gives only the goal and the lesson's rule, and reports from git status that nothing in the copy has changed yet." /></td>
+    <td width="50%" valign="top"><img src="assets/readme/learn-help-challenge.png" width="380" alt="At step 10 the app gives the goal and reports the onboarding note still changed in git status." /></td>
   </tr>
   <tr>
-    <td><b>Step 1 of 12, GUIDED:</b> the exact command, and the window to type it in.</td>
-    <td><b>Step 11 of 12, CHALLENGE:</b> the goal alone, while the app watches your copy.</td>
+    <td><b>Step 1 of 11, GUIDED:</b> the exact command, and the window to type it in.</td>
+    <td><b>Step 10 of 11, CHALLENGE:</b> the goal and Git status, while the app watches your copy.</td>
   </tr>
 </table>
 
-<!-- Both captured with Claude Code v2.1.292 (stable) on 2026-10-17. -->
-<sub>Beginner lesson 1, steps 1 and 11.</sub>
+<!-- App renders for the curriculum verified against Claude Code v2.1.292 (stable), 2026-10-20. -->
+<sub>Beginner lesson 1, steps 1 and 10.</sub>
 
 <a id="-choose-your-path"></a>
 ## Pick your level
