@@ -16,6 +16,14 @@ i-6 docs/intermediate/06-subagents.md
 i-7 docs/intermediate/07-mcp.md
 i-8 docs/intermediate/08-plugins.md
 i-capstone docs/intermediate/capstone.md
+a-1 docs/advanced/01-parallel-sessions.md
+a-2 docs/advanced/02-orchestration-patterns.md
+a-3 docs/advanced/03-dynamic-workflows.md
+a-4 docs/advanced/04-headless.md
+a-5 docs/advanced/05-github-actions.md
+a-6 docs/advanced/06-share-your-setup.md
+a-7 docs/advanced/07-bounded-runs.md
+a-capstone docs/advanced/capstone.md
 
 # Level indexes a warm-up may quote, in the same form: the id <level>-index,
 # then the page, which must be docs/<level>/README.md. A warm-up of any level
