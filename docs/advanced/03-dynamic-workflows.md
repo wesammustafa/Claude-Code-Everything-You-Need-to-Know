@@ -87,8 +87,9 @@ A size guideline tells Claude how many agents to aim for when it writes the scri
 - It reads the folder from `args`, so `Run /<name> on <folder>` works on any folder without editing the script.
 - It stops on its own: when your test command passes, or after two rounds in a row that make no progress, so a change your tests can't accept doesn't loop until the runtime's agent cap ([Behavior and limits](https://code.claude.com/docs/en/workflows#behavior-and-limits)).
 - After each run, `git grep -n -E '<pattern>' -- <folder>` lists nothing, your test command passes, and you've reviewed and committed the run's changes.
+- The pattern that finds the old form is saved on one line in `.practice/a-3-pattern.txt`, so the check can find the old form in your history.
 
-One way to get there: before you start, save the pattern that finds the old form on one line in `.practice/a-3-pattern.txt`. For the practice template's migration, that's:
+One way to get there: save the pattern before you start. For the practice template's migration, that's:
 
 ```bash
 printf '%s\n' 'import\.meta\.url' > .practice/a-3-pattern.txt
