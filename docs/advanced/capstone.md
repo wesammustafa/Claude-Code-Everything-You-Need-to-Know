@@ -1,6 +1,6 @@
 # Advanced capstone: add CI review your team can share
 
-<sub>**Advanced** · Capstone · 30 to 60 minutes, plus run time · Needs: the seven [Advanced lessons](README.md), or their skills · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
+<sub>**Advanced** · Capstone · 30 to 60 minutes, plus run time · Needs: the seven [Advanced lessons](README.md), or their skills · Verified against Claude Code v2.1.292 (stable) on 2026-10-22</sub>
 
 This task puts the whole Advanced level together, in a new copy of the practice template that you tear down at the end. It has no worked example: the brief says what the team needs, and you choose how to build it. The [Advanced Exit](README.md#by-the-end-of-this-level-you-can) is the list of what you can do by the end of this level. The check reads what you commit and two files you save under `.practice/`, and you tick the rest of the Exit yourself under [What the check can't see](#what-the-check-cant-see).
 
@@ -34,13 +34,13 @@ Build each part the way its lesson taught:
    ```
 
    Then merge both branches into `main` with `git merge`, not `git merge --squash`, and remove both worktrees.
-2. **A review script** ([lesson 4](04-headless.md)): `scripts/review-staged.sh`, to lesson 4's criteria. It pipes the staged diff into one `claude -p` call with JSON output and `dontAsk` mode ([dontAsk mode](https://code.claude.com/docs/en/permission-modes#allow-only-pre-approved-tools-with-dontask-mode)), pre-approves only `Read`, `Grep` and `Glob`, and caps turns at 10 or fewer ([CLI flags](https://code.claude.com/docs/en/cli-reference#cli-flags)). After the merges, stage a one-line change in the main checkout, run the script once, read the review and commit the change:
+2. **A review script** ([lessons 4](04-headless.md) and [7](07-bounded-runs.md)): `scripts/review-staged.sh`, to lesson 4's criteria. It pipes the staged diff into one `claude -p` call with JSON output and `dontAsk` mode ([dontAsk mode](https://code.claude.com/docs/en/permission-modes#allow-only-pre-approved-tools-with-dontask-mode)), pre-approves only `Read`, `Grep` and `Glob`, and caps turns at 10 or fewer ([CLI flags](https://code.claude.com/docs/en/cli-reference#cli-flags)). As in lesson 7, it also caps spend with `--max-budget-usd`, written as a number in the script. Claude Code checks that cap against its client-side cost estimate, and spend can pass it, so leave headroom ([CLI flags](https://code.claude.com/docs/en/cli-reference#cli-flags)). After the merges, stage a one-line change in the main checkout, run the script once, read the review and commit the change:
 
    ```bash
    mkdir -p .practice && scripts/review-staged.sh .practice/a-capstone-run.json
    ```
 
-   The saved JSON's `total_cost_usd` estimates what one review spends. As with lesson 7's slice, it's a client-side estimate, not your bill ([Track cost and usage](https://code.claude.com/docs/en/agent-sdk/cost-tracking#estimates-not-billing)).
+   The saved JSON's `total_cost_usd` estimates what one review spent, and it must come in under your cap. As with lesson 7's slice, it's a client-side estimate, not your bill ([Track cost and usage](https://code.claude.com/docs/en/agent-sdk/cost-tracking#estimates-not-billing)).
 3. **The team's plugin** ([lesson 6](06-share-your-setup.md)): a marketplace in `team-marketplace/` that lists one plugin by a relative path, with the plugin in its own folder under `team-marketplace/`, as in lesson 6's example kit, and at least one skill or agent in the plugin. The committed `.claude/settings.json` registers the marketplace by a relative path and turns the plugin on ([Require plugins per repository](https://code.claude.com/docs/en/plugins/org#require-plugins-per-repository)). Both validations pass: `claude plugin validate` on the marketplace, and on the plugin directory with `--strict` ([plugin validate](https://code.claude.com/docs/en/plugins/cli-reference#plugin-validate)). The kit is a good start; its [`settings.snippet.json`](../../examples/advanced/06-share-your-setup/settings.snippet.json) also denies reading `.env`, which this copy has no rule for yet. Test the plugin only after the merges: a relative path resolves against the repository's main checkout, even from a worktree ([Require plugins per repository](https://code.claude.com/docs/en/plugins/org#require-plugins-per-repository)), so the part-3 session can't load it yet.
 4. **A saved dynamic workflow** ([lessons 2](02-orchestration-patterns.md) and [3](03-dynamic-workflows.md)): from a session in the main checkout, after the merges, ask for a workflow that reviews each file under `src/` and has a second agent check each finding. While it runs, `/workflows` shows each agent's token usage ([Cost](https://code.claude.com/docs/en/workflows#cost)). Save it to the project: a project save writes to the closest `.claude/workflows/` folder that already exists between the session's working directory and the repository root, or, if none exists yet, to `.claude/workflows/` at the repository root ([Save the workflow for reuse](https://code.claude.com/docs/en/workflows#save-the-workflow-for-reuse)). Commit it.
 5. **CI review with limits** ([lessons 5](05-github-actions.md) and [7](07-bounded-runs.md)): `.github/workflows/claude-review.yml` runs on `pull_request` ([Events that trigger workflows](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request)) and uses `anthropics/claude-code-action` (Anthropic) with a `prompt` that asks for a review of the pull request's changes ([Action parameters](https://code.claude.com/docs/en/github-actions#action-parameters)). Hold it to lesson 5's limits:
@@ -66,31 +66,24 @@ Listings checked against the listing bar on 2026-10-09.
 
 You are done when all of these are true:
 
-- [ ] A committed `.gitignore` ignores `.claude/worktrees/` and not the rest of `.claude/`.
-- [ ] `.practice/a-capstone-worktrees.txt` lists two worktrees under `.claude/worktrees/` whose commits split from each other, and both are merged into your branch.
-- [ ] A committed script in `.claude/workflows/` has a literal `export const meta`, with a `name` and a `description`, as its first statement, and starts subagents with `agent()`.
-- [ ] `scripts/review-staged.sh` is committed and executable.
-- [ ] Its `claude -p` call asks for JSON, runs in `dontAsk` mode, pre-approves only `Read`, `Grep` and `Glob`, caps turns at 10 or fewer, and has the prompt right after `-p`.
-- [ ] It pipes the staged diff in, saves the JSON where its argument says, prints the result, exits non-zero when the run fails, and doesn't call Claude when nothing is staged.
-- [ ] `.practice/a-capstone-run.json` holds a run that succeeded within your cap.
-- [ ] A committed workflow runs `anthropics/claude-code-action` on `pull_request`, pinned to a release tag or a full commit SHA, in automation mode, with its credential from a secret and none in the file, a read-only job token (no write access in `permissions` except `id-token: write`, and `github_token` set to the job's own token), `--max-turns` of 10 or fewer, an `--allowedTools` list without unrestricted Bash and a `timeout-minutes` of 30 or fewer.
-- [ ] No Claude API key or token is committed, at `HEAD` or in the commit the check reads your workflow from.
-- [ ] A committed team marketplace lists a plugin by a relative path, and the entry's name matches the `name` in the plugin's `plugin.json`.
-- [ ] The committed `.claude/settings.json` registers that marketplace by a relative path and turns the plugin on.
+- [ ] Lesson 1: `.practice/a-capstone-worktrees.txt` lists two worktrees under `.claude/worktrees/` whose commits split from each other, both are merged into your branch, and a committed `.gitignore` ignores `.claude/worktrees/` and not the rest of `.claude/`.
+- [ ] Lessons 2 and 3: a committed script in `.claude/workflows/` has a literal `export const meta`, with a `name` and a `description`, as its first statement, and starts subagents with `agent()`.
+- [ ] Lesson 4: `scripts/review-staged.sh` is committed, executable and meets lesson 4's criteria: one `claude -p` call, with the prompt right after `-p`, JSON output, `dontAsk` mode, only `Read`, `Grep` and `Glob`, and 10 turns or fewer; the staged diff piped in; the JSON saved where its argument says and the result printed; a non-zero exit when the run fails; and no call to Claude when nothing is staged.
+- [ ] Lesson 5: a committed workflow runs `anthropics/claude-code-action` on `pull_request`, pinned to a release tag or a full commit SHA, in automation mode, with its credential from a secret and none in the file, a read-only job token (no write access in `permissions` except `id-token: write`, and `github_token` set to the job's own token), `--max-turns` of 10 or fewer, an `--allowedTools` list without unrestricted Bash and a `timeout-minutes` of 30 or fewer; and no Claude API key or token is committed, at `HEAD` or in the commit the check reads that workflow from.
+- [ ] Lesson 6: a committed team marketplace lists a plugin by a relative path, under the `name` in the plugin's `plugin.json`, and the committed `.claude/settings.json` registers that marketplace by a relative path and turns the plugin on.
+- [ ] Lesson 7: the review script's `claude -p` call caps spend with `--max-budget-usd`, and `.practice/a-capstone-run.json` holds a real run that succeeded within your turn cap and cost less than your spend cap.
 - [ ] `npm test` passes, and `git status --porcelain` prints nothing.
 
-Run `npm run check -- a-capstone` in this copy. Each item that fails prints what to fix. The check runs your script with a stand-in for `claude`, so it uses none of your usage, and it reads the workflow from your history, so it passes before and after the teardown.
+Run `npm run check -- a-capstone` in this copy. It checks each box's parts one by one, and each part that fails prints what to fix. The check runs your script with a stand-in for `claude`, so it uses none of your usage, and it reads the workflow from your history, so it passes before and after the teardown.
 
 ## What the check can't see
 
 The check doesn't look at these parts of the Advanced Exit. Tick them yourself, honestly:
 
-- [ ] I ran both worktree sessions at the same time, and neither saw the other's uncommitted edits.
-- [ ] I can take the per-file review, with a second agent checking each finding, through lesson 2's questions and say why they end at a dynamic workflow, not subagents in one conversation.
+- [ ] My CI review and my saved workflow both review code, and I can say which one I'd run on every pull request and which I'd keep for a sweep before a release, and why, by what each costs and how deep it goes.
 - [ ] I can say when an unattended run needs the sandbox from [lesson 7](07-bounded-runs.md), and whether my review script and CI workflow need it.
-- [ ] I saw the CI run on my pull request and read Claude's review on its summary page before I merged.
-- [ ] A new session in the main checkout, after the merges, loaded my team plugin with no install command.
-- [ ] Before I turned CI on, I used the local run's `total_cost_usd`, as lesson 7 used its slice, to estimate what one review in CI spends, and saw in `/workflows` how many tokens the per-file review used.
+- [ ] Before I merged, I acted on at least one point in Claude's review on the run's summary page, or dismissed it with a reason.
+- [ ] Before I turned CI on, I multiplied the local run's `total_cost_usd` by the pull requests my team opens in a week, to estimate what CI review spends, and I saw in `/workflows` how many tokens the per-file review used.
 
 When every box on this page is ticked, you've shown the Advanced Exit and finished the last of the guide's three levels. One step remains: the teardown below.
 

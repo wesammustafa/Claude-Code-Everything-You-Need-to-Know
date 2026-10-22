@@ -88,30 +88,18 @@ Work in your repository. The folders `src/` and `test/` and the command `npm tes
    ```
 
    If git reports a path as ignored, `git check-ignore -v <path>` shows the rule that matches it; add the path with `git add -f`.
-4. See a limit stop a run. Give the same bounds a tiny spend limit:
-
-   ```bash
-   claude -p "Run npm test and summarize the result" \
-     --setting-sources project --settings .claude/bounded-run.json \
-     --permission-mode dontAsk --model sonnet \
-     --max-budget-usd 0.01 --output-format json > .practice/a-7-capped.json
-   echo "exit $?"
-   jq '{subtype, total_cost_usd}' .practice/a-7-capped.json
-   ```
-
-   It prints a non-zero exit code, then `"subtype": "error_max_budget_usd"`: the run stopped at the limit, and the JSON still records it ([Handle the result](https://code.claude.com/docs/en/agent-sdk/agent-loop#handle-the-result)). `total_cost_usd` can be above the limit, because it includes the response that crossed it ([Track costs on failed conversations](https://code.claude.com/docs/en/agent-sdk/cost-tracking#track-costs-on-failed-conversations)).
-5. Estimate the cost on a slice, one small part of a bigger task:
+4. Estimate the cost on a slice, one small part of a bigger task:
 
    ```bash
    scripts/bounded-run.sh "Use your Edit tool to add a test for one untested function in src/<file>. Then run npm test as a command on its own, and then commit the test." .practice/a-7-slice.json
    ```
 
-   The summary shows `"subtype": "success"`, the turns used, `total_cost_usd`, and under `denied` each call your bounds refused, such as the `git commit`; your list will differ. HEAD is the same before and after, and `git status` lists the new test, uncommitted. Your output will differ. `total_cost_usd` is a client-side estimate, not your bill ([Track cost and usage](https://code.claude.com/docs/en/agent-sdk/cost-tracking#estimates-not-billing)); on a Claude plan, `/usage` in a session shows your plan's usage limits ([Commands](https://code.claude.com/docs/en/commands#all-commands)). To bound the whole task, scale the slice's figure up and set the spend limit above it, with room to spare.
-6. Be the review gate. Read every change with `git status` and `git diff`, the bounds file included, run `npm test` yourself, and commit only what you accept. For a second opinion, start `claude` and have a subagent review the diff in a fresh context and report gaps ([Add an adversarial review step](https://code.claude.com/docs/en/best-practices#add-an-adversarial-review-step)).
+   The summary shows `"subtype": "success"`, the turns used, `total_cost_usd`, and under `denied` each call your bounds refused, such as the `git commit`; your list will differ. HEAD is the same before and after, and `git status` lists the new test, uncommitted. Your output will differ. `total_cost_usd` is a client-side estimate, not your bill ([Track cost and usage](https://code.claude.com/docs/en/agent-sdk/cost-tracking#estimates-not-billing)); on a Claude plan, `/usage` in a session shows your plan's usage limits ([Commands](https://code.claude.com/docs/en/commands#all-commands)). To bound the whole task, scale the slice's figure up and set the spend limit above it, with room to spare. A run that reaches the limit stops with `"subtype": "error_max_budget_usd"` and a non-zero exit code ([Handle the result](https://code.claude.com/docs/en/agent-sdk/agent-loop#handle-the-result)), and its `total_cost_usd` can be above the limit, because it includes the response that crossed it ([Track costs on failed conversations](https://code.claude.com/docs/en/agent-sdk/cost-tracking#track-costs-on-failed-conversations)).
+5. Be the review gate. Read every change with `git status` and `git diff`, the bounds file included, and look for changes outside the task: a test weakened or deleted so the suite passes, an edited config or bounds file, a moved HEAD. Run `npm test` yourself, and commit only what you accept. For a second opinion, start `claude` and have a subagent review the diff in a fresh context and report gaps ([Add an adversarial review step](https://code.claude.com/docs/en/best-practices#add-an-adversarial-review-step)).
 
 ## Your turn
 
-Bound a real task in your repository that is bigger than one slice, such as tests for every untested function in one folder.
+Bound a real task from your backlog that is bigger than one slice, such as tests for every untested function in one folder, or a mechanical migration across one folder.
 
 Acceptance criteria:
 
@@ -122,7 +110,7 @@ Acceptance criteria:
 - The sandbox is on and strict, sends sandboxed commands through your rules, and the run refuses to start without it.
 - There's a turn limit, and a spend limit above what your slice cost, scaled to the task.
 - The script is executable, and the script and the bounds file are committed.
-- You run it, then read the diff and run the tests yourself before you commit any of it.
+- You run it, review the diff for changes outside the task, and run the tests yourself before you commit any of it.
 
 ## Check
 
@@ -133,12 +121,11 @@ You are done when all of these are true:
 - [ ] Every allow rule names one command or one folder, and the deny rules stop `git commit` and `git push`.
 - [ ] The settings file turns the sandbox on in strict mode without auto-allow, and makes the run refuse to start without it.
 - [ ] `.practice/a-7-slice.json` holds a slice run whose cost is under your spend limit.
-- [ ] `.practice/a-7-capped.json` holds a run a limit stopped.
-- [ ] Self-check (not tested): you read the diff and ran the tests before you committed any of it.
+- [ ] Self-check (not tested): in the run's diff you looked for changes outside the task, such as a weakened or deleted test, an edited config or an unexpected commit, and you can name one you rejected or would have.
 
 Run `npm run check -- a-7 --dir <your repo>` from your practice copy, or `npm run check -- a-7` in the copy itself. The check runs your committed script with a stand-in for `claude`, so it uses none of your usage.
 
-If the first item fails, make sure the committed script is executable (`git ls-files -s scripts/bounded-run.sh` starts with `100755`) and calls `claude` by name, not by a path or through `npx`, and doesn't set `PATH`: the check reads the committed script, so commit each fix. If an allow rule fails, narrow it to the one folder or command the task needs. If the sandbox item names a key, add it to the settings file: without `failIfUnavailable`, a run whose sandbox can't start runs unsandboxed ([`sandbox.enabled`](https://code.claude.com/docs/en/settings-reference#sandbox-enabled)). If the slice item fails, make sure your script sends only `claude`'s JSON output (stdout) to the result path, then run step 5 again; a slice that ended in `error_max_budget_usd` means your spend limit is below one slice, so raise it.
+If the first item fails, make sure the committed script is executable (`git ls-files -s scripts/bounded-run.sh` starts with `100755`) and calls `claude` by name, not by a path or through `npx`, and doesn't set `PATH`: the check reads the committed script, so commit each fix. If an allow rule fails, narrow it to the one folder or command the task needs. If the sandbox item names a key, add it to the settings file: without `failIfUnavailable`, a run whose sandbox can't start runs unsandboxed ([`sandbox.enabled`](https://code.claude.com/docs/en/settings-reference#sandbox-enabled)). If the slice item fails, make sure your script sends only `claude`'s JSON output (stdout) to the result path, then run step 4 again; a slice that ended in `error_max_budget_usd` means your spend limit is below one slice, so raise it.
 
 ## Watch out
 
