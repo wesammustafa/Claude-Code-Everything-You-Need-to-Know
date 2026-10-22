@@ -1,7 +1,7 @@
 ---
 # What: a project skill that builds a feature test-first. Unfinished on purpose: lesson 1's Your turn has you finish it.
 # Runs: when you type /tdd <feature>. Once finished, also when Claude matches your request to the description.
-# Side effects: Claude edits code and tests and runs your test command, with your usual permission prompts.
+# Side effects: Claude edits code and tests and runs your test command, under your session's permission settings.
 # Requires: Claude Code and a project with a test command. Platforms: any.
 # Remove: delete .claude/skills/tdd/.
 # Tested in Claude Code v2.1.285 (stable) on macOS, 2026-10-06
