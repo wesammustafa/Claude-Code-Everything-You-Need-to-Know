@@ -111,7 +111,7 @@ You are done when all of these are true:
 - [ ] A committed workflow runs `anthropics/claude-code-action` pinned to a release tag or a full commit SHA, in automation mode, with its credential from a secret and none in the file.
 - [ ] Its limits are in the file: `--max-turns` of 10 or fewer, an `--allowedTools` list without unrestricted Bash, a read-only job token (no write access in `permissions` except `id-token: write`) and a `timeout-minutes` of 30 or fewer.
 - [ ] `.practice/a-5-runs.json` shows a completed, successful manual run on a commit that holds the workflow.
-- [ ] Self-check (not tested): Claude answered your issue in a comment, and your run's summary page explains each broken link.
+- [ ] Self-check (not tested): you can say who can start a Claude run in this copy, and which text from an issue or comment reaches Claude as input (see Watch out).
 
 Run `npm run check -- a-5` in this copy.
 

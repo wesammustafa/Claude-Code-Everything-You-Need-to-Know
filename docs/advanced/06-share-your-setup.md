@@ -1,6 +1,6 @@
 # Share your setup with a team
 
-<sub>**Advanced** · Lesson 6 of 7 · about 20 minutes · Needs: [GitHub Actions](05-github-actions.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
+<sub>**Advanced** · Lesson 6 of 7 · about 20 minutes · Needs: [GitHub Actions](05-github-actions.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-22</sub>
 
 ## Goal
 
@@ -17,7 +17,9 @@ By the end of this lesson you can share your Claude Code setup with a team: comm
 
 What everyone should get is committed: `.claude/settings.json`, `CLAUDE.md`, `.claude/rules/`, skills, agents and `.mcp.json` ([Explore the .claude directory](https://code.claude.com/docs/en/claude-directory#file-reference)). What is yours stays out of git: `.claude/settings.local.json`, which that table doesn't mark for commit, and `CLAUDE.local.md` ([What's not shown](https://code.claude.com/docs/en/claude-directory#what%E2%80%99s-not-shown)). Your local file outranks the shared one, so a teammate can override a team setting for themselves without a commit, though lists such as permission rules merge instead ([Settings files and precedence](https://code.claude.com/docs/en/settings#settings-precedence)).
 
-A plugin shares skills, agents and hooks with a team as one unit ([Create a Claude Code plugin](https://code.claude.com/docs/en/plugins/create#decide-when-to-use-a-plugin)), and a marketplace is a folder whose `.claude-plugin/marketplace.json` lists plugins ([Create a marketplace](https://code.claude.com/docs/en/plugins/create-marketplace)). Commit a marketplace inside the repository, declare it in `extraKnownMarketplaces` by a relative `directory` path, and turn its plugin on in `enabledPlugins`. Each teammate gets the plugin once they accept the workspace trust dialog for the folder ([Manage Claude Code plugins for your organization](https://code.claude.com/docs/en/plugins/org#require-plugins-per-repository)), and installs nothing: a plugin listed by a relative path loads from the marketplace itself ([Plugin loading reference](https://code.claude.com/docs/en/plugins/loading#enabled-in-project-settings-but-not-installed)).
+A committed `.claude/` folder already shares skills, agents and hooks with everyone who clones this one repository, under their short names. The docs say to keep that standalone setup while it serves one project, and to make a plugin when you want to install it in several projects or publish versioned releases ([Create a Claude Code plugin](https://code.claude.com/docs/en/plugins/create#decide-when-to-use-a-plugin)). This lesson builds the plugin inside one repository so you can see every step; when a second repository needs the same kit, move the marketplace to its own repository (Go further).
+
+A plugin shares skills, agents and hooks as one unit, and a marketplace is a folder whose `.claude-plugin/marketplace.json` lists plugins ([Create a marketplace](https://code.claude.com/docs/en/plugins/create-marketplace)). Commit a marketplace inside the repository, declare it in `extraKnownMarketplaces` by a relative `directory` path, and turn its plugin on in `enabledPlugins`. Each teammate gets the plugin once they accept the workspace trust dialog for the folder ([Manage Claude Code plugins for your organization](https://code.claude.com/docs/en/plugins/org#require-plugins-per-repository)), and installs nothing: a plugin listed by a relative path loads from the marketplace itself ([Plugin loading reference](https://code.claude.com/docs/en/plugins/loading#enabled-in-project-settings-but-not-installed)).
 
 ## Worked example
 
@@ -77,7 +79,7 @@ Your teammates keep asking how the repository's Claude Code setup works. Share a
 
 ## Your turn
 
-**Brief:** move one piece of your Intermediate setup into `team-kit`, so everyone who clones the repository gets it from the plugin. Take a skill, such as `tdd` from Intermediate lesson 1, or a subagent, such as `test-gaps` from lesson 6. For a harder move, take a hook from lesson 5: its entry goes in the plugin's `hooks/hooks.json`, in the same shape as in a settings file, with its script inside the plugin, called through `${CLAUDE_PLUGIN_ROOT}` ([Add components to a plugin](https://code.claude.com/docs/en/plugins/components#hooks)).
+**Brief:** your team wants the same Claude Code kit in its other repositories. Start the move: take one piece of your Intermediate setup into `team-kit`, so everyone who clones this repository gets it from the plugin, and the same plugin can later serve the others. Take a skill, such as `tdd` from Intermediate lesson 1, or a subagent, such as `test-gaps` from lesson 6. For a harder move, take a hook from lesson 5: its entry goes in the plugin's `hooks/hooks.json`, in the same shape as in a settings file, with its script inside the plugin, called through `${CLAUDE_PLUGIN_ROOT}` ([Add components to a plugin](https://code.claude.com/docs/en/plugins/components#hooks)).
 
 **Acceptance criteria:**
 
@@ -92,16 +94,15 @@ Because `team-kit` is listed by a relative path in a marketplace on your disk, C
 
 You are done when all of these are true:
 
-- [ ] A committed team marketplace lists a plugin by a relative path, and the entry's name matches the `name` in the plugin's `plugin.json`.
+- [ ] A committed team marketplace lists a plugin by a relative path, and `.practice/a-6-validate.json` records a strict validation of that plugin that passed.
 - [ ] The committed `.claude/settings.json` registers that marketplace by a relative path and turns the plugin on.
 - [ ] A component you moved is in the plugin and gone from `.claude/`.
 - [ ] A committed `.gitignore` keeps `.claude/settings.local.json` and `CLAUDE.local.md` out, and git tracks neither.
-- [ ] `.practice/a-6-validate.json` records a strict validation of the plugin directory that passed.
-- [ ] Self-check (not tested): in a new session in your repository, after trust, your moved component loads from `team-kit` with no install command.
+- [ ] Self-check (not tested): you can say why a teammate gets `team-kit` with no `claude plugin install`, when each teammate had to install `claude-code-setup` in [Intermediate lesson 8](../intermediate/08-plugins.md).
 
 Run `npm run check -- a-6 --dir <your repo>` from your practice copy.
 
-If the first item fails, run `claude plugin validate ./team-marketplace` and compare the entry's `name` with the plugin's `plugin.json`; a folder still named `dot-claude-plugin/` isn't a marketplace until you rename it to `.claude-plugin/`. If the second fails, check that the key under `extraKnownMarketplaces` is the marketplace's `name`, that the `path` is relative, such as `./team-marketplace`, and that the plugin's value is `true`, not `"true"`. If the third fails, run `git status`: the original may still be committed under `.claude/`, or the plugin's copy may not be committed yet. If the fourth fails, run `git rm --cached` on the tracked file, add both lines to `.gitignore` and commit. If the fifth fails, run the strict validation again from the repository's root and save its report after it passes.
+If the first item fails, run `claude plugin validate ./team-marketplace` and compare the entry's `name` with the plugin's `plugin.json`; a folder still named `dot-claude-plugin/` isn't a marketplace until you rename it to `.claude-plugin/`. If the marketplace passes, run the strict validation of the plugin again from the repository's root and save its report after it passes. If the second fails, check that the key under `extraKnownMarketplaces` is the marketplace's `name`, that the `path` is relative, such as `./team-marketplace`, and that the plugin's value is `true`, not `"true"`. If the third fails, run `git status`: the original may still be committed under `.claude/`, or the plugin's copy may not be committed yet. If the fourth fails, run `git rm --cached` on the tracked file, add both lines to `.gitignore` and commit.
 
 ## Watch out
 
