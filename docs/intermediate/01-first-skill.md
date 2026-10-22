@@ -54,7 +54,7 @@ flowchart LR
    ```
 
    followed by the investigation steps and the rule "Don't change any files."
-2. Start `claude` in the repository and run `/skills` ([Commands](https://code.claude.com/docs/en/commands)). If the [workspace trust dialog](https://code.claude.com/docs/en/security#built-in-protections) appears, trust only a repository you own or have reviewed. The list includes `five-whys`, a project skill because it lives in `.claude/skills/` ([Choose where skills load](https://code.claude.com/docs/en/skills#where-skills-live)).
+2. Start `claude` in the repository and run `/skills` ([Commands](https://code.claude.com/docs/en/commands)). If the [workspace trust dialog](https://code.claude.com/docs/en/security#additional-safeguards) appears, trust only a repository you own or have reviewed. The list includes `five-whys`, a project skill because it lives in `.claude/skills/` ([Choose where skills load](https://code.claude.com/docs/en/skills#where-skills-live)).
 3. Run the skill by name, with a problem from your repository. For example, in the practice copy:
 
    ```text
