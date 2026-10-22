@@ -1,0 +1,11 @@
+{
+  "rule": "lesson-quotes",
+  "expect": "fail",
+  "env": {
+    "LEARN_DIR": "practice"
+  },
+  "about": "The capstone gained a Tear down step, so the lesson file's Tear down count is wrong.",
+  "output": [
+    "a-capstone\\.md counts 2 steps in Tear down, but the lesson has 3\\."
+  ]
+}

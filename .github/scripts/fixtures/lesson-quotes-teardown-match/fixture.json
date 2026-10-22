@@ -1,0 +1,8 @@
+{
+  "rule": "lesson-quotes",
+  "expect": "pass",
+  "env": {
+    "LEARN_DIR": "practice"
+  },
+  "about": "The capstone's Tear down step count matches the numbered steps under its Tear down heading, and a Your turn part heading is not counted."
+}

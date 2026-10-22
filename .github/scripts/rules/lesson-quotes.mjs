@@ -118,7 +118,8 @@ async function lessonFile(root, lesson) {
   return res.text();
 }
 
-// The number of top-level numbered steps under a `## <name>` heading.
+// The number of top-level numbered steps under a `## <name>` heading: a
+// lesson's Worked example, Your turn, The task, or a capstone's Tear down.
 function stepCount(text, name) {
   let inside = false;
   let count = 0;
@@ -179,7 +180,9 @@ function compare(lesson, page, rawPage, rawFile, pages, listed) {
       heading = h[1];
       from = null;
       warmup = /^R\d+ \| Warm-up \|/.test(h[1]);
-      const counted = h[1].match(/(Worked example|Your turn|The task) step \d+ of (\d+)/);
+      // A `Your turn part N of M` heading splits one step into parts, so it
+      // isn't counted against the lesson's numbered steps.
+      const counted = h[1].match(/(Worked example|Your turn|The task|Tear down) step \d+ of (\d+)/);
       if (counted && !recounted.has(counted[1]) && stepCount(pageText, counted[1]) !== Number(counted[2])) {
         recounted.add(counted[1]);
         say(`counts ${counted[2]} steps in ${counted[1]}, but the lesson has ${stepCount(pageText, counted[1])}.`);
