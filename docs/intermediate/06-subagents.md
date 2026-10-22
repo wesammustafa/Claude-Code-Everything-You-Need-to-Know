@@ -1,6 +1,6 @@
 # Delegate to a custom subagent
 
-<sub>**Intermediate** · Lesson 6 of 8 · about 20 minutes · Needs: [Permissions, settings scopes and the sandbox](04-permissions-and-sandbox.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
+<sub>**Intermediate** · Lesson 6 of 8 · about 25 minutes · Needs: [Permissions, settings scopes and the sandbox](04-permissions-and-sandbox.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
 
 ## Goal
 
@@ -9,6 +9,7 @@ By the end of this lesson you can write a subagent that has only the tools its t
 ## You need
 
 - One of your own repositories, and your copy of the practice template with Node.js LTS: the check runs from the copy. To practice in the template copy instead, use it for both.
+- A small source change and its regression test that you are ready to review and keep. If you have no pending work, add a useful behavior in your repository, such as a CLI help response, and test it first.
 - `jq`, for the delegation log in Your turn.
 - Usage: light to moderate. Each delegation starts a second context window.
 
@@ -31,7 +32,7 @@ Delegate a task whose output you don't need in full, or that should run with res
 
 ## Worked example
 
-1. In your repository, download this guide's example [`code-reviewer`](../../examples/intermediate/06-subagents/dot-claude/agents/code-reviewer.md) and read it:
+1. In your repository, download the example [`code-reviewer`](../../examples/intermediate/06-subagents/dot-claude/agents/code-reviewer.md) and read it:
 
    ```bash
    mkdir -p .claude/agents
@@ -45,20 +46,29 @@ Delegate a task whose output you don't need in full, or that should run with res
    tools: Read, Grep, Glob
    ```
 
-2. Start `claude`. If a session was already running when you created `.claude/agents/`, restart it: Claude Code watches only the agent folders that existed when the session started ([Write subagent files](https://code.claude.com/docs/en/sub-agents#write-subagent-files)).
-3. Make a small change in a source file, then ask:
+2. Start `claude`. If a session was already running when you created `.claude/agents/`, restart it: Claude Code watches only the agent folders that existed when the session started ([Write subagent files](https://code.claude.com/docs/en/sub-agents#write-subagent-files)). Keep [auto mode](https://code.claude.com/docs/en/permission-modes#which-mode-a-session-starts-in) for this lesson. If Claude Code asks about an action, inspect its target before answering.
+3. Review the source change and its regression test, run your project's tests, then commit only those files. Keep this commit at `HEAD` while both reviewers work. In a terminal in your repository, `git show --stat --oneline HEAD` lets you confirm its scope ([Git show](https://git-scm.com/docs/git-show)). Leave unrelated work out of the review.
+4. Ask your main conversation to collect that commit's diff and give it to the custom reviewer:
 
    ```text
-   Use the code-reviewer agent to review my uncommitted changes.
+   Use the code-reviewer agent to review HEAD^..HEAD. First collect that diff and pass it the diff and changed filenames. Ask for a report only. Do not edit files.
    ```
 
-   The transcript shows a row such as `code-reviewer(Review uncommitted changes)` while it works. The reviewer can't run `git diff`, so it starts from the task message your session writes for it and a git status snapshot ([What loads at startup](https://code.claude.com/docs/en/sub-agents#what-loads-at-startup)); then you get its findings as a summary, grouped by severity. Your wording will differ.
+   The reviewer can't run `git diff`, so your main conversation must supply it. Wait for the completed report. Subagents normally run in the background and return their result later ([Run subagents in foreground or background](https://code.claude.com/docs/en/sub-agents#run-subagents-in-foreground-or-background)); `/tasks` lists background work ([Commands](https://code.claude.com/docs/en/commands)). A disappearing activity row does not prove the report is ready. Then you get its findings as a summary, grouped by severity. Your wording will differ.
+5. Review the same commit with the bundled skill, which accepts a Git revision range ([Review locally with `/code-review`](https://code.claude.com/docs/en/code-review-local#choose-what-to-review)):
+
+   ```text
+   /code-review HEAD^..HEAD
+   ```
+
+   Without `--fix`, the bundled skill asks for a report only ([What the review reads and edits](https://code.claude.com/docs/en/code-review-local#what-the-review-reads-and-edits)). That instruction differs from the custom reviewer's tool restriction: the custom reviewer has no file-editing or shell tool. Run `git status --short` after each review to inspect what actually happened ([Git status](https://git-scm.com/docs/git-status)).
+6. Compare the reports against the same diff. Pick a finding and prove or refute it with a targeted test before changing code. If neither report finds a bug, check an edge case yourself; do not invent a defect to satisfy the exercise. Review and commit any justified correction and `.claude/agents/code-reviewer.md`. Keep the useful source change, and leave unrelated work as you found it.
 
 ## Your turn
 
 Finish a read-only subagent that finds code no test calls, then delegate to it.
 
-1. Save this as `.claude/agents/test-gaps.md`, and replace both `TODO`s. Give it only read-only tools:
+1. A teammate asks to find missing tests and add them. Decide which part belongs in a read-only report and which part stays in your main conversation. Save this as `.claude/agents/test-gaps.md`, and replace both `TODO`s. Give it only read-only tools:
 
    ```markdown
    ---
@@ -67,27 +77,21 @@ Finish a read-only subagent that finds code no test calls, then delegate to it.
    tools: TODO
    ---
 
-   You find code that no test exercises. You never change files.
-
-   1. List the functions each source file exports.
-   2. For each one, search the test files for a call to it.
-   3. Report the functions that no test calls, grouped by file, with one line on what a test for each should check. If every function has a test, say so.
+   List exported functions no test calls. Never change files.
+   Report each by file and suggest a test. If all are called, say so.
    ```
 
+   Write the description on one line, with at least eight words: what it reports and when Claude should delegate to it. Keep writing tests outside its stated task. A call in a test is a lead for investigation, not proof that the function's behavior is well tested.
 2. Commit it.
 3. Save this delegation log to `.practice/i-6-hook.json`. It is a [`SubagentStart` hook](https://code.claude.com/docs/en/hooks#subagentstart) that appends the name of each subagent Claude starts to `.practice/i-6-agents.txt`, and logs nothing else:
 
    ```json
-   {
-     "hooks": {
-       "SubagentStart": [
-         { "hooks": [ { "type": "command", "command": "jq -r '.agent_type' >> \"$CLAUDE_PROJECT_DIR/.practice/i-6-agents.txt\"" } ] }
-       ]
-     }
-   }
+   {"hooks":{"SubagentStart":[{"hooks":[{
+     "type":"command","command":"jq -r '.agent_type' >> \"$CLAUDE_PROJECT_DIR/.practice/i-6-agents.txt\""
+   }]}]}}
    ```
 
-4. Start `claude --settings .practice/i-6-hook.json` and ask `Use the test-gaps agent to list the functions no test calls.`
+4. End your current session. Start `claude --settings .practice/i-6-hook.json` ([CLI reference](https://code.claude.com/docs/en/cli-reference#cli-flags)) and ask `Use the test-gaps agent to list the functions no test calls.` Wait for its completed report and compare a candidate with the actual tests. Reporting that every export is called is a valid result. Let the main conversation write any test you decide is needed; the subagent stays read-only.
 
 ## Check
 
@@ -96,7 +100,7 @@ You are done when all of these are true:
 - [ ] The committed subagent has its name and a description of when to use it: `git show HEAD:.claude/agents/test-gaps.md | head -5`.
 - [ ] Its tools are read-only: the `tools` line names tools such as `Read`, `Grep` and `Glob`, and no tool that edits files or runs commands, such as `Edit`, `Write` or `Bash`.
 - [ ] Claude delegated to it: `grep -x test-gaps .practice/i-6-agents.txt` prints `test-gaps`.
-- [ ] Self-check (not tested): the subagent's file reads stayed out of your conversation, and only its summary came back.
+- [ ] Self-check (not tested): the subagent's file reads stayed out of your conversation, and only its summary came back. You compared both reviews of the same commit with the actual diff, and checked the evidence for a finding or an edge case.
 
 Run `npm run check -- i-6 --dir <your repo>` from your practice copy, or `npm run check -- i-6` in the copy itself.
 
@@ -106,7 +110,6 @@ If the first item fails, check the frontmatter: Claude Code skips an agent file 
 
 - A subagent that lists `Bash` can still change files through shell commands, such as a `sed` edit or a [`> file` redirect](https://code.claude.com/docs/en/permissions#redirections), even without `Edit` or `Write`. Leave `Bash` out, and let your session pass it what a command would have shown.
 - On macOS, Linux and WSL, where Glob and Grep are absent by default, a subagent whose `tools` list names `Glob` or `Grep` and leaves out `Bash` gets the ones it names ([Glob tool behavior](https://code.claude.com/docs/en/tools-reference#glob-tool-behavior)).
-- A custom subagent reads your `CLAUDE.md` as the main conversation does, but the built-in Explore and Plan subagents skip it: restate a rule in your request when Claude hands them work ([Check common causes](https://code.claude.com/docs/en/debug-your-config#check-common-causes)).
 
 ## Go further
 
@@ -116,6 +119,6 @@ If the first item fails, check the frontmatter: Claude Code skips an agent file 
 
 ---
 
-<sub>Sources: [Create custom subagents](https://code.claude.com/docs/en/sub-agents) · [Hooks reference](https://code.claude.com/docs/en/hooks) · [Tools reference](https://code.claude.com/docs/en/tools-reference) · [Configure permissions](https://code.claude.com/docs/en/permissions) · [Debug your configuration](https://code.claude.com/docs/en/debug-your-config)</sub>
+<sub>Sources: [Create custom subagents](https://code.claude.com/docs/en/sub-agents) · [Review locally with /code-review](https://code.claude.com/docs/en/code-review-local) · [Hooks reference](https://code.claude.com/docs/en/hooks) · [Tools reference](https://code.claude.com/docs/en/tools-reference) · [Configure permissions](https://code.claude.com/docs/en/permissions) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Commands](https://code.claude.com/docs/en/commands) · [CLI reference](https://code.claude.com/docs/en/cli-reference) · [Git show](https://git-scm.com/docs/git-show) · [Git status](https://git-scm.com/docs/git-status)</sub>
 
 <sub>← [Enforce a rule with a hook](05-hooks.md) · [Intermediate index](README.md) · [Connect a tool with MCP](07-mcp.md) → · Topic: [Subagents and parallel work](../topics/subagents-and-parallel-work.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=i-6)</sub>

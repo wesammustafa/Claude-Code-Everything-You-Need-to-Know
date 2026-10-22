@@ -1,66 +1,57 @@
 # Pick the model and effort
 
-<sub>**Intermediate** · Lesson 3 of 8 · about 15 minutes · Needs: [Turn a repeated workflow into a skill](01-first-skill.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
+<sub>**Intermediate** · Lesson 3 of 8 · about 20 minutes · Needs: [Turn a repeated workflow into a skill](01-first-skill.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-21</sub>
 
 ## Goal
 
-By the end of this lesson you can pick a model and an effort level for a task, set them for a session or for one skill, and tell from a wrong result whether to raise the effort or pick a larger model.
+By the end of this lesson you can diagnose a weak result before changing models, choose model and effort settings for a real task, and give a routine skill its own settings.
 
 ## You need
 
-- The repository where you did [lesson 1](01-first-skill.md), with its skills, and your copy of the practice template with Node.js LTS: the check runs from the copy.
-- Usage: light. A larger model costs more per token, and a higher effort usually produces more tokens, so either tends to use more of your plan's usage.
+- The repository where you did [lesson 1](01-first-skill.md), with its committed skills, and a small change you intend to make. Use a terminal in that repository for edits and Git; use your practice copy only for the final check.
+- Usage: light. You will request a short investigation and a changelog entry.
 
 ## The idea
 
-Two separate choices shape an answer ([Choosing a Claude model and effort level in Claude Code](https://claude.com/blog/claude-model-and-effort-level-in-claude-code)):
+The [model aliases](https://code.claude.com/docs/en/model-config#model-aliases) include `sonnet` for daily coding and `opus` for complex reasoning. Model choice sets the capability you start with; [effort](https://code.claude.com/docs/en/model-config#choose-an-effort-level) changes how much reasoning and verification Claude applies. See the [model descriptions](https://platform.claude.com/docs/en/about-claude/models/overview).
 
-- The **model** decides how capable the answer can be.
-- The **effort** decides how much work Claude does on each request: how many files it reads, how much it verifies, and how far it goes before it checks back with you ([Model configuration](https://code.claude.com/docs/en/model-config#adjust-effort-level)).
+Before escalating, inspect the evidence:
 
-Anthropic's guidance is to start from the model's default effort for most tasks. When a result is wrong, find out why before you turn a knob:
-
-| What happened, or what the task is | What to change |
+| Evidence | Next experiment |
 |---|---|
-| Claude lacked context: a vague prompt, a missing tool or skill | The context: the prompt, `CLAUDE.md`, a skill |
-| Claude didn't try hard enough: it skipped a file or didn't run the tests | A higher effort |
-| Claude had the context, tried, and was still wrong: a subtle bug, an unfamiliar domain, a design decision | A larger model, such as `opus` |
-| Routine work: edits you can describe precisely, mechanical changes | A smaller model, such as `sonnet`, and a lower effort ([Choose an effort level](https://code.claude.com/docs/en/model-config#choose-an-effort-level)) |
-| Deep planning, then routine work | `opusplan`: Opus in plan mode, then Sonnet to carry out the plan |
+| A relevant file or failing example was missing | Supply it and retry |
+| Claude skipped verification despite having the context | Try more effort |
+| Context and verification were adequate, but the reasoning still failed | Try a more capable model |
+| A precise, routine change will be reviewed | Try a smaller model with lower effort |
 
-Where a choice applies decides how you set it. The [Models and effort](../reference/models.md) page lists the aliases and levels:
+Change one variable, then compare against the same success criterion. Higher effort cannot supply a missing fixture.
 
-| Scope | Model | Effort |
-|---|---|---|
-| This session | `/model`, then `s` on a row | `/effort`, then `s` in the slider |
-| Your default | `/model <alias>` | `/effort <level>` |
-| One turn | – | `ultrathink` in the prompt asks for deeper reasoning; the level stays |
-| One skill or subagent | `model:` in its frontmatter | `effort:` in its frontmatter |
+A skill's [`model:` and `effort:` frontmatter](https://code.claude.com/docs/en/skills#frontmatter-reference) overrides the session while it is active. It need not give every task the same settings.
 
 ## Worked example
 
-1. Start `claude` in your repository. Run `/status`: it shows the model. Run `/effort status`: it prints the effort level in force ([Commands](https://code.claude.com/docs/en/commands)).
-2. Switch the model for this session only: run `/model`, move to Sonnet and press `s`. `/status` now shows Sonnet, and your default for new sessions is unchanged ([Setting your model](https://code.claude.com/docs/en/model-config#setting-your-model)).
-3. Ask for deeper reasoning on one turn, without changing the effort level. In the practice template:
+1. Start `claude` in your repository. Run `/status`: it shows the model. Run `/effort status`: it prints the effort level in force ([Commands](https://code.claude.com/docs/en/commands)). Notice what your session actually shows; the account and provider affect the available models.
+2. Switch the model for this session only: run `/model`, move to Sonnet and press `s`. Run `/status` again to check the selected model. Your default for new sessions is unchanged ([Setting your model](https://code.claude.com/docs/en/model-config#setting-your-model)). Stay in auto mode for this lesson.
+3. Investigate an error path in your own repository, without making an edit:
 
    ```text
-   ultrathink: which links could linkcheck report as broken although their file exists?
+   ultrathink: read the code and tests for one error path in this repository. Identify a case the tests might miss. Cite the files you used. Do not edit files or run network requests.
    ```
 
-   Claude Code recognizes `ultrathink` and asks for deeper reasoning on that turn only. Phrases such as "think hard" are ordinary text ([Use ultrathink](https://code.claude.com/docs/en/model-config#use-ultrathink-for-one-off-deep-reasoning)).
-4. Give one task its own effort. `five-whys`, from lesson 1, traces a cause from evidence, where verification matters. Add a line to its frontmatter in `.claude/skills/five-whys/SKILL.md`:
+   `ultrathink` requests deeper reasoning for this turn without changing the session effort setting ([Use ultrathink](https://code.claude.com/docs/en/model-config#use-ultrathink-for-one-off-deep-reasoning)). Open a cited file and check whether the suspected gap is real. A plausible answer alone is not evidence.
+4. Give the diagnostic skill its own effort. Add this line inside the frontmatter of `.claude/skills/five-whys/SKILL.md`:
 
    ```yaml
    effort: high
    ```
 
-   From now on the skill runs at `high` while it's active, over the session's level. An effort set with the `CLAUDE_CODE_EFFORT_LEVEL` variable, and any effort cap, still come first ([Set the effort level](https://code.claude.com/docs/en/model-config#set-the-effort-level)).
+   `five-whys` investigates a cause from evidence, where verification matters. The skill overrides the session effort while active; an effort environment variable and any effort cap still take precedence ([Set the effort level](https://code.claude.com/docs/en/model-config#set-the-effort-level)). Review the skill diff and keep it for the final commit.
 
 ## Your turn
 
-Give a routine task the smallest model and effort that do the job.
+Tune a routine writing task differently from the diagnostic task. Decide what counts as a useful entry before you run it: the entry must describe the staged change for someone using your project.
 
-1. Save this skill as `.claude/skills/changelog/SKILL.md`:
+1. Save this partial skill as `.claude/skills/changelog/SKILL.md`. Its `disable-model-invocation: true` field keeps invocation under your control ([Control who invokes a skill](https://code.claude.com/docs/en/skills#control-who-invokes-a-skill)).
 
    ```markdown
    ---
@@ -74,9 +65,9 @@ Give a routine task the smallest model and effort that do the job.
    Read the staged changes with `git diff --staged`. Add one list item (`- `) under `## Unreleased` in CHANGELOG.md that says what changed for someone using the tool, creating the file and the heading if they don't exist. Change no other file.
    ```
 
-2. Replace both `TODO`s, using the first table. In auto mode, use `sonnet`: auto mode doesn't support Haiku, so a skill set to `haiku` keeps the session's model there ([Eliminate permission prompts with auto mode](https://code.claude.com/docs/en/permission-modes#eliminate-prompts-with-auto-mode)).
-3. Stage a small change of your own, run `/changelog`, and approve the edit. If Claude Code says the command is unknown, run `/reload-skills` first.
-4. Commit the change, `CHANGELOG.md` and the skill together.
+2. Choose the settings for a short entry whose input is an exact staged diff and whose output you will review. Use `model: sonnet` for this auto-mode exercise, and choose `effort: low` or `effort: medium`. Explain why this task needs different settings from a cause investigation. At this lesson's baseline, Haiku is not supported in auto mode, and an unsupported skill model leaves the session model in use ([Auto mode](https://code.claude.com/docs/en/permission-modes#eliminate-prompts-with-auto-mode), [skill model overrides](https://code.claude.com/docs/en/skills#frontmatter-reference)).
+3. Make a small intended change in your repository. Review and stage only that change, keeping unrelated work out of the staged diff. Run `/changelog`. Review any permission request if one appears; auto mode may allow the edit without one. If the skill is unknown, run `/reload-skills` and retry. Read the new entry against the staged diff. If it invents a benefit or names only an internal implementation detail, correct the entry before committing.
+4. Review the complete diff. Commit it with `CHANGELOG.md` and both skills. Check that the commit includes the diagnostic skill's effort line too.
 
 ## Check
 
@@ -84,26 +75,25 @@ You are done when all of these are true:
 
 - [ ] The committed skill picks a smaller model and a low or medium effort: `git show HEAD:.claude/skills/changelog/SKILL.md | grep -E '^(model|effort):'` shows both.
 - [ ] A committed `CHANGELOG.md` has a `- ` entry under `## Unreleased`: `git show HEAD:CHANGELOG.md` shows it.
-- [ ] Self-check (not tested): for a precise rename, a new feature with a clear scope, and a bug Claude keeps getting wrong with all the context, you can say which model and effort you'd pick, and why.
+- [ ] Self-check (not tested): you checked the investigation against a cited file and the entry against the staged diff, and can explain why the tasks use different settings.
 
 Run `npm run check -- i-3 --dir <your repo>` from your practice copy, or `npm run check -- i-3` in the copy itself.
 
-If the skill check says the model is larger than the task needs, set `model: sonnet`: a change you can describe precisely is routine work. If there's no entry, stage a change before you run `/changelog`, because the skill reads only staged changes.
+If the skill check says the model is larger than the task needs, revisit the precise input and reviewed output in Your turn step 2. If there's no entry, stage a change before you run `/changelog`, because the skill reads only staged changes.
 
 ## Watch out
 
 - `/model <alias>` and `/effort <level>` save your choice as the default for new sessions. To change only the current session, press `s` in the picker or the slider.
-- Switching the model mid-session, and on most models changing the effort, makes the next request read the whole conversation with no cache hits; while the cache is warm, Claude Code asks you to confirm ([How Claude Code uses prompt caching](https://code.claude.com/docs/en/prompt-caching#switching-models)).
-- Set with `/effort`, `max` lasts for the current session only, and it can overthink: test it before you rely on it ([Choose an effort level](https://code.claude.com/docs/en/model-config#choose-an-effort-level)).
+- A model switch makes the next request read the conversation without cache hits. Claude Code may ask you to confirm while the cache is warm ([Switching models](https://code.claude.com/docs/en/prompt-caching#switching-models)).
 
 ## Go further
 
-- [Choosing a Claude model and effort level in Claude Code](https://claude.com/blog/claude-model-and-effort-level-in-claude-code): Anthropic's guide to the two settings, with the "try or know" test this lesson uses.
-- [Models and effort](../reference/models.md): the model aliases, the effort levels and the ways to set them.
+- [Models and effort](../reference/models.md): model aliases, effort levels and where each setting applies.
 - [Model configuration](https://code.claude.com/docs/en/model-config): defaults by account and provider, and organization limits.
+- [Choosing a Claude model and effort level in Claude Code](https://claude.com/blog/claude-model-and-effort-level-in-claude-code): Anthropic's guidance on choosing the next experiment after a weak result.
 
 ---
 
-<sub>Sources: [Model configuration](https://code.claude.com/docs/en/model-config) · [Commands](https://code.claude.com/docs/en/commands) · [Choosing a Claude model and effort level in Claude Code](https://claude.com/blog/claude-model-and-effort-level-in-claude-code) · [Extend Claude with skills](https://code.claude.com/docs/en/skills) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [How Claude Code uses prompt caching](https://code.claude.com/docs/en/prompt-caching)</sub>
+<sub>Sources: [Model configuration](https://code.claude.com/docs/en/model-config) · [Models overview](https://platform.claude.com/docs/en/about-claude/models/overview) · [Commands](https://code.claude.com/docs/en/commands) · [Extend Claude with skills](https://code.claude.com/docs/en/skills) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [How Claude Code uses prompt caching](https://code.claude.com/docs/en/prompt-caching)</sub>
 
 <sub>← [Organize project memory and see what loaded](02-organize-memory.md) · [Intermediate index](README.md) · [Permissions, settings scopes and the sandbox](04-permissions-and-sandbox.md) → · Topic: [Models, effort and cost](../topics/models-effort-and-cost.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=i-3)</sub>

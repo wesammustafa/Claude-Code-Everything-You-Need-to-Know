@@ -4,35 +4,36 @@
 
 ## Goal
 
-By the end of this lesson you can put a permission rule in the settings file whose scope fits it, see which rules are in force, and turn on the sandbox so the shell commands Claude runs can't write outside your project, a temporary folder and any folders you've added.
+By the end of this lesson you can choose a narrow permission rule, put it in the right settings scope, and verify the sandbox's boundary.
 
 ## You need
 
-- Your copy of the practice template, for the Worked example, with Node.js LTS: the check runs from it. One of your own repositories with a test command, for Your turn; or use the template copy for both.
+- Your practice copy with Node.js LTS for the Worked example and the check.
+- One of your own repositories with a test command for Your turn; or use the practice copy for both. Keep your home directory outside the project's writable folders for the sandbox probe.
 - macOS, Linux or WSL 2. On Linux and WSL 2, the sandbox needs `bubblewrap` and `socat` ([Set up Linux and WSL2](https://code.claude.com/docs/en/sandboxing#set-up-linux-and-wsl2)); a Codespace on your template copy has both.
 - Usage: light.
 
 ## The idea
 
-Claude Code reads settings from four files, and the file a rule goes in decides who it affects ([Settings](https://code.claude.com/docs/en/settings#settings-files-and-who-they-affect)):
+The file a rule goes in decides who it affects ([Settings](https://code.claude.com/docs/en/settings#settings-files-and-who-they-affect)):
 
 | File | Affects | Put here |
 |---|---|---|
-| `~/.claude/settings.json` | You, in every project | Your own preferences |
-| `.claude/settings.json`, committed | Everyone in the project | Team rules: files Claude must never read, commands everyone runs |
-| `.claude/settings.local.json`, kept out of git | You, in this project | Your own exceptions. "Yes, and don't ask again" on a Bash command saves here |
-| Managed settings | Everyone your organization deploys them to | Policy your settings can't override, apart from a few security keys where the stricter value wins |
+| `~/.claude/settings.json` | You, in every project | Personal defaults |
+| `.claude/settings.json`, committed | Everyone in the project | Team rules |
+| `.claude/settings.local.json`, kept out of git | You, in this project | Personal choices |
+| Managed settings | Your organization | Organization policy |
 
 When the same key is set in more than one place, the higher level wins: managed, then the command line, then local, then shared project, then user ([Settings precedence](https://code.claude.com/docs/en/settings#settings-precedence)). Rule lists such as `permissions.allow` merge across the files instead. Among the rules, deny is checked first, then ask, then allow, and the first match decides ([Configure permissions](https://code.claude.com/docs/en/permissions#manage-permissions)).
 
-Permission rules govern Claude's tools. The [sandbox](https://code.claude.com/docs/en/sandboxing) adds a boundary that the operating system enforces around the shell commands Claude runs: by default they can write only in the project, a per-user temporary folder and any folders you've added with `--add-dir` or `/add-dir`, and reach the network only through a proxy that checks each host against the hosts you allow. It's off until you turn it on. In its auto-allow mode, a command that runs inside it needs no permission prompt.
+By default, the [sandbox](https://code.claude.com/docs/en/sandboxing) restricts shell writes to the project, a per-user temporary folder and added directories, using an operating-system boundary.
 
 ## Worked example
 
 In your practice copy:
 
-1. Start `claude` and run `/status`. Its `Setting sources` line lists the settings files this session loaded.
-2. Save the team's rules as `.claude/settings.json`. These are the docs' rules for keeping Claude out of `.env` files ([Exclude sensitive files](https://code.claude.com/docs/en/settings-reference#exclude-sensitive-files)), plus the test command:
+1. Open a terminal in your practice copy and start a Manual session with `claude --permission-mode default`. Check that the footer says `manual mode on`. Manual is the deliberate exercise here: auto mode can approve a test run without a prompt, so the missing prompt alone would not demonstrate an allow rule ([Choose a permission mode](https://code.claude.com/docs/en/permission-modes#available-modes)). Then run `/status`. Its `Setting sources` line lists the settings files this session loaded. Open `/sandbox`; keep the sandbox off for the rule comparison, then close the panel.
+2. Save the team's rules as `.claude/settings.json`. Merge this block with any settings already there, rather than replacing unrelated keys. These are the docs' rules for keeping Claude out of `.env` files ([Exclude sensitive files](https://code.claude.com/docs/en/settings-reference#exclude-sensitive-files)), plus the exact test command:
 
    ```json
    {
@@ -43,22 +44,22 @@ In your practice copy:
    }
    ```
 
-   Claude Code reloads a settings file when it changes ([When edits take effect](https://code.claude.com/docs/en/settings#when-edits-take-effect)). Run `/permissions`: it lists `Bash(npm test)` among the allow rules and the two `Read` rules among the deny rules.
-3. Ask Claude to `Run npm test`. It runs without a permission prompt: the allow rule covers it.
-4. Turn on the sandbox. Run `/sandbox` and, on the Mode tab, select auto-allow. Claude Code saves the setting to `.claude/settings.local.json`, your personal file ([Get started](https://code.claude.com/docs/en/sandboxing#get-started)).
+   Claude Code reloads permission rules when the file changes ([When edits take effect](https://code.claude.com/docs/en/settings#when-edits-take-effect)). Run `/permissions`: it lists `Bash(npm test)` among the allow rules and the two `Read` rules among the deny rules. Check their source file too.
+3. Ask Claude to `Run npm test`. Read the test result. In Manual mode, with the sandbox off and no matching ask or deny rule, this exact command runs without a permission prompt because the allow rule covers it. If it asks, inspect the command and rule sources instead of approving a broader grant.
+4. Turn on the sandbox. Run `/sandbox` and, on the Mode tab, select auto-allow. Claude Code saves the setting to `.claude/settings.local.json`, your personal file ([Get started](https://code.claude.com/docs/en/sandboxing#get-started)). Sandboxed commands can now run without routine permission prompts; this is separate from auto permission mode. Permission approval and that boundary answer different questions: may this command run, and what can it reach? If `/sandbox` shows only a Dependencies tab, install `bubblewrap` and `socat`, restart Claude Code and run `/sandbox` again.
 5. Ask Claude to try a write outside the project:
 
    ```text
    Run this exact command and show me its output: touch ~/sandbox-probe
    ```
 
-   It runs without a prompt and fails: `Operation not permitted` on macOS, `Read-only file system` on Linux and WSL 2 ([Confirm commands run inside the sandbox](https://code.claude.com/docs/en/sandboxing#confirm-commands-run-inside-the-sandbox)). If Claude offers to retry outside the sandbox, decline.
+   Read the tool's output: `Operation not permitted` on macOS, or `Read-only file system` on Linux and WSL 2 ([Confirm commands run inside the sandbox](https://code.claude.com/docs/en/sandboxing#confirm-commands-run-inside-the-sandbox)). If Claude offers to retry outside the sandbox, decline. The rejected write is the useful evidence, not whether a permission prompt appeared.
 
 ## Your turn
 
-Set up the same split in your own repository.
+Audit a proposed team setup in your own repository. A teammate suggests `Bash(npm *)` so tests run without prompts, and wants your personal sandbox choice committed too. Decide what belongs in shared settings before editing.
 
-1. Save this partial file as `.claude/settings.json`, and replace each `TODO` with a rule. Allow only the one command that runs your tests, such as `Bash(npm test)` or `Bash(pytest)`:
+1. Choose the exact command from your repository's test script. Share that narrow rule and the `.env` denies; keep your personal sandbox choice local. `Bash(npm *)` would also approve unrelated npm commands. Finish this partial block in `.claude/settings.json`, preserving existing settings. Use the Worked example's deny rules for both the base file and the `.env.*` family:
 
    ```json
    {
@@ -69,9 +70,10 @@ Set up the same split in your own repository.
    }
    ```
 
-2. Commit it: these are rules for everyone who works in the repository.
-3. In a session there, turn on the sandbox with `/sandbox` in auto-allow mode, and repeat the Worked example's step 5.
-4. Run `git status`. `.claude/settings.local.json` isn't listed: Claude Code keeps it out of git when it creates it ([Keep personal settings out of a repository](https://code.claude.com/docs/en/settings#keep-personal-settings-out-of-a-repository)).
+   Replace every `TODO` before saving the final file. Allow only the one command that runs your tests, such as `Bash(npm test)` or `Bash(pytest)`.
+2. Review and commit the team's rules. Use your repository's terminal. Check that the commit contains the narrow test rule and both deny rules, while preserving the earlier lessons' settings.
+3. In a Claude Code session in your repository, turn on the sandbox with `/sandbox` in auto-allow mode. Check the Config tab: a local `"enabled": false` overrides a shared `true`. Ask Claude to `Run this exact command and show me its output: touch ~/sandbox-probe`, and inspect the actual failure. If Claude offers to retry outside the sandbox, decline.
+4. Run [`git status --short`](https://git-scm.com/docs/git-status) and [`git ls-files .claude/settings.local.json`](https://git-scm.com/docs/git-ls-files) in your repository's terminal. Your personal file should appear in neither output. Claude Code keeps it out of git when it creates it; if you created it by hand, add it to `.gitignore` yourself ([Keep personal settings out of a repository](https://code.claude.com/docs/en/settings#keep-personal-settings-out-of-a-repository)). Leave Manual mode when the exercise is finished: press `Shift+Tab` until the footer shows `auto mode on`, if auto mode is available ([Switch permission modes](https://code.claude.com/docs/en/permission-modes#switch-permission-modes)).
 
 ## Check
 
@@ -79,17 +81,16 @@ You are done when all of these are true:
 
 - [ ] The committed `.claude/settings.json` denies reading `.env` and `.env.*` files and allows one test command: `git show HEAD:.claude/settings.json | jq .permissions` shows them.
 - [ ] The sandbox is on, and your personal file stays out of git: `jq .sandbox .claude/settings.local.json` shows `"enabled": true`, and `git ls-files .claude/settings.local.json` prints nothing.
-- [ ] Self-check (not tested): Claude's `touch ~/sandbox-probe` failed without asking you first.
+- [ ] Self-check (not tested): you inspected the active rules and sandbox configuration, and Claude's attempted write outside the project failed without an unsandboxed retry.
 
 Run `npm run check -- i-4 --dir <your repo>` from your practice copy, or `npm run check -- i-4` in the copy itself.
 
-If the first item fails on a broad rule, replace it with the one command: `Bash(npm *)` would let Claude run any npm command without asking. If `/sandbox` shows only a Dependencies tab, install `bubblewrap` and `socat`, restart Claude Code and run `/sandbox` again.
+If the rules item fails, review Your turn step 1, then commit the corrected settings. If the sandbox item fails, revisit Your turn step 3 in the repository the check reads; a local disable wins over a shared enable.
 
 ## Watch out
 
-- The sandbox wraps shell commands only. Claude's file and web tools run outside it and follow your permission rules; hooks and local MCP servers run outside it with your full access ([What runs outside the sandbox](https://code.claude.com/docs/en/sandboxing#what-runs-outside-the-sandbox)). If the sandbox can't start, Claude Code runs commands unsandboxed unless `sandbox.failIfUnavailable` is `true`.
-- On its own, a `Read` deny rule covers Claude's file tools and the file commands Claude Code recognizes in Bash, such as `cat`, but not a script that opens files itself ([Read and Edit](https://code.claude.com/docs/en/permissions#read-and-edit)). With the sandbox on, Claude Code also adds your `Read` deny paths to the sandbox's [`filesystem.denyRead`](https://code.claude.com/docs/en/settings-reference#sandbox-filesystem-denyread), so sandboxed commands and the processes they start can't read those files either.
-- In a Codespace or another container, if sandboxed commands fail with `Can't mount proc on /newroot/proc`, see [Bubblewrap fails to start inside a container](https://code.claude.com/docs/en/sandboxing#bubblewrap-fails-to-start-inside-a-container).
+- The sandbox wraps shell commands only. Claude's file and web tools follow permission rules; hooks and local MCP servers run outside it with your full access ([What runs outside the sandbox](https://code.claude.com/docs/en/sandboxing#what-runs-outside-the-sandbox)). If the sandbox can't start, Claude Code runs commands unsandboxed unless `sandbox.failIfUnavailable` is `true`.
+- A `Read` deny rule doesn't stop an arbitrary script from opening files itself ([Read and Edit](https://code.claude.com/docs/en/permissions#read-and-edit)). With the sandbox on, Claude Code also adds your `Read` deny paths to the sandbox's [`filesystem.denyRead`](https://code.claude.com/docs/en/settings-reference#sandbox-filesystem-denyread). If a container reports `Can't mount proc on /newroot/proc`, follow [Bubblewrap fails to start inside a container](https://code.claude.com/docs/en/sandboxing#bubblewrap-fails-to-start-inside-a-container) before treating the sandbox as working.
 
 ## Go further
 
@@ -99,6 +100,6 @@ If the first item fails on a broad rule, replace it with the one command: `Bash(
 
 ---
 
-<sub>Sources: [Settings files and precedence](https://code.claude.com/docs/en/settings) · [All settings](https://code.claude.com/docs/en/settings-reference) · [Configure permissions](https://code.claude.com/docs/en/permissions) · [Configure the sandboxed Bash tool](https://code.claude.com/docs/en/sandboxing)</sub>
+<sub>Sources: [Settings files and precedence](https://code.claude.com/docs/en/settings) · [All settings](https://code.claude.com/docs/en/settings-reference) · [Configure permissions](https://code.claude.com/docs/en/permissions) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Configure the sandboxed Bash tool](https://code.claude.com/docs/en/sandboxing) · [git status](https://git-scm.com/docs/git-status) · [git ls-files](https://git-scm.com/docs/git-ls-files)</sub>
 
 <sub>← [Pick the model and effort](03-model-and-effort.md) · [Intermediate index](README.md) · [Enforce a rule with a hook](05-hooks.md) → · Topic: [Permissions and safety](../topics/permissions-and-safety.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=i-4)</sub>

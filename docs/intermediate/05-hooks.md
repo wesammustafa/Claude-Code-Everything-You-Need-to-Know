@@ -4,7 +4,7 @@
 
 ## Goal
 
-By the end of this lesson you can add a hook that enforces a rule every time Claude edits a file, and show it firing.
+By the end of this lesson you can add a hook that enforces a rule on Claude's Edit and Write tools, and show it firing.
 
 ## You need
 
@@ -101,10 +101,10 @@ esac
 exit 0
 ```
 
-1. Each block prints a `Blocked:` reason to stderr and exits with 2; everything else exits with 0.
+1. Choose a narrower environment-file match so `src/config.envelope.ts` is allowed. Finish both TODOs. Each block prints a `Blocked:` reason to stderr and exits with 2; everything else exits with 0.
 2. Run the Check's test table until every row gives its expected exit code.
 3. In a session, ask Claude to use its Write tool to create `secrets/test.key`. Your hook blocks it.
-4. Commit the script and `.claude/settings.json`. Keep the script executable: `git ls-files -s .claude/hooks/protect-files.sh` starts with `100755`.
+4. Review and commit both hook scripts and `.claude/settings.json`, including the formatter you downloaded. Keep the protection script executable: `git ls-files -s .claude/hooks/protect-files.sh` starts with `100755` ([Git ls-files](https://git-scm.com/docs/git-ls-files)).
 
 ## Check
 
@@ -123,7 +123,7 @@ You are done when all of these are true:
 
 Run `npm run check -- i-5 --dir <your repo>` from your practice copy, or `npm run check -- i-5` in the copy itself.
 
-If a row is wrong, test that path alone and print the name the script sees: `basename` of `.env.local` is `.env.local`, so a `case` pattern `.env.*` matches it. The check runs the committed script, so commit each fix before you run it. If the second item fails on the file mode, run `chmod +x .claude/hooks/protect-files.sh`, then `git add` it and commit again.
+If every row gives an unexpected result, run `bash -n .claude/hooks/protect-files.sh` to check the syntax, then run one row without `2>/dev/null` to read its error ([Bash manual](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html)). If a row is wrong, test that path alone and print the name the script sees: `basename` of `.env.local` is `.env.local`, so a `case` pattern `.env.*` matches it. The check runs the committed script, so commit each fix before you run it. If the second item fails on the file mode, run `chmod +x .claude/hooks/protect-files.sh`, then `git add` it and commit again.
 
 ## Watch out
 
@@ -139,6 +139,6 @@ If a row is wrong, test that path alone and print the name the script sees: `bas
 
 ---
 
-<sub>Sources: [Automate actions with hooks](https://code.claude.com/docs/en/hooks-guide) · [Hooks reference](https://code.claude.com/docs/en/hooks) · [Configure permissions](https://code.claude.com/docs/en/permissions) · [Debug your configuration](https://code.claude.com/docs/en/debug-your-config)</sub>
+<sub>Sources: [Automate actions with hooks](https://code.claude.com/docs/en/hooks-guide) · [Hooks reference](https://code.claude.com/docs/en/hooks) · [Configure permissions](https://code.claude.com/docs/en/permissions) · [Debug your configuration](https://code.claude.com/docs/en/debug-your-config) · [Git ls-files](https://git-scm.com/docs/git-ls-files) · [Bash manual](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html)</sub>
 
 <sub>← [Permissions, settings scopes and the sandbox](04-permissions-and-sandbox.md) · [Intermediate index](README.md) · [Delegate to a custom subagent](06-subagents.md) → · Topic: [Hooks](../topics/hooks.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=i-5)</sub>

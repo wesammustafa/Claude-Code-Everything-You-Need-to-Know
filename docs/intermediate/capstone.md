@@ -25,7 +25,9 @@ Build each part the way its lesson taught:
 6. **Chrome DevTools MCP** at project scope, pinned, with its usage statistics, CrUX lookups and update checks off ([lesson 7](07-mcp.md)).
 7. **The `claude-code-setup` plugin**, turned on for everyone at project scope, and installed ([lesson 8](08-plugins.md)).
 
-Then, in a session, try each part: run the skill by name, ask Claude to edit a file in `samples/` with its Edit tool, delegate a review, approve the MCP server and use one of its tools. Pick the model and effort for each job as [lesson 3](03-model-and-effort.md) showed. Commit everything, and make sure `npm test` still passes.
+8. **A bug fix.** Reproduce the malformed-percent bug in `capstone/intermediate-bug.md`. A link such as `[broken](bad%.md)` crashes the checker instead of producing its normal broken-link report. Use your setup to diagnose and repair it. Malformed percent escapes are broken links; valid percent-encoded paths must still resolve. Add a regression test that fails before the repair and passes after it, and keep `samples/` unchanged. Commit the source fix and its regression test together.
+
+Then, in a session in auto mode ([Permission modes](https://code.claude.com/docs/en/permission-modes)), try each part: run the skill by name, ask Claude to edit a file in `samples/` with its Edit tool, delegate a review, approve the MCP server and use one of its tools. Pick the model and effort for each job as [lesson 3](03-model-and-effort.md) showed. Commit everything, and make sure `npm test` still passes.
 
 ## Check
 
@@ -40,6 +42,7 @@ You are done when all of these are true:
 - [ ] The committed `.claude/settings.json` turns the sandbox on, and `.claude/settings.local.json` stays out of git.
 - [ ] A committed `CLAUDE.md` imports a file with `@path`, and the file exists.
 - [ ] A committed rule in `.claude/rules/` is scoped with `paths:`, and every scoped rule matches a file in the repository.
+- [ ] The committed CLI reports malformed percent escapes as broken links, continues checking later links and still resolves valid encoded paths.
 - [ ] `npm test` passes, and `git status --porcelain` prints nothing.
 
 Run `npm run check -- i-capstone` in your practice copy. Each item that fails prints what to fix.
@@ -62,6 +65,6 @@ If this level helped, a star helps other developers find the guide.
 
 ---
 
-<sub>Sources: [Advanced setup](https://code.claude.com/docs/en/setup) · the [Intermediate lessons](README.md), which cite the official pages for each step.</sub>
+<sub>Sources: [Advanced setup](https://code.claude.com/docs/en/setup) · [Permission modes](https://code.claude.com/docs/en/permission-modes) · the [Intermediate lessons](README.md), which cite the official pages for each step.</sub>
 
 <sub>← [Install and manage plugins](08-plugins.md) · [Intermediate index](README.md) · [Advanced index](../advanced/README.md) → · [Stuck on this capstone?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=i-capstone)</sub>
