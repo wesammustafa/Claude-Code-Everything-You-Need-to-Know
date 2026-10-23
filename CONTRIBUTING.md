@@ -107,6 +107,12 @@ Each release has an entry in [CHANGELOG.md](CHANGELOG.md), newest first:
 
 Pushing a `v*` tag runs the edition gate. On an edition tag, every stamped page's Stamp must name the edition's version. On a correction tag, every stamped page changed since the previous tag must carry a Stamp dated after that tag's entry.
 
+Not every merge is a release. After a pull request merges, decide which of these it is:
+
+- **Edition** (`vYYYY.MM`): a new level or a major rework. Verify every stamped page at the then-current `stable` and re-stamp it, as the Baseline item under [Pull requests](#pull-requests) says. Then turn the Unreleased entry into the edition's entry, tag the merge commit, and publish a GitHub Release with the entry as its notes.
+- **Correction** (`vYYYY.MM.N`, numbered from 1 within an edition): a merged change that alters what a learner does or reads as fact, such as a wrong command, a stale claim, or a broken lesson, example or check. Batch these: one correction covers every such change merged since the previous tag, at most once a week. Its entry lists the changes. Give every stamped page changed since the previous tag a new Stamp, then tag the merge commit and publish a Release as for an edition.
+- **No tag**: typos, wording that changes no fact or step, CI, the guide's own check scripts, tooling and repository housekeeping. These ship on `main` without a release.
+
 ### Numbers, benchmarks and estimates
 
 | Kind | Rule |
