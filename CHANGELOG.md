@@ -8,6 +8,10 @@ Baseline: Claude Code v2.1.292 (stable), frozen on 2026-10-15.
 
 Every change in the next edition is verified against this version, the `stable` dist-tag of [`@anthropic-ai/claude-code`](https://www.npmjs.com/package/@anthropic-ai/claude-code?activeTab=versions) on 2026-10-15. It stays frozen until the edition ships, unless a later `stable` release removes, renames or changes the default of something a lesson teaches.
 
+## v2026.11 - 2026-10-23
+
+Verified against Claude Code v2.1.292 (stable).
+
 Editions 2 and 3: the Intermediate and Advanced paths, with checked exercises. Every level is now rebuilt, and no page from the previous edition remains.
 
 ### Added
