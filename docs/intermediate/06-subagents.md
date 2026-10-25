@@ -53,14 +53,14 @@ Delegate a task whose output you don't need in full, or that should run with res
    Use the code-reviewer agent to review the commit in .practice/i-1-commit.txt: pass it that commit's diff and filenames. Ask for a report only. Do not edit files.
    ```
 
-   The reviewer can't run `git diff`, so your main conversation must supply it. Wait for the completed report; `/tasks` lists background work ([Commands](https://code.claude.com/docs/en/commands)). Its findings come back as a summary. Your wording will differ.
+   The reviewer can't run `git diff`, so your main conversation must supply it. Wait for the completed report; `/tasks` lists background work ([Commands](https://code.claude.com/docs/en/commands)). Its findings come back as a summary. Your wording will differ. After Claude responds, Claude Code can suggest your next prompt, such as a follow-up step; this step edits nothing, so start typing to dismiss a suggestion you don't want ([Prompt suggestions](https://code.claude.com/docs/en/interactive-mode#prompt-suggestions)).
 4. Review the same commit with the bundled skill, which accepts a Git revision range ([Review locally with `/code-review`](https://code.claude.com/docs/en/code-review-local#choose-what-to-review)). Put the SHA from `.practice/i-1-commit.txt` in place of `<sha>`:
 
    ```text
    /code-review <sha>^..<sha>
    ```
 
-   Without `--fix`, the bundled skill asks for a report only ([What the review reads and edits](https://code.claude.com/docs/en/code-review-local#what-the-review-reads-and-edits)). That instruction differs from the custom reviewer's tool restriction: the custom reviewer has no file-editing or shell tool. Run `git status --short` after each review to inspect what actually happened ([Git status](https://git-scm.com/docs/git-status)).
+   Without `--fix`, the bundled skill asks for a report only ([What the review reads and edits](https://code.claude.com/docs/en/code-review-local#what-the-review-reads-and-edits)). That instruction differs from the custom reviewer's tool restriction: the custom reviewer has no file-editing or shell tool. Run `git status --short` now, after both reviews, to inspect what actually happened ([Git status](https://git-scm.com/docs/git-status)).
 5. Compare the reports against the same diff. A reviewer asked to find gaps usually reports some, even when the work is sound: act on a finding that affects correctness or the requirements, after a targeted test shows it is real ([Add an adversarial review step](https://code.claude.com/docs/en/best-practices#add-an-adversarial-review-step)). Review and commit any justified fix and `.claude/agents/code-reviewer.md`.
 
 ## Your turn
@@ -117,6 +117,6 @@ If the first item fails, check the frontmatter: Claude Code skips an agent file 
 
 ---
 
-<sub>Sources: [Create custom subagents](https://code.claude.com/docs/en/sub-agents) · [Review locally with /code-review](https://code.claude.com/docs/en/code-review-local) · [Best practices](https://code.claude.com/docs/en/best-practices) · [Hooks reference](https://code.claude.com/docs/en/hooks) · [Configure permissions](https://code.claude.com/docs/en/permissions) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Commands](https://code.claude.com/docs/en/commands) · [CLI reference](https://code.claude.com/docs/en/cli-reference) · [Git status](https://git-scm.com/docs/git-status)</sub>
+<sub>Sources: [Create custom subagents](https://code.claude.com/docs/en/sub-agents) · [Review locally with /code-review](https://code.claude.com/docs/en/code-review-local) · [Best practices](https://code.claude.com/docs/en/best-practices) · [Interactive mode](https://code.claude.com/docs/en/interactive-mode) · [Hooks reference](https://code.claude.com/docs/en/hooks) · [Configure permissions](https://code.claude.com/docs/en/permissions) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Commands](https://code.claude.com/docs/en/commands) · [CLI reference](https://code.claude.com/docs/en/cli-reference) · [Git status](https://git-scm.com/docs/git-status)</sub>
 
 <sub>← [Enforce a rule with a hook](05-hooks.md) · [Intermediate index](README.md) · [Connect a tool with MCP](07-mcp.md) → · Topic: [Subagents and parallel work](../topics/subagents-and-parallel-work.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=i-6)</sub>

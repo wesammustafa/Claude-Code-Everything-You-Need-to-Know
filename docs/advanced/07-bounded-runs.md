@@ -8,7 +8,7 @@ By the end of this lesson you can bound an unattended `claude -p` run with least
 
 ## You need
 
-- The repository you scripted in [lesson 4](04-headless.md) and shared in [lesson 6](06-share-your-setup.md), with a test command, and your copy of the practice template with Node.js LTS and the Advanced checks ([Practice](README.md#practice)): the check runs from the copy. Set up the repository's `.practice/` folder as [Beginner lesson 1](../beginner/01-install-and-look-around.md#you-need) describes, if you haven't yet.
+- The repository you scripted in [lesson 4](04-headless.md) and shared in [lesson 6](06-share-your-setup.md), with a test command, and your copy of the practice template with Node.js LTS and the Advanced checks ([Practice](README.md#practice)): the check runs from the copy. Set up the repository's `.practice/` folder as the [Intermediate index](../intermediate/README.md#prepare-your-own-repository) describes, if you haven't yet.
 - bash and `jq`, on macOS, Linux or WSL 2. On Linux and WSL 2, the sandbox needs `bubblewrap` and `socat` ([Set up Linux and WSL2](https://code.claude.com/docs/en/sandboxing#set-up-linux-and-wsl2)).
 - Usage: moderate. Each run stops at its limits. Cheap variant: in Your turn, set the limits from your slice run, and run the script on one more slice instead of the whole task.
 
@@ -61,6 +61,7 @@ Work in your repository. The folders `src/` and `test/` and the command `npm tes
    before=$(git rev-parse --short HEAD)
    claude -p "$1" \
      --setting-sources project \
+     --strict-mcp-config \
      --settings .claude/bounded-run.json \
      --permission-mode dontAsk \
      --model sonnet \
@@ -75,6 +76,7 @@ Work in your repository. The folders `src/` and `test/` and the command `npm tes
    ```
 
    - `--setting-sources project`: leaves your user and local settings files out of the run ([CLI flags](https://code.claude.com/docs/en/cli-reference#cli-flags)), so an allow rule you saved with "Yes, and don't ask again", which goes to `.claude/settings.local.json`, doesn't join the bounds ([Permission system](https://code.claude.com/docs/en/permissions#permission-system)).
+   - `--strict-mcp-config`: Claude Code uses only the MCP servers you pass with `--mcp-config`, and this runner passes none, so no server in `.mcp.json` starts ([CLI flags](https://code.claude.com/docs/en/cli-reference#cli-flags), [Project scope](https://code.claude.com/docs/en/mcp#project-scope)). That includes one you rejected when Claude Code asked about it: the rejection is saved in `.claude/settings.local.json` ([`disabledMcpjsonServers`](https://code.claude.com/docs/en/settings-reference#disabledmcpjsonservers)), which `--setting-sources project` leaves out.
    - `--settings`: the bounds file, which Claude Code applies above the project's own settings ([Change a setting for one session](https://code.claude.com/docs/en/settings#change-a-setting-for-one-session)). The allow rules go there because a `-p` run ignores the allow rules in a never-trusted folder's `.claude/settings.json` ([What runs before you trust a folder](https://code.claude.com/docs/en/permissions#what-runs-before-you-trust-a-folder)).
    - `allowUnsandboxedCommands: false` in that file: because it comes from `--settings`, a project's `true` can't turn the unsandboxed retry back on, and Claude Code then also ignores the repository's settings that loosen the sandbox ([Strict sandbox mode](https://code.claude.com/docs/en/sandboxing#turn-off-the-retry-with-strict-sandbox-mode)).
    - `--max-turns` and `--max-budget-usd`: configuration, so set your own.
@@ -103,6 +105,7 @@ Hand a real task to a run you'd trust overnight, and catch what it shouldn't hav
 Acceptance criteria:
 
 - `scripts/bounded-run.sh "<task>" <result.json>` runs it: one `claude -p` call in `dontAsk` mode, with JSON output saved to the result path, and the bounds from a committed file passed with `--settings`.
+- It starts no MCP server you didn't pass: the call keeps `--strict-mcp-config`.
 - Each allow rule names one folder or one command: no bare `Bash` or `Edit`, and no rule for the whole project or a whole program, such as `Bash(npm *)`. Your committed `.claude/settings.json` counts too: in a folder you've trusted, its allow rules join the bounds file's ([Lists merge instead of overriding](https://code.claude.com/docs/en/settings#lists-merge-instead-of-overriding)). So do the `allowed-tools` of the repository's skills, in a run that invokes one ([Pre-approve tools for a skill](https://code.claude.com/docs/en/skills#pre-approve-tools-for-a-skill)).
 - Deny rules stop `git commit` and `git push`, each with the trailing ` *`: `Bash(git push)` matches only the bare command.
 - The sandbox is on and strict, sends sandboxed commands through your rules, and the run refuses to start without it.
@@ -114,7 +117,7 @@ Acceptance criteria:
 
 You are done when all of these are true:
 
-- [ ] `scripts/bounded-run.sh` is committed and executable, takes a task and a result path (`scripts/bounded-run.sh "<task>" <result.json>`), and starts `claude -p` in `dontAsk` mode with JSON output and a committed `--settings` file.
+- [ ] `scripts/bounded-run.sh` is committed and executable, takes a task and a result path (`scripts/bounded-run.sh "<task>" <result.json>`), and starts `claude -p` in `dontAsk` mode with JSON output, `--strict-mcp-config` and a committed `--settings` file.
 - [ ] It sets a turn limit and a spend limit.
 - [ ] Every allow rule names one command or one folder, and the deny rules stop `git commit` and `git push`.
 - [ ] The settings file turns the sandbox on in strict mode without auto-allow, and makes the run refuse to start without it.
@@ -127,7 +130,7 @@ If the first item fails, make sure the committed script is executable (`git ls-f
 
 ## Watch out
 
-- Your bounds don't cover everything the run loads. Hooks and local MCP servers run outside the sandbox with your full access ([What runs outside the sandbox](https://code.claude.com/docs/en/sandboxing#what-runs-outside-the-sandbox)). As [lesson 4](04-headless.md#watch-out) warned, a `-p` run uses a repository's hooks and `.mcp.json` servers without asking, and it applies the `allowed-tools` of the repository's skills too ([What runs before you trust a folder](https://code.claude.com/docs/en/permissions#what-runs-before-you-trust-a-folder)). Read those hooks, servers and skills before a bounded run, or add `"disableAllHooks": true` to the bounds file to turn hooks off for it.
+- Your bounds don't cover everything the run loads. Hooks and local MCP servers run outside the sandbox with your full access ([What runs outside the sandbox](https://code.claude.com/docs/en/sandboxing#what-runs-outside-the-sandbox)). As [lesson 4](04-headless.md#watch-out) warned, a `-p` run uses a repository's hooks without asking, and its `.mcp.json` servers unless you pass `--strict-mcp-config`; it applies the `allowed-tools` of the repository's skills too ([What runs before you trust a folder](https://code.claude.com/docs/en/permissions#what-runs-before-you-trust-a-folder)). Read those hooks and skills before a bounded run, or add `"disableAllHooks": true` to the bounds file to turn hooks off for it.
 - A deny rule matches the command Claude writes, not what a program does ([What a Bash rule doesn't match](https://code.claude.com/docs/en/permissions#bash-rule-limits)). The allowed `npm test` runs test files the run can edit. In the sandbox, that code can write anywhere in your working directory but protected paths, even make a commit ([Protected paths](https://code.claude.com/docs/en/sandboxing#protected-paths)). That's why the script prints HEAD before and after, and why your review covers every changed file.
 - A dynamic workflow starts in this run only if an allow rule names `Workflow` or `Workflow(<name>)`, or a `PreToolUse` hook approves it ([Approve the plan before it runs](https://code.claude.com/docs/en/workflows#approve-the-plan-before-it-runs)); if you let one start, its agents' spend counts toward `--max-budget-usd`, as a subagent's does ([CLI flags](https://code.claude.com/docs/en/cli-reference#cli-flags)).
 
@@ -139,6 +142,6 @@ If the first item fails, make sure the committed script is executable (`git ls-f
 
 ---
 
-<sub>Sources: [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Configure permissions](https://code.claude.com/docs/en/permissions) · [Extend Claude with skills](https://code.claude.com/docs/en/skills) · [Configure the sandboxed Bash tool](https://code.claude.com/docs/en/sandboxing) · [All settings](https://code.claude.com/docs/en/settings-reference) · [Settings files and precedence](https://code.claude.com/docs/en/settings) · [CLI reference](https://code.claude.com/docs/en/cli-reference) · [Create custom subagents](https://code.claude.com/docs/en/sub-agents) · [How the agent loop works](https://code.claude.com/docs/en/agent-sdk/agent-loop) · [Track cost and usage](https://code.claude.com/docs/en/agent-sdk/cost-tracking) · [Commands](https://code.claude.com/docs/en/commands) · [Best practices](https://code.claude.com/docs/en/best-practices) · [Orchestrate subagents at scale with dynamic workflows](https://code.claude.com/docs/en/workflows)</sub>
+<sub>Sources: [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Configure permissions](https://code.claude.com/docs/en/permissions) · [Extend Claude with skills](https://code.claude.com/docs/en/skills) · [Configure the sandboxed Bash tool](https://code.claude.com/docs/en/sandboxing) · [All settings](https://code.claude.com/docs/en/settings-reference) · [Settings files and precedence](https://code.claude.com/docs/en/settings) · [CLI reference](https://code.claude.com/docs/en/cli-reference) · [Connect Claude Code to tools via MCP](https://code.claude.com/docs/en/mcp) · [Create custom subagents](https://code.claude.com/docs/en/sub-agents) · [How the agent loop works](https://code.claude.com/docs/en/agent-sdk/agent-loop) · [Track cost and usage](https://code.claude.com/docs/en/agent-sdk/cost-tracking) · [Commands](https://code.claude.com/docs/en/commands) · [Best practices](https://code.claude.com/docs/en/best-practices) · [Orchestrate subagents at scale with dynamic workflows](https://code.claude.com/docs/en/workflows)</sub>
 
 <sub>← [Share your setup with a team](06-share-your-setup.md) · [Advanced index](README.md) · [Advanced capstone](capstone.md) → · Topic: [Permissions and safety](../topics/permissions-and-safety.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=a-7)</sub>

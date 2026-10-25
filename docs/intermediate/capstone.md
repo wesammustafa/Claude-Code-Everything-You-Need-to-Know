@@ -22,7 +22,7 @@ The brief is in `capstone/intermediate-brief.md` in your practice copy: set the 
 5. **A second opinion that can't change anything.** Before we commit, we want each change reviewed by something that can only read the code.
 6. **The docs in a browser.** Claude should open the docs in a browser through Chrome DevTools MCP, which we reviewed at one version. Everyone runs that version, and nothing leaves our machines that doesn't need to: usage statistics, CrUX lookups and update checks stay off.
 7. **One official plugin.** Everyone in the repository should get `claude-code-setup` from the official marketplace.
-8. **A real bug, fixed with your setup.** Reproduce the malformed-percent bug in `capstone/intermediate-bug.md` with your link-check workflow: a link such as `[broken](bad%.md)` crashes the checker instead of producing its normal broken-link report. Fix it with Claude while your protection keeps `samples/` unchanged. Malformed percent escapes are broken links; valid percent-encoded paths must still resolve. Add a regression test that fails before the repair and passes after it. If your copy runs lesson 5's test gate, expect it to send Claude back to work when Claude stops while that test fails. Before you commit, have your reviewer review the fix in a session started with `claude --settings .practice/i-capstone-hook.json`, lesson 6's delegation log with its own log file:
+8. **A real bug, fixed with your setup.** Reproduce the malformed-percent bug in `capstone/intermediate-bug.md` with your link-check workflow: a link such as `[broken](bad%.md)` crashes the checker instead of producing its normal broken-link report. Fix it with Claude while your protection keeps `samples/` unchanged, and tell Claude not to commit until your reviewer has reviewed the fix: in auto mode, Claude Code blocks an action that goes against a boundary you state in the conversation ([Boundaries you state in conversation](https://code.claude.com/docs/en/permission-modes#boundaries-you-state-in-conversation)). Malformed percent escapes are broken links; valid percent-encoded paths must still resolve. Add a regression test that fails before the repair and passes after it. If your copy runs lesson 5's test gate, expect it to send Claude back to work when Claude stops while that test fails. Before you commit, have your reviewer review the fix in a session started with `claude --settings .practice/i-capstone-hook.json`, lesson 6's delegation log with its own log file:
 
    ```json
    {"hooks":{"SubagentStart":[{"hooks":[{
@@ -32,7 +32,7 @@ The brief is in `capstone/intermediate-brief.md` in your practice copy: set the 
 
    Then commit the source fix and its regression test together.
 
-Then try each part in a session, and pick the model and effort for each job as [lesson 3](03-model-and-effort.md) showed. Commit everything, and make sure `npm test` still passes.
+Then try each part in a session, and pick the model and effort for each job as [lesson 3](03-model-and-effort.md) showed. To see your `samples/` protection work, ask for the Edit tool by name and say it's a test, as in [lesson 5](05-hooks.md#worked-example): `Use your Edit tool, not a shell command, to add a blank line at the end of samples/guide.md. I'm testing whether my protection blocks it.` Claude can also change a file with a shell command, which an `Edit|Write` hook doesn't see ([Filter hooks with matchers](https://code.claude.com/docs/en/hooks-guide#filter-hooks-with-matchers)). If the edit goes through, restore the file with `git restore samples/` and fix your protection. Commit everything, and make sure `npm test` still passes.
 
 ## Check
 
@@ -59,6 +59,7 @@ The check doesn't look at these parts of the Intermediate Exit. Tick them yourse
 - [ ] I ran my skill by name, and Claude loaded it on its own when I asked it to check links.
 - [ ] I saw my protection stop an Edit in `samples/` during a session.
 - [ ] I approved the MCP server in a session and used one of its tools.
+- [ ] My reviewer reviewed the fix before I committed it.
 - [ ] I installed the plugin with `claude plugin install claude-code-setup@claude-plugins-official --scope project`, as a teammate does after pulling the settings.
 - [ ] I can pick a model and an effort level for a task, and say why.
 - [ ] When Claude didn't follow an instruction, I can find out whether its file loaded.
@@ -67,6 +68,6 @@ When every box on this page is ticked, you're ready for the [Advanced level](../
 
 ---
 
-<sub>Sources: [Advanced setup](https://code.claude.com/docs/en/setup) · [All settings](https://code.claude.com/docs/en/settings-reference) · the [Intermediate lessons](README.md), which cite the official pages for each step.</sub>
+<sub>Sources: [Advanced setup](https://code.claude.com/docs/en/setup) · [All settings](https://code.claude.com/docs/en/settings-reference) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Automate actions with hooks](https://code.claude.com/docs/en/hooks-guide) · the [Intermediate lessons](README.md), which cite the official pages for each step.</sub>
 
 <sub>← [Install and manage plugins](08-plugins.md) · [Intermediate index](README.md) · [Advanced index](../advanced/README.md) → · [Stuck on this capstone?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=i-capstone)</sub>

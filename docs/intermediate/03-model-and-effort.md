@@ -69,7 +69,7 @@ A changelog entry is routine work: give it only what it needs, and keep root-cau
    ```
 
 2. Choose the settings for a short entry whose input is an exact staged diff and whose output you will review. Set `model: haiku`: on the Anthropic API it resolves to Haiku 5.5, which auto mode supports. Set `effort: low`: `medium` is already Claude Code's default for Haiku 5.5 and Sonnet 5.5 ([Adjust effort level](https://code.claude.com/docs/en/model-config#adjust-effort-level)). Explain why this task needs different settings from a cause investigation.
-3. Make a small intended change in your repository. Review and stage only that change, keeping unrelated work out of the staged diff. Run `/changelog`. Review any permission request if one appears; auto mode may allow the edit without one. If the skill is unknown, run `/reload-skills` and retry. Read the new entry against the staged diff. If it invents a benefit or names only an internal implementation detail, correct the entry before committing.
+3. Make a small intended change in your repository. In your practice copy, leave the malformed percent escape bug alone, such as a link to `bad%.md`: the [Intermediate capstone](capstone.md) fixes it. Review and stage only that change, keeping unrelated work out of the staged diff. Run `/changelog`. Review any permission request if one appears; auto mode may allow the edit without one. If the skill is unknown, run `/reload-skills` and retry. Read the new entry against the staged diff. If it invents a benefit or names only an internal implementation detail, correct the entry before committing.
 4. Review the complete diff. Commit it with `CHANGELOG.md` and both skills. Check that the commit includes the diagnostic skill's effort line too.
 
 ## Check

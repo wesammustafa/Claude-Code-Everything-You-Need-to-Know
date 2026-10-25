@@ -8,7 +8,7 @@ By the end of this lesson you can run two Claude Code sessions at once, each in 
 
 ## You need
 
-- One of your own repositories with a test command and no uncommitted changes, checked out on its default branch and up to date with a remote you can push to (Watch out says why), and your copy of the practice template with Node.js LTS and the Advanced checks ([Practice](README.md#practice)): the check runs from the copy. Set up the repository's `.practice/` folder as [Beginner lesson 1](../beginner/01-install-and-look-around.md#you-need) describes, if you haven't yet.
+- One of your own repositories with a test command and no uncommitted changes, checked out on its default branch and up to date with a remote you can push to (Watch out says why), and your copy of the practice template with Node.js LTS and the Advanced checks ([Practice](README.md#practice)): the check runs from the copy. Set up the repository's `.practice/` folder as the [Intermediate index](../intermediate/README.md#prepare-your-own-repository) describes, if you haven't yet.
 - If you haven't run `claude` in that repository before, run it there once and accept the trust dialog: until then `claude --worktree` exits with an error ([Start Claude in a worktree](https://code.claude.com/docs/en/worktrees#start-claude-in-a-worktree)).
 - macOS, Linux or WSL 2, and three terminals open at the repository's root: two for the sessions, one for git.
 - Usage: moderate. Two sessions work at the same time.

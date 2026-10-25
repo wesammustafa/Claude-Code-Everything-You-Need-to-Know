@@ -109,7 +109,7 @@ Claude sometimes stops while the tests fail: send it back to work when it does, 
    echo '{"stop_hook_active":false}' | CLAUDE_PROJECT_DIR=$PWD .claude/hooks/test-gate.sh; echo "exit $?"
    ```
 
-4. Review and commit both hook scripts and `.claude/settings.json`, including the formatter you downloaded. Keep the scripts executable: `git ls-files -s .claude/hooks` shows `100755` for each ([Git ls-files](https://git-scm.com/docs/git-ls-files)).
+4. Review and commit the three hook scripts, the formatter you downloaded included, and `.claude/settings.json`. Keep the scripts executable: `git ls-files -s .claude/hooks` shows `100755` for each ([Git ls-files](https://git-scm.com/docs/git-ls-files)).
 5. See the gate in a session. Break one test on purpose again, start `claude`, and ask a question that needs no edit, such as `Which file holds the link parser?` When Claude finishes its answer, the gate runs the tests and sends it back to work with your reason. Then restore the test you broke with git, and check that `git status --short` prints nothing.
 
 ## Check

@@ -8,7 +8,7 @@ By the end of this lesson you can split a project's instructions into imports an
 
 ## You need
 
-- One of your own repositories with a committed `CLAUDE.md`, as [Beginner lesson 5](../beginner/05-project-memory.md) leaves it, and your copy of the practice template with Node.js LTS: the check runs from the copy. To practice in the template copy instead, use it for both. Set up the repository's `.practice/` folder as [Beginner lesson 1](../beginner/01-install-and-look-around.md#you-need) describes, if you haven't yet.
+- One of your own repositories with a committed `CLAUDE.md`, as [Beginner lesson 5](../beginner/05-project-memory.md) leaves it, and your copy of the practice template with Node.js LTS: the check runs from the copy. To practice in the template copy instead, use it for both. Set up the repository's `.practice/` folder as the [Intermediate index](README.md#prepare-your-own-repository) describes, if you haven't yet.
 - `jq`, for the load log in the Worked example.
 - Usage: light.
 

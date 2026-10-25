@@ -34,7 +34,7 @@ The job: tidy up `brokenLinks` in `src/check-links.js`. You'll try one approach,
 2. Explore:
 
    ```text
-   Explain how src/check-links.js finds broken links, and which files call brokenLinks.
+   Explain how src/check-links.js finds broken links, and which files in src/ and test/ call brokenLinks.
    ```
 
    Your wording will differ, but Claude should name `src/cli.js` and `test/links.test.js` as the callers. Every file it reads to answer goes into the context window: type `/context` to see what fills it.

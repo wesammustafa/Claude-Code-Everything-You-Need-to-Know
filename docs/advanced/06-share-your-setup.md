@@ -8,7 +8,7 @@ By the end of this lesson you can share your Claude Code setup with a team: comm
 
 ## You need
 
-- Your own repository with your Intermediate setup: the committed `.claude/settings.json` from [Intermediate lesson 4](../intermediate/04-permissions-and-sandbox.md), and the skills, hooks and subagents from lessons 1, 5 and 6. Set up its `.practice/` folder as [Beginner lesson 1](../beginner/01-install-and-look-around.md#you-need) describes, if you haven't yet.
+- Your own repository with your Intermediate setup: the committed `.claude/settings.json` from [Intermediate lesson 4](../intermediate/04-permissions-and-sandbox.md), and the skills, hooks and subagents from lessons 1, 5 and 6. Set up its `.practice/` folder as the [Intermediate index](../intermediate/README.md#prepare-your-own-repository) describes, if you haven't yet.
 - Your copy of the practice template with Node.js LTS and the Advanced checks ([Practice](README.md#practice)): the check runs from the copy.
 - bash, `curl` and git, on macOS, Linux or WSL 2.
 - Usage: light.

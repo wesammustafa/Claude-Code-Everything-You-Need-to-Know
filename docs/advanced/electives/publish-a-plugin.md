@@ -37,7 +37,7 @@ Publishing is a `.claude-plugin/marketplace.json` in a git repository: once it's
    echo '# commit-helper: drafts commit messages in a short, consistent format.' > plugins/commit-helper/README.md
    ```
 
-   `.practice/` holds the file the Check reads, ignored without a commit as in [Beginner lesson 1](../../beginner/01-install-and-look-around.md#you-need). The `.gitignore` line keeps out the results each eval run writes under `evals/results/` ([Write and refine cases](https://code.claude.com/docs/en/plugin-evals#write-and-refine-cases)), and the release checklist asks for the README ([Prepare your plugin for release](https://code.claude.com/docs/en/plugins/publish#prepare-your-plugin-for-release)). Then save the plugin's manifest, with the fields that checklist asks for, as `plugins/commit-helper/.claude-plugin/plugin.json`:
+   `.practice/` holds the file the Check reads, ignored without a commit as in the [Intermediate index](../../intermediate/README.md#prepare-your-own-repository). The `.gitignore` line keeps out the results each eval run writes under `evals/results/` ([Write and refine cases](https://code.claude.com/docs/en/plugin-evals#write-and-refine-cases)), and the release checklist asks for the README ([Prepare your plugin for release](https://code.claude.com/docs/en/plugins/publish#prepare-your-plugin-for-release)). Then save the plugin's manifest, with the fields that checklist asks for, as `plugins/commit-helper/.claude-plugin/plugin.json`:
 
    ```json
    {

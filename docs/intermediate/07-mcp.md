@@ -8,7 +8,7 @@ By the end of this lesson you can connect a version-pinned MCP server at the rig
 
 ## You need
 
-- One of your own repositories, and your copy of the practice template with Node.js LTS: the check runs from the copy. To practice in the template copy instead, use it for both. Set up the repository's `.practice/` folder as [Beginner lesson 1](../beginner/01-install-and-look-around.md#you-need) describes, if you haven't yet.
+- One of your own repositories, and your copy of the practice template with Node.js LTS: the check runs from the copy. To practice in the template copy instead, use it for both. Set up the repository's `.practice/` folder as the [Intermediate index](README.md#prepare-your-own-repository) describes, if you haven't yet.
 - Chrome, and npm, which comes with Node.js: the server runs through `npx` ([upstream requirements](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/chrome-devtools-mcp-v1.10.1/README.md#requirements)).
 - Usage: light.
 
@@ -66,7 +66,7 @@ In an interactive session, Claude Code asks you to approve a project's servers b
    Use the chrome-devtools tools to open .practice/demo.html as a file: URL. Read the title, visible count and console error. Report the error and its source location, without editing any files.
    ```
 
-   If Claude Code asks about a tool call, inspect the tool name and inputs, then approve only that call ([Configure permissions](https://code.claude.com/docs/en/permissions#manage-permissions)). Do not grant a standing approval for this exercise. Read the actual tool output: the count stays at `Counting links...`, and the script fails when it tries to update an element that wasn't found. Your browser's error wording may differ. After reviewing the first call, return to auto mode with `Shift+Tab`, if available, so later calls can proceed under its checks ([Switch permission modes](https://code.claude.com/docs/en/permission-modes#switch-permission-modes)).
+   If Claude Code asks about a tool call, inspect the tool name and inputs, then approve only that call ([Configure permissions](https://code.claude.com/docs/en/permissions#manage-permissions)). Do not grant a standing approval for this exercise. Read the actual tool output: the count stays at `Counting links...`, and the script fails when it tries to update an element that wasn't found. Your browser's error wording may differ. After reviewing the first call, press `Shift+Tab` until the status bar reads `⏵⏵ auto mode on`, if auto mode is available, so later calls can proceed under its checks ([Switch permission modes](https://code.claude.com/docs/en/permission-modes#switch-permission-modes)).
 
 ## Your turn
 

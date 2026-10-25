@@ -9,7 +9,7 @@ By the end of this Elective you can run Claude Code inside a dev container, keep
 ## You need
 
 - For the Worked example: your copy of the practice template on GitHub, and GitHub Codespaces on your account. Nothing to install on your computer: the copy's dev container installs Claude Code.
-- For Your turn: one of your own repositories with no `.devcontainer/` folder, with its `.practice/` folder set up as [Beginner lesson 1](../../beginner/01-install-and-look-around.md#you-need) describes.
+- For Your turn: one of your own repositories with no `.devcontainer/` folder, with its `.practice/` folder set up as the [Intermediate index](../../intermediate/README.md#prepare-your-own-repository) describes.
 - Also for Your turn: Docker, VS Code with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) ([System requirements](https://code.visualstudio.com/docs/devcontainers/containers#_system-requirements)), and `jq`, on macOS, Linux or WSL 2. Without Docker, do the Worked example and the Check's self-check.
 - Usage: light. A codespace also uses your GitHub account's Codespaces compute while it runs, and storage while it exists ([GitHub Codespaces billing](https://docs.github.com/en/billing/concepts/product-billing/github-codespaces)).
 

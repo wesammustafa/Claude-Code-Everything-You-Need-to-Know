@@ -28,6 +28,19 @@ git commit -m "Add the Intermediate checks and lessons"
 
 A copy older than the app has no `learn` script, so `npm run learn` says `Missing script: "learn"`: run `node learn/app.mjs` instead.
 
+### Prepare your own repository
+
+Lessons save the files their checks read in a `.practice/` folder, in the repository you practice in. Before your first lesson in one of your own repositories, create that folder there and tell git to ignore it without a commit ([gitignore](https://git-scm.com/docs/gitignore)):
+
+```bash
+mkdir -p .practice
+echo '.practice/' >> "$(git rev-parse --git-path info/exclude)"
+```
+
+**Windows:** `New-Item -ItemType Directory -Force .practice` and `Add-Content (git rev-parse --git-path info/exclude) '.practice/'`.
+
+Your copy of the practice template already ignores `.practice/` in its `.gitignore`, so it needs neither command.
+
 ## When to use what
 
 Seven of the ways to extend Claude Code, each with the sign that you need it; [Extend Claude Code](https://code.claude.com/docs/en/features-overview#build-your-setup-over-time) lists the rest. Each links its lesson.
@@ -90,6 +103,6 @@ Optional lessons beside the core path:
 
 ---
 
-<sub>Sources: [Extend Claude Code](https://code.claude.com/docs/en/features-overview) · [How Claude remembers your project](https://code.claude.com/docs/en/memory) · [Extend Claude with skills](https://code.claude.com/docs/en/skills) · [Hooks](https://code.claude.com/docs/en/hooks) · [Create custom subagents](https://code.claude.com/docs/en/sub-agents) · [Workflows](https://code.claude.com/docs/en/workflows) · [Connect Claude Code to tools via MCP](https://code.claude.com/docs/en/mcp) · [Plugins](https://code.claude.com/docs/en/plugins) · [Code intelligence plugins](https://code.claude.com/docs/en/plugins/code-intelligence) · [Configure the sandboxed Bash tool](https://code.claude.com/docs/en/sandboxing) · [Claude Code in action](https://academy.claude.com/courses/claude-code-in-action) · [Introduction to agent skills](https://academy.claude.com/courses/introduction-to-agent-skills) · [Introduction to subagents](https://academy.claude.com/courses/introduction-to-subagents)</sub>
+<sub>Sources: [Extend Claude Code](https://code.claude.com/docs/en/features-overview) · [How Claude remembers your project](https://code.claude.com/docs/en/memory) · [Extend Claude with skills](https://code.claude.com/docs/en/skills) · [Hooks](https://code.claude.com/docs/en/hooks) · [Create custom subagents](https://code.claude.com/docs/en/sub-agents) · [Workflows](https://code.claude.com/docs/en/workflows) · [Connect Claude Code to tools via MCP](https://code.claude.com/docs/en/mcp) · [Plugins](https://code.claude.com/docs/en/plugins) · [Code intelligence plugins](https://code.claude.com/docs/en/plugins/code-intelligence) · [Configure the sandboxed Bash tool](https://code.claude.com/docs/en/sandboxing) · [gitignore](https://git-scm.com/docs/gitignore) · [Claude Code in action](https://academy.claude.com/courses/claude-code-in-action) · [Introduction to agent skills](https://academy.claude.com/courses/introduction-to-agent-skills) · [Introduction to subagents](https://academy.claude.com/courses/introduction-to-subagents)</sub>
 
 <sub>Up: [Claude Code: Everything You Need to Know](../../README.md#pick-your-level)</sub>

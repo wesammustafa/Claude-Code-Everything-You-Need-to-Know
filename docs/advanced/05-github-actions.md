@@ -78,7 +78,7 @@ Both of the docs' setup paths install the Claude GitHub App ([Setup](https://cod
 
 ## Your turn
 
-**Brief:** run Claude in CI with every limit written in the file, then leave no live credential behind. Add `.github/workflows/linkcheck-report.yml`, a workflow you start by hand, in which Claude runs the template's link checker on `samples/` and explains each broken link on the run's summary page, without changing any files. The docs' [Run on a schedule](https://code.claude.com/docs/en/github-actions#run-on-a-schedule) example is a starting point. It sets a model with `--model`: pick one as in [Intermediate lesson 3](../intermediate/03-model-and-effort.md), or leave that line out to use Claude Code's default model ([Pass CLI arguments](https://code.claude.com/docs/en/github-actions#pass-cli-arguments)).
+**Brief:** run Claude in CI with every limit written in the file, then leave no credential in the copy. Add `.github/workflows/linkcheck-report.yml`, a workflow you start by hand, in which Claude runs the template's link checker on `samples/` and explains each broken link on the run's summary page, without changing any files. The docs' [Run on a schedule](https://code.claude.com/docs/en/github-actions#run-on-a-schedule) example is a starting point. It sets a model with `--model`: pick one as in [Intermediate lesson 3](../intermediate/03-model-and-effort.md), or leave that line out to use Claude Code's default model ([Pass CLI arguments](https://code.claude.com/docs/en/github-actions#pass-cli-arguments)).
 
 **Acceptance criteria:**
 
@@ -126,7 +126,7 @@ Then run it, save the record and tear down:
    ```
 
 6. Delete the secret: `gh secret delete ANTHROPIC_API_KEY`, or `gh secret delete CLAUDE_CODE_OAUTH_TOKEN` ([gh secret delete](https://cli.github.com/manual/gh_secret_delete)).
-7. With an API key, delete the key the secret held on the Claude Console's [API keys page](https://platform.claude.com/settings/keys).
+7. With an API key, delete the key the secret held on the Claude Console's [API keys page](https://platform.claude.com/settings/keys). With a subscription token, nothing in this teardown revokes it, so it stays valid until it expires ([Uninstall](https://code.claude.com/docs/en/github-actions#uninstall)): that's why this lesson recommends an API key.
 
 If you installed the Claude GitHub App for this copy, also remove the copy from the App's repository access on GitHub ([Modifying repository access](https://docs.github.com/en/apps/using-github-apps/reviewing-and-modifying-installed-github-apps#modifying-repository-access)).
 
@@ -148,7 +148,7 @@ The check reads the workflow from your history, so it still passes after the tea
 ## Watch out
 
 - Anyone with write access to the repository can start a run with `@claude`, and the issue or comment text is input to Claude, so it can carry hidden instructions ([Who can trigger runs](https://code.claude.com/docs/en/github-actions#who-can-trigger-runs), [the action's security notes](https://github.com/anthropics/claude-code-action/blob/v1.0.258/docs/security.md)). Keep this copy private and yours: only people with read access can see its run logs ([Using workflow run logs](https://docs.github.com/en/actions/how-tos/monitor-workflows/use-workflow-run-logs)).
-- Each run uses GitHub Actions minutes and tokens. In a private repository, the minutes come out of your account's included minutes ([GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions)). The tokens are billed to your Console account with an API key, or drawn from your plan with a subscription token. `--max-turns` and `timeout-minutes` limit how much work a run can do, which lowers both ([Manage costs](https://code.claude.com/docs/en/github-actions#manage-costs)).
+- Each run uses GitHub Actions minutes and tokens. In a private repository, the minutes come out of your account's included minutes ([GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions)). The template's Progress workflow also runs on each push to this copy, so every push uses some of those minutes too. The tokens are billed to your Console account with an API key, or drawn from your plan with a subscription token. `--max-turns` and `timeout-minutes` limit how much work a run can do, which lowers both ([Manage costs](https://code.claude.com/docs/en/github-actions#manage-costs)).
 - The `v1` tag in the docs' examples moves to each new release ([tags](https://github.com/anthropics/claude-code-action/tags)), and each release pins the Claude Code version it installs, so a workflow on `@v1` can run a newer Claude Code than you tested. GitHub calls a workflow dependency lockfile the strongest protection, offers pinning to a full-length commit SHA for repositories that cannot adopt one, and warns that a tag can be moved or deleted if a bad actor gains access to the action's repository ([Secure use reference](https://docs.github.com/en/actions/reference/security/secure-use#using-third-party-actions)). A release tag such as `v1.0.258` is the lighter pin this lesson also accepts.
 
 Listings checked against the listing bar on 2026-10-24.

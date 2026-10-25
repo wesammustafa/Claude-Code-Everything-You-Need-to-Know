@@ -12,7 +12,7 @@ By the end of this Elective you can staff an agent team from your own subagent d
 ## You need
 
 - [Choose an orchestration pattern](../02-orchestration-patterns.md), and the subagent definitions you wrote in [Delegate to a custom subagent](../../intermediate/06-subagents.md).
-- One of your own repositories, with its `.practice/` folder set up as [Beginner lesson 1](../../beginner/01-install-and-look-around.md#you-need) describes.
+- One of your own repositories, with its `.practice/` folder set up as the [Intermediate index](../../intermediate/README.md#prepare-your-own-repository) describes.
 - macOS, Linux or WSL 2, and `jq`: the hooks that log the team are shell commands that use it.
 - An interactive session: in a `-p` run, Claude doesn't spawn teammates ([Enable agent teams](https://code.claude.com/docs/en/agent-teams#enable-agent-teams)). The default in-process display, where teammates run inside your terminal, works in any terminal ([Choose a display mode](https://code.claude.com/docs/en/agent-teams#choose-a-display-mode)).
 - Usage: heavy. Each teammate is a separate Claude instance with its own context window, and token usage scales with the number of active teammates ([Token usage](https://code.claude.com/docs/en/agent-teams#token-usage)). Cheap variant: change one small file in the Worked example, run two teammates in Your turn, and shut the teammates down as soon as they report.
