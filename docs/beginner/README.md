@@ -2,7 +2,7 @@
 
 <sub>**Beginner** · about 2½ hours · Verified against Claude Code v2.1.292 (stable) on 2026-10-19</sub>
 
-One session, one change. You install Claude Code and check what it tells you against the code, decide what it may do without asking, take a change from request to commit and catch what it gets wrong, back out of a wrong turn and keep a long session on track, and give it a project memory.
+One session, one change, done well. You start Claude Code safely and check what it tells you against the code, decide when it asks and when to plan first, take a change from request to commit and catch what it gets wrong, stop or rewind a wrong turn and keep the conversation focused, and give the project a memory that new sessions follow.
 
 ## You're ready for this level if you can
 
@@ -18,7 +18,7 @@ Before lesson 1, make your own copy of the [practice template](https://github.co
 
 To go step by step, run `npm run learn` in your copy and use Claude Code in a second terminal beside it. The app takes you through every core lesson and the capstone, one step at a time, and checks your work as you go. Each page below teaches the same lesson on its own.
 
-Each core lesson and the capstone end with a check you run in your copy as `npm run check -- <id>`, where the id is `b-1` to `b-5` for the lessons and `b-capstone` for the capstone. The Electives end with a checklist you confirm yourself. The checks need Node.js LTS, which a Codespace on your copy has preinstalled. Every Beginner exercise runs in the template copy, because each one works with files planted there; lesson 5 ends by giving one of your own repositories a `CLAUDE.md`, and the [Intermediate level](../intermediate/README.md) practices in your own repository.
+Each core lesson and the capstone end with a check you run in your copy as `npm run check -- <id>`, where the id is `b-1` to `b-5` for the lessons and `b-capstone` for the capstone. The checks need Node.js LTS, which a Codespace on your copy has preinstalled. Every Beginner exercise runs in your template copy, because each one works with files planted there.
 
 On native Windows, if PowerShell refuses to run `npm` with `running scripts is disabled on this system` ([Troubleshoot installation](https://code.claude.com/docs/en/troubleshoot-install#running-scripts-is-disabled-on-this-system)), follow the Windows note in [lesson 1](01-install-and-look-around.md#you-need).
 
@@ -40,15 +40,15 @@ Each lesson takes 20 to 25 minutes, and the capstone 30 to 60.
 
 This list is the Beginner Exit ([Glossary](../reference/glossary.md)), which the capstone puts together in one task.
 
-- [ ] Install Claude Code, sign in, start it in your repository, and tell which version, model and account you're on.
-- [ ] Choose and switch permission modes, and approve a plan in plan mode before any change.
+- [ ] Install Claude Code, start it safely in a repository, tell which model and account a session uses, and check its answers against the code.
+- [ ] Choose a permission mode for a task, decide when a change needs a plan, and approve only a plan you would merge.
 - [ ] Take one change from request to commit: explore, plan, implement, test, review the diff, correct, commit.
-- [ ] Keep a session on track with context, clear, compact, rewind and resume.
-- [ ] Create a project CLAUDE.md and show that a new session follows it.
+- [ ] Stop or rewind a wrong turn, and choose between clear, compact and resume.
+- [ ] Create a short, true project CLAUDE.md and show that a new session follows it.
 
 ## Electives
 
-Optional lessons beside the core path:
+Optional lessons beside the core path, each ending with a checklist you confirm yourself:
 
 - [IDE extensions](electives/ide-extensions.md)
 - [Screenshots and images](electives/screenshots-and-images.md)

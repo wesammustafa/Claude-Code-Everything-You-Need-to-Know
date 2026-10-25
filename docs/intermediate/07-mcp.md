@@ -33,14 +33,14 @@ Where you add a server decides who gets it ([MCP installation scopes](https://co
 | Project | Everyone who works in the project | `.mcp.json` at the project root, committed |
 | User | You, in every project | `~/.claude.json` |
 
-In an interactive session, Claude Code asks you to approve a project's servers before it uses them. Approving a server and approving an individual tool call are separate decisions.
+In an interactive session, Claude Code asks you to approve a project's servers before it uses them. Approving a server and approving an individual tool call are separate decisions. A shared `.mcp.json` never holds a token: write `${VAR}` and each teammate sets the variable ([Environment variable expansion](https://code.claude.com/docs/en/mcp#environment-variable-expansion-in-mcp-json)). With tool search, the default, only tool names and server instructions load at session start ([Scale with MCP Tool Search](https://code.claude.com/docs/en/mcp#scale-with-mcp-tool-search)).
 
 > [!WARNING]
 > Data that leaves your machine. By default, Chrome DevTools MCP sends usage statistics to Google, may send the URLs of performance traces to Google's CrUX API, and checks npm for updates ([upstream README](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/chrome-devtools-mcp-v1.10.1/README.md)). This lesson always runs it with all three turned off. The pages Claude opens still load from the web, and the server shows Claude everything in that browser. Use the isolated browser only for this local demo, with no personal accounts or sensitive pages.
 
 ## Worked example
 
-1. Save this page as `.practice/demo.html` in your repository. It has a planted browser bug; leave it unfixed. Its element lookup uses a [DOM selector](https://dom.spec.whatwg.org/#dom-parentnode-queryselector):
+1. Save this page as `.practice/demo.html` in your repository. It has a planted browser bug; leave it unfixed:
 
    ```html
    <!doctype html>
@@ -70,39 +70,31 @@ In an interactive session, Claude Code asks you to approve a project's servers b
 
 ## Your turn
 
-Share the reviewed server with your team, then use the project's tools to repair the page rather than merely capture its broken state.
+Give every teammate the exact browser server you reviewed, then use it to fix the broken demo page.
 
 1. In the same repository's terminal, remove your local copy, which would otherwise take precedence over a project server of the same name ([Scope hierarchy and precedence](https://code.claude.com/docs/en/mcp#scope-hierarchy-and-precedence)): `claude mcp remove chrome-devtools -s local`. If it reports no local server, confirm you are in the repository where you added it; local scope belongs to that project.
-2. Save this partial file as `.mcp.json` at the repository root, and replace each `TODO` with the values from the Worked example's command. Preserve any unrelated servers already in the file:
+2. Add the same server at project scope. The command writes `.mcp.json` at the repository root, beside any servers already in it ([Project scope](https://code.claude.com/docs/en/mcp#project-scope)):
 
-   ```json
-   {"mcpServers": {
-     "chrome-devtools": {
-       "type": "stdio",
-       "command": "npx",
-       "args": ["-y", "TODO: the package at an exact version", "--isolated",
-         "TODO: no usage statistics", "TODO: no CrUX lookups"],
-       "env": { "TODO: the variable that turns off update checks": "1" }
-     }
-   }}
+   ```bash
+   claude mcp add --scope project --env CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS=1 --transport stdio chrome-devtools -- npx -y chrome-devtools-mcp@1.10.1 --isolated --no-usage-statistics --no-performance-crux
    ```
 
-3. Review and commit `.mcp.json`.
-4. Exit the session from the Worked example, then start `claude` again in your repository. When it asks about the project's new server, approve it only if you have reviewed the server's command and arguments in `.mcp.json`. If `.mcp.json` names a server you haven't reviewed, decline and investigate. Avoid a standing approval for future servers you haven't reviewed. Inspect the selected option before pressing Enter. Run `/mcp`, select the server and check that it connected ([Edit .mcp.json directly](https://code.claude.com/docs/en/mcp-quickstart#edit-mcp-json-directly)). Keep auto mode for the repair; review any request Claude Code still asks you about.
-5. Use the project's browser tools to reload `.practice/demo.html` and read its console before editing. Decide whether the element lookup or the count calculation is at fault: compare the reported source line with the page's existing result element. Fix the mismatched lookup while keeping the calculation; hiding the exception would leave the page broken. Ask Claude to make that focused repair, then use the MCP tools to reload and verify the visible count and console. The result should read `2 links ready` with no script error. Have the server save the repaired page as a PNG to `.practice/i-7-page.png` ([Screenshot tool](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/chrome-devtools-mcp-v1.10.1/docs/tool-reference.md#take_screenshot)).
+3. Read `.mcp.json` before you commit it: check the pinned version, the two flags and the variable, and that it holds no token. Then commit it.
+4. Exit the session from the Worked example, then start `claude` again in your repository. When it asks about the project's new server, approve it only if you have reviewed the server's command and arguments in `.mcp.json`: they decide what code runs on your machine. If `.mcp.json` names a server you haven't reviewed, decline and investigate. Run `/mcp`, select the server and check that it connected ([Edit .mcp.json directly](https://code.claude.com/docs/en/mcp-quickstart#edit-mcp-json-directly)). Keep auto mode for the repair.
+5. Use the project's browser tools to reload `.practice/demo.html` and read its console before editing. Decide whether the element lookup or the count calculation is at fault: compare the reported source line with the page's existing result element. Fix the mismatched lookup while keeping the calculation; hiding the exception would leave the page broken. Ask Claude to make that focused repair, then use the MCP tools to reload and verify the visible count and console. The result should read `2 links ready` with no script error. Then have the server save the repaired page as a PNG to `.practice/i-7-page.png` ([Screenshot tool](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/chrome-devtools-mcp-v1.10.1/docs/tool-reference.md#take_screenshot)).
 
 ## Check
 
 You are done when all of these are true:
 
 - [ ] The committed `.mcp.json` pins the package to an exact version and turns off usage statistics, CrUX lookups and update checks: `git show HEAD:.mcp.json | jq '.mcpServers["chrome-devtools"]'` shows them.
-- [ ] `.practice/i-7-page.png` holds a PNG image of the repaired page.
-- [ ] The demo script displays `2 links ready` without a script error. The local check runs this demo's inline script with its link collection and an extra-link probe in a bounded Node process; a static or hardcoded count doesn't pass. Its small document adapter does not replace the Chrome verification.
+- [ ] `.practice/i-7-page.png` holds a PNG image of the repaired page, saved after the repair.
+- [ ] The demo script displays `2 links ready` without a script error; a hardcoded count doesn't pass.
 - [ ] Self-check (not tested): you reviewed the first MCP tool call, used the project's server to read the real console error, and verified the repaired count and clean console after reloading.
 
 Run `npm run check -- i-7 --dir <your repo>` from your practice copy, or `npm run check -- i-7` in the copy itself.
 
-If the server item fails, compare each argument with the Worked example's command: `@latest` isn't pinned. If the capture is missing, confirm the server connected before asking it to save the PNG. If the demo item fails, revisit Your turn step 5: removing the script or swallowing its error doesn't repair the count.
+If the server item fails, compare each argument with the Worked example's command: `@latest` isn't pinned. If the capture is missing or older than the repair, confirm the server connected, then ask it to save the PNG again. If the demo item fails, revisit Your turn step 5: removing the script or swallowing its error doesn't repair the count.
 
 ## Watch out
 
@@ -121,6 +113,6 @@ Listings checked against the listing bar on 2026-10-06.
 
 ---
 
-<sub>Sources: [Connect Claude Code to tools via MCP](https://code.claude.com/docs/en/mcp) · [Connect to MCP servers](https://code.claude.com/docs/en/mcp-quickstart) · [Configure permissions](https://code.claude.com/docs/en/permissions) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Chrome DevTools MCP README](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/chrome-devtools-mcp-v1.10.1/README.md) · [Chrome DevTools MCP configuration](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/chrome-devtools-mcp-v1.10.1/docs/configuration.md) · [Chrome DevTools MCP tools](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/chrome-devtools-mcp-v1.10.1/docs/tool-reference.md) · [The MCP Registry](https://modelcontextprotocol.io/registry/about) · [DOM selectors](https://dom.spec.whatwg.org/#dom-parentnode-queryselector)</sub>
+<sub>Sources: [Connect Claude Code to tools via MCP](https://code.claude.com/docs/en/mcp) · [Connect to MCP servers](https://code.claude.com/docs/en/mcp-quickstart) · [Configure permissions](https://code.claude.com/docs/en/permissions) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Chrome DevTools MCP README](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/chrome-devtools-mcp-v1.10.1/README.md) · [Chrome DevTools MCP configuration](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/chrome-devtools-mcp-v1.10.1/docs/configuration.md) · [Chrome DevTools MCP tools](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/chrome-devtools-mcp-v1.10.1/docs/tool-reference.md) · [The MCP Registry](https://modelcontextprotocol.io/registry/about)</sub>
 
 <sub>← [Delegate to a custom subagent](06-subagents.md) · [Intermediate index](README.md) · [Install and manage plugins](08-plugins.md) → · Topic: [MCP](../topics/mcp.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=i-7)</sub>

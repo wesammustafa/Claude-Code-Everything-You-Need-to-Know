@@ -6,7 +6,7 @@ Where to go once you finish Advanced. The guide teaches one developer's use of C
 
 Every item is published by Anthropic, except the MCP project's pages on modelcontextprotocol.io.
 
-Listings checked against the listing bar on 2026-10-09.
+Listings checked against the listing bar on 2026-10-24.
 
 ## Build your own agents
 
@@ -20,7 +20,7 @@ To drive the same agent loop from a language other than Python or TypeScript, th
 
 A product or service you build on the Agent SDK should use API key authentication through the Claude Console or a supported cloud provider ([Legal and compliance](https://code.claude.com/docs/en/legal-and-compliance#authentication-and-credential-use)). Unless previously approved, Anthropic doesn't allow third-party developers to offer claude.ai login for their products ([Agent SDK overview](https://code.claude.com/docs/en/agent-sdk/overview#get-started)).
 
-While you write code that calls the Claude API, the bundled `/claude-api` skill loads Claude API reference material for your project's language, and Claude also loads it on its own when your code imports `anthropic` or `@anthropic-ai/sdk` ([Skills](https://code.claude.com/docs/en/skills#work-on-claude-api-projects)).
+While you write code that calls the Claude API, the bundled `/claude-api` skill loads Claude API and Managed Agents reference material for your project's language, and Claude also loads it on its own when your code imports `anthropic` or `@anthropic-ai/sdk` ([Skills](https://code.claude.com/docs/en/skills#work-on-claude-api-projects)).
 
 ## Build MCP servers
 
@@ -30,6 +30,18 @@ While you write code that calls the Claude API, the bundled `/claude-api` skill 
 - [Build an MCP server](https://modelcontextprotocol.io/docs/develop/build-server) (Vendor: the MCP project): the MCP project's own tutorial, and its [SDKs](https://modelcontextprotocol.io/docs/sdk) for building servers and clients.
 - [Introduction to Model Context Protocol](https://academy.claude.com/courses/introduction-to-model-context-protocol): Claude Academy's course on building servers and clients from scratch with the Python SDK.
 - [Model Context Protocol: Advanced topics](https://academy.claude.com/courses/model-context-protocol-advanced-topics): Claude Academy's course on sampling, notifications and roots.
+
+## Run Claude Code beyond your machine
+
+[GitHub Actions](05-github-actions.md) and the [capstone](capstone.md) run Claude in your own CI. Anthropic also runs it for you:
+
+- [Code Review](https://code.claude.com/docs/en/code-review): Claude reviews each pull request in your GitHub repositories and comments inline, for Team and Enterprise plans, with no workflow to maintain.
+- [Automate work with scheduled tasks](https://code.claude.com/docs/en/routines): cloud scheduled tasks, formerly routines, that run in the cloud on a schedule, on API calls or on GitHub events.
+
+  > [!NOTE]
+  > "Scheduled tasks are in research preview. Behavior, limits, and the API surface may change."
+
+- [Use Claude Code in the cloud](https://code.claude.com/docs/en/claude-code-on-the-web): sessions that run on cloud infrastructure instead of your machine, started from a browser, a phone, the Desktop app or a terminal.
 
 ## Run Claude Code for an organization
 
@@ -53,8 +65,12 @@ Once the setup is in place, these help people adopt it:
 - [The AI-native SDLC playbook](https://academy.claude.com/courses/ai-native-sdlc-playbook): Claude Academy's course for engineering, platform and security leads whose organization already uses Claude Code.
 - [Running an AI-native engineering org](https://claude.com/resources/articles/running-an-ai-native-engineering-org): how the Claude Code team's processes and structure changed once agentic coding became its default way of working.
 
+## Stay current
+
+Each page of this guide was checked against one `stable` version of Claude Code, named in its header line. When `claude --version` shows a newer one, the [CHANGELOG](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md) says what changed since.
+
 ---
 
-<sub>Sources: the pages linked above, each checked on 2026-10-09.</sub>
+<sub>Sources: the pages linked above, each checked on 2026-10-24.</sub>
 
 <sub>Up: [Advanced](README.md)</sub>

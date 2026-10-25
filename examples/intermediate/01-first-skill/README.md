@@ -10,7 +10,7 @@ cp -R <path-to-this-folder>/dot-claude/skills/five-whys .claude/skills/
 | Skill | What it does | Runs |
 |---|---|---|
 | `five-whys` | Finds a problem's root cause by asking "why" until the answer is something you can fix. Tells Claude not to change any files. | `/five-whys <problem>`, or when Claude matches your request to its description |
-| `tdd` | Builds a feature test-first. Unfinished on purpose: the lesson's Your turn has you finish it. | `/tdd <feature>` only, until you finish it |
+| `tdd` | Builds a feature test-first and stops at a diff for you to review and commit. Unfinished on purpose: the lesson's Your turn has you finish it. | `/tdd <feature>` only, until you finish it |
 
 Each `SKILL.md` carries its header block as comments at the top of its frontmatter: what it does, when it runs, side effects, platforms, how to remove it, and its test line. Neither skill pre-approves any tool, so Claude asks before anything your permission settings don't already allow.
 
@@ -18,4 +18,5 @@ If `.claude/skills/` didn't exist when your session started, run `/reload-skills
 
 Smoke test, without Claude: `bash test.sh`.
 
-Tested in Claude Code v2.1.285 (stable) on macOS, 2026-10-06
+`five-whys`: Tested in Claude Code v2.1.285 (stable) on macOS, 2026-10-06\
+`tdd`: Not yet tested in a session at this edition's version

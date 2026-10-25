@@ -16,7 +16,7 @@ By the end of this lesson you can turn a workflow you keep repeating into a proj
 
 ## The idea
 
-A [skill](https://code.claude.com/docs/en/skills) is a folder holding a `SKILL.md` file: YAML frontmatter that says what the skill is for, then the instructions Claude follows. A project skill lives in `.claude/skills/<name>/SKILL.md`. Commit it, and everyone who works in the repository gets it.
+Write a [skill](https://code.claude.com/docs/en/skills) when you paste the same playbook into chat for the third time ([Build your setup over time](https://code.claude.com/docs/en/features-overview#build-your-setup-over-time)). A skill is a folder holding a `SKILL.md` file: YAML frontmatter that says what the skill is for, then the instructions Claude follows. A project skill lives in `.claude/skills/<name>/SKILL.md`. Commit it, and everyone who works in the repository gets it.
 
 Claude decides whether to load a skill from its description, plus any `when_to_use` text, in the skill listing, not from the skill body ([Frontmatter reference](https://code.claude.com/docs/en/skills#frontmatter-reference)). Invoking the skill loads the full instructions:
 
@@ -30,7 +30,7 @@ flowchart LR
 ```
 
 - `$ARGUMENTS` receives the text after the skill's name ([Pass arguments to skills](https://code.claude.com/docs/en/skills#pass-arguments-to-skills)).
-- `disable-model-invocation: true` makes invocation manual. Keep it for a workflow whose timing you must control, such as deployment ([Control who invokes a skill](https://code.claude.com/docs/en/skills#control-who-invokes-a-skill)).
+- Each skill Claude can load on its own sits in the skill listing, which adds to your context on every turn. `disable-model-invocation: true` makes invocation manual and keeps the description out. Use it for a workflow with side effects or whose timing you must control, such as a commit or a deploy ([Control who invokes a skill](https://code.claude.com/docs/en/skills#control-who-invokes-a-skill)).
 
 ## Worked example
 
@@ -41,7 +41,7 @@ flowchart LR
    curl -fsSL https://raw.githubusercontent.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/main/examples/intermediate/01-first-skill/dot-claude/skills/five-whys/SKILL.md -o .claude/skills/five-whys/SKILL.md
    ```
 
-   Leaving out the comment lines at the top of its frontmatter, the file holds:
+   Without its header comments, it starts:
 
    ```markdown
    ---
@@ -72,17 +72,17 @@ flowchart LR
 
 ## Your turn
 
-The team wants a test-first workflow for requested features, while explanation-only questions should stay read-only. Decide what should trigger this coding workflow, then finish and test it in your repository.
+The team wants a test-first workflow for requested features, while explanation-only questions should stay read-only. Make test-first load for feature requests, never for questions, and leave the commit to you.
 
-1. Download the partial [`tdd` skill](../../examples/intermediate/01-first-skill/dot-claude/skills/tdd/SKILL.md):
+1. Download the partial [`tdd` skill](../../examples/intermediate/01-first-skill/dot-claude/skills/tdd/SKILL.md) and read it:
 
    ```bash
    mkdir -p .claude/skills/tdd
    curl -fsSL https://raw.githubusercontent.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/main/examples/intermediate/01-first-skill/dot-claude/skills/tdd/SKILL.md -o .claude/skills/tdd/SKILL.md
    ```
 
-   This is the same example path as `five-whys`, with `tdd` in its place. Read it: the frontmatter has `description: TODO` and `disable-model-invocation: true`, and the Green and Refactor steps are unfinished.
-2. Decide which requests should load this skill before you edit it. Write the description for requested feature work; keep explanation-only questions outside its stated scope. Allow automatic loading for that boundary; keep deployment workflows manual.
+   The frontmatter has `description: TODO` and `disable-model-invocation: true`, and the Green and Refactor steps are unfinished. The skill ends by showing the diff, not by committing.
+2. Decide which requests should load this skill before you edit it. Write the description for requested feature work; keep explanation-only questions outside its stated scope. The skill stops at a diff you review, so it has no side effect that needs a manual trigger, and it can load on its own.
 
    In your editor, finish it:
    - replace `TODO` in the description with what the skill does followed by "Use when" and the feature requests it fits;
@@ -102,12 +102,10 @@ The team wants a test-first workflow for requested features, while explanation-o
    /tdd a slugify(heading) function in src/slug.js that turns a Markdown heading into its link anchor: lowercase, punctuation dropped, spaces turned into hyphens
    ```
 
-   Keep auto mode. It can approve edits and test runs without a prompt; if Claude Code asks, review the action before approving ([Permission modes](https://code.claude.com/docs/en/permission-modes)). Read the failing test output, the final passing result and the complete change before keeping the commit.
+   Keep auto mode. Read the failing test output, the passing run and the complete diff. If the change is what you asked for, commit the test and the code together in a terminal in your repository, then save that commit: [`git rev-parse HEAD > .practice/i-1-commit.txt`](https://git-scm.com/docs/git-rev-parse).
+5. Probe the trigger both ways: on a request the skill should load for, and on one it shouldn't ([Evaluate and iterate on a skill](https://code.claude.com/docs/en/skills#evaluate-and-iterate-on-a-skill)). Run `/clear` and ask for another small feature test-first without naming the skill, such as `Add a countHeadings(markdown) function, test-first.` Press `Esc` as soon as the `Skill` tool call for `tdd` appears, before it starts editing ([Interactive mode](https://code.claude.com/docs/en/interactive-mode)). Run `/clear` again and ask a question, such as `Explain how isExternal decides that a link is external.` No `Skill` call for `tdd` should appear.
 
-   In a terminal in your repository, inspect the current branch with [`git branch --show-current`](https://git-scm.com/docs/git-branch) and the commit with [`git show HEAD`](https://git-scm.com/docs/git-show). Confirm it holds the intended test and code, then save that commit: [`git rev-parse HEAD > .practice/i-1-commit.txt`](https://git-scm.com/docs/git-rev-parse). Keep the branch you reviewed; later lessons use this same repository.
-5. Start with a clean repository. Clear the conversation first. Run `/clear` and ask for another small feature test-first without naming the skill, such as `Add a countHeadings(markdown) function, test-first.` Press `Esc` as soon as the `Skill` tool call for `tdd` appears, before it starts editing ([Interactive mode](https://code.claude.com/docs/en/interactive-mode)). This probe checks the trigger, so let no second feature accumulate.
-
-   If no call appears, revise the description and retry in a cleared conversation. Check `git status --short` afterward. If edits already happened, inspect them and recover only this experiment as in [Beginner lesson 4](../beginner/04-keep-a-session-on-track.md). Rewind does not track Bash edits ([Checkpointing](https://code.claude.com/docs/en/checkpointing#bash-command-changes-not-tracked)). Finish with a clean repository.
+   If either probe fails, revise the description, commit it and repeat both. Then run `git status --short` and undo anything the probes changed, so the repository is clean.
 
 ## Check
 
@@ -116,11 +114,11 @@ You are done when all of these are true:
 - [ ] The finished skill is committed with no TODO left: `git grep -n TODO HEAD -- .claude/skills/tdd` prints nothing.
 - [ ] It can run as `/tdd` and load on its own: `git show HEAD:.claude/skills/tdd/SKILL.md` shows a description of what it does and when to use it, and no `disable-model-invocation: true`.
 - [ ] The commit saved in `.practice/i-1-commit.txt` holds a test and the code it tests: `git show --stat $(cat .practice/i-1-commit.txt)` lists both.
-- [ ] Self-check (not tested): `/tdd` ran the skill, its trigger fits feature requests, and a cleared conversation loaded `tdd` on its own before you stopped the probe.
+- [ ] Self-check (not tested): `/tdd` ran the skill, a cleared conversation loaded `tdd` on its own for a feature request, and a question didn't load `tdd`.
 
 Run `npm run check -- i-1 --dir <your repo>` from your practice copy, or `npm run check -- i-1` in the copy itself.
 
-If the skill isn't committed, run `git check-ignore -v .claude/skills/tdd/SKILL.md`: an ignore rule that matches `.claude`, in a `.gitignore`, `.git/info/exclude` or your global excludes file, hides the folder from `git add`, so add the file with `git add -f`. If the invocation item fails, rewrite the description as what the skill does followed by "Use when" and the feature requests it fits, then commit again. If the commit item fails, run `/tdd` on a new small feature and let it commit the test with the code before saving that commit.
+If the skill isn't committed, run `git check-ignore -v .claude/skills/tdd/SKILL.md`: an ignore rule that matches `.claude`, in a `.gitignore`, `.git/info/exclude` or your global excludes file, hides the folder from `git add`, so add the file with `git add -f`. If the invocation item fails, rewrite the description as what the skill does followed by "Use when" and the feature requests it fits, then commit again. If the commit item fails, run `/tdd` on a new small feature, review the diff, and commit the test with the code before you save that commit.
 
 ## Watch out
 
@@ -135,6 +133,6 @@ If the skill isn't committed, run `git check-ignore -v .claude/skills/tdd/SKILL.
 
 ---
 
-<sub>Sources: [Extend Claude with skills](https://code.claude.com/docs/en/skills) · [Advanced setup](https://code.claude.com/docs/en/setup) · [Commands](https://code.claude.com/docs/en/commands) · [Security](https://code.claude.com/docs/en/security) · [Tools reference](https://code.claude.com/docs/en/tools-reference) · [Permission modes](https://code.claude.com/docs/en/permission-modes) · [Interactive mode](https://code.claude.com/docs/en/interactive-mode) · [Checkpointing](https://code.claude.com/docs/en/checkpointing) · [git-status](https://git-scm.com/docs/git-status) · [git-branch](https://git-scm.com/docs/git-branch) · [git-show](https://git-scm.com/docs/git-show) · [git-add](https://git-scm.com/docs/git-add) · [git-commit](https://git-scm.com/docs/git-commit) · [git-rev-parse](https://git-scm.com/docs/git-rev-parse)</sub>
+<sub>Sources: [Extend Claude with skills](https://code.claude.com/docs/en/skills) · [Extend Claude Code](https://code.claude.com/docs/en/features-overview) · [Advanced setup](https://code.claude.com/docs/en/setup) · [Commands](https://code.claude.com/docs/en/commands) · [Security](https://code.claude.com/docs/en/security) · [Tools reference](https://code.claude.com/docs/en/tools-reference) · [Interactive mode](https://code.claude.com/docs/en/interactive-mode) · [git-status](https://git-scm.com/docs/git-status) · [git-add](https://git-scm.com/docs/git-add) · [git-commit](https://git-scm.com/docs/git-commit) · [git-rev-parse](https://git-scm.com/docs/git-rev-parse)</sub>
 
 <sub>← [Intermediate index](README.md) · [Organize project memory and see what loaded](02-organize-memory.md) → · Topic: [Skills](../topics/skills.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=i-1)</sub>

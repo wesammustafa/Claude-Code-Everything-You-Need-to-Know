@@ -256,7 +256,7 @@ The guide is organized as lessons in three levels: Beginner, Intermediate and Ad
 
 ### Lessons
 
-A lesson takes 10 to 20 minutes and moves the reader one step toward one can-do statement of its level. Every lesson has this shape, in this order:
+A lesson takes 15 to 25 minutes and moves the reader one step toward one can-do statement of its level. Every lesson has this shape, in this order:
 
 1. An H1 with the lesson title, as the first line.
 2. One `<sub>` header line under it: the level in bold, the position ("Lesson N of M"), "about N minutes", Needs (links to earlier lessons), and [the stamp](#the-stamp).
@@ -265,7 +265,7 @@ A lesson takes 10 to 20 minutes and moves the reader one step toward one can-do 
    - **You need:** earlier lessons, the environment, and where to practice. A variant callout (native Windows, a plan difference) goes here, at most one per variant.
    - **The idea:** the working model in about 150 words at most, plus the lesson's one optional diagram.
    - **Worked example:** numbered steps on a realistic task, with real commands and the observable state after each step.
-   - **Your turn:** the exercise. Beginner repeats the example with exact steps; Intermediate finishes or fixes a partial file; Advanced gets a brief and acceptance criteria.
+   - **Your turn:** the exercise: a new decision on the same skill, never a repeat of the Worked example. Beginner gives exact steps; Intermediate finishes or fixes a partial file; Advanced gets a brief and acceptance criteria.
    - **Check:** a task list of observable criteria, with any ready-made test it needs; then the `npm run check -- <id>` line where a check exists (core lessons and capstones, not Electives); then at most one "if not" diagnosis per tested item.
 4. Optional slots: **Watch out** (at most 3 bullets: safety, then cost, then gotchas) and **Go further** (at most 3 links).
 5. A footer: the `Sources:` line; previous, level index and next; one `Topic:` link; and "Stuck on this lesson?".

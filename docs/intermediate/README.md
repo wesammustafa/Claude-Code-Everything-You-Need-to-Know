@@ -1,16 +1,16 @@
 # Intermediate
 
-<sub>**Intermediate** · about 3 hours · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
+<sub>**Intermediate** · about 4 hours · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
 
 One developer's setup. You shape Claude Code to your own project: skills, project memory, model and effort, permissions and the sandbox, hooks, subagents, MCP servers and plugins.
 
 ## You're ready for this level if you can
 
-- [ ] Install Claude Code, sign in, start it in your repository, and tell which version, model and account you're on.
-- [ ] Choose and switch permission modes, and approve a plan in plan mode before any change.
+- [ ] Install Claude Code, start it safely in a repository, tell which model and account a session uses, and check its answers against the code.
+- [ ] Choose a permission mode for a task, decide when a change needs a plan, and approve only a plan you would merge.
 - [ ] Take one change from request to commit: explore, plan, implement, test, review the diff, correct, commit.
-- [ ] Keep a session on track with context, clear, compact, rewind and resume.
-- [ ] Create a project CLAUDE.md and show that a new session follows it.
+- [ ] Stop or rewind a wrong turn, and choose between clear, compact and resume.
+- [ ] Create a short, true project CLAUDE.md and show that a new session follows it.
 
 ## Practice
 
@@ -30,13 +30,17 @@ A copy older than the app has no `learn` script, so `npm run learn` says `Missin
 
 ## When to use what
 
-Five of the ways to extend Claude Code; [Extend Claude Code](https://code.claude.com/docs/en/features-overview) lists the rest. Each links its lesson.
+Seven of the ways to extend Claude Code, each with the sign that you need it; [Extend Claude Code](https://code.claude.com/docs/en/features-overview#build-your-setup-over-time) lists the rest. Each links its lesson.
 
+- **Project memory:** Claude gets a convention or command wrong twice. Add it to `CLAUDE.md`, or to a rule in `.claude/rules/` scoped to the files it applies to ([How Claude remembers your project](https://code.claude.com/docs/en/memory); lesson: [Organize project memory and see what loaded](02-organize-memory.md)).
 - **Skills:** you give Claude the same instructions or workflow again and again. A project skill lives in `.claude/skills/<name>/SKILL.md` ([Extend Claude with skills](https://code.claude.com/docs/en/skills); lesson: [Turn a repeated workflow into a skill](01-first-skill.md)).
 - **Hooks:** something must happen every time at a set point in a session, such as before a tool runs, whatever Claude decides. Hooks are defined in a settings file such as `.claude/settings.json` ([Hooks](https://code.claude.com/docs/en/hooks); lesson: [Enforce a rule with a hook](05-hooks.md)).
 - **Subagents:** a side task should run in its own context window and report back. A project subagent lives in `.claude/agents/` ([Create custom subagents](https://code.claude.com/docs/en/sub-agents); lesson: [Delegate to a custom subagent](06-subagents.md)).
 - **Dynamic workflows:** the job needs more agents than one conversation can coordinate. A saved project workflow lives in `.claude/workflows/` ([Workflows](https://code.claude.com/docs/en/workflows); lesson: [Run and save a dynamic workflow](../advanced/03-dynamic-workflows.md)).
 - **MCP servers:** Claude needs tools or data outside your files, such as a browser, a database or an API. A project-scope server is listed in `.mcp.json` at the project root ([Connect Claude Code to tools via MCP](https://code.claude.com/docs/en/mcp); lesson: [Connect a tool with MCP](07-mcp.md)).
+- **Code intelligence:** Claude reads many files to find where a symbol is defined or used. A code intelligence plugin gives it a language server instead ([Code intelligence plugins](https://code.claude.com/docs/en/plugins/code-intelligence); lesson: [Install and manage plugins](08-plugins.md)).
+
+Permissions decide what Claude may do in all of these, and the [sandbox](https://code.claude.com/docs/en/sandboxing) limits what its shell commands can reach ([Permissions, settings scopes and the sandbox](04-permissions-and-sandbox.md)). Model and effort tune any of them ([Pick the model and effort](03-model-and-effort.md)).
 
 They combine: a [plugin](https://code.claude.com/docs/en/plugins) packages skills, agents, hooks and MCP servers so they install as one unit ([Install and manage plugins](08-plugins.md)).
 
@@ -51,11 +55,11 @@ They combine: a [plugin](https://code.claude.com/docs/en/plugins) packages skill
 7. [Connect a tool with MCP](07-mcp.md)
 8. [Install and manage plugins](08-plugins.md)
 
-Each lesson takes 10 to 20 minutes.
+Each lesson takes 20 to 25 minutes.
 
 ## Capstone
 
-[Get a repository ready for a new teammate](capstone.md): a skill, a hook that protects a folder, a read-only reviewer subagent, a project-scope MCP server and an official plugin, with project settings that keep secrets out of reach and turn the sandbox on.
+[Get a repository ready for a new teammate](capstone.md): turn a team lead's brief into setup a teammate gets from git, choosing the mechanism for each need, then fix a real bug with it.
 
 ## By the end of this level you can
 
@@ -86,6 +90,6 @@ Optional lessons beside the core path:
 
 ---
 
-<sub>Sources: [Extend Claude Code](https://code.claude.com/docs/en/features-overview) · [Extend Claude with skills](https://code.claude.com/docs/en/skills) · [Hooks](https://code.claude.com/docs/en/hooks) · [Create custom subagents](https://code.claude.com/docs/en/sub-agents) · [Workflows](https://code.claude.com/docs/en/workflows) · [Connect Claude Code to tools via MCP](https://code.claude.com/docs/en/mcp) · [Plugins](https://code.claude.com/docs/en/plugins) · [Claude Code in action](https://academy.claude.com/courses/claude-code-in-action) · [Introduction to agent skills](https://academy.claude.com/courses/introduction-to-agent-skills) · [Introduction to subagents](https://academy.claude.com/courses/introduction-to-subagents)</sub>
+<sub>Sources: [Extend Claude Code](https://code.claude.com/docs/en/features-overview) · [How Claude remembers your project](https://code.claude.com/docs/en/memory) · [Extend Claude with skills](https://code.claude.com/docs/en/skills) · [Hooks](https://code.claude.com/docs/en/hooks) · [Create custom subagents](https://code.claude.com/docs/en/sub-agents) · [Workflows](https://code.claude.com/docs/en/workflows) · [Connect Claude Code to tools via MCP](https://code.claude.com/docs/en/mcp) · [Plugins](https://code.claude.com/docs/en/plugins) · [Code intelligence plugins](https://code.claude.com/docs/en/plugins/code-intelligence) · [Configure the sandboxed Bash tool](https://code.claude.com/docs/en/sandboxing) · [Claude Code in action](https://academy.claude.com/courses/claude-code-in-action) · [Introduction to agent skills](https://academy.claude.com/courses/introduction-to-agent-skills) · [Introduction to subagents](https://academy.claude.com/courses/introduction-to-subagents)</sub>
 
 <sub>Up: [Claude Code: Everything You Need to Know](../../README.md#pick-your-level)</sub>

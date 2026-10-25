@@ -1,8 +1,8 @@
 #!/bin/bash
 # protect-files.sh: blocks Claude's Edit and Write tools on protected files.
 # This is the hooks guide's "Block edits to protected files" script, unchanged
-# below this header. Lesson 5 shows where its substring match is too broad and
-# has you fix it.
+# below this header. Lesson 5 registers it with "onFailure": "block", so it
+# fails closed.
 # Runs: PreToolUse, matcher Edit|Write (see settings.snippet.json).
 # Side effects: none. Exit 2 blocks the tool call, and the stderr line goes to
 # Claude as the reason. It sees only Edit and Write, not shell commands.
