@@ -1,6 +1,6 @@
 # Organize project memory and see what loaded
 
-<sub>**Intermediate** · Lesson 2 of 8 · about 20 minutes · Needs: [Turn a repeated workflow into a skill](01-first-skill.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
+<sub>**Intermediate** · Lesson 2 of 8 · about 20 minutes · Needs: [Turn a repeated workflow into a skill](01-first-skill.md) · Verified against Claude Code v2.1.308 (stable) on 2026-10-25</sub>
 
 ## Goal
 

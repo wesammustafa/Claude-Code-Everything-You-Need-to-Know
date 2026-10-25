@@ -1,6 +1,6 @@
 # Install, sign in and look around
 
-<sub>**Beginner** · Lesson 1 of 5 · about 20 minutes · Needs: [Beginner index](README.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-19</sub>
+<sub>**Beginner** · Lesson 1 of 5 · about 20 minutes · Needs: [Beginner index](README.md) · Verified against Claude Code v2.1.308 (stable) on 2026-10-25</sub>
 
 ## Goal
 

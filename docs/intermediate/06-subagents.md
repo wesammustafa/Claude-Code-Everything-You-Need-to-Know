@@ -1,6 +1,6 @@
 # Delegate to a custom subagent
 
-<sub>**Intermediate** · Lesson 6 of 8 · about 25 minutes · Needs: [Turn a repeated workflow into a skill](01-first-skill.md), [Permissions, settings scopes and the sandbox](04-permissions-and-sandbox.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
+<sub>**Intermediate** · Lesson 6 of 8 · about 25 minutes · Needs: [Turn a repeated workflow into a skill](01-first-skill.md), [Permissions, settings scopes and the sandbox](04-permissions-and-sandbox.md) · Verified against Claude Code v2.1.308 (stable) on 2026-10-25</sub>
 
 ## Goal
 
