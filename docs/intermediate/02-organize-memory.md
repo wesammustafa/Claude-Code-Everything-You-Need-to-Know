@@ -90,7 +90,7 @@ A teammate's rule never takes effect. Find out why, and fix it.
 
 3. In a terminal in your repository, read `.practice/i-2-loaded.txt`. The log appends to earlier attempts: inspect the lines added by this session. Compare its pattern with the files that exist, `git ls-files src`. Use your own source folder in place of `src`. Decide whether to change the pattern, the instruction, or the way the file was read. Use the load log and the actual paths as your evidence.
 4. Fix the mismatch you found. End the session, start a new logged session and repeat step 2. The log now has a `path_glob_match` line for `cli.md`.
-5. Before you commit, place three instructions: a command every session needs, a convention for test files only, and a multi-step release procedure. The first goes in `CLAUDE.md`, the second in a scoped rule, the third in a skill: keep `CLAUDE.md` to facts Claude should hold in every session ([When to add to CLAUDE.md](https://code.claude.com/docs/en/memory#when-to-add-to-claude-md)). Then commit `CLAUDE.md` and `.claude/rules/`. Delete `.practice/i-2-hook.json` when you no longer need the log.
+5. Before you commit, decide where three instructions belong: a command every session needs, a convention for test files only, and a multi-step release procedure. The first goes in `CLAUDE.md`, the second in a scoped rule, the third in a skill: keep `CLAUDE.md` to facts Claude should hold in every session ([When to add to CLAUDE.md](https://code.claude.com/docs/en/memory#when-to-add-to-claude-md)). Then commit `CLAUDE.md` and `.claude/rules/`. Delete `.practice/i-2-hook.json` when you no longer need the log.
 
 ## Check
 

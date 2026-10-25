@@ -75,7 +75,7 @@ Work a teammate's ticket so that nothing ships you'd reject in review. The ticke
    ```
 
    Check that the status bar reads `⏸ plan mode on`, and answer any question Claude asks.
-3. Read the plan as its reviewer. For each change, ask whether you would merge it as part of this ticket. Use the plan menu to send back anything you wouldn't merge, in your own words, with your reason, until the plan is one you would approve.
+3. Read the plan as its reviewer. For each change, ask whether you would merge it as part of this ticket. If the plan includes a request you wouldn't merge, use the plan menu to send it back, in your own words, with your reason. If the plan already leaves one out, read Claude's reason and decide whether you agree. Revise until the plan is one you would approve.
 4. While the final plan is on screen, save what git sees, and the files the plan says it will change, in the other terminal. Write each path the way `git status` shows it: relative to the repository root, with forward slashes, one per line. For a plan that changed `src/links.js` and `test/links.test.js`, it would be:
 
    ```bash

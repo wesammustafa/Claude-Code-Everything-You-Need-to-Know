@@ -38,7 +38,7 @@ Migrate one small folder in a single session, gated by a goal.
    ```
 
    It has one measurable end state, the checks that prove it, a constraint, and a turn clause that bounds the run ([Write an effective condition](https://code.claude.com/docs/en/goal#write-an-effective-condition)). Setting a goal starts a turn at once, with the condition as the directive, and a `◎ /goal active` indicator shows while it runs.
-3. While it works, run `/goal` with no argument. It shows the condition, how long it has run, the turns evaluated, the token spend and the evaluator's most recent reason ([Check status](https://code.claude.com/docs/en/goal#check-status)). When the evaluator judges the condition met, Claude Code clears the goal and records an achieved entry in the transcript ([How evaluation works](https://code.claude.com/docs/en/goal#how-evaluation-works)).
+3. While it works, run `/goal` with no argument. It shows the condition, how long it has run, the turns evaluated, the token spend and the evaluator's most recent reason ([Check status](https://code.claude.com/docs/en/goal#check-status)). If the goal was already achieved, it shows the achieved condition with its duration, turn count and token spend. When the evaluator judges the condition met, Claude Code clears the goal and records an achieved entry in the transcript ([How evaluation works](https://code.claude.com/docs/en/goal#how-evaluation-works)).
 4. Be the last check. The evaluator judged what Claude showed it, so run the checks yourself: `git grep -n -E '<pattern>' -- <folder>` lists nothing, and your test command passes. Read `git diff`, then commit what you accept.
 
 ## Your turn

@@ -81,6 +81,11 @@ The work comes back through git: each session commits on its branch, and you bri
 
 Land two backlog changes made at once, with neither session touching the other's files. Pick two real changes from your repository's backlog that don't change the same lines and don't build on each other, such as a small bug fix in one module and a missing test for another. Git merges changes to different parts of one file cleanly, but two changes to the same lines collide when you bring them together ([How conflicts are presented](https://git-scm.com/docs/git-merge#_how_conflicts_are_presented)), and each session starts without the other's change. Keep it to two, because each session's diff still needs your review.
 
+No backlog to pick from? Your copy of the practice template has two such changes:
+
+- `findLinks` in `src/links.js` lets a `~~~` line close a code block that opened with three backticks, so it reports links inside the block.
+- No test covers `src/cli.js`, the command that prints each broken link and sets the exit code.
+
 Before you start the sessions, decide what a fresh worktree of your repository lacks before its tests can run. Dependencies are the usual gap: tell each session to install them, as the Worked example's test session did. A gitignored file the tests read, such as a local config, is the other: list it in a `.worktreeinclude` file at your repository root, which copies only the files that match a pattern and are gitignored, or have the session create a test-only copy ([Copy gitignored files into worktrees](https://code.claude.com/docs/en/worktrees#copy-gitignored-files-into-worktrees)). Every worktree gets its own copy of each file you list, so list only what the tests need.
 
 If the work they should build on isn't on the remote's default branch yet, get it there first, or add `"worktree": {"baseRef": "head"}` to `.claude/settings.local.json`, your personal settings file from [Intermediate lesson 4](../intermediate/04-permissions-and-sandbox.md), so new worktrees start from your local `HEAD` ([`worktree.baseRef`](https://code.claude.com/docs/en/settings-reference#worktree-baseref)).
@@ -110,7 +115,7 @@ You are done when all of these are true:
 
 Run `npm run check -- a-1 --dir <your repo>` from your practice copy.
 
-If the first item fails, run `git check-ignore -v .claude/worktrees/x` in your repository: it should name your committed `.gitignore` ([git-check-ignore](https://git-scm.com/docs/git-check-ignore#Documentation/git-check-ignore.txt---verbose)). If the second item fails, read the hint the check prints: save the file after both sessions commit and before you remove either worktree. If the third item fails, run `git worktree remove <path>` from your main checkout on each path the check names.
+If the first item fails, run `git check-ignore -v .claude/worktrees/x` in your repository: it should name your committed `.gitignore` ([git-check-ignore](https://git-scm.com/docs/git-check-ignore#Documentation/git-check-ignore.txt---verbose)). If the second item fails, read the hint the check prints: save the file after both sessions commit and before you remove either worktree. If the third item fails, exit any Claude Code session still open in a worktree it names: `/exit`, then remove it, or keep it and run `git worktree remove <path>` from your main checkout. Run `git worktree unlock <path>` first only when git says the worktree is locked and no session is open in it ([Clean up worktrees](https://code.claude.com/docs/en/worktrees#clean-up-worktrees)).
 
 ## Watch out
 
