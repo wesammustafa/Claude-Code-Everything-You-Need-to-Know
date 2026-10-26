@@ -19,7 +19,12 @@ import {
 } from "node:fs";
 import { dirname, join, posix } from "node:path";
 
-/** Licenses a bundled package may carry. OFL-1.1 is for fonts only. */
+/**
+ * Licenses bundled code may carry: a package's own, and that of the code it
+ * compiled or copied into its files. OFL-1.1 is for fonts only. The owner added
+ * MIT-Modern-Variant and MIT-0 for the code compiled into Rive's WASM
+ * (HarfBuzz, and miniaudio under Unlicense OR MIT-0).
+ */
 export const ALLOWED_LICENSES = [
   "MIT",
   "ISC",
@@ -27,6 +32,8 @@ export const ALLOWED_LICENSES = [
   "BSD-3-Clause",
   "Apache-2.0",
   "OFL-1.1",
+  "MIT-Modern-Variant",
+  "MIT-0",
 ] as const;
 
 /** The workspaces whose production dependencies ship in a bundle. The server joins when it exists. */
@@ -44,6 +51,169 @@ export interface ShippedOptions {
   /** Packages, resolved from the repo root, whose runtime the bundler injects. */
   bundlerRuntime?: readonly string[];
 }
+
+/** A license text kept in this repo for a package published without one. */
+export interface SuppliedLicense {
+  /** The text, relative to the repo root. */
+  file: string;
+  /** Where it was copied from: the source repository's file at the release's commit. */
+  source: string;
+}
+
+/**
+ * License texts for shipped packages published without one, each copied from
+ * the package's source repository at the commit its release was tagged from.
+ * A package matches by name and exact version, so a version bump fails the
+ * license test until the new release's text is checked and supplied.
+ */
+export const SUPPLIED_LICENSES: Readonly<Record<string, SuppliedLicense>> = {
+  "@rive-app/react-webgl2@4.37.1": {
+    file: "quest/release/licenses/rive-react-v4.37.1-LICENSE",
+    source:
+      "https://github.com/rive-app/rive-react/blob/8f4ab5a831bb92e96e3076af5ecbd6963112d1ac/LICENSE",
+  },
+  "@rive-app/webgl2@2.45.1": {
+    file: "quest/release/licenses/rive-wasm-2.45.1-LICENSE",
+    source:
+      "https://github.com/rive-app/rive-wasm/blob/dc6c23329b5395591aad6fb9cc29c30fa75e87cc/LICENSE",
+  },
+};
+
+/** Third-party code a package compiled or copied into the files it ships, with that code's notice. */
+export interface EmbeddedNotice {
+  /** The project the code comes from, as the notices name it. */
+  project: string;
+  /** The project's license, as an SPDX expression. */
+  license: string;
+  /** The notice text, relative to the repo root. */
+  file: string;
+  /** Where it was copied from: the project's file at the revision the package's build used. */
+  source: string;
+}
+
+/** The embedded notices of one package, gathered for one exact version. */
+export interface EmbeddedNotices {
+  version: string;
+  notices: readonly EmbeddedNotice[];
+}
+
+const RIVE_EMBEDDED = "quest/release/licenses/rive-webgl2-2.45.1-embedded";
+
+/**
+ * Notices for code a shipped package carries inside its own files, which its
+ * own license text does not cover: the libraries compiled into a WASM binary,
+ * or code copied into its JavaScript. They are gathered from the package's
+ * build at its release, for one exact version, so a version bump fails the
+ * license test until they are gathered again.
+ *
+ * @rive-app/webgl2 2.45.1 is built from rive-wasm dc6c233 (its LICENSE is
+ * supplied above) with rive-runtime c51c078 and emsdk 4.0.23, for the webgl2
+ * renderer with text, audio, layout and scripting, and without the image
+ * decoders. rive.wasm compiles in the Skia code rive-wasm and the renderer
+ * import, HarfBuzz (with Microsoft's USE table data) and SheenBidi for text,
+ * miniaudio, Yoga, the Luau VM, libhydrogen, and Emscripten's runtime and musl
+ * libc; rive.js carries Emscripten's glue and a copy of braintree/sanitize-url.
+ * (libc++ and compiler-rt are under the LLVM exception, which asks no notice
+ * for compiled code.)
+ */
+export const EMBEDDED_NOTICES: Readonly<Record<string, EmbeddedNotices>> = {
+  "@rive-app/webgl2": {
+    version: "2.45.1",
+    notices: [
+      {
+        project: "Rive runtime and renderer",
+        license: "MIT",
+        file: `${RIVE_EMBEDDED}/rive-runtime-LICENSE`,
+        source:
+          "https://github.com/rive-app/rive-runtime/blob/c51c078efba52f369cccbbbfd26c99bc2421d613/LICENSE",
+      },
+      {
+        project: "Skia",
+        license: "BSD-3-Clause",
+        file: `${RIVE_EMBEDDED}/skia-LICENSE`,
+        source:
+          "https://github.com/google/skia/blob/b4171f5ba83048039097bbc664eaa076190f6239/LICENSE",
+      },
+      {
+        project: "HarfBuzz",
+        license: "MIT-Modern-Variant",
+        file: `${RIVE_EMBEDDED}/harfbuzz-COPYING`,
+        source:
+          "https://github.com/rive-app/harfbuzz/blob/08d34675f64b1ac4880f4f10c9fd474a56dd4399/COPYING",
+      },
+      {
+        project: "HarfBuzz: Microsoft's Universal Shaping Engine data",
+        license: "MIT",
+        file: `${RIVE_EMBEDDED}/harfbuzz-ms-use-COPYING`,
+        source:
+          "https://github.com/rive-app/harfbuzz/blob/08d34675f64b1ac4880f4f10c9fd474a56dd4399/src/ms-use/COPYING",
+      },
+      {
+        project: "SheenBidi",
+        license: "Apache-2.0",
+        file: `${RIVE_EMBEDDED}/sheenbidi-LICENSE`,
+        source:
+          "https://github.com/Tehreer/SheenBidi/blob/adfccc46504b1be37b8894f064121c56c31312f7/LICENSE",
+      },
+      {
+        project: "Yoga",
+        license: "MIT",
+        file: `${RIVE_EMBEDDED}/yoga-LICENSE`,
+        source:
+          "https://github.com/rive-app/yoga/blob/9a6ac7fac43ca22d9b1e56468e5c8200ba0a07d3/LICENSE",
+      },
+      {
+        project: "Luau",
+        license: "MIT",
+        file: `${RIVE_EMBEDDED}/luau-LICENSE.txt`,
+        source:
+          "https://github.com/luigi-rosso/luau/blob/c1c57894ff8f4fdacf171179eddd04c27cc5f7da/LICENSE.txt",
+      },
+      {
+        project: "Lua, in Luau",
+        license: "MIT",
+        file: `${RIVE_EMBEDDED}/lua-LICENSE.txt`,
+        source:
+          "https://github.com/luigi-rosso/luau/blob/c1c57894ff8f4fdacf171179eddd04c27cc5f7da/lua_LICENSE.txt",
+      },
+      {
+        project: "libhydrogen",
+        license: "ISC",
+        file: `${RIVE_EMBEDDED}/libhydrogen-LICENSE`,
+        source:
+          "https://github.com/luigi-rosso/libhydrogen/blob/4c298c5e3012d891b8b375c6dd215f580a36ed60/LICENSE",
+      },
+      {
+        project: "miniaudio",
+        license: "Unlicense OR MIT-0",
+        file: `${RIVE_EMBEDDED}/miniaudio-LICENSE`,
+        source:
+          "https://github.com/rive-app/miniaudio/blob/3a8b070f80e203a35ec763c5118da20805a90d5a/LICENSE",
+      },
+      {
+        project: "Emscripten",
+        license: "MIT OR NCSA",
+        file: `${RIVE_EMBEDDED}/emscripten-LICENSE`,
+        source:
+          "https://github.com/emscripten-core/emscripten/blob/7a5d93b50f6a3a35e85a0d2fc9e667b8498e6aed/LICENSE",
+      },
+      {
+        project: "musl libc, in Emscripten",
+        license: "MIT",
+        file: `${RIVE_EMBEDDED}/musl-COPYRIGHT`,
+        source:
+          "https://github.com/emscripten-core/emscripten/blob/7a5d93b50f6a3a35e85a0d2fc9e667b8498e6aed/system/lib/libc/musl/COPYRIGHT",
+      },
+      {
+        project: "sanitize-url",
+        license: "MIT",
+        file: `${RIVE_EMBEDDED}/sanitize-url-LICENSE`,
+        source:
+          "https://github.com/braintree/sanitize-url/blob/ff8da9bb5fc68761658046365a842c8202dd2d3c/LICENSE",
+      },
+    ],
+  },
+};
 
 /**
  * Where the license test writes the notices, relative to the repo root: build
@@ -326,23 +496,74 @@ function licenseFiles(dir: string): string[] {
     .sort((a, b) => a.localeCompare(b, "en"));
 }
 
-/** Every shipped package whose license is outside the allowlist or has no license text. */
+type Supplied = Readonly<Record<string, SuppliedLicense>>;
+type Embedded = Readonly<Record<string, EmbeddedNotices>>;
+
+/** The license text supplied for a package, matched by name and exact version. */
+function suppliedFor(
+  pkg: ShippedPackage,
+  supplied: Supplied,
+): SuppliedLicense | undefined {
+  return supplied[`${pkg.name}@${pkg.version}`];
+}
+
+/**
+ * Every shipped package whose license is outside the allowlist or has no
+ * license text: neither a file of its own nor one supplied for its exact
+ * version, or whose embedded code is under a license outside the allowlist.
+ * A package that ships its own text while one is also supplied is a problem
+ * too, so a supplied text never outlives its need.
+ */
 export function licenseProblems(
   root: string,
   shipped: readonly ShippedPackage[],
+  supplied: Supplied = SUPPLIED_LICENSES,
+  embedded: Embedded = EMBEDDED_NOTICES,
 ): LicenseProblem[] {
   const problems: LicenseProblem[] = [];
   for (const pkg of shipped) {
     const base = { name: pkg.name, version: pkg.version, license: pkg.license };
+    const inside = embedded[pkg.name];
+    if (inside && inside.version !== pkg.version) {
+      problems.push({
+        ...base,
+        reason: `the notices for the code compiled or copied into it were gathered for ${inside.version}; gather them again for ${pkg.version}`,
+      });
+    } else if (inside) {
+      for (const notice of inside.notices) {
+        if (!existsSync(join(root, notice.file)))
+          problems.push({
+            ...base,
+            reason: `the ${notice.project} notice ${notice.file} is missing`,
+          });
+        if (!licenseAllowed(notice.license))
+          problems.push({
+            ...base,
+            reason: `the ${notice.project} code compiled or copied into it is under ${notice.license}, which is not on the allowlist`,
+          });
+      }
+    }
+    const own = licenseFiles(join(root, pkg.path));
+    const text = suppliedFor(pkg, supplied);
     if (!licenseAllowed(pkg.license)) {
       problems.push({
         ...base,
         reason: `license ${pkg.license ?? "(none)"} is not on the allowlist`,
       });
-    } else if (licenseFiles(join(root, pkg.path)).length === 0) {
+    } else if (own.length > 0 && text) {
+      problems.push({
+        ...base,
+        reason: `ships its own license file, so its supplied text ${text.file} is no longer needed`,
+      });
+    } else if (own.length === 0 && !text) {
       problems.push({
         ...base,
         reason: "no license file to credit in the notices",
+      });
+    } else if (text && !existsSync(join(root, text.file))) {
+      problems.push({
+        ...base,
+        reason: `its supplied license text ${text.file} is missing`,
       });
     }
   }
@@ -353,6 +574,8 @@ export function licenseProblems(
 export function renderNotices(
   root: string,
   shipped: readonly ShippedPackage[],
+  supplied: Supplied = SUPPLIED_LICENSES,
+  embedded: Embedded = EMBEDDED_NOTICES,
 ): string {
   const parts = [
     "Claude Code Quest: third-party notices",
@@ -374,6 +597,30 @@ export function renderNotices(
         .trimEnd();
       parts.push(`--- ${file} ---`, text, "");
     }
+    const text = suppliedFor(pkg, supplied);
+    if (text && licenseFiles(join(root, pkg.path)).length === 0) {
+      const body = readFileSync(join(root, text.file), "utf8")
+        .replace(/\r\n?/g, "\n")
+        .trimEnd();
+      parts.push(`--- LICENSE (from ${text.source}) ---`, body, "");
+    }
+    const inside = embedded[pkg.name];
+    if (inside?.version === pkg.version) {
+      parts.push(
+        "It carries code from the projects below, compiled or copied into its files.",
+        "",
+      );
+      for (const notice of inside.notices) {
+        const body = readFileSync(join(root, notice.file), "utf8")
+          .replace(/\r\n?/g, "\n")
+          .trimEnd();
+        parts.push(
+          `--- ${notice.project}, ${notice.license} (from ${notice.source}) ---`,
+          body,
+          "",
+        );
+      }
+    }
   }
   return `${parts.join("\n").trimEnd()}\n`;
 }
@@ -382,10 +629,15 @@ export function renderNotices(
 export function writeNotices(
   root: string,
   outFile: string,
-  options: ShippedOptions = {},
+  options: ShippedOptions & { supplied?: Supplied; embedded?: Embedded } = {},
 ): ShippedPackage[] {
-  const shipped = shippedPackages(root, options);
-  const problems = licenseProblems(root, shipped);
+  const {
+    supplied = SUPPLIED_LICENSES,
+    embedded = EMBEDDED_NOTICES,
+    ...shippedOptions
+  } = options;
+  const shipped = shippedPackages(root, shippedOptions);
+  const problems = licenseProblems(root, shipped, supplied, embedded);
   if (problems.length > 0) {
     const lines = problems.map((p) => `- ${p.name} ${p.version}: ${p.reason}`);
     throw new Error(
@@ -393,6 +645,6 @@ export function writeNotices(
     );
   }
   mkdirSync(dirname(outFile), { recursive: true });
-  writeFileSync(outFile, renderNotices(root, shipped));
+  writeFileSync(outFile, renderNotices(root, shipped, supplied, embedded));
   return shipped;
 }
