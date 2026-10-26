@@ -1,0 +1,8 @@
+{
+  "rule": "internal-links",
+  "expect": "pass",
+  "about": "Relative links under course/steps/ (quotes that resolve from their page, not the step file) and practice-template/samples/ (the linkcheck tests' deliberate broken link) are skipped.",
+  "output": [
+    "PASS internal-links: \\d+ links in 2 pages"
+  ]
+}

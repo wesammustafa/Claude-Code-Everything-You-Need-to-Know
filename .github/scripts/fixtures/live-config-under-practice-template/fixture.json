@@ -1,0 +1,10 @@
+{
+  "rule": "inertness",
+  "expect": "fail",
+  "about": "A real CLAUDE.md, .claude/ folder and .mcp.json under practice-template/, which Claude Code can load. Generated, never committed.",
+  "output": [
+    "practice-template/CLAUDE\\.md: Claude Code can load this",
+    "practice-template/starter/\\.claude: Claude Code can load this",
+    "practice-template/\\.mcp\\.json: Claude Code can load this"
+  ]
+}
