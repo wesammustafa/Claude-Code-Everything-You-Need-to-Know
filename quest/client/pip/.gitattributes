@@ -1,0 +1,5 @@
+# The build record hashes the rig's bytes, so its sources stay LF on every
+# platform; the built file and the posters are binary.
+rig/** text eol=lf
+*.riv binary
+*.png binary
