@@ -212,6 +212,8 @@
 
   /* A disabled control fades and stops. */
   --opacity-disabled: 45%;
+  /* Where a fading element starts as it opens, and ends as it closes. */
+  --opacity-gone: 0%;
 
   /* Motion. */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);

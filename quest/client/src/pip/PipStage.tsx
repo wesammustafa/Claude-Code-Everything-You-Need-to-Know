@@ -1,5 +1,6 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -16,10 +17,11 @@ import {
   type EventFeed,
 } from "../live/events";
 import { motionReduced, pageHidden, useReducedMotion } from "../lib/page";
-import type { DirectorInput } from "./director";
+import type { DirectorInput, LookTarget } from "./director";
 import { screenFor } from "./screens";
 import {
   createPipStage,
+  measureGaze,
   measureGazeTargets,
   type PipStage,
   type StageClock,
@@ -43,6 +45,7 @@ const STILL: PipModel = {
 };
 const stillStage: PipStage = {
   model: () => STILL,
+  helpShowing: () => false,
   send: () => undefined,
   subscribe: () => () => undefined,
 };
@@ -58,6 +61,51 @@ export function usePipModel(): PipModel {
 /** Tells the director something the page learned. */
 export function usePipInput(): (input: DirectorInput) => void {
   return useContext(StageContext).send;
+}
+
+/** Whether the step's help offer is in Pip's bubble. */
+export function useHelpShowing(): boolean {
+  const stage = useContext(StageContext);
+  return useSyncExternalStore(stage.subscribe, stage.helpShowing);
+}
+
+/**
+ * Has Pip watch what the Learner just did: the element marked
+ * `data-pip-target` with that name around `from` (the Copy button pressed,
+ * say), or else the page's first one. Nothing without a Pip on the page.
+ */
+export function usePipLook(): (
+  target: LookTarget,
+  from?: Element | null,
+) => void {
+  const send = usePipInput();
+  return useCallback(
+    (target, from) => {
+      const selector = `[data-pip-target="${target}"]`;
+      const el = from?.closest(selector) ?? document.querySelector(selector);
+      if (el === null) return;
+      const at = measureGaze(document, el);
+      if (at !== null) send({ type: "look", target, at });
+    },
+    [send],
+  );
+}
+
+/**
+ * Tells the director which step is on screen, and whether an unopened hint is
+ * ready on it, for the help offer's stuck rule.
+ */
+export function usePipStep(step: string | null, hintReady: boolean): void {
+  const send = usePipInput();
+  useEffect(() => {
+    send({ type: "step", step });
+    return () => {
+      send({ type: "step", step: null });
+    };
+  }, [send, step]);
+  useEffect(() => {
+    send({ type: "hint", ready: hintReady });
+  }, [send, step, hintReady]);
 }
 
 /** Input that counts as the Learner's activity: pointing, typing, scrolling. */

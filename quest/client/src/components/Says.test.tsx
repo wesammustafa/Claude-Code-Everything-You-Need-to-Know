@@ -20,6 +20,7 @@ test.each<[SaysTone, string]>([
   ["notYet", "border-wait"],
   ["passed", "border-pass"],
   ["broken", "border-broken"],
+  ["offer", "border-accent-edge"],
 ])("the %s bubble takes its status colour from tokens", (tone, border) => {
   render(<Says tone={tone}>Status</Says>);
   const bubble = screen.getByRole("status");

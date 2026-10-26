@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
 import { envelope } from "../../test/events";
 import { GAZE_HOLD_MS, IDLE_REST_MS } from "./director";
+import { HINT_UNUSED_MS } from "./help";
 import {
   createPipStage,
   gazeToward,
@@ -85,7 +86,29 @@ describe("Pip's stage", () => {
     clock.advance(GAZE_HOLD_MS - 1);
     expect(stage.model().gaze).toEqual({ x: 1, y: 0 });
     clock.advance(1);
-    expect(stage.model().gaze).toBeNull();
+    // Back to the step's resting gaze, toward the content.
+    expect(stage.model().gaze).toEqual({ x: 0.4, y: 0 });
+  });
+
+  test("ticks the director when its model is due to change: the help offer", () => {
+    const clock = fakeClock();
+    const stage = createPipStage(clock, { screen: "step" });
+    const heard = vi.fn();
+    stage.subscribe(heard);
+    stage.send({ type: "step", step: "b-1:0" });
+    stage.send({ type: "hint", ready: true });
+    expect(stage.helpShowing()).toBe(false);
+    heard.mockClear();
+    clock.advance(HINT_UNUSED_MS);
+    expect(stage.helpShowing()).toBe(true);
+    expect(stage.model().reaction?.kind).toBe("explaining");
+    expect(heard).toHaveBeenCalled();
+    // Dismissing it changes no model, and the listeners still hear it.
+    clock.advance(GAZE_HOLD_MS);
+    heard.mockClear();
+    stage.send({ type: "helpDismissed" });
+    expect(stage.helpShowing()).toBe(false);
+    expect(heard).toHaveBeenCalledTimes(1);
   });
 
   test("ticks the director when its model is due to change: the 5-minute rest", () => {

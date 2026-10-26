@@ -1,14 +1,15 @@
 // Pip's stage: the director with a real clock and its timer, as a store React
 // can subscribe to. Everything the page learns goes in through `send`; the
-// PipModel comes out, and changes only when the director's model does.
+// PipModel comes out, and changes only when the director's model does; so
+// does whether the step's help offer shows.
 import type { PipModel } from "../../pip/contract";
 import {
   createPipDirector,
   type DirectorInput,
   type DirectorStart,
   type GazePoint,
+  type GazeTargetName,
 } from "./director";
-import type { PipGazeTarget } from "./reactions";
 
 export interface StageClock {
   now(): number;
@@ -18,6 +19,8 @@ export interface StageClock {
 
 export interface PipStage {
   model: () => PipModel;
+  /** Whether the step's help offer is in the bubble. */
+  helpShowing: () => boolean;
   send: (input: DirectorInput) => void;
   /** While anyone listens, the stage ticks the director when its model is due to change. */
   subscribe: (listener: () => void) => () => void;
@@ -43,6 +46,7 @@ export function createPipStage(
 ): PipStage {
   const director = createPipDirector(() => clock.now(), start);
   let model = director.model();
+  let helpShowing = director.helpShowing();
   const listeners = new Set<() => void>();
   let timer: { handle: unknown } | null = null;
 
@@ -69,8 +73,10 @@ export function createPipStage(
   };
   const send = (input: DirectorInput) => {
     const next = director.send(input);
-    if (!samePipModel(model, next)) {
+    const nextHelp = director.helpShowing();
+    if (!samePipModel(model, next) || nextHelp !== helpShowing) {
       model = next;
+      helpShowing = nextHelp;
       for (const listener of [...listeners]) listener();
     }
     schedule();
@@ -78,6 +84,7 @@ export function createPipStage(
 
   return {
     model: () => model,
+    helpShowing: () => helpShowing,
     send,
     subscribe(listener) {
       listeners.add(listener);
@@ -105,19 +112,37 @@ export function gazeToward(
   return length === 0 ? { x: 0, y: 0 } : { x: dx / length, y: dy / length };
 }
 
-const TARGETS: readonly PipGazeTarget[] = ["hint", "tiers", "work"];
+const TARGETS: readonly GazeTargetName[] = [
+  "hint",
+  "tiers",
+  "work",
+  "lines",
+  "command",
+  "goal",
+];
+
+/**
+ * Where one element sits as the Pip on screen sees it; null without a drawn
+ * Pip.
+ */
+export function measureGaze(root: ParentNode, el: Element): GazePoint | null {
+  const pip = root.querySelector("[data-pip]");
+  if (pip === null) return null;
+  return gazeToward(pip.getBoundingClientRect(), el.getBoundingClientRect());
+}
 
 /**
  * The page's gaze targets, relative to the Pip on screen: elements marked
- * `data-pip-target="hint"` (or `tiers`, `work`). None without a drawn Pip.
+ * `data-pip-target="hint"` (or `tiers`, `work`, `lines`, `command`, `goal`; the first
+ * of each). None without a drawn Pip.
  */
 export function measureGazeTargets(
   root: ParentNode,
-): Partial<Record<PipGazeTarget, GazePoint>> {
+): Partial<Record<GazeTargetName, GazePoint>> {
   const pip = root.querySelector("[data-pip]");
   if (pip === null) return {};
   const from = pip.getBoundingClientRect();
-  const targets: Partial<Record<PipGazeTarget, GazePoint>> = {};
+  const targets: Partial<Record<GazeTargetName, GazePoint>> = {};
   for (const name of TARGETS) {
     const el = root.querySelector(`[data-pip-target="${name}"]`);
     if (el !== null)

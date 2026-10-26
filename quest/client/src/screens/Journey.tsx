@@ -6,13 +6,19 @@ import { InlineText } from "../components/InlineText";
 import { LEVELS, LESSONS, lessonLabel, levelOf } from "../course/placeholder";
 import { cx } from "../lib/cx";
 import { useBelow } from "../lib/media";
+import { Pip } from "../pip/Pip";
 import { PageTitle } from "../shell/PageTitle";
 import { EYEBROW, WIDE } from "./layout";
 
 // Until the snapshot says where the Learner is, the first Lesson is current.
 const current = LESSONS[0];
 
-/** The Learning journey: three Level cards that select a Level, its Lessons on one line, and one Next band. */
+/**
+ * The Learning journey: three Level cards that select a Level, its Lessons on
+ * one line, and one Next band, with Pip beside it, turned toward the lesson
+ * ahead. Below the sm breakpoint Pip sits above the band, which keeps the
+ * full width.
+ */
 export function Journey() {
   const [selected, setSelected] = useState(0);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -154,21 +160,24 @@ export function Journey() {
       </section>
 
       {current && (
-        <div className="flex items-center justify-between gap-4 rounded-lg border border-accent-edge bg-linear-100 from-accent-soft to-surface to-55% px-5.5 py-4.5 shadow-sm max-sm:flex-col max-sm:items-stretch">
-          <div className="grid gap-0.5">
-            <span className={EYEBROW}>Next</span>
-            <b className="text-lg">
-              {`${levelOf(current).name}, ${lessonLabel(current)}: `}
-              <InlineText text={current.title} />
-            </b>
+        <div className="flex items-center gap-3.5 max-sm:flex-col max-sm:items-start max-sm:gap-2">
+          <Pip size="beside" />
+          <div className="flex min-w-0 flex-1 items-center max-sm:self-stretch justify-between gap-4 rounded-lg border border-accent-edge bg-linear-100 from-accent-soft to-surface to-55% px-5.5 py-4.5 shadow-sm max-sm:flex-col max-sm:items-stretch">
+            <div className="grid gap-0.5">
+              <span className={EYEBROW}>Next</span>
+              <b className="text-lg">
+                {`${levelOf(current).name}, ${lessonLabel(current)}: `}
+                <InlineText text={current.title} />
+              </b>
+            </div>
+            <ButtonLink
+              to={`/lesson/${current.id}`}
+              variant="primary"
+              iconEnd="arrow"
+            >
+              Continue
+            </ButtonLink>
           </div>
-          <ButtonLink
-            to={`/lesson/${current.id}`}
-            variant="primary"
-            iconEnd="arrow"
-          >
-            Continue
-          </ButtonLink>
         </div>
       )}
     </main>
