@@ -1,0 +1,366 @@
+/*
+  Claude Code Quest's design tokens: direction A, "Harbor". This file is the
+  only place a colour, size, duration or easing is written; components use
+  the utilities Tailwind builds from it. The dark theme is the default; the
+  light theme follows the system setting unless data-theme on <html> picks
+  one, and reduced motion follows the system setting unless data-motion
+  does. src/tokens/contrast.test.ts measures every text pairing below, and
+  every mark that shows a state or is a control's only edge, at WCAG 2.2 AA
+  in both themes.
+*/
+
+/* The light theme: the system asks for it and no theme was picked, or light was picked. */
+@custom-variant light {
+  @media (prefers-color-scheme: light) {
+    &:not(:where([data-theme="dark"], [data-theme="dark"] *)) {
+      @slot;
+    }
+  }
+  &:where([data-theme="light"], [data-theme="light"] *) {
+    @slot;
+  }
+}
+
+/* Reduced motion: the system asks for it and full motion was not picked, or reduce was picked. */
+@custom-variant reduced {
+  @media (prefers-reduced-motion: reduce) {
+    &:not(:where([data-motion="full"], [data-motion="full"] *)) {
+      @slot;
+    }
+  }
+  &:where([data-motion="reduce"], [data-motion="reduce"] *) {
+    @slot;
+  }
+}
+
+@theme static {
+  /* Only these tokens exist: Tailwind's default palette, scale and fonts are cleared. */
+  --*: initial;
+
+  --spacing: 0.25rem;
+  --breakpoint-sm: 30rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+
+  /* Page widths: the lesson column fits half a laptop screen beside a terminal. */
+  --container-column: 45rem;
+  --container-wide: 65rem;
+  --container-hero: 40rem;
+  --container-moment: 30rem;
+  --container-sheet: 27.5rem;
+  /* The wide sheet that reads a lesson page: its own measure, not the column's. */
+  --container-reading: 47.5rem;
+  --container-measure: 66ch;
+
+  /* Colour, dark theme. */
+  --color-bg: #0b1020;
+  --color-surface: #141b33;
+  --color-surface-2: #1b2440;
+  --color-line: #243052;
+  --color-line-2: #3a4672;
+  --color-text: #eef1f8;
+  --color-muted: #a9b3cc;
+  --color-accent: #ff784e;
+  --color-accent-hover: #ff9f73;
+  --color-accent-ink: #1a0f0a;
+  --color-accent-text: #ff8f6b;
+  --color-teal: #3cc8bc;
+  --color-pass: #47c98a;
+  --color-wait: #f2b54a;
+  --color-broken: #f58a99;
+  --color-code-bg: #070b17;
+  --color-code-text: #ffe8dc;
+  --color-code-muted: #8c95b3;
+  --color-focus: #ff784e;
+  /* Marks that must be seen at 3:1: a selected or current state in coral, and
+     an idle mark (a step still to do, a control's only edge). */
+  --color-accent-mark: var(--color-accent);
+  --color-mark: #636e9a;
+  /* Code blocks stay navy in both themes, so a ring inside one is coral in both. */
+  --color-focus-on-code: var(--color-accent);
+  --color-scrim: #060810;
+
+  /* Derived, for both themes: pressed and soft fills, measured as sRGB mixes. */
+  --color-accent-pressed: color-mix(
+    in srgb,
+    var(--color-accent) 88%,
+    var(--color-accent-ink)
+  );
+  --color-pressed: color-mix(
+    in srgb,
+    var(--color-line) 70%,
+    var(--color-surface-2)
+  );
+  --color-accent-soft: color-mix(
+    in srgb,
+    var(--color-accent) 13%,
+    var(--color-surface)
+  );
+  --color-teal-soft: color-mix(
+    in srgb,
+    var(--color-teal) 12%,
+    var(--color-surface)
+  );
+  --color-pass-soft: color-mix(
+    in srgb,
+    var(--color-pass) 12%,
+    var(--color-surface)
+  );
+  --color-wait-soft: color-mix(
+    in srgb,
+    var(--color-wait) 12%,
+    var(--color-surface)
+  );
+  --color-broken-soft: color-mix(
+    in srgb,
+    var(--color-broken) 12%,
+    var(--color-surface)
+  );
+  --color-code-control: color-mix(
+    in srgb,
+    var(--color-code-text) 8%,
+    var(--color-code-bg)
+  );
+  --color-code-control-hover: color-mix(
+    in srgb,
+    var(--color-code-text) 15%,
+    var(--color-code-bg)
+  );
+  --color-code-line: color-mix(
+    in srgb,
+    var(--color-code-text) 12%,
+    var(--color-code-bg)
+  );
+  --color-accent-edge: color-mix(
+    in srgb,
+    var(--color-accent) 55%,
+    var(--color-line)
+  );
+  --color-teal-edge: color-mix(
+    in srgb,
+    var(--color-teal) 55%,
+    var(--color-line)
+  );
+
+  /* Type: Inter with optical sizes, JetBrains Mono for code, both bundled. */
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+  --default-font-family: var(--font-sans);
+  --default-mono-font-family: var(--font-mono);
+
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.84375rem;
+  --text-sm--line-height: 1.25rem;
+  --text-control: 0.90625rem;
+  --text-control--line-height: 1.25rem;
+  --text-base: 0.96875rem;
+  --text-base--line-height: 1.6;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.625rem;
+  --text-xl: 1.375rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.75rem;
+  --text-2xl--line-height: 2.125rem;
+  --text-3xl: 2.25rem;
+  --text-3xl--line-height: 2.625rem;
+  --text-code: 0.9em;
+  --text-display: 3rem;
+  --text-display--line-height: 3.375rem;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-heading: 650;
+  --font-weight-bold: 700;
+
+  --tracking-normal: 0em;
+  --tracking-heading: -0.018em;
+  --tracking-tight: -0.01em;
+  --tracking-eyebrow: 0.07em;
+
+  /* Shape and depth. */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 2.5rem;
+
+  /* Shadows take their ink from :root, so each theme sets it: Tailwind writes these values into the utilities. */
+  --shadow-sm: 0 1px 2px var(--shadow-ink-sm);
+  --shadow-md:
+    0 1px 2px var(--shadow-ink-near), 0 8px 24px var(--shadow-ink-md);
+  --shadow-lg:
+    0 2px 4px var(--shadow-ink-near), 0 18px 48px var(--shadow-ink-lg);
+  --shadow-mark: inset -4px -3px 0 var(--color-accent-pressed);
+  --shadow-selected: 0 0 0 3px var(--color-accent-soft), var(--shadow-md);
+  --shadow-current: 0 0 0 6px var(--color-accent-soft);
+  --shadow-track: inset 0 0 0 1px var(--color-line);
+
+  --blur-md: 12px;
+
+  /* A disabled control fades and stops. */
+  --opacity-disabled: 45%;
+
+  /* Motion. */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --default-transition-duration: var(--duration-fast);
+  --default-transition-timing-function: var(--ease-out);
+
+  --animate-rise: rise var(--duration-slow) var(--ease-out) both;
+  --animate-fade: fade var(--duration-base) var(--ease-out) both;
+  --animate-says: says var(--duration-base) var(--ease-out) var(--says-delay)
+    both;
+  --animate-line: line var(--duration-base) var(--ease-out) both;
+  --animate-sheet: sheet var(--duration-slow) var(--ease-out) both;
+  --animate-drop: drop var(--duration-base) var(--ease-out) both;
+  --animate-pop: pop var(--duration-base) var(--ease-spring);
+  --animate-breathe: breathe 2.4s var(--ease-in-out) infinite;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(var(--rise));
+    }
+  }
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes says {
+    from {
+      opacity: 0;
+      transform: translateY(calc(var(--rise) / 3));
+    }
+  }
+  @keyframes line {
+    from {
+      opacity: 0;
+      transform: translateX(calc(var(--rise) / -2));
+    }
+  }
+  @keyframes sheet {
+    from {
+      opacity: 0.4;
+      transform: translateX(calc(var(--rise) * 6));
+    }
+  }
+  @keyframes drop {
+    from {
+      opacity: 0;
+      transform: translateY(calc(var(--rise) * -1));
+    }
+  }
+  @keyframes pop {
+    from {
+      transform: scale(var(--pop-from));
+    }
+  }
+  @keyframes breathe {
+    50% {
+      opacity: 0.55;
+    }
+  }
+}
+
+:root {
+  /* Durations: press, hover and colour, status and hints, entrances and sheets, the badge moment. */
+  --duration-press: 90ms;
+  --duration-fast: 140ms;
+  --duration-base: 220ms;
+  --duration-slow: 360ms;
+  --duration-moment: 560ms;
+  /* A turning mark, such as a disclosure's chevron: a rotation is travel, so reduced motion snaps it. */
+  --duration-turn: 220ms;
+  --stagger: 40ms;
+  --says-delay: 80ms;
+
+  /* Travel: the screen rise, the press, a hovered node, the copy tick. */
+  --rise: 8px;
+  --press-y: 1px;
+  --press-scale: 0.985;
+  --hover-scale: 1.06;
+  --nudge: 2px;
+  --pop-from: 0.6;
+
+  /* A contrast theme (forced colours) replaces every colour above with the
+     user's own. The few marks that must keep a fill there take it from these
+     system colours, so they follow the user's theme too. */
+  --forced-mark: CanvasText;
+  --forced-current: Highlight;
+  --forced-current-ink: HighlightText;
+
+  --topbar-height: 3.5rem;
+  /* The heights of the sticky top and the fixed action bar, kept current by
+     the shell and the bar while they are mounted (useHeightProperty), so
+     focus and in-page scrolling stop clear of both. */
+  --top-height: 0px;
+  --action-bar-height: 0px;
+  --focus-clearance: calc(var(--spacing) * 4);
+  /* The scrollbar's width while an open Panel locks the page's scroll; fixed bars keep clear of it. */
+  --scroll-lock-gap: 0px;
+  --moment-height: calc(100dvh - var(--topbar-height));
+  --shadow-ink-sm: rgb(0 0 0 / 0.35);
+  --shadow-ink-near: rgb(0 0 0 / 0.3);
+  --shadow-ink-md: rgb(0 0 0 / 0.28);
+  --shadow-ink-lg: rgb(0 0 0 / 0.4);
+  --glow: radial-gradient(
+    60% 50% at 50% -10%,
+    rgb(255 120 78 / 0.13),
+    transparent 70%
+  );
+  color-scheme: dark;
+
+  @variant light {
+    --color-bg: #fbf6ef;
+    --color-surface: #ffffff;
+    --color-surface-2: #f6efe5;
+    --color-line: #ebe1d2;
+    --color-line-2: #c9b8a1;
+    --color-text: #141b33;
+    --color-muted: #4f5872;
+    --color-accent-hover: #ff8d66;
+    --color-accent-text: #b13f1d;
+    --color-teal: #0e776f;
+    --color-pass: #127a4b;
+    --color-wait: #8a5700;
+    --color-broken: #b02e48;
+    --color-code-bg: #141b33;
+    --color-focus: #b13f1d;
+    --color-accent-mark: #d9592f;
+    --color-mark: #9a866c;
+    --color-scrim: #141b33;
+
+    --shadow-ink-sm: rgb(60 40 20 / 0.08);
+    --shadow-ink-near: rgb(60 40 20 / 0.06);
+    --shadow-ink-md: rgb(60 40 20 / 0.08);
+    --shadow-ink-lg: rgb(60 40 20 / 0.12);
+    --glow: radial-gradient(
+      60% 50% at 50% -10%,
+      rgb(255 120 78 / 0.12),
+      transparent 70%
+    );
+    color-scheme: light;
+  }
+
+  /* Reduced motion: no travel, hop or spring; state changes stay as fades of at most 120 ms. */
+  @variant reduced {
+    --duration-fast: 120ms;
+    --duration-base: 120ms;
+    --duration-slow: 120ms;
+    --duration-moment: 120ms;
+    --duration-turn: 0ms;
+    --stagger: 0ms;
+    --rise: 0px;
+    --press-y: 0px;
+    --press-scale: 1;
+    --hover-scale: 1;
+    --nudge: 0px;
+    --pop-from: 1;
+    --ease-spring: var(--ease-out);
+    --animate-breathe: none;
+  }
+}

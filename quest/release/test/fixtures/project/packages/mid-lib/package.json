@@ -1,0 +1,9 @@
+{
+  "name": "mid-lib",
+  "version": "1.0.0",
+  "license": "MIT",
+  "dependencies": {
+    "bare-lib": "1.0.0",
+    "deep-gpl": "1.0.0"
+  }
+}
