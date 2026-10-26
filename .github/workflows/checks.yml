@@ -10,9 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  # The ruleset on main requires this job's check run, which GitHub names after
-  # the job id. Renaming the job, or giving it a name:, would block every merge.
-  checks:
+  guide:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -33,3 +31,33 @@ jobs:
         run: |
           if [ -n "$BASE_REF" ]; then base="origin/$BASE_REF"; else base="HEAD^"; fi
           node .github/scripts/check.mjs --mode pr --base "$base"
+
+  quest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test:quest
+
+  # The ruleset on main requires the check run named "checks", which this job
+  # reports today. Keep the job id and add no name:, or that check may never
+  # report and every merge would block.
+  # GitHub reports a skipped job as success and lets a skipped required check
+  # through, so this job always runs and fails unless every job it needs
+  # succeeded.
+  checks:
+    needs: [guide, quest]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail unless every needed job succeeded
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          echo "$NEEDS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          echo "$NEEDS" | jq -e 'all(.[]; .result == "success")' > /dev/null
