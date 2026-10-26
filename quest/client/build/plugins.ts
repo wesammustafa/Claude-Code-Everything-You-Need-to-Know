@@ -42,6 +42,57 @@ export function bundledPackagesOnly(): Plugin {
   );
 }
 
+/** Vite's helper for dynamic imports, which it adds to every client build that has one. */
+const VITE_PRELOAD_HELPER = "\0vite/preload-helper.js";
+
+/**
+ * Wraps each dynamic import in the app's own helper (src/lib/dynamic-import.ts)
+ * instead of Vite's, so no Vite code ships and the bundle check above stays
+ * strict. Vite's helper preloads a dynamic chunk's dependencies; with
+ * `build.modulePreload` off there are none to preload, so the app's helper
+ * only runs the import.
+ */
+export function ownDynamicImportHelper(): Plugin {
+  const helper = join(clientRoot, "src/lib/dynamic-import.ts");
+  return {
+    name: "quest:own-dynamic-import-helper",
+    apply: "build",
+    enforce: "pre",
+    configResolved(config) {
+      if (config.build.modulePreload !== false) {
+        throw new Error(
+          "ownDynamicImportHelper preloads nothing, so it needs build.modulePreload set to false",
+        );
+      }
+    },
+    resolveId(id) {
+      return id === VITE_PRELOAD_HELPER ? helper : undefined;
+    },
+    // Vite's helper would load a dynamic chunk's stylesheets first; the
+    // app's does not, so a dynamic chunk that brings CSS fails the build
+    // rather than ship unstyled.
+    generateBundle(_options, bundle) {
+      const dynamic = new Set(
+        Object.values(bundle).flatMap((output) =>
+          output.type === "chunk" ? output.dynamicImports : [],
+        ),
+      );
+      const styled = [...dynamic].filter((file) => {
+        const chunk = bundle[file];
+        return (
+          chunk?.type === "chunk" &&
+          (chunk.viteMetadata?.importedCss.size ?? 0) > 0
+        );
+      });
+      if (styled.length > 0) {
+        this.error(
+          `A dynamically imported chunk brings stylesheets the app's dynamic import helper would not load: ${styled.join(", ")}.`,
+        );
+      }
+    },
+  };
+}
+
 /** The headers the app's server sends, so an e2e run meets the same policy. */
 export const PREVIEW_HEADERS = {
   "Content-Security-Policy":

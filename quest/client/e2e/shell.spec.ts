@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { watch } from "./watch.ts";
 
 const SCREENS: readonly (readonly [path: string, heading: string])[] = [
   ["/", "Learn Claude Code by using it."],
@@ -8,22 +9,6 @@ const SCREENS: readonly (readonly [path: string, heading: string])[] = [
   ["/#/lesson/b-1/complete", "Install, sign in and look around"],
   ["/#/progress", "Progress"],
 ];
-
-// Every request the page makes, and every console error, warning or page error.
-function watch(page: Page) {
-  const requests: string[] = [];
-  const problems: string[] = [];
-  page.on("request", (request) => requests.push(request.url()));
-  page.on("console", (message) => {
-    if (message.type() === "error" || message.type() === "warning") {
-      problems.push(`${message.type()}: ${message.text()}`);
-    }
-  });
-  page.on("pageerror", (error) =>
-    problems.push(`page error: ${error.message}`),
-  );
-  return { requests, problems };
-}
 
 async function fontsSettled(page: Page) {
   await page.evaluate(async () => {
@@ -47,7 +32,7 @@ test("every screen renders, asks no host but 127.0.0.1 and logs no error", async
     await fontsSettled(page);
   }
 
-  const urls = seen.requests.map((url) => new URL(url));
+  const urls = seen.requests;
   expect(urls.length).toBeGreaterThan(3);
   expect(
     urls.filter((url) => url.hostname !== "127.0.0.1").map(String),
@@ -145,9 +130,9 @@ test("renders with both bundled fonts, fetching only their Latin files", async (
   }
 
   // Fonts come from the app's own files: the two Latin subsets and nothing else.
-  const fontFiles = seen.requests
-    .filter((url) => url.endsWith(".woff2"))
-    .map((url) => new URL(url));
+  const fontFiles = seen.requests.filter((url) =>
+    url.pathname.endsWith(".woff2"),
+  );
   expect(
     fontFiles.every(
       (url) =>

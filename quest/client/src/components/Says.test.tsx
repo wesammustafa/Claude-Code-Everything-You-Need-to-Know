@@ -8,7 +8,7 @@ test("says the status in a polite live region beside Pip", () => {
   const bubble = screen.getByRole("status");
   expect(bubble).toHaveAttribute("aria-live", "polite");
   expect(bubble).toHaveTextContent("Watching your Practice copy.");
-  expect(container.querySelector("[data-pip-placeholder]")).toHaveAttribute(
+  expect(container.querySelector("[data-pip=beside]")).toHaveAttribute(
     "aria-hidden",
     "true",
   );

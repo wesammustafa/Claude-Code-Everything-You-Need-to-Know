@@ -3,6 +3,10 @@ import { defineConfig, devices } from "@playwright/test";
 const PREVIEW = "http://127.0.0.1:4319";
 export const PIP_CONTRACT = "http://127.0.0.1:4320";
 
+/** Every host name but 127.0.0.1 fails to resolve in the test browser. */
+export const ONLY_LOOPBACK =
+  "--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1";
+
 // Playwright on the built client, Chromium only, served by `vite preview` on
 // 127.0.0.1. Every host name but 127.0.0.1 fails to resolve, so a request
 // anywhere else could never succeed; the tests also record and refuse one.
@@ -23,7 +27,7 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         launchOptions: {
-          args: ["--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1"],
+          args: [ONLY_LOOPBACK],
         },
       },
     },

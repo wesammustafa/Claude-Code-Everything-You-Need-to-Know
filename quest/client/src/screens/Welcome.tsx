@@ -1,8 +1,8 @@
 import { Link } from "react-router";
 import { ButtonLink } from "../components/Button";
 import { Icon } from "../components/Icon";
-import { PipPlaceholder } from "../components/PipPlaceholder";
 import { LESSONS } from "../course/placeholder";
+import { Pip } from "../pip/Pip";
 import { PageTitle } from "../shell/PageTitle";
 import { BOX, QUIET_LINK } from "./layout";
 
@@ -12,7 +12,7 @@ const first = LESSONS[0];
 export function Welcome() {
   return (
     <main className="mx-auto grid min-h-dvh max-w-hero content-center justify-items-center gap-4.5 px-5 pt-12 pb-24 text-center">
-      <PipPlaceholder size="hero" className="mb-2" />
+      <Pip size="hero" className="mb-2" />
       <PageTitle title="Welcome" className="text-display max-sm:text-3xl">
         Learn Claude Code by using it.
       </PageTitle>

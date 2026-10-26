@@ -60,7 +60,7 @@ for (const [scheme, body, shade] of [
     await expect(icon).toHaveCount(1);
     await expect(icon).toHaveAttribute("aria-hidden", "true");
     await expect(
-      page.getByRole("banner").locator("[data-pip-placeholder], canvas"),
+      page.getByRole("banner").locator("[data-pip], img, canvas"),
     ).toHaveCount(0);
 
     const box = await icon.boundingBox();
