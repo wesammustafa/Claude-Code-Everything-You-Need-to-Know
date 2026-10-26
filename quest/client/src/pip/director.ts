@@ -10,6 +10,7 @@ import type {
   PipReactionKind,
   PipSize,
 } from "../../pip/contract";
+import { REST_TOWARD_CONTENT } from "../../pip/posters";
 import {
   helpDismissed,
   helpDueAt,
@@ -53,11 +54,9 @@ export const GAZE_HOLD_MS = 3000;
  * opening, the check's lines arriving) before he returns to his resting gaze.
  */
 export const LOOK_HOLD_MS = 1500;
-/**
- * Pip's resting gaze beside the content: turned toward it, to his right
- * (owner, 2026-10-26: "about 0.4"). Centred, he rests facing the Learner.
- */
-export const REST_TOWARD_CONTENT = 0.4;
+// Pip's resting gaze beside the content lives with the posters, which are
+// rendered at it, so the two never drift apart.
+export { REST_TOWARD_CONTENT };
 /** The help offer's Explaining: soft, an offer rather than an explanation. */
 export const OFFER_INTENSITY = 0.5;
 /**

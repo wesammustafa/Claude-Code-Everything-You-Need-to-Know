@@ -37,7 +37,7 @@ describe("strayFiles", () => {
       "rig/rive.yaml": "name: pip\n",
       "rig/pip.rml": '<Rive version="1" kind="fragment"/>\n',
       "pip.riv": "",
-      "posters/idle-hero.png": "",
+      "posters/idle-hero-front.png": "",
     });
     expect(strayFiles(dir)).toEqual([]);
   });

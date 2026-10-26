@@ -26,6 +26,7 @@ import { dirname, join } from "node:path";
 import { PIP_MODES, PIP_REACTIONS } from "./contract.ts";
 import {
   changedShare,
+  colourBounds,
   decodePng,
   drawnBounds,
   encodePng,
@@ -55,6 +56,9 @@ import {
 const RIV_BUDGET = 50 * 1024;
 const POSTERS_BUDGET = 300 * 1024;
 
+/** How much of Pip two Reactions' still versions must differ in. */
+const STILLS_APART = 0.018;
+
 /** The CLI's capture background when the scene draws none: opaque #1D1D1D. */
 const CLI_BACKGROUND = [0x1d, 0x1d, 0x1d] as const;
 
@@ -66,7 +70,12 @@ function fail(message: string): never {
 
 /** Runs the Rive CLI; returns its standard output, or its whole log with `log`. */
 function rive(args: readonly string[], log = true): string {
-  const run = spawnSync("rive", args, { encoding: "utf8" });
+  // `rive inspect --json` prints the whole resolved scene, well past
+  // spawnSync's 1 MB default.
+  const run = spawnSync("rive", args, {
+    encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
+  });
   if (run.error) {
     fail(
       `Could not run the Rive CLI (${run.error.message}). pip:build runs on a maintainer's machine with the Rive CLI ${RIVE_CLI_VERSION} installed.`,
@@ -134,6 +143,53 @@ function withBackground(rig: string, work: string, argb: string): string {
     path,
     `${text.slice(0, at)}<Fill name="Poster Background"><SolidColor colorValue="${argb}"/></Fill>${text.slice(at)}`,
   );
+  return dir;
+}
+
+// Marker colours for the parts the Celebration checks find: the hands in
+// green, the ears in blue and the head's front face in magenta, colours Pip
+// never draws.
+const HAND_MARKER = [0, 255, 0] as const;
+const EAR_MARKER = [0, 0, 255] as const;
+const FACE_MARKER = [255, 0, 255] as const;
+
+// A copy of a project with the hands, ears and the head's front face painted
+// in marker colours, so a capture shows exactly where they are.
+function withMarkers(rig: string, work: string): string {
+  const dir = join(work, "rig-markers");
+  cpSync(rig, dir, { recursive: true });
+  const path = join(dir, "pip.rml");
+  let text = readFileSync(path, "utf8");
+  const paint = (block: RegExp, argb: string) => {
+    let found = 0;
+    text = text.replace(block, (part) => {
+      found++;
+      return part.replace(/colorValue="[0-9A-F]{8}"/g, `colorValue="${argb}"`);
+    });
+    if (found !== 2)
+      fail(`the marker copy found ${String(found)} of ${String(block)}, not 2`);
+  };
+  paint(
+    /<Shape\b[^>]*name="Hand (?:Left|Right)">[\s\S]*?<\/Shape>/g,
+    "FF00FF00",
+  );
+  paint(
+    /<Shape\b[^>]*name="Thumb (?:Left|Right)">[\s\S]*?<\/Shape>/g,
+    "FF00FF00",
+  );
+  paint(/<Node name="Ear (?:Left|Right)">[\s\S]*?<\/Node>/g, "FF0000FF");
+  // The front face's two colours, in the art and in the Turn's keys of them.
+  const before = text;
+  text = text.replace(
+    /(<GradientStop colorValue=")[0-9A-F]{8}(" position="[^"]*" id="0:64[01]"\/>)/g,
+    "$1FFFF00FF$2",
+  );
+  text = text.replace(
+    /<KeyedObject objectId="0:64[01]">[\s\S]*?<\/KeyedObject>/g,
+    (keys) => keys.replace(/value="[0-9A-F]{8}"/g, 'value="FFFF00FF"'),
+  );
+  if (text === before) fail("the marker copy found no front face to paint");
+  writeFileSync(path, text);
   return dir;
 }
 
@@ -229,19 +285,127 @@ function checkBehaviour(white: string, work: string): string[] {
   }
 
   for (const reaction of ["success", "celebration"] as const) {
-    const still = shot({ reducedMotion: "true", [reaction]: "1" }, "300ms");
     const full = shot({ [reaction]: "1" }, "450ms");
-    const idle = shot({}, "300ms");
-    if (Math.abs(topEdge(still) - topEdge(idle)) > 1)
-      fail(`${reaction} under reduced motion must not move Pip`);
-    if (!(topEdge(full) < topEdge(idle) - 4))
+    if (!(topEdge(full) < topEdge(shot({}, "300ms")) - 4))
       fail(`${reaction} at full motion should lift Pip`);
-    if (changedShare(idle, still) < 0.001)
-      fail(`${reaction} under reduced motion must still show an expression`);
+  }
+  // Celebration raises the arms up and out: at the top of the jump each fist
+  // sits wholly above its ear (whose top is above the head's middle) and
+  // outward of the ear's inner edge, the side of the head, at either
+  // intensity.
+  const marked = withMarkers(white, work);
+  for (const intensity of ["0", "1"]) {
+    const apex = capture(
+      marked,
+      work,
+      px,
+      { intensity, celebration: "1" },
+      "550ms",
+    );
+    const half = Math.floor(px / 2);
+    for (const [side, box] of [
+      ["left", { top: 0, bottom: px - 1, left: 0, right: half - 1 }],
+      ["right", { top: 0, bottom: px - 1, left: half, right: px - 1 }],
+    ] as const) {
+      const fist = colourBounds(apex, HAND_MARKER, box);
+      const ear = colourBounds(apex, EAR_MARKER, box);
+      if (!fist || !ear)
+        fail(`Celebration's ${side} fist or ear is missing from the capture`);
+      const centre = (fist.left + fist.right) / 2;
+      const outward = side === "left" ? centre < ear.right : centre > ear.left;
+      if (!(fist.bottom < ear.top) || !outward)
+        fail(
+          `Celebration at intensity ${intensity} must raise the ${side} fist above the ear and outside the head (fist rows ${String(fist.top)}-${String(fist.bottom)}, ear top ${String(ear.top)})`,
+        );
+    }
   }
   lines.push(
-    "reduced motion: Success and Celebration show an expression, with no travel",
+    "celebration: both fists rise above the ears and outside the head at the top of the jump",
   );
+  // Then the landing: from the arms' swing down (frame 42, 700 ms) to past
+  // the end, every other frame, neither fist ever crosses the head's front
+  // face; the arms swing down round its sides.
+  for (const intensity of ["0", "1"]) {
+    for (let ms = 700; ms <= 1500; ms += 33) {
+      const at = capture(
+        marked,
+        work,
+        px,
+        { intensity, celebration: "1" },
+        `${String(ms)}ms`,
+      );
+      const face = colourBounds(at, FACE_MARKER);
+      if (!face)
+        fail(`Celebration's landing at ${String(ms)} ms shows no face`);
+      const fist = colourBounds(at, HAND_MARKER, face);
+      if (fist)
+        fail(
+          `Celebration at intensity ${intensity}, ${String(ms)} ms in: a fist crosses the head's front face (fist pixels in columns ${String(fist.left)}-${String(fist.right)}, rows ${String(fist.top)}-${String(fist.bottom)})`,
+        );
+    }
+  }
+  lines.push(
+    "celebration: on the landing neither fist crosses the head's front face",
+  );
+
+  // Each Reaction's still version: an expression of its own, in place.
+  const reactions = ["success", "retry", "celebration"] as const;
+  const moments = ["300ms", "800ms"];
+  const stills = moments.map((t) =>
+    reactions.map((reaction) => {
+      const still = shot({ reducedMotion: "true", [reaction]: "1" }, t);
+      const idle = shot({ reducedMotion: "true" }, t);
+      const drawn = drawnBounds(still);
+      const rest = drawnBounds(idle);
+      if (
+        !drawn ||
+        !rest ||
+        Math.abs(drawn.top - rest.top) > 1 ||
+        Math.abs(drawn.left - rest.left) > 1 ||
+        Math.abs(drawn.right - rest.right) > 1
+      )
+        fail(`${reaction} under reduced motion must not move Pip`);
+      if (t === moments[0] && changedShare(idle, still) < 0.001)
+        fail(`${reaction} under reduced motion must still show an expression`);
+      return still;
+    }),
+  );
+  // Each pair, at whichever moment its two expressions differ most (300 ms,
+  // as each one opens; 800 ms, as Retry's lids soften), measured over Pip
+  // alone rather than the empty frame round him. The bar sits well above a
+  // few pixels of cheek, so two stills drifting toward one look fail.
+  const pip =
+    drawnBounds(shot({ reducedMotion: "true" }, "300ms")) ??
+    fail("Pip drew nothing under reduced motion");
+  const apart: string[] = [];
+  for (const [i, a] of reactions.entries())
+    for (const [j, b] of reactions.entries()) {
+      if (j <= i) continue;
+      const most = Math.max(
+        ...stills.map((at) => {
+          const x = at[i];
+          const y = at[j];
+          return x && y ? changedShare(x, y, 8, pip) : 0;
+        }),
+      );
+      if (most < STILLS_APART)
+        fail(
+          `${a} and ${b} under reduced motion differ in only ${fmtShare(most)} of Pip, under ${fmtShare(STILLS_APART)}; each must read differently`,
+        );
+      apart.push(`${a} and ${b} ${fmtShare(most)}`);
+    }
+  lines.push(
+    `reduced motion: each Reaction shows its own expression with no travel, apart in ${apart.join(", ")} of Pip`,
+  );
+
+  // The head turn: gazeX turns the head, so the face's front plane slides
+  // across and the silhouette changes, not the eyes alone.
+  const ahead = shot({ mode: "rest" }, "500ms");
+  const turned = shot({ mode: "rest", gazeX: "1" }, "500ms");
+  const turn = changedShare(ahead, turned);
+  if (turn < 0.05)
+    fail(`gazeX 1 barely turns Pip's head (${fmtShare(turn)} of pixels)`);
+  lines.push(`head turn: gazeX 1 changes ${fmtShare(turn)} of pixels`);
   return lines;
 }
 
@@ -280,8 +444,8 @@ function main(): void {
     const behaviour = checkBehaviour(white, work);
 
     const posters = new Map<string, Buffer>();
-    for (const { file, pose, px } of allPosters()) {
-      const { data, advance } = POSTER_POSES[pose];
+    for (const { file, pose, data, px } of allPosters()) {
+      const { advance } = POSTER_POSES[pose];
       const onBlack = capture(black, work, px, data, advance);
       const onWhite = capture(white, work, px, data, advance);
       const poster = matte(onBlack, onWhite);
@@ -329,10 +493,12 @@ function main(): void {
         ]),
       ),
     };
-    writeFileSync(
-      join(PIP_DIR, RECORD),
-      `${JSON.stringify(record, null, 2)}\n`,
+    // Each short list of names on one line, as Prettier writes the file.
+    const json = JSON.stringify(record, null, 2).replace(
+      /\[\s+("[^"\n]*"(?:,\s+"[^"\n]*")*)\s+\]/g,
+      (_, names: string) => `[${names.replace(/,\s+/g, ", ")}]`,
     );
+    writeFileSync(join(PIP_DIR, RECORD), `${json}\n`);
 
     console.log(`rive --verify: ${report}`);
     for (const line of behaviour) console.log(`checked ${line}`);

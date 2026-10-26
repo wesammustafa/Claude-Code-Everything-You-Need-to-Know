@@ -10,6 +10,7 @@ import {
   type Route,
 } from "@playwright/test";
 import { changedShare, drawnBounds, type Rgba } from "../pip/png.ts";
+import { POSTER_SCALE } from "../pip/posters.ts";
 import { RIG, RUNTIME, STEP, WASM, lessonUsable, pip } from "./pip-page.ts";
 import { watch } from "./watch.ts";
 
@@ -194,6 +195,164 @@ test("every screen with Pip draws the rig, and Welcome greets at the hero size",
     await rigDrawn(page);
   }
   expect(seen.problems).toEqual([]);
+});
+
+test("on Welcome the rig fades in over the poster before the Greeting starts on it, so the two never show together", async ({
+  page,
+}) => {
+  // Notes, as the rig's Greeting starts, how much of each poster still shows.
+  await page.addInitScript(() => {
+    const seen: number[] = [];
+    Object.assign(window, { greetingOverPoster: seen });
+    new MutationObserver(() => {
+      const el = document.querySelector<HTMLElement>("[data-pip]");
+      if (
+        seen.length > 0 ||
+        el?.dataset.pipRendering !== "rig" ||
+        el.dataset.pipReaction !== "greeting"
+      )
+        return;
+      const posters = [...el.querySelectorAll("img[data-pip-poster]")];
+      seen.push(
+        Math.max(
+          0,
+          ...posters.map((img) => Number(getComputedStyle(img).opacity)),
+        ),
+      );
+    }).observe(document, { subtree: true, attributes: true });
+  });
+  await page.goto("/");
+  await rigDrawn(page);
+  await expect(pip(page)).toHaveAttribute("data-pip-reaction", "greeting");
+  const shown = await page.evaluate(
+    () =>
+      (window as unknown as { greetingOverPoster: number[] })
+        .greetingOverPoster,
+  );
+  expect(shown, "the poster is gone when the Greeting starts").toEqual([0]);
+});
+
+/**
+ * Notes, the moment the rig takes over from the poster, how much of Pip
+ * differs between the rig's frame and the poster it fades from (both over
+ * white, at the poster's own pixels, within Pip's drawn box on the poster),
+ * and the poster's pose and turn. png.ts's measures run in the page as they are.
+ */
+async function noteHandover(page: Page) {
+  // A script of its own source, so the page's Content Security Policy, which
+  // allows no eval, never sees png.ts's functions built from strings.
+  await page.addInitScript(
+    `(${watchHandover.toString()})(${changedShare.toString()}, ${drawnBounds.toString()})`,
+  );
+}
+
+/** Runs in the page: see noteHandover. */
+function watchHandover(
+  changed: typeof changedShare,
+  drawn: typeof drawnBounds,
+): void {
+  const noted: Handover[] = [];
+  Object.assign(window, { pipHandover: noted });
+  const overWhite = (image: CanvasImageSource, size: number): Rgba => {
+    const copy = document.createElement("canvas");
+    copy.width = size;
+    copy.height = size;
+    const context = copy.getContext("2d", { willReadFrequently: true });
+    if (!context) throw new Error("no 2D context");
+    context.fillStyle = "#fff";
+    context.fillRect(0, 0, size, size);
+    context.drawImage(image, 0, 0, size, size);
+    const { data } = context.getImageData(0, 0, size, size);
+    return { width: size, height: size, data: new Uint8Array(data.buffer) };
+  };
+  let poster: HTMLImageElement | null = null;
+  new MutationObserver(() => {
+    const el = document.querySelector<HTMLElement>("[data-pip]");
+    if (!el || noted.length > 0) return;
+    if (el.dataset.pipRendering === "poster") {
+      // The poster the Learner sees, the moment before the rig takes over.
+      poster =
+        [...el.querySelectorAll<HTMLImageElement>("img[data-pip-poster]")].find(
+          (img) => img.classList.contains("opacity-100"),
+        ) ?? poster;
+      return;
+    }
+    const canvas = el.querySelector("canvas");
+    if (el.dataset.pipRendering !== "rig" || !canvas || !poster) return;
+    const size = poster.naturalWidth;
+    const still = overWhite(poster, size);
+    const box = drawn(still);
+    noted.push({
+      share: box ? changed(still, overWhite(canvas, size), 8, box) : 1,
+      poster: poster.dataset.pipPoster ?? "",
+      turn: poster.dataset.pipPosterTurn ?? "",
+    });
+  }).observe(document, { subtree: true, attributes: true, childList: true });
+}
+
+interface Handover {
+  share: number;
+  poster: string;
+  turn: string;
+}
+
+async function handover(page: Page): Promise<Handover> {
+  const noted = () =>
+    page.evaluate(
+      () =>
+        (window as unknown as { pipHandover: Handover[] }).pipHandover[0] ??
+        null,
+    );
+  await expect.poll(noted).not.toBeNull();
+  const found = await noted();
+  if (!found) throw new Error("no hand-over noted");
+  return found;
+}
+
+// Beside the step the poster and the rig agree in about 2.5% of Pip, the
+// poster's own scaling and anti-aliasing; a different turn differs in about
+// a quarter of him.
+const SAME_POSE = 0.08;
+
+test.describe("the rig takes over in the poster's pose", () => {
+  test.use({ deviceScaleFactor: POSTER_SCALE });
+
+  test("on Progress, even when the glance toward the goal comes before the runtime", async ({
+    page,
+  }) => {
+    await noteHandover(page);
+    const release = await hold(page, WASM);
+    await page.goto("/#/progress");
+    await expect(pip(page)).toHaveAttribute("data-pip", "beside");
+    // The glance at 600 ms comes while the poster shows Pip turned toward the content.
+    await expect(pip(page)).not.toHaveAttribute("data-pip-gaze", "0.40 0.00", {
+      timeout: 5_000,
+    });
+    await expect(pip(page)).toHaveAttribute("data-pip-rendering", "poster");
+    release();
+    await rigDrawn(page);
+    const noted = await handover(page);
+    expect(noted.turn).toBe("content");
+    expect(
+      noted.share,
+      `the rig at the hand-over differs from the poster in ${(noted.share * 100).toFixed(1)}% of Pip`,
+    ).toBeLessThan(SAME_POSE);
+  });
+
+  test("on an address with no screen, where Pip sits centred facing the Learner", async ({
+    page,
+  }) => {
+    await noteHandover(page);
+    await page.goto("/#/nowhere");
+    await expect(pip(page)).toHaveAttribute("data-pip-gaze", "0.00 0.00");
+    await rigDrawn(page);
+    const noted = await handover(page);
+    expect(noted).toMatchObject({ poster: "idle", turn: "front" });
+    expect(
+      noted.share,
+      `the rig at the hand-over differs from the poster in ${(noted.share * 100).toFixed(1)}% of Pip`,
+    ).toBeLessThan(SAME_POSE);
+  });
 });
 
 test("the Lesson's controls are usable before the Rive runtime finishes loading", async ({

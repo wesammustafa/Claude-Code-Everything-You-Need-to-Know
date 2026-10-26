@@ -13,7 +13,13 @@ import {
   type PipModel,
   type PipReactionKind,
 } from "../../pip/contract";
-import { closeRig, openRig, PipRive, type PipRiveProps } from "./PipRive";
+import {
+  closeRig,
+  GAZE_SETTLE_MS,
+  openRig,
+  PipRive,
+  type PipRiveProps,
+} from "./PipRive";
 
 // Rive's React runtime, faked: each view model property records what the
 // adapter writes into it, in order, and each trigger records that it fired.
@@ -104,6 +110,8 @@ function props(fields: Partial<PipRiveProps> = {}): PipRiveProps {
     file: {} as PipRiveProps["file"],
     model: model(),
     active: true,
+    handedOver: true,
+    heldGazeX: 0,
     onDrawn: vi.fn(),
     onFailed: vi.fn(),
     onReaction: vi.fn(),
@@ -170,6 +178,31 @@ describe("Pip's Rive adapter", () => {
       ["gazeY", -0.5],
     ]);
     expect(written("reducedMotion")).toEqual([["reducedMotion", true]]);
+  });
+
+  test("holds the poster's turn until it has taken over, then eases to the model's gaze", () => {
+    // On Progress the director's glance toward the goal (0.94, 0.34) can
+    // come before the rig takes over from the poster, turned 0.4.
+    const glance = model({ gaze: { x: 0.94, y: 0.34 } });
+    const { rerender } = render(
+      <PipRive
+        {...props({ model: glance, handedOver: false, heldGazeX: 0.4 })}
+      />,
+    );
+    expect(written("gazeX", "gazeY")).toEqual([
+      ["gazeX", 0.4],
+      ["gazeY", 0],
+    ]);
+    rive.writes.length = 0;
+    rerender(
+      <PipRive
+        {...props({ model: glance, handedOver: true, heldGazeX: 0.4 })}
+      />,
+    );
+    expect(written("gazeX", "gazeY")).toEqual([
+      ["gazeX", 0.94],
+      ["gazeY", 0.34],
+    ]);
   });
 
   test("sets a Reaction's intensity before it fires the trigger, and reports the start", () => {
@@ -241,6 +274,31 @@ describe("Pip's Rive adapter", () => {
     expect(fired()).toEqual(["greeting"]);
   });
 
+  test("holds a Reaction until the poster has handed over, then starts it", () => {
+    const reaction = {
+      id: "rive.handover",
+      kind: "greeting" as PipReactionKind,
+      intensity: 1,
+    };
+    const onReaction = vi.fn();
+    const { rerender } = render(
+      <PipRive
+        {...props({
+          model: model({ reaction }),
+          handedOver: false,
+          onReaction,
+        })}
+      />,
+    );
+    expect(fired()).toEqual([]);
+    expect(onReaction).not.toHaveBeenCalled();
+    rerender(
+      <PipRive {...props({ model: model({ reaction }), onReaction })} />,
+    );
+    expect(fired()).toEqual(["greeting"]);
+    expect(onReaction).toHaveBeenCalledExactlyOnceWith("rive.handover");
+  });
+
   test("plays while active and pauses otherwise", () => {
     const { rerender } = render(<PipRive {...props()} />);
     expect(rive.instance.play).toHaveBeenCalledTimes(1);
@@ -265,12 +323,45 @@ describe("Pip's Rive adapter", () => {
     expect(onDrawn).toHaveBeenCalledTimes(1);
   });
 
+  test("with a gaze away from the Learner, hands over only once the turn has settled", () => {
+    vi.useFakeTimers({
+      toFake: ["requestAnimationFrame", "cancelAnimationFrame"],
+    });
+    const onDrawn = vi.fn();
+    render(
+      <PipRive
+        {...props({
+          onDrawn,
+          handedOver: false,
+          heldGazeX: 0.4,
+          model: model({ gaze: { x: 0.4, y: 0 } }),
+        })}
+      />,
+    );
+    const frames = Math.ceil(GAZE_SETTLE_MS / 16);
+    for (let i = 0; i < frames; i++) {
+      act(() => {
+        vi.advanceTimersToNextFrame();
+      });
+    }
+    expect(onDrawn).not.toHaveBeenCalled();
+    act(() => {
+      vi.advanceTimersToNextFrame();
+    });
+    expect(onDrawn).toHaveBeenCalledTimes(1);
+  });
+
   test("the canvas is hidden from screen readers", () => {
     const { container } = render(<PipRive {...props()} />);
     expect(container.querySelector("canvas")).toHaveAttribute(
       "aria-hidden",
       "true",
     );
+  });
+
+  test("the canvas fills its box from the start, never the browser's default 300 px", () => {
+    const { container } = render(<PipRive {...props()} />);
+    expect(container.querySelector("canvas")).toHaveClass("size-full");
   });
 });
 

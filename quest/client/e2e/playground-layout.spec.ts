@@ -11,7 +11,7 @@ test.use({ baseURL: DEV });
 const BOARD = "**/@playground/board.png";
 // Any PNG stands in for the private board, which CI never has.
 const STAND_IN = readFileSync(
-  join(import.meta.dirname, "../pip/posters/idle-hero.png"),
+  join(import.meta.dirname, "../pip/posters/idle-hero-front.png"),
 );
 
 async function open(page: Page, board: "present" | "missing" = "present") {

@@ -238,27 +238,46 @@ export function largestDifference(a: Rgba, b: Rgba): number {
   return largest;
 }
 
-/** The share of pixels (0 to 1) whose colour differs by more than `tolerance` in some channel. */
-export function changedShare(a: Rgba, b: Rgba, tolerance = 8): number {
-  if (a.width !== b.width || a.height !== b.height)
-    throw new Error("the images differ in size");
-  let changed = 0;
-  for (let i = 0; i < a.data.length; i += 4) {
-    for (let ch = 0; ch < 3; ch++) {
-      if (Math.abs((a.data[i + ch] ?? 0) - (b.data[i + ch] ?? 0)) > tolerance) {
-        changed++;
-        break;
-      }
-    }
-  }
-  return changed / (a.width * a.height);
-}
-
 export interface Bounds {
   top: number;
   bottom: number;
   left: number;
   right: number;
+}
+
+/**
+ * The share of pixels (0 to 1) whose colour differs by more than `tolerance`
+ * in some channel: of the whole image, or of the box `within` (inclusive).
+ */
+export function changedShare(
+  a: Rgba,
+  b: Rgba,
+  tolerance = 8,
+  within?: Bounds,
+): number {
+  if (a.width !== b.width || a.height !== b.height)
+    throw new Error("the images differ in size");
+  const box = within ?? {
+    top: 0,
+    bottom: a.height - 1,
+    left: 0,
+    right: a.width - 1,
+  };
+  let changed = 0;
+  for (let y = box.top; y <= box.bottom; y++) {
+    for (let x = box.left; x <= box.right; x++) {
+      const i = (y * a.width + x) * 4;
+      for (let ch = 0; ch < 3; ch++) {
+        if (
+          Math.abs((a.data[i + ch] ?? 0) - (b.data[i + ch] ?? 0)) > tolerance
+        ) {
+          changed++;
+          break;
+        }
+      }
+    }
+  }
+  return changed / ((box.bottom - box.top + 1) * (box.right - box.left + 1));
 }
 
 /**
@@ -324,4 +343,42 @@ export function soles(image: Rgba): number | null {
     }
   }
   return null;
+}
+
+/**
+ * The box around the pixels within `tolerance` of the colour `rgb` in every
+ * channel, inside the box `within` (inclusive) when given: where a part
+ * painted in a marker colour landed. Null when there are none.
+ */
+export function colourBounds(
+  image: Rgba,
+  rgb: readonly [number, number, number],
+  within?: Bounds,
+  tolerance = 24,
+): Bounds | null {
+  const box = within ?? {
+    top: 0,
+    bottom: image.height - 1,
+    left: 0,
+    right: image.width - 1,
+  };
+  let bounds: Bounds | null = null;
+  for (let y = box.top; y <= box.bottom; y++) {
+    for (let x = box.left; x <= box.right; x++) {
+      const i = (y * image.width + x) * 4;
+      if (
+        !rgb.every(
+          (value, ch) =>
+            Math.abs((image.data[i + ch] ?? 0) - value) <= tolerance,
+        )
+      )
+        continue;
+      if (!bounds) bounds = { top: y, bottom: y, left: x, right: x };
+      bounds.top = Math.min(bounds.top, y);
+      bounds.bottom = y;
+      bounds.left = Math.min(bounds.left, x);
+      bounds.right = Math.max(bounds.right, x);
+    }
+  }
+  return bounds;
 }

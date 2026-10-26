@@ -147,6 +147,33 @@ describe("Pip's renderer", () => {
     });
   });
 
+  test("lets a Reaction start only once the rig's fade over the poster has ended", () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    runtime.settled = fakeRuntime;
+    const getComputed = window.getComputedStyle.bind(window);
+    vi.spyOn(window, "getComputedStyle").mockImplementation((el) => {
+      const style = getComputed(el);
+      if (el.querySelector("canvas") && !el.hasAttribute("data-pip"))
+        return Object.assign(style, {
+          transitionDuration: "0.22s",
+          transitionDelay: "0s",
+        });
+      return style;
+    });
+    const { container } = render(<PipRenderer model={model()} />);
+    expect(pipOf(container)).toHaveAttribute("data-pip-rendering", "rig");
+    expect(runtime.props.at(-1)?.handedOver).toBe(false);
+    act(() => {
+      vi.advanceTimersByTime(219);
+    });
+    expect(runtime.props.at(-1)?.handedOver).toBe(false);
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(runtime.props.at(-1)?.handedOver).toBe(true);
+    vi.restoreAllMocks();
+  });
+
   test("keeps the poster while the rig has not drawn yet", async () => {
     runtime.draws = false;
     runtime.load.mockResolvedValue(fakeRuntime);

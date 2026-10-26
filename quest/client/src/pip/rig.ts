@@ -5,8 +5,11 @@ import type { PipMode, PipModel } from "../../pip/contract";
 import {
   PIP_SIZES,
   POSTER_FOR,
+  POSTER_TURNS,
   posterFile,
+  posterTurn,
   type PosterPose,
+  type PosterTurn,
 } from "../../pip/posters";
 
 /** Where Pip can show the rig or a poster: every size but the icon. */
@@ -49,6 +52,20 @@ export function posterPose(
   return POSTER_FOR[model.mode];
 }
 
+/**
+ * The turn of the poster for a model: the one drawn nearest the gaze it asks
+ * for, so at rest exactly its resting gaze (turned toward the content beside
+ * the step, facing the Learner elsewhere).
+ */
+export function posterTurnFor(model: PipModel, size: RigSize): PosterTurn {
+  return posterTurn(size, rigValues(model).gazeX);
+}
+
+/** The gazeX a poster's turn shows, where the rig rests until it takes over from it. */
+export function posterGazeX(turn: PosterTurn): number {
+  return POSTER_TURNS[turn];
+}
+
 // Every committed poster, by its path relative to quest/client/pip/.
 const POSTER_URLS = Object.fromEntries(
   Object.entries(
@@ -61,9 +78,13 @@ const POSTER_URLS = Object.fromEntries(
 );
 
 /** The URL the build gave a poster. */
-export function posterUrl(pose: PosterPose, size: RigSize): string {
-  const url = POSTER_URLS[posterFile(pose, size)];
-  if (url === undefined)
-    throw new Error(`No poster ${posterFile(pose, size)} in the build`);
+export function posterUrl(
+  pose: PosterPose,
+  size: RigSize,
+  turn: PosterTurn,
+): string {
+  const file = posterFile(pose, size, turn);
+  const url = POSTER_URLS[file];
+  if (url === undefined) throw new Error(`No poster ${file} in the build`);
   return url;
 }
