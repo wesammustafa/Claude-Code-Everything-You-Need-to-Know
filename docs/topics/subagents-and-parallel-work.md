@@ -1,6 +1,6 @@
 # Subagents and parallel work
 
-<sub>Topic · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
+<sub>Topic · Verified against Claude Code v2.1.308 (stable) on 2026-10-26</sub>
 
 Ways to split work across contexts and sessions: subagents, worktrees, `/batch`, dynamic workflows and agent teams.
 

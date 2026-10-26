@@ -1,6 +1,6 @@
 # Learn from Claude Code itself
 
-<sub>**Beginner** · Elective · about 20 minutes · Needs: [Install, sign in and look around](../01-install-and-look-around.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
+<sub>**Beginner** · Elective · about 20 minutes · Needs: [Install, sign in and look around](../01-install-and-look-around.md) · Verified against Claude Code v2.1.308 (stable) on 2026-10-26</sub>
 
 ## Goal
 

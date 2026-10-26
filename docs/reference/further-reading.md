@@ -1,7 +1,7 @@
 <a id="further-reading"></a>
 # Further learning
 
-<sub>Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
+<sub>Verified against Claude Code v2.1.308 (stable) on 2026-10-26</sub>
 
 Courses, docs and posts that go deeper than the guide, grouped by the level where they help most. Lessons link the pages they rely on; this page collects the rest. Every item is published by Anthropic, except the Agent Skills specification, an open standard that Anthropic started.
 
