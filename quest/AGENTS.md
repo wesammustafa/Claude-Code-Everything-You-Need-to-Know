@@ -32,7 +32,7 @@ Every change keeps the app safety contract:
 - Write every `quest/` package in strict TypeScript, extending `tsconfig.base.json` (`strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax`), with a reference in the root `tsconfig.json`. `tsc -b` only type-checks. Never weaken a compiler option or a lint rule to make a check pass.
 - Keep the Checks plain JavaScript, checked through `// @ts-check` and JSDoc, and leave the Starter project as it is.
 - Test a `quest/` package with Vitest inside that package; the Checks' tests live in `practice-template/checks/test/` and the Guide's rules' tests in `.github/scripts/test/`, both on `node:test`.
-- Verify a change from the repo root: `npm run typecheck`, `npm run lint` (ESLint, then `prettier --check quest`), `npm run test:quest`, `npm run guide`, and `npm run verify` for everything CI runs.
+- Verify a change from the repo root: `npm run typecheck`, `npm run lint` (ESLint, then `prettier --check quest`), `npm run test:quest`, `npm run build` (the client, and the server bundle once it exists), `npm run e2e` (Playwright on the built client, served by `vite preview` on `127.0.0.1`; install its browser once with `npx playwright install chromium`), `npm run guide`, and `npm run verify` for everything CI runs.
 
 ## Pip
 

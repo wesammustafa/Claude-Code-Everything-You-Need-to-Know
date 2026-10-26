@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "lib": ["es2024", "dom"],
+    "types": ["node"],
+    "tsBuildInfoFile": "dist/.tsbuildinfo/node",
+    "allowImportingTsExtensions": true
+  },
+  "include": [
+    "vite.config.ts",
+    "playwright.config.ts",
+    "e2e",
+    "build",
+    "../release/src/licenses.ts"
+  ]
+}

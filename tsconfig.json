@@ -1,4 +1,8 @@
 {
   "files": [],
-  "references": [{ "path": "quest/contract" }]
+  "references": [
+    { "path": "quest/contract" },
+    { "path": "quest/client" },
+    { "path": "quest/release" }
+  ]
 }
