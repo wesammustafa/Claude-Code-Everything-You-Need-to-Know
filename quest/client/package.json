@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "node dev.ts",
     "build": "vite build && vite build -c vite.pip-contract.config.ts",
     "preview": "vite preview"
   },

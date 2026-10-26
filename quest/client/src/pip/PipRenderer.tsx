@@ -38,6 +38,11 @@ export interface PipRendererProps {
   className?: string | undefined;
   /** Pip scrolled into view or out of it. */
   onScreenChange?: ((visible: boolean) => void) | undefined;
+  /**
+   * False keeps the poster for good, as wherever Rive is unavailable: the
+   * Pip Playground's switch. The app leaves it on.
+   */
+  rig?: boolean | undefined;
 }
 
 /**
@@ -53,6 +58,7 @@ export function PipRenderer({
   model,
   className,
   onScreenChange,
+  rig = true,
 }: PipRendererProps) {
   if (model.size === "icon")
     return <PipIcon className={cx("size-6", className)} />;
@@ -62,6 +68,7 @@ export function PipRenderer({
       size={model.size}
       className={className}
       onScreenChange={onScreenChange}
+      rig={rig}
     />
   );
 }
@@ -69,11 +76,13 @@ export function PipRenderer({
 interface RigPipProps extends Omit<PipRendererProps, "model"> {
   model: PipModel;
   size: RigSize;
+  rig: boolean;
 }
 
-function RigPip({ model, size, className, onScreenChange }: RigPipProps) {
+function RigPip({ model, size, className, onScreenChange, rig }: RigPipProps) {
   const box = useRef<HTMLSpanElement>(null);
-  const runtime = useSyncExternalStore(subscribePipRuntime, settledPipRuntime);
+  const settled = useSyncExternalStore(subscribePipRuntime, settledPipRuntime);
+  const runtime = rig ? settled : null;
   const file = runtime?.file ?? null;
   // The file the rig drew a frame of, and the one it failed on: a runtime
   // that comes back after a lost context starts again from the poster.
@@ -123,6 +132,9 @@ function RigPip({ model, size, className, onScreenChange }: RigPipProps) {
   );
   const pose = posterPose(model, holding);
 
+  // With the rig switched off, the frame it drew is gone: switched back on,
+  // the poster shows until the rig draws again.
+  if (!rig && drawn !== null) setDrawn(null);
   const rigFailed = file !== null && failed === file;
   const rigShown = file !== null && drawn === file && !rigFailed;
   // The posters Pip has shown so far. A pose joins only while the poster is

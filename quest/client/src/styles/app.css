@@ -2,6 +2,8 @@
 /* Utilities come only from the app's own source: tests, e2e specs and build scripts name classes they never ship. */
 @import "tailwindcss" source("../");
 @source not "../**/*.test.{ts,tsx}";
+/* The Pip Playground is development-only: its own stylesheet builds its utilities. */
+@source not "../playground";
 @import "@fontsource-variable/inter/opsz.css";
 @import "@fontsource-variable/jetbrains-mono/index.css";
 @import "./tokens.css";

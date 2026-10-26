@@ -174,6 +174,30 @@ describe("Pip's renderer", () => {
     expect(container.querySelector("canvas")).toBeNull();
   });
 
+  test("with the rig switched off, keeps the poster for good; back on, the poster shows until the rig draws", () => {
+    runtime.settled = fakeRuntime;
+    const { container, rerender } = render(<PipRenderer model={model()} />);
+    expect(pipOf(container)).toHaveAttribute("data-pip-rendering", "rig");
+
+    rerender(<PipRenderer model={model()} rig={false} />);
+    expect(pipOf(container)).toHaveAttribute(
+      "data-pip-rendering",
+      "unavailable",
+    );
+    expect(container.querySelector("canvas")).toBeNull();
+    expect(poster(container, "idle")?.className).toContain("opacity-100");
+
+    runtime.draws = false;
+    rerender(<PipRenderer model={model()} />);
+    expect(pipOf(container)).toHaveAttribute("data-pip-rendering", "poster");
+    expect(poster(container, "idle")?.className).toContain("opacity-100");
+    act(() => {
+      runtime.props.at(-1)?.onDrawn();
+    });
+    expect(pipOf(container)).toHaveAttribute("data-pip-rendering", "rig");
+    expect(runtime.load).not.toHaveBeenCalled();
+  });
+
   test("brings the poster back when the rig fails after loading", async () => {
     runtime.load.mockResolvedValue(fakeRuntime);
     const { container } = render(<PipRenderer model={model()} />);
