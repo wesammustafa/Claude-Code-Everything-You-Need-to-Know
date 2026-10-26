@@ -1,7 +1,8 @@
-// Nothing under examples/ sits at a path Claude Code can load on its own:
-// no .claude/ folder, .mcp.json, CLAUDE.md, CLAUDE.local.md or AGENTS.md.
-// Examples use dot-claude/, dot-mcp.json and CLAUDE.example.md instead. The
-// folder is read from disk, so files git ignores are caught too.
+// Nothing under examples/, practice-template/ or solutions/ sits at a path
+// Claude Code can load on its own: no .claude/ folder, .mcp.json, CLAUDE.md,
+// CLAUDE.local.md or AGENTS.md. These folders use dot-claude/, dot-mcp.json
+// and CLAUDE.example.md instead. The folders are read from disk, so files git
+// ignores are caught too.
 //
 // Nor can an example folder or the guide repository be added as a plugin
 // marketplace by its folder path or as owner/repo. A plugin's own
@@ -16,6 +17,7 @@ import { join } from 'node:path';
 export const id = 'inertness';
 export const modes = ['pr', 'release'];
 
+const INERT = ['examples', 'practice-template', 'solutions'];
 const LIVE = new Set(['.claude', '.mcp.json', 'CLAUDE.md', 'CLAUDE.local.md', 'AGENTS.md']);
 const RENAME = { '.claude': 'dot-claude/', '.mcp.json': 'dot-mcp.json', 'CLAUDE.md': 'CLAUDE.example.md', 'CLAUDE.local.md': 'CLAUDE.example.md', 'AGENTS.md': 'AGENTS.example.md' };
 
@@ -38,7 +40,8 @@ export function run(ctx) {
   if (existsSync(join(ctx.root, '.claude-plugin'))) {
     problems.push('.claude-plugin/: an owner/repo marketplace add reads this folder at the repository root; keep marketplace examples under examples/, in dot-claude-plugin/');
   }
-  if (existsSync(join(ctx.root, 'examples'))) walk(ctx.root, 'examples', problems);
+  const present = INERT.filter((folder) => existsSync(join(ctx.root, folder)));
+  for (const folder of present) walk(ctx.root, folder, problems);
   if (problems.length) return { status: 'fail', problems };
-  return { status: 'pass', summary: existsSync(join(ctx.root, 'examples')) ? 'examples/ is inert' : 'no examples/ folder' };
+  return { status: 'pass', summary: present.length ? `inert: ${present.map((f) => `${f}/`).join(', ')}` : 'no examples/, practice-template/ or solutions/ folder' };
 }

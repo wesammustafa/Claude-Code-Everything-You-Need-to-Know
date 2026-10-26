@@ -1,0 +1,2 @@
+/* allow-em-dash */ .quote::before { content: "—"; }
+.range::before { content: "\2013"; }
