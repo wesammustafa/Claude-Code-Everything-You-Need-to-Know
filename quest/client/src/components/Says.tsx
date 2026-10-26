@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { cx } from "../lib/cx";
-import { PipPlaceholder } from "./PipPlaceholder";
+import { Pip } from "../pip/Pip";
 
 /** What the status bubble is saying: its border and fill take the status colour. */
 export type SaysTone =
@@ -17,7 +17,7 @@ const TONES: Record<SaysTone, string> = {
 
 export interface SaysProps {
   tone?: SaysTone;
-  /** Pip beside the bubble; a placeholder until Pip's renderer lands. */
+  /** Pip beside the bubble: by default the page's own Pip. */
   pip?: ReactNode;
   /** Changes whenever the words change, so they fade in again after Pip's Reaction. */
   textKey?: string;
@@ -28,7 +28,7 @@ export interface SaysProps {
 export function Says({ tone = "idle", pip, textKey, children }: SaysProps) {
   return (
     <div className="flex items-center gap-3.5" data-tone={tone}>
-      {pip ?? <PipPlaceholder size="beside" />}
+      {pip ?? <Pip size="beside" />}
       <div
         role="status"
         aria-live="polite"

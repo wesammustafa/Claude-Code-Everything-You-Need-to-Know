@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, ButtonLink } from "../components/Button";
 import { Icon } from "../components/Icon";
 import { InlineText } from "../components/InlineText";
 import { Panel } from "../components/Panel";
 import { Says } from "../components/Says";
 import { lessonLabel, levelOf } from "../course/placeholder";
+import { usePipInput } from "../pip/PipStage";
 import { PageTitle } from "../shell/PageTitle";
 import { NotFound } from "./NotFound";
 import { COLUMN, EYEBROW } from "./layout";
@@ -14,6 +15,17 @@ import { useLesson } from "./lesson";
 export function LessonOverview() {
   const lesson = useLesson();
   const [reading, setReading] = useState(false);
+  // Pip rests while the lesson page is open beside it.
+  const tellPip = usePipInput();
+  useEffect(() => {
+    tellPip({ type: "pagePanel", open: reading });
+  }, [tellPip, reading]);
+  useEffect(
+    () => () => {
+      tellPip({ type: "pagePanel", open: false });
+    },
+    [tellPip],
+  );
   if (!lesson) return <NotFound />;
   const level = levelOf(lesson);
 

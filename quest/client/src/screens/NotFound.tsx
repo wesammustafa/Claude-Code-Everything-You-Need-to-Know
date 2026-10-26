@@ -1,5 +1,5 @@
 import { ButtonLink } from "../components/Button";
-import { PipPlaceholder } from "../components/PipPlaceholder";
+import { Pip } from "../pip/Pip";
 import { PageTitle } from "../shell/PageTitle";
 import { MOMENT } from "./layout";
 
@@ -7,7 +7,7 @@ import { MOMENT } from "./layout";
 export function NotFound() {
   return (
     <main className={MOMENT}>
-      <PipPlaceholder size="beside" className="mb-2" />
+      <Pip size="beside" className="mb-2" />
       <PageTitle title="Nothing here" className="text-2xl" />
       <p className="text-muted">
         This address has no screen. The learning journey has every lesson.

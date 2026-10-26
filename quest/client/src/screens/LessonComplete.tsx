@@ -1,8 +1,8 @@
 import { Link } from "react-router";
 import { ButtonLink } from "../components/Button";
 import { InlineText } from "../components/InlineText";
-import { PipPlaceholder } from "../components/PipPlaceholder";
 import { lessonLabel, nextLesson } from "../course/placeholder";
+import { Pip } from "../pip/Pip";
 import { PageTitle } from "../shell/PageTitle";
 import { NotFound } from "./NotFound";
 import { EYEBROW, MOMENT, QUIET_LINK } from "./layout";
@@ -16,7 +16,7 @@ export function LessonComplete() {
 
   return (
     <main className={MOMENT}>
-      <PipPlaceholder size="hero" className="mb-2" />
+      <Pip size="hero" className="mb-2" />
       <span className={EYEBROW}>{`${lessonLabel(lesson)} complete`}</span>
       <PageTitle
         title={`Complete: ${lesson.title}`}

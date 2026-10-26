@@ -6,6 +6,7 @@ import { STAMP } from "./build/inputs.ts";
 import {
   PREVIEW_HEADERS,
   bundledPackagesOnly,
+  ownDynamicImportHelper,
   stampInputs,
 } from "./build/plugins.ts";
 
@@ -54,6 +55,7 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    ownDynamicImportHelper(),
     bundledPackagesOnly(),
     preloadFonts(),
     stampInputs(STAMP),
@@ -63,8 +65,10 @@ export default defineConfig({
     emptyOutDir: true,
     // Every asset is a file Vite emits, so fonts are never inlined into the CSS.
     assetsInlineLimit: 0,
-    // Browsers the app supports load modules natively; no polyfill ships.
-    modulePreload: { polyfill: false },
+    // Browsers the app supports load modules natively, so no polyfill ships,
+    // and the one dynamic import (Pip's runtime, after the first paint) is a
+    // single chunk with nothing to preload (ownDynamicImportHelper).
+    modulePreload: false,
   },
   server: { host: "127.0.0.1", port: 4318, strictPort: true },
   preview: {
