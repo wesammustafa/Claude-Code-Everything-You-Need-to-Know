@@ -31,7 +31,6 @@ Electives: `/powerup` and `/output-style` ([the built-in teachers](../beginner/e
 - `/permissions`: manage allow, ask and deny rules. [Permissions, settings scopes and the sandbox](../intermediate/04-permissions-and-sandbox.md)
 - `/sandbox`: turn the sandbox on or off. [Permissions, settings scopes and the sandbox](../intermediate/04-permissions-and-sandbox.md)
 - `/hooks`: see which hooks are configured. [Enforce a rule with a hook](../intermediate/05-hooks.md)
-- `/agents`: a reminder of how to create and manage subagents. [Delegate to a custom subagent](../intermediate/06-subagents.md)
 - `/mcp`: manage MCP server connections and sign-ins. [Connect a tool with MCP](../intermediate/07-mcp.md)
 - `/plugin`: browse, install and manage plugins. [Install and manage plugins](../intermediate/08-plugins.md)
 
@@ -42,10 +41,9 @@ Electives: `/statusline` ([The status line](../intermediate/electives/status-lin
 - `claude --worktree <name>` (`-w`): start a session in an isolated git worktree at `.claude/worktrees/<name>` ([CLI reference](https://code.claude.com/docs/en/cli-reference#cli-flags)). [Parallel sessions with worktrees](../advanced/01-parallel-sessions.md)
 - `/tasks`: view and manage background work in this session, including subagents that have finished. [Choose an orchestration pattern](../advanced/02-orchestration-patterns.md)
 - `/workflows`: watch, pause, resume and save dynamic workflows. [Run and save a dynamic workflow](../advanced/03-dynamic-workflows.md)
-- `/deep-research <question>`: a bundled workflow that fans out web searches on a question, cross-checks the sources and writes a cited report. [Run and save a dynamic workflow](../advanced/03-dynamic-workflows.md)
 - `/goal <condition>`: keep Claude working across turns until the condition is met; `/goal clear` removes it. [Run and save a dynamic workflow](../advanced/03-dynamic-workflows.md)
 - `claude -p "<prompt>"`: run one prompt without the interactive interface, print the answer and exit; a script adds `--output-format json`, `--allowedTools` and `--max-turns` ([CLI reference](https://code.claude.com/docs/en/cli-reference#cli-commands)). [Script Claude Code with `claude -p`](../advanced/04-headless.md)
-- `/install-github-app`: install the Claude GitHub App for a repository, with optional workflow and secret setup. [GitHub Actions](../advanced/05-github-actions.md)
+- `/install-github-app`: install the Claude GitHub App for a repository, with optional workflow and secret setup. [GitHub Actions](../advanced/05-github-actions.md) names it as one way to add `@claude`; its exercise uses the job's own token instead.
 - `claude plugin validate <dir>`: check a marketplace or a plugin folder before you share it; `--strict` also fails on warnings ([Plugin commands reference](https://code.claude.com/docs/en/plugins/cli-reference#plugin-validate)). [Share your setup with a team](../advanced/06-share-your-setup.md)
 - `/usage`: the session's cost, your plan's usage limits and activity stats. [Put bounds on autonomous runs](../advanced/07-bounded-runs.md)
 
