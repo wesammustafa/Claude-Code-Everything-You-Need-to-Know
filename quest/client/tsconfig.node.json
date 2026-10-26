@@ -8,6 +8,7 @@
     "allowImportingTsExtensions": true
   },
   "include": [
+    "dev.ts",
     "vite.config.ts",
     "vite.pip-contract.config.ts",
     "playwright.config.ts",

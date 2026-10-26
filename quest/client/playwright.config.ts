@@ -2,13 +2,15 @@ import { defineConfig, devices } from "@playwright/test";
 
 const PREVIEW = "http://127.0.0.1:4319";
 export const PIP_CONTRACT = "http://127.0.0.1:4320";
+/** The client's dev server, for the Pip Playground, which only it serves. */
+export const DEV = "http://127.0.0.1:4321";
 
 /** Every host name but 127.0.0.1 fails to resolve in the test browser. */
 export const ONLY_LOOPBACK =
   "--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1";
 
 // Playwright on the built client, Chromium only, served by `vite preview` on
-// 127.0.0.1. Every host name but 127.0.0.1 fails to resolve, so a request
+// 127.0.0.1; the Pip Playground's specs alone run on the dev server. Every host name but 127.0.0.1 fails to resolve, so a request
 // anywhere else could never succeed; the tests also record and refuse one.
 export default defineConfig({
   testDir: "e2e",
@@ -44,6 +46,13 @@ export default defineConfig({
       command: "npx vite preview -c vite.pip-contract.config.ts",
       cwd: import.meta.dirname,
       url: PIP_CONTRACT,
+      reuseExistingServer: false,
+    },
+    {
+      // The dev server: the Pip Playground is development-only.
+      command: "node dev.ts --port 4321",
+      cwd: import.meta.dirname,
+      url: DEV,
       reuseExistingServer: false,
     },
   ],
