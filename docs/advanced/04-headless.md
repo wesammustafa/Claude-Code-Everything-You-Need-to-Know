@@ -1,6 +1,6 @@
 # Script Claude Code with `claude -p`
 
-<sub>**Advanced** · Lesson 4 of 7 · about 20 minutes · Needs: [Run and save a dynamic workflow](03-dynamic-workflows.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-22</sub>
+<sub>**Advanced** · Lesson 4 of 7 · about 20 minutes · Needs: [Run and save a dynamic workflow](03-dynamic-workflows.md) · Verified against Claude Code v2.1.308 (stable) on 2026-10-25</sub>
 
 ## Goal
 
@@ -8,7 +8,7 @@ By the end of this lesson you can write a script that runs Claude Code with no o
 
 ## You need
 
-- One of your own repositories with a test command, and your copy of the practice template with Node.js LTS: the check runs from the copy. To practice in the template copy instead, use it for both. Set up the repository's `.practice/` folder as [Beginner lesson 1](../beginner/01-install-and-look-around.md#you-need) describes, if you haven't yet.
+- One of your own repositories with a test command, and your copy of the practice template with Node.js LTS: the check runs from the copy. To practice in the template copy instead, use it for both. Set up the repository's `.practice/` folder as the [Intermediate index](../intermediate/README.md#prepare-your-own-repository) describes, if you haven't yet.
 - bash and `jq`, on macOS, Linux or WSL 2.
 - Usage: light. Each `claude -p` run is one short session.
 
@@ -20,9 +20,9 @@ With [`--output-format json`](https://code.claude.com/docs/en/headless#get-struc
 
 When a script needs fields rather than prose, add `--json-schema` with a [JSON Schema](https://json-schema.org/): the object then also holds `structured_output`, an answer in that shape ([Get structured output](https://code.claude.com/docs/en/headless#get-structured-output)). A run that ends without valid structured output has no `structured_output` field, so check that it's there before you use it.
 
-Nobody can answer a permission prompt, so pass a mode every time: a run where nothing sets one can start in auto mode ([Auto-approve tools](https://code.claude.com/docs/en/headless#auto-approve-tools)). Three flags set the limits: `--permission-mode dontAsk` denies every call that would otherwise prompt, `--allowedTools` names what may run anyway, and `--max-turns` caps the turns ([CLI flags](https://code.claude.com/docs/en/cli-reference#cli-flags)).
+Nobody can answer a permission prompt, so pass a mode every time, and the script behaves the same on every version. Since v2.1.302, a run that sets none starts in Manual mode and denies every call that needs approval; before that, it could start in auto mode ([Tool calls denied in `claude -p` and Agent SDK runs](https://code.claude.com/docs/en/permission-modes#which-mode-a-non-interactive-run-starts-in)). Three flags set the limits: `--permission-mode dontAsk` denies every call that would otherwise prompt, `--allowedTools` names what may run anyway, and `--max-turns` caps the turns. `--tools` goes further: it restricts which built-in tools Claude can use at all ([CLI flags](https://code.claude.com/docs/en/cli-reference#cli-flags)).
 
-A `-p` run also loads what an interactive session would: hooks, skills, plugins, MCP servers, auto memory and CLAUDE.md, from the project and from `~/.claude`. `--bare` skips all of them, so a CI run behaves the same on every machine, and it is the mode the docs recommend for scripted calls ([Start faster with bare mode](https://code.claude.com/docs/en/headless#start-faster-with-bare-mode)). Bare mode never reads your subscription login: on the Anthropic API it needs `ANTHROPIC_API_KEY`, or an `apiKeyHelper` in `--settings`, so use it where the run has a key, as in CI. This lesson runs on your own login, so its steps use `--setting-sources user` instead, which drops less: it leaves out the project's settings files and its `.mcp.json`, and your user settings still load ([What runs before you trust a folder](https://code.claude.com/docs/en/permissions#what-runs-before-you-trust-a-folder)).
+A `-p` run also loads what an interactive session would: hooks, skills, plugins, MCP servers and CLAUDE.md, from the project and from `~/.claude`. In CI, where the run has an API key, add `--bare`, which skips all of them so every machine behaves the same ([Start faster with bare mode](https://code.claude.com/docs/en/headless#start-faster-with-bare-mode)). This lesson runs on your own login, which `--bare` never reads, so its steps use `--setting-sources user` to leave the project's settings files and `.mcp.json` out ([What runs before you trust a folder](https://code.claude.com/docs/en/permissions#what-runs-before-you-trust-a-folder)).
 
 ## Worked example
 
@@ -53,7 +53,7 @@ In your repository:
    claude -p "Run the test suite and say how many tests pass" --output-format json --permission-mode dontAsk --setting-sources user --disallowedTools "Read(./.env)" "Read(./.env.*)" --allowedTools "Bash(npm test *)" --max-turns 3 | jq '{subtype, num_turns, denied: (.permission_denials | length)}'
    ```
 
-   It shows `"subtype": "success"` and `"denied": 0`: this time Claude ran the tests. The space before the `*` matters, and a trailing ` *` also matches the bare command ([Wildcard patterns](https://code.claude.com/docs/en/permissions#wildcard-patterns)). The rule also covers a pipeline such as `npm test 2>&1 | tail -20`: Claude Code checks each part of a pipeline on its own, and `tail` is one of the read-only commands that run without approval ([Compound commands](https://code.claude.com/docs/en/permissions#compound-commands), [Read-only commands](https://code.claude.com/docs/en/permissions#read-only-commands)).
+   It shows `"subtype": "success"` and `"denied": 0`: this time Claude ran the tests. The space before the `*` matters, and a trailing ` *` also matches the bare command ([Wildcard patterns](https://code.claude.com/docs/en/permissions#wildcard-patterns)). A rule must match each part of a pipeline Claude writes, such as `npm test 2>&1 | tail -20`, where `tail` is a read-only command that needs no rule ([Compound commands](https://code.claude.com/docs/en/permissions#compound-commands), [Read-only commands](https://code.claude.com/docs/en/permissions#read-only-commands)).
 4. Hit the cap. This task takes two steps in a row, and `--max-turns 1` allows one turn that calls tools. Keep `Read` and use the same Bash rule as in step 3:
 
    ```bash
@@ -66,14 +66,14 @@ In your repository:
 
 ## Your turn
 
-Write a review you can run before every commit: `scripts/review-staged.sh` sends your staged changes to Claude, prints Claude's review and saves the JSON result. The Advanced capstone reuses it.
+Build a pre-commit reviewer that runs nothing you didn't allow and never hides a failed run. `scripts/review-staged.sh` sends your staged changes to Claude, prints Claude's review and saves the JSON result. The Advanced capstone reuses it.
 
 Acceptance criteria:
 
 - A bash script at `scripts/review-staged.sh`, committed and executable.
 - It pipes `git diff --cached`, the staged changes ([git diff](https://git-scm.com/docs/git-diff)), into one `claude -p` call. Claude needs no Bash to read the diff, because it arrives on stdin ([Add Claude to a build script](https://code.claude.com/docs/en/headless#add-claude-to-a-build-script)).
-- That call puts the prompt right after `-p`, as the [Pipe data through Claude](https://code.claude.com/docs/en/headless#pipe-data-through-claude) and [Add Claude to a build script](https://code.claude.com/docs/en/headless#add-claude-to-a-build-script) examples do, and passes `--output-format json`, `--permission-mode dontAsk`, `--allowedTools` naming only `Read`, `Grep` and `Glob`, and `--max-turns` with a number from 1 to 10. On macOS, Linux and WSL, Glob and Grep are absent by default, and naming either one in `--allowedTools` brings both back ([Glob tool behavior](https://code.claude.com/docs/en/tools-reference#glob-tool-behavior)).
-- It calls `claude` by name, not by a path or through `npx`, and doesn't change `PATH`: that is how the check swaps in a stand-in for it.
+- That call puts the prompt right after `-p`, as the [Pipe data through Claude](https://code.claude.com/docs/en/headless#pipe-data-through-claude) and [Add Claude to a build script](https://code.claude.com/docs/en/headless#add-claude-to-a-build-script) examples do, and passes `--output-format json`, `--permission-mode dontAsk`, `--allowedTools` naming only `Read`, `Grep` and `Glob`, and `--max-turns` with a number from 1 to 10. On macOS, Linux and WSL, Glob and Grep are absent by default, and naming either one in `--allowedTools` brings both back ([Glob tool behavior](https://code.claude.com/docs/en/tools-reference#glob-tool-behavior)). `--allowedTools` only pre-approves: a tool it doesn't name still runs when a rule approves it, such as the test rule from [Intermediate lesson 4](../intermediate/04-permissions-and-sandbox.md). So the call also passes `--tools "Read,Grep,Glob"`, which restricts the built-in tools to those three, so Claude can't use Bash, Edit or Write at all ([CLI flags](https://code.claude.com/docs/en/cli-reference#cli-flags)).
+- It keeps the project's hooks and MCP servers out of the review. `--settings '{"disableAllHooks": true}'` turns hooks off for the run, so the `Stop` hook from [Intermediate lesson 5](../intermediate/05-hooks.md) can't send the reviewer back to work ([Disable or remove hooks](https://code.claude.com/docs/en/hooks#disable-or-remove-hooks)), and `--strict-mcp-config` uses only the MCP servers you pass with `--mcp-config`, here none ([Project scope](https://code.claude.com/docs/en/mcp#project-scope)). Unlike `--setting-sources user`, both keep the project's skills, so the capstone's review skill still loads ([Control filesystem settings with settingSources](https://code.claude.com/docs/en/agent-sdk/claude-code-features#control-filesystem-settings-with-settingsources)).
 - It saves the JSON to the path in its first argument, or to `.practice/a-4-result.json` when it gets none, creating the folder if it's missing.
 - It prints the `result` text, and exits non-zero when `claude` does or when `is_error` is `true`.
 - With nothing staged, it says so and exits non-zero without calling Claude. `git diff --cached --quiet` exits with 0 when nothing is staged ([git diff](https://git-scm.com/docs/git-diff)).
@@ -85,14 +85,14 @@ Commit the script. Then stage a small change, such as a one-line fix, and run `s
 You are done when all of these are true:
 
 - [ ] `scripts/review-staged.sh` is committed and executable.
-- [ ] Its `claude -p` call has the prompt right after `-p`, asks for JSON, runs in `dontAsk` mode, pre-approves only `Read`, `Grep` and `Glob`, and caps turns at 10 or fewer.
+- [ ] Its `claude -p` call has the prompt right after `-p`, asks for JSON, runs in `dontAsk` mode, pre-approves only `Read`, `Grep` and `Glob`, restricts the tools to those three, turns hooks off and uses no MCP server, and caps turns at 10 or fewer.
 - [ ] It pipes the staged diff in, saves the JSON where its argument says, prints the result, exits non-zero when the run fails, and doesn't call Claude when nothing is staged.
 - [ ] `.practice/a-4-result.json` holds a run that succeeded within your cap.
 - [ ] Self-check (not tested): you read the review of your staged change and fixed one point it raised, or can say why you dismissed it, before you committed.
 
 Run `npm run check -- a-4 --dir <your repo>` from your practice copy, or `npm run check -- a-4` in the copy itself. The check runs your committed script with a stand-in for `claude`, so it uses none of your usage.
 
-If the first item fails, run `chmod +x scripts/review-staged.sh`, then `git add` it and commit again. If the second item fails, read its hint: it names the flag it didn't find, or says your script calls `claude` by a path or through `npx`, or changes `PATH`. Compare your `claude -p` line with the criteria in Your turn, starting with where the prompt sits. If the third item fails, run the script by hand with nothing staged and again with a staged change, and run `echo $?` after each; the check runs the committed script, so commit each fix before you run the check again. If the fourth item fails, stage a change and run the script again: a run that stopped at your cap doesn't count, so raise the cap or narrow the prompt.
+If the first item fails, run `chmod +x scripts/review-staged.sh`, then `git add` it and commit again. If the second item fails, compare your `claude -p` line with the criteria in Your turn, starting with where the prompt sits. If the third item fails, run the script by hand with nothing staged and again with a staged change, and run `echo $?` after each; the check runs the committed script, so commit each fix first. If the fourth item fails, stage a change and run the script again: a run that stopped at your cap doesn't count.
 
 ## Watch out
 
@@ -102,12 +102,12 @@ If the first item fails, run `chmod +x scripts/review-staged.sh`, then `git add`
 
 ## Go further
 
-- [Run Claude Code programmatically](https://code.claude.com/docs/en/headless): streaming JSON, and continuing a run with `--resume` and its `session_id`.
+- [Fail CI when a plugin or MCP server doesn't load](https://code.claude.com/docs/en/headless#fail-ci-when-a-plugin-or-mcp-server-doesn%E2%80%99t-load): make a scripted run fail when its plugins or servers didn't load.
 - [Approve the plan before it runs](https://code.claude.com/docs/en/workflows#approve-the-plan-before-it-runs): start the workflow you saved in the previous lesson from a script, with `Workflow(<name>)` in your allow rules.
 - [Agent SDK overview](https://code.claude.com/docs/en/agent-sdk/overview): the same agent loop from Python or TypeScript.
 
 ---
 
-<sub>Sources: [Run Claude Code programmatically](https://code.claude.com/docs/en/headless) · [CLI reference](https://code.claude.com/docs/en/cli-reference) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Configure permissions](https://code.claude.com/docs/en/permissions) · [Configure the sandboxed Bash tool](https://code.claude.com/docs/en/sandboxing) · [How the agent loop works](https://code.claude.com/docs/en/agent-sdk/agent-loop) · [Agent SDK reference - TypeScript](https://code.claude.com/docs/en/agent-sdk/typescript) · [Track cost and usage](https://code.claude.com/docs/en/agent-sdk/cost-tracking) · [Authentication](https://code.claude.com/docs/en/authentication) · [Tools reference](https://code.claude.com/docs/en/tools-reference) · [Error reference](https://code.claude.com/docs/en/errors) · [git diff](https://git-scm.com/docs/git-diff)</sub>
+<sub>Sources: [Run Claude Code programmatically](https://code.claude.com/docs/en/headless) · [CLI reference](https://code.claude.com/docs/en/cli-reference) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Configure permissions](https://code.claude.com/docs/en/permissions) · [Configure the sandboxed Bash tool](https://code.claude.com/docs/en/sandboxing) · [How the agent loop works](https://code.claude.com/docs/en/agent-sdk/agent-loop) · [Agent SDK reference - TypeScript](https://code.claude.com/docs/en/agent-sdk/typescript) · [Track cost and usage](https://code.claude.com/docs/en/agent-sdk/cost-tracking) · [Authentication](https://code.claude.com/docs/en/authentication) · [Tools reference](https://code.claude.com/docs/en/tools-reference) · [Hooks reference](https://code.claude.com/docs/en/hooks) · [Connect Claude Code to tools via MCP](https://code.claude.com/docs/en/mcp) · [Use Claude Code features in the SDK](https://code.claude.com/docs/en/agent-sdk/claude-code-features) · [Error reference](https://code.claude.com/docs/en/errors) · [git diff](https://git-scm.com/docs/git-diff)</sub>
 
 <sub>← [Run and save a dynamic workflow](03-dynamic-workflows.md) · [Advanced index](README.md) · [GitHub Actions](05-github-actions.md) → · Topic: [Automation](../topics/automation.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=a-4)</sub>

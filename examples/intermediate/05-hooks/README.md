@@ -31,7 +31,7 @@ Then merge `settings.snippet.json` into your project's `.claude/settings.json`. 
 ```
 
 `settings.snippet.json`:
-- **What:** registers `protect-files.sh` and `format-after-edit.sh` in [exec form](https://code.claude.com/docs/en/hooks#exec-form-and-shell-form), so the `${CLAUDE_PROJECT_DIR}` path needs no quoting, and adds a `Read(.env)` deny rule, which also stops Claude's Edit and Write tools from changing a `.env` file ([Configure permissions](https://code.claude.com/docs/en/permissions#read-and-edit)).
+- **What:** registers `protect-files.sh` and `format-after-edit.sh` in [exec form](https://code.claude.com/docs/en/hooks#exec-form-and-shell-form), so the `${CLAUDE_PROJECT_DIR}` path needs no quoting, with `"onFailure": "block"` on `protect-files.sh`, so a protection script that can't start, crashes or times out blocks the edit instead of letting it through ([Block the action when a hook fails](https://code.claude.com/docs/en/hooks#block-the-action-when-a-hook-fails)). It also adds a `Read(.env)` deny rule, which also stops Claude's Edit and Write tools from changing a `.env` file ([Configure permissions](https://code.claude.com/docs/en/permissions#read-and-edit)).
 - **When:** Claude Code reads it when a session starts in the project, and reloads it when the file changes ([Settings](https://code.claude.com/docs/en/settings#when-edits-take-effect)).
 - **Side effects:** none of its own; the scripts' headers list theirs.
 - **Platforms:** macOS, Linux and WSL2. The scripts need bash and jq, and `format-after-edit.sh` also needs python3.
@@ -41,6 +41,7 @@ Hooks in a repository's `.claude/settings.json` run with your user's rights: in 
 
 Smoke test, without Claude: `bash test.sh`.
 
-Tested in Claude Code v2.1.285 (stable) on macOS, 2026-10-06
+The scripts: Tested in Claude Code v2.1.285 (stable) on macOS, 2026-10-06\
+`settings.snippet.json`: Not yet tested in a session at this edition's version
 
 Sources: [Automate actions with hooks](https://code.claude.com/docs/en/hooks-guide), [Hooks reference](https://code.claude.com/docs/en/hooks), [Configure permissions](https://code.claude.com/docs/en/permissions), [Settings](https://code.claude.com/docs/en/settings)

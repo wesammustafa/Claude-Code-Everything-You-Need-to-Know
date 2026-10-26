@@ -1,10 +1,10 @@
 # Install and manage plugins
 
-<sub>**Intermediate** · Lesson 8 of 8 · about 25 minutes · Needs: [Turn a repeated workflow into a skill](01-first-skill.md), [Enforce a rule with a hook](05-hooks.md), [Delegate to a custom subagent](06-subagents.md), [Connect a tool with MCP](07-mcp.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-21</sub>
+<sub>**Intermediate** · Lesson 8 of 8 · about 25 minutes · Needs: [Turn a repeated workflow into a skill](01-first-skill.md), [Enforce a rule with a hook](05-hooks.md), [Delegate to a custom subagent](06-subagents.md), [Connect a tool with MCP](07-mcp.md) · Verified against Claude Code v2.1.308 (stable) on 2026-10-25</sub>
 
 ## Goal
 
-By the end of this lesson you can choose a plugin's scope, use a plugin workflow and code intelligence on your code, and disable or remove a plugin you no longer need.
+By the end of this lesson you can judge a plugin before you install it, trial code intelligence locally on your own code, and share only the plugin your team chose.
 
 ## You need
 
@@ -14,7 +14,7 @@ By the end of this lesson you can choose a plugin's scope, use a plugin workflow
 
 ## The idea
 
-A [plugin](https://code.claude.com/docs/en/plugins/overview) packages skills, agents, hooks, MCP servers or language servers. A marketplace is its catalog; `claude-plugins-official` is [Anthropic's official marketplace](https://code.claude.com/docs/en/plugins/anthropic-marketplaces). Review the components before installing.
+A [plugin](https://code.claude.com/docs/en/plugins/overview) packages skills, agents, hooks, MCP servers or language servers. A marketplace is its catalog. `claude-plugins-official` is [Anthropic's official marketplace](https://code.claude.com/docs/en/plugins/anthropic-marketplaces), but most of what it lists comes from partners and other authors, and a marketplace's name tells you who publishes the catalog, not what each plugin does ([Plugin security and trust](https://code.claude.com/docs/en/plugins/security)). Review the components before installing.
 
 The [install scope](https://code.claude.com/docs/en/plugins/install#choose-an-install-scope) decides who gets the enabled setting:
 
@@ -30,50 +30,34 @@ A shared setting does not download the plugin to a teammate's machine. They inst
 
 ## Worked example
 
-1. Start `claude` in your repository and stay in auto mode. Open the `commit-commands` plugin (Anthropic):
-
-   ```text
-   /plugin install commit-commands@claude-plugins-official
-   ```
-
-   Nothing installs until you review the details and choose a scope ([Install a plugin](https://code.claude.com/docs/en/plugins/install#install-a-plugin)). Read **Will install**, then choose **Install for you, in this repo only (local scope)**. Plugin commands have the plugin's prefix, such as `/commit-commands:commit`.
-2. Add code intelligence for your language. For JavaScript or TypeScript, use `typescript-lsp` (Anthropic). Its [README](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/typescript-lsp) names the required language server. On 2026-10-21, that server's [own installation instructions](https://github.com/typescript-language-server/typescript-language-server#installing) use the following command (`typescript-language-server`, Community):
+1. Install the language server first: a code intelligence plugin says which command starts it, but doesn't include it ([Install a code intelligence plugin](https://code.claude.com/docs/en/plugins/code-intelligence#install-a-code-intelligence-plugin)). For JavaScript or TypeScript, the plugin is `typescript-lsp` (Anthropic), and its [README](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/typescript-lsp) names the binary. On 2026-10-21, that server's [own installation instructions](https://github.com/typescript-language-server/typescript-language-server#installing) use the following command (`typescript-language-server`, Community). In a terminal in your repository:
 
    ```bash
    npm install -g typescript-language-server typescript@6
    command -v typescript-language-server
-   claude plugin install typescript-lsp@claude-plugins-official --scope local
    ```
 
-   For another supported language, use the matching plugin and binary from the [official table](https://code.claude.com/docs/en/plugins/code-intelligence#install-a-code-intelligence-plugin). Exit the old Claude Code session with `/exit`, then start `claude` again from this repository. Shell-installed plugins load in a new session; `/reload-plugins` can apply them to an existing session ([Plugin commands](https://code.claude.com/docs/en/plugins/cli-reference)).
-
-   Choose a function your planned change could affect. Replace the placeholders and ask:
+   For another supported language, use the matching plugin and binary from that page's table.
+2. Start `claude` in your repository and stay in auto mode. Open the plugin:
 
    ```text
-   Use the LSP tool to find the definition and references of <symbol> in <file>. Explain which caller my planned change could affect. Do not edit files yet.
+   /plugin install typescript-lsp@claude-plugins-official
    ```
 
-   Inspect the `LSP` tool result and open a returned location. A text search alone does not demonstrate language-server navigation ([LSP tool behavior](https://code.claude.com/docs/en/tools-reference#lsp-tool-behavior)). If the server cannot start, open `/plugin` and check **Errors**, then verify the server binary is on the launching shell's `PATH`. Make the small intended change and run your tests. After a matching-file edit, the server can report diagnostics; inspect any reported issue rather than assuming the build is correct.
-3. Review the complete diff, including unstaged files, and keep only the intended change in this commit. Run the plugin's commit workflow ([its command](https://github.com/anthropics/claude-plugins-official/blob/main/plugins/commit-commands/commands/commit.md)):
+   If Claude Code says `Marketplace "claude-plugins-official" not found`, the official marketplace isn't registered on this machine yet, for example because you've only used Claude Code in VS Code. Add it with `/plugin marketplace add anthropics/claude-plugins-official`, then open the plugin again ([Marketplace not found](https://code.claude.com/docs/en/plugins/troubleshooting#marketplace-claude-plugins-official-not-found)). Nothing installs until you review the details and choose a scope ([Install a plugin](https://code.claude.com/docs/en/plugins/install#install-a-plugin)). Read **Will install**, and **Context cost**, its token estimates for every turn and for when its skills and agents load. Then choose **Install for you, in this repo only (local scope)**. A confirmation says whether the plugin is active now or needs `/reload-plugins`.
+3. Confirm the server starts: it starts the first time Claude edits a file the plugin handles. Ask Claude to introduce a type error or a syntax error in one of your source files and then fix it, and look for a `Found N new diagnostic issues` line after the edit ([Install a code intelligence plugin](https://code.claude.com/docs/en/plugins/code-intelligence#install-a-code-intelligence-plugin)). If none appears, open `/plugin` and check **Errors**, then verify the server binary is on the launching shell's `PATH`.
+
+   Decide the small change you'll make, and choose a function it could affect. Replace the placeholders and ask:
 
    ```text
-   /commit-commands:commit Commit only the reviewed change. Do not push. Do not add AI attribution or co-author trailers.
+   Use the LSP tool to find the definition and references of <symbol> in <file>. I plan to <change>. Explain which callers that change could affect. Do not edit files yet.
    ```
 
-   Read `git show --stat HEAD` and the commit diff. Confirm it contains the tested change and no unrelated files. The plugin has now done repository work, rather than merely appearing in a list.
-4. Manage the trial from a terminal in this repository ([Plugin commands](https://code.claude.com/docs/en/plugins/cli-reference)):
-
-   ```bash
-   claude plugin list
-   claude plugin disable commit-commands@claude-plugins-official --scope local
-   claude plugin uninstall commit-commands@claude-plugins-official --scope local
-   ```
-
-   `disable` turns the plugin off and keeps it installed; `uninstall` removes the installation. Leave the language plugin enabled for the rest of the lesson.
+   Inspect the `LSP` tool result and open a returned location. A text search alone does not demonstrate language-server navigation ([LSP tool behavior](https://code.claude.com/docs/en/tools-reference#lsp-tool-behavior)). Make the small intended change, run your tests, review the diff and commit it.
 
 ## Your turn
 
-Choose what the team should share, rather than sharing every plugin from your trial. Use `claude-code-setup` (Anthropic) to identify and implement a useful improvement to this repository.
+Share only the plugin the team chose, so nobody pulls in the trial you're still judging. Use `claude-code-setup` (Anthropic) to find a gap in this repository's setup.
 
 1. Merge this block into `.claude/settings.json`, preserving the earlier settings, and replace the `TODO` with the plugin's full name, `<plugin>@<marketplace>` ([Project plugin settings](https://code.claude.com/docs/en/plugins/loading#enabled-in-project-settings-but-not-installed)):
 
@@ -91,7 +75,7 @@ Choose what the team should share, rather than sharing every plugin from your tr
    ```
 
    Review `git status`: if installation reformatted `.claude/settings.json`, review and commit that change too.
-4. Exit the existing session with `/exit`, start `claude` in this repository, and request `Recommend Claude Code automations for this project.` The plugin's [read-only skill](https://github.com/anthropics/claude-plugins-official/blob/main/plugins/claude-code-setup/README.md) recommends automations; it does not implement them. Look for its Skill tool call. If it did not load, invoke `/claude-code-setup:claude-automation-recommender` directly. Choose a recommendation that addresses a real gap rather than duplicating an existing skill or hook. Ask Claude to implement one small improvement using your existing tools, without adding another plugin or server. Test it, review the diff and commit it. Ask for a smaller proposal if the recommendations are too broad.
+4. Exit the existing session with `/exit`, start `claude` in this repository, and request `Recommend Claude Code automations for this project.` The plugin's [read-only skill](https://github.com/anthropics/claude-plugins-official/blob/main/plugins/claude-code-setup/README.md) recommends automations; it does not implement them. Look for its Skill tool call. If it did not load, invoke `/claude-code-setup:claude-automation-recommender` directly. Choose one recommendation that fills a real gap, rather than duplicating an existing skill or hook, and note why. Implementing it is optional.
 5. Save a machine-readable install list from this repository's root ([JSON list output](https://code.claude.com/docs/en/plugins/cli-reference#plugin-list)):
 
    ```bash
@@ -107,15 +91,16 @@ You are done when all of these are true:
 
 - [ ] The committed settings turn the plugin on for the project: `git show HEAD:.claude/settings.json | jq .enabledPlugins` shows `"claude-code-setup@claude-plugins-official": true`.
 - [ ] It's installed at project scope and enabled: `jq '.[] | select(.id == "claude-code-setup@claude-plugins-official") | {scope, enabled, projectEnabled}' .practice/i-8-plugins.json` shows `"project"`, `true` and `true`.
-- [ ] Self-check (not tested): you verified an LSP definition or reference, inspected the plugin-created commit, and tested the improvement you chose from the recommendations.
+- [ ] Your code intelligence trial is installed at local scope and stays out of the committed settings: `jq '.[] | select(.scope == "local") | .id' .practice/i-8-plugins.json` shows your `-lsp` plugin.
+- [ ] Self-check (not tested): you verified an LSP definition or reference, and chose a recommendation that fills a real gap.
 
 Run `npm run check -- i-8 --dir <your repo>` from your practice copy, or `npm run check -- i-8` in the copy itself.
 
-If the first item fails, check the name after `@`: it's the marketplace's name, `claude-plugins-official`, not its repository. If the second fails, install the project plugin in this repository and save the list again with `--json`.
+If the first item fails, check the name after `@`: it's the marketplace's name, `claude-plugins-official`, not its repository. If the second fails, install the project plugin in this repository and save the list again with `--json`. If the trial item fails, install your language's plugin with local scope, keep it out of `enabledPlugins` in `.claude/settings.json`, and save the list again.
 
 ## Watch out
 
-- A plugin's hooks and servers can run with your user's rights. Read **Will install**, and keep the MCP configuration you reviewed in lesson 7 ([Plugin security and trust](https://code.claude.com/docs/en/plugins/security)).
+- A plugin's hooks and servers can run with your user's rights. Read **Will install**, and keep the MCP configuration you reviewed in lesson 7. With auto-update on for its marketplace, a plugin's files can change after you reviewed them ([Plugin security and trust](https://code.claude.com/docs/en/plugins/security)).
 - An installed language plugin can still lack a working server. Confirm the binary and an actual lookup before relying on its diagnostics.
 
 Third-party: it can run code on your machine or give Claude new tools. Review it before installing; this guide does not audit it.
@@ -130,6 +115,6 @@ Listings checked against the listing bar on 2026-10-21.
 
 ---
 
-<sub>Sources: [Plugins overview](https://code.claude.com/docs/en/plugins/overview) · [Install and manage plugins](https://code.claude.com/docs/en/plugins/install) · [Anthropic's marketplaces](https://code.claude.com/docs/en/plugins/anthropic-marketplaces) · [Plugin loading reference](https://code.claude.com/docs/en/plugins/loading) · [Plugin commands reference](https://code.claude.com/docs/en/plugins/cli-reference) · [Code intelligence plugins](https://code.claude.com/docs/en/plugins/code-intelligence) · [LSP tool behavior](https://code.claude.com/docs/en/tools-reference) · [Plugin security and trust](https://code.claude.com/docs/en/plugins/security) · [Commit workflow](https://github.com/anthropics/claude-plugins-official/blob/main/plugins/commit-commands/commands/commit.md) · [TypeScript plugin README](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/typescript-lsp) · [Language server installation](https://github.com/typescript-language-server/typescript-language-server#installing) · [claude-code-setup README](https://github.com/anthropics/claude-plugins-official/blob/main/plugins/claude-code-setup/README.md)</sub>
+<sub>Sources: [Plugins overview](https://code.claude.com/docs/en/plugins/overview) · [Install and manage plugins](https://code.claude.com/docs/en/plugins/install) · [Anthropic's marketplaces](https://code.claude.com/docs/en/plugins/anthropic-marketplaces) · [Plugin loading reference](https://code.claude.com/docs/en/plugins/loading) · [Plugin commands reference](https://code.claude.com/docs/en/plugins/cli-reference) · [Code intelligence plugins](https://code.claude.com/docs/en/plugins/code-intelligence) · [Troubleshoot plugins](https://code.claude.com/docs/en/plugins/troubleshooting) · [LSP tool behavior](https://code.claude.com/docs/en/tools-reference) · [Plugin security and trust](https://code.claude.com/docs/en/plugins/security) · [TypeScript plugin README](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/typescript-lsp) · [Language server installation](https://github.com/typescript-language-server/typescript-language-server#installing) · [claude-code-setup README](https://github.com/anthropics/claude-plugins-official/blob/main/plugins/claude-code-setup/README.md)</sub>
 
 <sub>← [Connect a tool with MCP](07-mcp.md) · [Intermediate index](README.md) · [Intermediate capstone](capstone.md) → · Topic: [Plugins](../topics/plugins.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=i-8)</sub>

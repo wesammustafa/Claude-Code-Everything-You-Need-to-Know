@@ -76,5 +76,6 @@ jq -r '.hooks[][].hooks[].command' settings.snippet.json | while read -r command
   [ -f "$hooks/$name" ] || fail "settings.snippet.json runs $name, which is not in dot-claude/hooks/"
 done
 jq -e '[.hooks[][].hooks[] | has("args")] | all' settings.snippet.json > /dev/null || fail "every hook in settings.snippet.json should use exec form (args)"
+jq -e '[.hooks.PreToolUse[].hooks[] | select(.command | endswith("/protect-files.sh")) | .onFailure == "block"] | (length > 0 and all)' settings.snippet.json > /dev/null || fail "protect-files.sh should block when it fails (onFailure)"
 
 echo "PASS: lesson 5 hooks"

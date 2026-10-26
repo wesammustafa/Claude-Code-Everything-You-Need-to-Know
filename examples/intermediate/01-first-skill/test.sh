@@ -2,7 +2,8 @@
 # Smoke test for the lesson 1 skills, without Claude: each SKILL.md opens with
 # frontmatter that names the skill after its folder and has a description,
 # five-whys takes the problem as its argument, and tdd is still the
-# unfinished file lesson 1's Your turn asks you to finish.
+# unfinished file lesson 1's Your turn asks you to finish, ending at a diff
+# the user reviews rather than a commit.
 # Run: bash test.sh (needs bash and awk). Exits non-zero on the first failure.
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -27,5 +28,6 @@ grep -qF "\$ARGUMENTS" dot-claude/skills/five-whys/SKILL.md || fail "five-whys d
 [ "$(field dot-claude/skills/five-whys/SKILL.md disable-model-invocation)" = "" ] || fail "five-whys must load on its own"
 [ "$(field dot-claude/skills/tdd/SKILL.md disable-model-invocation)" = "true" ] || fail "tdd should start as run-by-name only"
 grep -q 'TODO' dot-claude/skills/tdd/SKILL.md || fail "tdd should still have its TODOs"
+grep -qF "Don't commit" dot-claude/skills/tdd/SKILL.md || fail "tdd should stop at a diff the user reviews"
 
 echo "PASS: lesson 1 skills"

@@ -37,7 +37,7 @@ In [lesson 1](../01-parallel-sessions.md) you made the worktrees yourself. Here 
    npm test
    ```
 
-   `npm test` passes, and `origin` is now the folder `av-origin.git`, so a push stays on your machine. The exclude lines keep two folders out of `git status` without a commit: `.practice/`, where Your turn saves its files (as in [Beginner lesson 1](../../beginner/01-install-and-look-around.md#you-need)), and the worktrees Claude creates ([gitignore](https://git-scm.com/docs/gitignore), [Start Claude in a worktree](https://code.claude.com/docs/en/worktrees#start-claude-in-a-worktree)).
+   `npm test` passes, and `origin` is now the folder `av-origin.git`, so a push stays on your machine. The exclude lines keep two folders out of `git status` without a commit: `.practice/`, where Your turn saves its files (as in the [Intermediate index](../../intermediate/README.md#prepare-your-own-repository)), and the worktrees Claude creates ([gitignore](https://git-scm.com/docs/gitignore), [Start Claude in a worktree](https://code.claude.com/docs/en/worktrees#start-claude-in-a-worktree)).
 2. In the first terminal, open agent view with two dispatch defaults: Manual mode, in which only reads run without asking ([Available modes](https://code.claude.com/docs/en/permission-modes#available-modes)), and Sonnet ([Model aliases](https://code.claude.com/docs/en/model-config#model-aliases)):
 
    ```bash

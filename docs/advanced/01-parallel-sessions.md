@@ -1,6 +1,6 @@
 # Parallel sessions with worktrees
 
-<sub>**Advanced** · Lesson 1 of 7 · about 20 minutes · Needs: [Advanced index](README.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-22</sub>
+<sub>**Advanced** · Lesson 1 of 7 · about 20 minutes · Needs: [Advanced index](README.md) · Verified against Claude Code v2.1.308 (stable) on 2026-10-25</sub>
 
 ## Goal
 
@@ -8,7 +8,7 @@ By the end of this lesson you can run two Claude Code sessions at once, each in 
 
 ## You need
 
-- One of your own repositories with a test command and no uncommitted changes, checked out on its default branch and up to date with a remote you can push to (Watch out says why), and your copy of the practice template with Node.js LTS and the Advanced checks ([Practice](README.md#practice)): the check runs from the copy. Set up the repository's `.practice/` folder as [Beginner lesson 1](../beginner/01-install-and-look-around.md#you-need) describes, if you haven't yet.
+- One of your own repositories with a test command and no uncommitted changes, checked out on its default branch and up to date with a remote you can push to (Watch out says why), and your copy of the practice template with Node.js LTS and the Advanced checks ([Practice](README.md#practice)): the check runs from the copy. Set up the repository's `.practice/` folder as the [Intermediate index](../intermediate/README.md#prepare-your-own-repository) describes, if you haven't yet.
 - If you haven't run `claude` in that repository before, run it there once and accept the trust dialog: until then `claude --worktree` exits with an error ([Start Claude in a worktree](https://code.claude.com/docs/en/worktrees#start-claude-in-a-worktree)).
 - macOS, Linux or WSL 2, and three terminals open at the repository's root: two for the sessions, one for git.
 - Usage: moderate. Two sessions work at the same time.
@@ -17,9 +17,9 @@ By the end of this lesson you can run two Claude Code sessions at once, each in 
 
 A [git worktree](https://git-scm.com/docs/git-worktree) is a second working folder, on its own branch, that shares the repository's history. `claude --worktree <name>` (or `-w <name>`) creates one under `.claude/worktrees/<name>/` on a new branch, `worktree-<name>`, and starts the session in it ([Start Claude in a worktree](https://code.claude.com/docs/en/worktrees#start-claude-in-a-worktree)). Each session edits its own copy of the files. Claude Code also stops a worktree session's file-editing tools from changing your main checkout, and its commands from running there or pointing git at it ([How Claude Code enforces isolation](https://code.claude.com/docs/en/worktrees#how-claude-code-enforces-isolation)).
 
-Commits and branches are shared. Uncommitted edits, installed dependencies and gitignored files such as `.env` are not: each worktree is a fresh checkout. A `.worktreeinclude` file at the repository root copies the gitignored files it lists into each new worktree ([Copy gitignored files into worktrees](https://code.claude.com/docs/en/worktrees#copy-gitignored-files-into-worktrees)); list only what the project needs, since every worktree gets its own copy of each secret.
+Commits and branches are shared. Uncommitted edits, installed dependencies and gitignored files such as `.env` are not: each worktree is a fresh checkout ([Set up the worktree environment](https://code.claude.com/docs/en/worktrees#set-up-the-worktree-environment)).
 
-The work comes back through git: each session commits on its branch, you merge the branches from your main checkout, then remove the worktrees.
+The work comes back through git: each session commits on its branch, and you bring both branches into yours. Your review sets the pace. Claude Academy puts the ceiling at "how many streams one person can review properly" ([Parallel sessions and subagents](https://academy.claude.com/courses/ai-native-sdlc-playbook/parallel-sessions-and-subagents)), so run only as many sessions as you can read the diffs of.
 
 ## Worked example
 
@@ -31,7 +31,7 @@ The work comes back through git: each session commits on its branch, you merge t
    git push
    ```
 
-   The leading `\n` puts the rule on a line of its own, even if your `.gitignore` doesn't end with a newline. Afterwards `git status --short` prints nothing, and `git log -1 --oneline` shows the commit.
+   Afterwards `git status --short` prints nothing, and `git log -1 --oneline` shows the commit.
 2. In terminal 1, start a session in a new worktree and give it a docs task:
 
    ```bash
@@ -42,7 +42,7 @@ The work comes back through git: each session commits on its branch, you merge t
    Tidy the wording of the README's first section, then wait for me before you commit.
    ```
 
-   Claude Code creates `.claude/worktrees/docs-pass/` on the branch `worktree-docs-pass`, and the session works there. In auto mode, the starting mode, Claude works without routine permission prompts ([Auto mode](https://code.claude.com/docs/en/permission-modes#eliminate-permission-prompts-with-auto-mode)), so a `git commit` wouldn't wait for you. Asking it to wait is what holds the commit until step 4: auto mode treats a boundary you state in the conversation as a reason to block the matching action ([Boundaries you state in conversation](https://code.claude.com/docs/en/permission-modes#boundaries-you-state-in-conversation)). If Claude Code asks before an edit, read it, then approve.
+   Claude Code creates `.claude/worktrees/docs-pass/` on the branch `worktree-docs-pass`, and the session works there. In auto mode, the mode a session starts in, a commit, or even a push to the repository you're working in, wouldn't wait for you ([Which mode a session starts in](https://code.claude.com/docs/en/permission-modes#which-mode-a-session-starts-in), [What the classifier blocks by default](https://code.claude.com/docs/en/permission-modes#what-the-classifier-blocks-by-default)). Asking it to wait is what holds the commit until step 4: auto mode treats a boundary you state in the conversation as a reason to block the matching action. It's a soft stop, which a compacted conversation can lose; for a hard one, add a deny rule ([Boundaries you state in conversation](https://code.claude.com/docs/en/permission-modes#boundaries-you-state-in-conversation)).
 3. In terminal 2, start a second session with the short flag and give it a test task:
 
    ```bash
@@ -53,7 +53,7 @@ The work comes back through git: each session commits on its branch, you merge t
    This worktree is a fresh checkout: install the dependencies, then add one missing test for a small exported function and run the tests. Wait for me before you commit.
    ```
 
-   Claude Code creates `.claude/worktrees/test-pass/` on the branch `worktree-test-pass`; the session installs the dependencies there before it adds the test. If Claude Code asks before a command, read the command before you approve it.
+   Claude Code creates `.claude/worktrees/test-pass/` on the branch `worktree-test-pass`; the session installs the dependencies there before it adds the test.
 4. In terminal 3, in your main checkout, look at all three checkouts while both sessions wait for you:
 
    ```bash
@@ -71,7 +71,7 @@ The work comes back through git: each session commits on its branch, you merge t
    git merge worktree-test-pass
    ```
 
-   [`git merge`](https://git-scm.com/docs/git-merge) brings each branch's commits into yours. The first merge just moves your branch forward (a fast-forward): `worktree-docs-pass` started from the commit you pushed in step 1, so your branch has no commits it lacks. The second makes a merge commit, because your branch now has a commit `worktree-test-pass` lacks, and opens your editor for its message: save and close it. Run this step yourself: while a session is isolated in its worktree, Claude Code blocks its git commands that reach into the main checkout. If both tasks changed the same lines, git stops with a conflict: resolve it, or start `claude` in the main checkout and ask it to.
+   [`git merge`](https://git-scm.com/docs/git-merge) brings each branch's commits into yours. The first merge just moves your branch forward, and the second makes a merge commit and opens your editor for its message: save and close it. Run this step yourself: while a session is isolated in its worktree, Claude Code blocks its git commands that reach into the main checkout. If both tasks changed the same lines, git stops with a conflict: resolve it, or start `claude` in the main checkout and ask it to.
 6. In each session, run `/exit`. The worktree's branch has a new commit, so Claude Code asks whether to keep or remove the worktree: choose remove ([Clean up worktrees](https://code.claude.com/docs/en/worktrees#clean-up-worktrees)). `git worktree list` no longer shows either worktree.
 
 > [!CAUTION]
@@ -79,11 +79,16 @@ The work comes back through git: each session commits on its branch, you merge t
 
 ## Your turn
 
-Pick two real changes from your repository's backlog that touch different files, such as a small bug fix in one module and a missing test for another. Make each one in its own worktree session, with both sessions running at the same time, and bring both into your branch.
+Land two backlog changes made at once, with neither session touching the other's files. Pick two real changes from your repository's backlog that don't change the same lines and don't build on each other, such as a small bug fix in one module and a missing test for another. Git merges changes to different parts of one file cleanly, but two changes to the same lines collide when you bring them together ([How conflicts are presented](https://git-scm.com/docs/git-merge#_how_conflicts_are_presented)), and each session starts without the other's change. Keep it to two, because each session's diff still needs your review.
 
-Before you start the sessions, decide what a fresh worktree of your repository lacks before its tests can run. Dependencies are the usual gap: tell each session to install them, as the Worked example's test session did ([Set up the worktree environment](https://code.claude.com/docs/en/worktrees#set-up-the-worktree-environment)). A gitignored file the tests read, such as a local config, is the other: list it in a `.worktreeinclude` file at your repository root, which copies only the files that match a pattern and are gitignored, or have the session create a test-only copy ([Copy gitignored files into worktrees](https://code.claude.com/docs/en/worktrees#copy-gitignored-files-into-worktrees)). Every worktree gets its own copy of each file you list, so list only what the tests need.
+No backlog to pick from? Your copy of the practice template has two such changes:
 
-If the work they should build on isn't on the remote's default branch yet (see Watch out), get it there first, or add `"worktree": {"baseRef": "head"}` to `.claude/settings.local.json`, your personal settings file from [Intermediate lesson 4](../intermediate/04-permissions-and-sandbox.md), so new worktrees start from your local `HEAD` ([`worktree.baseRef`](https://code.claude.com/docs/en/settings-reference#worktree-baseref)).
+- `findLinks` in `src/links.js` lets a `~~~` line close a code block that opened with three backticks, so it reports links inside the block.
+- No test covers `src/cli.js`, the command that prints each broken link and sets the exit code.
+
+Before you start the sessions, decide what a fresh worktree of your repository lacks before its tests can run. Dependencies are the usual gap: tell each session to install them, as the Worked example's test session did. A gitignored file the tests read, such as a local config, is the other: list it in a `.worktreeinclude` file at your repository root, which copies only the files that match a pattern and are gitignored, or have the session create a test-only copy ([Copy gitignored files into worktrees](https://code.claude.com/docs/en/worktrees#copy-gitignored-files-into-worktrees)). Every worktree gets its own copy of each file you list, so list only what the tests need.
+
+If the work they should build on isn't on the remote's default branch yet, get it there first, or add `"worktree": {"baseRef": "head"}` to `.claude/settings.local.json`, your personal settings file from [Intermediate lesson 4](../intermediate/04-permissions-and-sandbox.md), so new worktrees start from your local `HEAD` ([`worktree.baseRef`](https://code.claude.com/docs/en/settings-reference#worktree-baseref)).
 
 Acceptance criteria:
 
@@ -95,22 +100,22 @@ Acceptance criteria:
   git worktree list --porcelain > .practice/a-1-worktrees.txt
   ```
 
-- Both branches are merged into your branch with `git merge`, not [`git merge --squash`](https://git-scm.com/docs/git-merge#Documentation/git-merge.txt---squash).
-- Your tests pass after both merges (not checked).
-- Both worktrees are removed, and any branch you kept is deleted only after it's merged.
+- Both changes are in your branch, by merge, rebase or squash, whichever your team uses.
+- Your tests pass with both changes in (not checked).
+- Both worktrees are removed, and any branch you kept is deleted only once its change is in your branch.
 
 ## Check
 
 You are done when all of these are true:
 
 - [ ] A committed `.gitignore` ignores `.claude/worktrees/`, and not the rest of `.claude/`.
-- [ ] `.practice/a-1-worktrees.txt` lists two worktrees under `.claude/worktrees/` whose commits split from each other, and both are merged into your branch.
+- [ ] `.practice/a-1-worktrees.txt` lists two worktrees under `.claude/worktrees/` whose commits split from each other, and both changes are in your branch.
 - [ ] Neither of those worktrees still exists: `git worktree list` doesn't show them.
 - [ ] Self-check (not tested): you can name what a fresh worktree of your repository lacked, such as its dependencies or a gitignored config file, and say whether you listed it in `.worktreeinclude` or had the session set it up, and why.
 
 Run `npm run check -- a-1 --dir <your repo>` from your practice copy.
 
-If the first item fails, run `git -c core.excludesFile=/dev/null check-ignore -v .claude/worktrees/x` in your repository (the `-c` part swaps your global excludes file, [`core.excludesFile`](https://git-scm.com/docs/gitignore), for an empty one, as the check does): it should name your `.gitignore` and the line that matches ([git-check-ignore](https://git-scm.com/docs/git-check-ignore#Documentation/git-check-ignore.txt---verbose)). A rule only in `.git/info/exclude` or your global excludes file isn't committed, and a broad rule such as `.claude/` would also hide the settings and skills you commit for your team. If the second item fails, read the hint the check prints: save the file after both sessions commit and before you remove either worktree, and merge each branch with `git merge`. If the third item fails, run `git worktree remove <path>` from your main checkout on each path the check names, with `git worktree unlock <path>` first if git says it's locked. That leaves the worktree's branch: delete it once it's merged, with `git merge-base --is-ancestor worktree-<name> HEAD && git branch -D worktree-<name>`. The first command succeeds only when the branch is part of `HEAD` ([git-merge-base](https://git-scm.com/docs/git-merge-base#Documentation/git-merge-base.txt---is-ancestor)), and `-D` deletes it without git's own merged test, which checks the branch's upstream, when it has one, rather than `HEAD` ([git-branch](https://git-scm.com/docs/git-branch#Documentation/git-branch.txt--D)).
+If the first item fails, run `git check-ignore -v .claude/worktrees/x` in your repository: it should name your committed `.gitignore` ([git-check-ignore](https://git-scm.com/docs/git-check-ignore#Documentation/git-check-ignore.txt---verbose)). If the second item fails, read the hint the check prints: save the file after both sessions commit and before you remove either worktree. If the third item fails, exit any Claude Code session still open in a worktree it names: `/exit`, then remove it, or keep it and run `git worktree remove <path>` from your main checkout. Run `git worktree unlock <path>` first only when git says the worktree is locked and no session is open in it ([Clean up worktrees](https://code.claude.com/docs/en/worktrees#clean-up-worktrees)).
 
 ## Watch out
 
@@ -126,6 +131,6 @@ If the first item fails, run `git -c core.excludesFile=/dev/null check-ignore -v
 
 ---
 
-<sub>Sources: [Run parallel sessions with worktrees](https://code.claude.com/docs/en/worktrees) · [All settings](https://code.claude.com/docs/en/settings-reference) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Run agents in parallel](https://code.claude.com/docs/en/agents) · [git-worktree](https://git-scm.com/docs/git-worktree) · [git-merge](https://git-scm.com/docs/git-merge) · [git-check-ignore](https://git-scm.com/docs/git-check-ignore) · [gitignore](https://git-scm.com/docs/gitignore) · [git-merge-base](https://git-scm.com/docs/git-merge-base) · [git-branch](https://git-scm.com/docs/git-branch)</sub>
+<sub>Sources: [Run parallel sessions with worktrees](https://code.claude.com/docs/en/worktrees) · [All settings](https://code.claude.com/docs/en/settings-reference) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Run agents in parallel](https://code.claude.com/docs/en/agents) · [Parallel sessions and subagents](https://academy.claude.com/courses/ai-native-sdlc-playbook/parallel-sessions-and-subagents) · [git-worktree](https://git-scm.com/docs/git-worktree) · [git-merge](https://git-scm.com/docs/git-merge) · [git-check-ignore](https://git-scm.com/docs/git-check-ignore)</sub>
 
 <sub>← [Advanced index](README.md) · [Choose an orchestration pattern](02-orchestration-patterns.md) → · Topic: [Subagents and parallel work](../topics/subagents-and-parallel-work.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=a-1)</sub>
