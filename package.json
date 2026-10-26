@@ -13,6 +13,7 @@
     "build": "npm run build --workspaces --if-present",
     "e2e": "playwright test -c quest/client/playwright.config.ts",
     "pip:build": "node quest/client/pip/build.ts",
+    "pip:turn": "node quest/client/pip/turn.ts",
     "dev": "node quest/client/dev.ts",
     "verify": "npm run guide:selftest && npm run guide && npm run typecheck && npm run lint && npm run test:quest"
   },

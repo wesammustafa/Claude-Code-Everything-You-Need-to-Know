@@ -401,6 +401,25 @@ test.describe("below the sm breakpoint, at 390 px", () => {
 });
 
 for (const width of [720, 1440]) {
+  test(`beside the step at ${String(width)} px Pip covers no code or instruction text, turned toward it`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(STEP);
+    await expect(pip(page)).toHaveAttribute("data-pip", "beside");
+    await expect(pip(page)).toHaveAttribute("data-pip-rendering", "rig", {
+      timeout: 20_000,
+    });
+    await expect(pip(page)).toHaveAttribute("data-pip-gaze", REST);
+    await settled(page);
+    await coversNothing(
+      page,
+      page.locator(
+        "main h1, main h2, main p, main li, main pre, main code, main button",
+      ),
+    );
+  });
+
   test(`on the Learning journey Pip sits beside the Next band at ${String(width)} px, covering nothing, with no Greeting`, async ({
     page,
   }) => {

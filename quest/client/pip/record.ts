@@ -26,7 +26,7 @@ export interface BuildRecord {
   rive: string;
   /** sha256 of the rig's sources (see rigSources), by path and content. */
   rig: string;
-  /** The posters' scale, sizes and poses (posters.ts) they were rendered to. */
+  /** The posters' scale, sizes, poses and turns (posters.ts) they were rendered to. */
   posters: PosterSpec;
   /** sha256 of each output, by its path relative to quest/client/pip/. */
   outputs: Record<string, string>;
@@ -128,7 +128,7 @@ export function recordProblems(pipDir: string): string[] {
     JSON.stringify(canonical(posterSpec()))
   ) {
     problems.push(
-      `the posters' scale, sizes or poses in posters.ts changed since the last build: they are not the ones ${RECORD} records. ${rebuild}`,
+      `the posters' scale, sizes, poses or turns in posters.ts changed since the last build: they are not the ones ${RECORD} records. ${rebuild}`,
     );
   }
   const expected = expectedOutputs();

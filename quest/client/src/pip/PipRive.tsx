@@ -33,6 +33,9 @@ export interface OpenedRig {
   context: WebGL2RenderingContext;
 }
 
+/** The rig's gaze ease (view-model.rml, 220 ms) and a frame's margin. */
+export const GAZE_SETTLE_MS = 240;
+
 /** Whether a runtime instance was started before, so the next must be a new one. */
 let started = false;
 
@@ -127,6 +130,19 @@ export interface PipRiveProps {
   model: PipModel;
   /** On screen and the page visible: the rig plays; otherwise it pauses. */
   active: boolean;
+  /**
+   * The poster has faded out and the rig alone shows Pip, so a Reaction can
+   * start: one started during the crossfade would play over the still poster
+   * as a double image.
+   */
+  handedOver: boolean;
+  /**
+   * The gazeX of the poster the rig takes over from. Until it has taken
+   * over, the rig rests there, facing the way the poster faces, so the
+   * crossfade joins one pose; then it takes the model's gaze, and a glance
+   * the director asked for meanwhile eases in on the live rig.
+   */
+  heldGazeX: number;
   /** The canvas holds a frame drawn from the model: the poster can go. */
   onDrawn: () => void;
   /** The runtime could not draw this Pip: the poster stays. */
@@ -140,6 +156,8 @@ export function PipRive({
   file,
   model,
   active,
+  handedOver,
+  heldGazeX,
   onDrawn,
   onFailed,
   onReaction,
@@ -199,17 +217,22 @@ export function PipRive({
   useEffect(() => {
     if (bound) setMode(values.mode);
   }, [bound, setMode, values.mode]);
+  const gaze = handedOver
+    ? { x: values.gazeX, y: values.gazeY }
+    : { x: heldGazeX, y: 0 };
   useEffect(() => {
     if (!bound) return;
-    setGazeX(values.gazeX);
-    setGazeY(values.gazeY);
-  }, [bound, setGazeX, setGazeY, values.gazeX, values.gazeY]);
+    setGazeX(gaze.x);
+    setGazeY(gaze.y);
+  }, [bound, setGazeX, setGazeY, gaze.x, gaze.y]);
   useEffect(() => {
     if (bound) setReducedMotion(values.reducedMotion);
   }, [bound, setReducedMotion, values.reducedMotion]);
 
   // A Reaction plays once per ID in this tab, at its intensity, set first so
-  // the blend opens at the right strength.
+  // the blend opens at the right strength, once the rig has taken over from
+  // the poster: the crossfade joins the poster to the rig's resting pose, and
+  // the Reaction then plays whole on the rig.
   const reaction = model.reaction;
   const setIntensity = intensity.setValue;
   const fire = triggers[reaction?.kind ?? "greeting"];
@@ -218,12 +241,12 @@ export function PipRive({
     reacted.current = onReaction;
   }, [onReaction]);
   useEffect(() => {
-    if (!bound || reaction === null) return;
+    if (!bound || !handedOver || reaction === null) return;
     if (!reactionLedger.start(reaction.id)) return;
     setIntensity(reaction.intensity);
     fire();
     reacted.current(reaction.id);
-  }, [bound, reaction, setIntensity, fire]);
+  }, [bound, handedOver, reaction, setIntensity, fire]);
 
   // Plays only while Pip can be seen; paused, the state machine stops
   // advancing and the runtime stops drawing.
@@ -234,29 +257,46 @@ export function PipRive({
   }, [rive, bound, active]);
 
   // Once the model is applied, a frame is drawn on the next animation frame;
-  // the one after it is on screen, and the poster can hand over.
+  // the one after it is on screen, and the poster can hand over. A turn away
+  // from the Learner eases in over the rig's 220 ms from the front view, so
+  // then the hand-over also waits for the turn to settle: the rig holds the
+  // poster's turn (above), and the crossfade joins the same pose.
   const drawn = useRef(onDrawn);
+  const settle = useRef(0);
+  const gazeAway = heldGazeX !== 0;
   useEffect(() => {
     drawn.current = onDrawn;
-  }, [onDrawn]);
+    settle.current = gazeAway ? GAZE_SETTLE_MS : 0;
+  }, [onDrawn, gazeAway]);
   useEffect(() => {
     if (rive === null || !bound) return;
     rive.startRendering();
-    let second = 0;
-    const first = requestAnimationFrame(() => {
-      second = requestAnimationFrame(() => {
+    let frames = 0;
+    let start: number | undefined;
+    const tick = (now: number) => {
+      frames++;
+      start ??= now;
+      if (frames >= 2 && now - start >= settle.current) {
         drawn.current();
-      });
-    });
+        return;
+      }
+      pending = requestAnimationFrame(tick);
+    };
+    let pending = requestAnimationFrame(tick);
     return () => {
-      cancelAnimationFrame(first);
-      cancelAnimationFrame(second);
+      cancelAnimationFrame(pending);
     };
   }, [rive, bound]);
 
   return (
     <div ref={setContainerRef} className="absolute inset-0">
-      <canvas ref={setCanvasRef} aria-hidden="true" className="block" />
+      {/* Sized by its box from the start: before the runtime sizes it, a bare
+          canvas is the browser's 300 by 150, wider than Pip beside the step. */}
+      <canvas
+        ref={setCanvasRef}
+        aria-hidden="true"
+        className="block size-full"
+      />
     </div>
   );
 }

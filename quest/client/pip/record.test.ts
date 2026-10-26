@@ -16,7 +16,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 import { pngSize } from "./png.ts";
-import { allPosters, posterSpec } from "./posters.ts";
+import {
+  POSTER_TURNS,
+  REST_TOWARD_CONTENT,
+  allPosters,
+  posterSpec,
+} from "./posters.ts";
 import {
   PIP_DIR,
   RECORD,
@@ -52,6 +57,27 @@ describe("the committed Pip build", () => {
         height: px,
       });
     }
+  });
+});
+
+describe("the posters' poses", () => {
+  test("each poster is drawn at its turn's gaze: beside, toward the content and facing the Learner; at the hero size, facing the Learner", () => {
+    const turns = allPosters().map(({ file, turn, data }) => {
+      expect(data.gazeX ?? "0", file).toBe(String(POSTER_TURNS[turn]));
+      return file;
+    });
+    expect(
+      turns.filter((file) => file.includes("-beside-content.")),
+    ).toHaveLength(4);
+    expect(
+      turns.filter((file) => file.includes("-beside-front.")),
+    ).toHaveLength(4);
+    expect(turns.filter((file) => file.includes("-hero-front."))).toHaveLength(
+      4,
+    );
+    expect(turns).toHaveLength(12);
+    expect(POSTER_TURNS.content).toBe(REST_TOWARD_CONTENT);
+    expect(POSTER_TURNS.front).toBe(0);
   });
 });
 
@@ -150,9 +176,9 @@ describe("recordProblems", () => {
 
   test("fails when an output differs from the one the build wrote, or is missing", () => {
     const poster = copy();
-    appendFileSync(join(poster, "posters/idle-hero.png"), "x");
+    appendFileSync(join(poster, "posters/idle-hero-front.png"), "x");
     expect(recordProblems(poster)).toEqual([
-      `posters/idle-hero.png is not the file the last build wrote. ${REBUILD}`,
+      `posters/idle-hero-front.png is not the file the last build wrote. ${REBUILD}`,
     ]);
 
     const riv = copy();
@@ -163,16 +189,16 @@ describe("recordProblems", () => {
   test("fails on a poster no build writes", () => {
     const pip = copy();
     cpSync(
-      join(pip, "posters/idle-hero.png"),
-      join(pip, "posters/extra-hero.png"),
+      join(pip, "posters/idle-hero-front.png"),
+      join(pip, "posters/extra-hero-front.png"),
     );
     expect(recordProblems(pip)).toEqual([
-      "posters/extra-hero.png is not a poster the build writes",
+      "posters/extra-hero-front.png is not a poster the build writes",
     ]);
   });
 
-  test("fails when a poster size, the scale or a pose changes without a rebuild", () => {
-    const POSTERS_CHANGED = `the posters' scale, sizes or poses in posters.ts changed since the last build: they are not the ones ${RECORD} records. ${REBUILD}`;
+  test("fails when a poster size, the scale, a pose or a turn changes without a rebuild", () => {
+    const POSTERS_CHANGED = `the posters' scale, sizes, poses or turns in posters.ts changed since the last build: they are not the ones ${RECORD} records. ${REBUILD}`;
     const spec = posterSpec();
     const changes = [
       { ...spec, sizes: { ...spec.sizes, beside: 96 } },
@@ -191,6 +217,8 @@ describe("recordProblems", () => {
           idle: { data: { mode: "rest" }, advance: "1" },
         },
       },
+      { ...spec, turns: { ...spec.turns, content: 0.5 } },
+      { ...spec, sizeTurns: { ...spec.sizeTurns, hero: [] } },
     ];
     for (const posters of changes) {
       const pip = copy();
@@ -203,15 +231,18 @@ describe("recordProblems", () => {
   test("reads the poster spec whatever order its keys are in", () => {
     const pip = copy();
     const record = readRecord(pip);
+    // Each object's keys reversed; a list keeps its order, which means something.
     const reversed = (o: object): unknown =>
-      Object.fromEntries(
-        Object.entries(o)
-          .reverse()
-          .map(([k, v]) => [
-            k,
-            typeof v === "object" && v !== null ? reversed(v as object) : v,
-          ]),
-      );
+      Array.isArray(o)
+        ? o
+        : Object.fromEntries(
+            Object.entries(o)
+              .reverse()
+              .map(([k, v]) => [
+                k,
+                typeof v === "object" && v !== null ? reversed(v as object) : v,
+              ]),
+          );
     writeFileSync(
       join(pip, RECORD),
       JSON.stringify({ ...record, posters: reversed(record.posters) }),
@@ -223,23 +254,23 @@ describe("recordProblems", () => {
   test("fails on a poster at another size than posters.ts asks for, even one the record vouches for", () => {
     const pip = copy();
     cpSync(
-      join(pip, "posters/idle-beside.png"),
-      join(pip, "posters/idle-hero.png"),
+      join(pip, "posters/idle-beside-content.png"),
+      join(pip, "posters/idle-hero-front.png"),
     );
     const record = readRecord(pip);
-    record.outputs["posters/idle-hero.png"] = fileDigest(
-      join(pip, "posters/idle-hero.png"),
+    record.outputs["posters/idle-hero-front.png"] = fileDigest(
+      join(pip, "posters/idle-hero-front.png"),
     );
     writeFileSync(join(pip, RECORD), JSON.stringify(record));
     expect(recordProblems(pip)).toEqual([
-      `posters/idle-hero.png is 152 by 152 pixels, not the 416 by 416 posters.ts asks for. ${REBUILD}`,
+      `posters/idle-hero-front.png is 152 by 152 pixels, not the 416 by 416 posters.ts asks for. ${REBUILD}`,
     ]);
 
     const broken = copy();
-    writeFileSync(join(broken, "posters/idle-hero.png"), "not an image");
+    writeFileSync(join(broken, "posters/idle-hero-front.png"), "not an image");
     expect(recordProblems(broken)).toEqual([
-      `posters/idle-hero.png is not the file the last build wrote. ${REBUILD}`,
-      `posters/idle-hero.png is not a PNG. ${REBUILD}`,
+      `posters/idle-hero-front.png is not the file the last build wrote. ${REBUILD}`,
+      `posters/idle-hero-front.png is not a PNG. ${REBUILD}`,
     ]);
   });
 
