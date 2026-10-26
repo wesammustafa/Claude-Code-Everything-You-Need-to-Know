@@ -13,7 +13,7 @@ import { usePageHidden } from "../lib/page";
 import { afterFirstPaint } from "../lib/paint";
 import { PipIcon } from "./PipIcon";
 import { reactionLedger } from "./playback";
-import { posterPose, posterUrl, type RigSize } from "./rig";
+import { posterPose, posterUrl, rigValues, type RigSize } from "./rig";
 import {
   loadPipRuntime,
   settledPipRuntime,
@@ -131,6 +131,8 @@ function RigPip({ model, size, className, onScreenChange, rig }: RigPipProps) {
     reaction === null ? false : reactionLedger.holding(reaction.id),
   );
   const pose = posterPose(model, holding);
+  // The gaze the adapter writes to the rig, readable on the page.
+  const { gazeX, gazeY } = rigValues(model);
 
   // With the rig switched off, the frame it drew is gone: switched back on,
   // the poster shows until the rig draws again.
@@ -173,6 +175,7 @@ function RigPip({ model, size, className, onScreenChange, rig }: RigPipProps) {
       data-pip-rendering={rendering}
       data-pip-playing={String(rigShown && onScreen && !hidden)}
       data-pip-reaction={shownReaction ?? undefined}
+      data-pip-gaze={`${gazeX.toFixed(2)} ${gazeY.toFixed(2)}`}
       className={cx("relative inline-block shrink-0", BOX[size], className)}
     >
       {/* The posters Pip has shown, stacked; the current one is opaque and

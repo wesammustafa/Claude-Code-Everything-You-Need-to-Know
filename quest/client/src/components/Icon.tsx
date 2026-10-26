@@ -17,6 +17,12 @@ const PATHS = {
       <path d="M3 9h18" />
     </>
   ),
+  bulb: (
+    <>
+      <path d="M9.5 18h5M10.5 21h3" />
+      <path d="M12 3a6 6 0 0 0-3.7 10.7c.8.7 1.2 1.4 1.2 2.3h5c0-.9.4-1.6 1.2-2.3A6 6 0 0 0 12 3z" />
+    </>
+  ),
   check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
   chevron: <path d="m9 6 6 6-6 6" />,
   circle: <circle cx="12" cy="12" r="7.5" />,

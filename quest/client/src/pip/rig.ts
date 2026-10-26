@@ -23,8 +23,9 @@ export interface RigValues {
 const clamp = (v: number) => Math.max(-1, Math.min(1, v));
 
 /**
- * A null gaze is the centre: the rig's own small glances play around it, and
- * under reduced motion (where the director never sets a gaze) Pip holds still.
+ * A null gaze is the centre, facing the Learner. The director always sends a
+ * resting gaze, and only that under reduced motion, where the rig holds still
+ * there; the rig's own small glances play around whatever gaze it is given.
  */
 export function rigValues(model: PipModel): RigValues {
   return {

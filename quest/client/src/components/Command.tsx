@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { cx } from "../lib/cx";
+import { usePipLook } from "../pip/PipStage";
 import { Icon } from "./Icon";
 
 /** How long "Copied" shows before the button reads "Copy" again. */
@@ -25,12 +26,14 @@ export interface CommandProps {
 /**
  * A command to type in the terminal, with a Copy button. Where the clipboard
  * is unavailable, Copy selects the command so the keyboard can copy it.
+ * Either way Pip, if the screen has one, looks at the command for a moment.
  */
 export function Command({ text, fit = false, className }: CommandProps) {
   const [state, setState] = useState<CopyState>("idle");
   // Counts every Copy, so each one restarts the confirmation and is announced again.
   const [copies, setCopies] = useState(0);
   const code = useRef<HTMLElement>(null);
+  const look = usePipLook();
 
   useEffect(() => {
     if (state === "idle") return;
@@ -59,6 +62,7 @@ export function Command({ text, fit = false, className }: CommandProps) {
   };
 
   const copy = async () => {
+    look("command", code.current);
     try {
       // The Clipboard API is missing outside a secure context.
       if (!("clipboard" in navigator)) throw new Error("no clipboard");
@@ -74,6 +78,7 @@ export function Command({ text, fit = false, className }: CommandProps) {
 
   return (
     <div
+      data-pip-target="command"
       className={cx(
         "flex items-center gap-2.5 rounded-md border border-code-line bg-code-bg py-1.5 pr-1.5 pl-4 text-code-text",
         // One width class only: a second one would win by Tailwind's order, not by intent.

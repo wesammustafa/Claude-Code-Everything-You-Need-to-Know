@@ -8,6 +8,7 @@ import {
   type RefObject,
 } from "react";
 import { cx } from "../lib/cx";
+import { usePipInput } from "../pip/PipStage";
 import { FixedLayer } from "./FixedLayer";
 import { IconButton } from "./IconButton";
 
@@ -124,6 +125,7 @@ export function Panel({
   const body = useRef<HTMLDivElement>(null);
   const scrolls = useOverflows(body, open);
   const onCloseRef = useRef(onClose);
+  const tellPip = usePipInput();
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -138,6 +140,8 @@ export function Panel({
     const scrimNode = scrim.current;
     if (!scrimNode) return;
     const restoreInert = makeRestInert(scrimNode);
+    // Pip and his bubble are inert now too: the help offer waits for them.
+    tellPip({ type: "pageInert", inert: true });
     const unlockScroll = lockScroll();
     close.current?.focus();
 
@@ -171,10 +175,11 @@ export function Panel({
       document.removeEventListener("keydown", onKey);
       scrimNode.removeEventListener("click", onScrimClick);
       restoreInert();
+      tellPip({ type: "pageInert", inert: false });
       unlockScroll();
       opener?.focus();
     };
-  }, [open]);
+  }, [open, tellPip]);
 
   if (!open) return null;
   return (
