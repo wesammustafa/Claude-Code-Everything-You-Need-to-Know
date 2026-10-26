@@ -6,7 +6,7 @@ Where to go once you finish Advanced. The guide teaches one developer's use of C
 
 Every item is published by Anthropic, except the MCP project's pages on modelcontextprotocol.io.
 
-Listings checked against the listing bar on 2026-10-24.
+Listings checked against the listing bar on 2026-10-26.
 
 ## Build your own agents
 
@@ -71,6 +71,6 @@ Each page of this guide was checked against one `stable` version of Claude Code,
 
 ---
 
-<sub>Sources: the pages linked above, each checked on 2026-10-24.</sub>
+<sub>Sources: the pages linked above, each checked on 2026-10-26.</sub>
 
 <sub>Up: [Advanced](README.md)</sub>

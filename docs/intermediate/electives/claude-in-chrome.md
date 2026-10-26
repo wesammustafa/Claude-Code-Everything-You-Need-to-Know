@@ -68,7 +68,7 @@ If Claude doesn't use the browser, start the session with `--chrome`, or run `/c
 ## Go further
 
 - [Use Claude Code with Chrome](https://code.claude.com/docs/en/chrome): more workflows, from filling forms to recording a GIF, and troubleshooting.
-- [Get started with Claude in Chrome](https://support.claude.com/en/articles/12012173-getting-started-with-claude-in-chrome): the extension itself, including its shortcuts and permissions.
+- [Get started with Claude in Chrome](https://support.claude.com/en/articles/12012173-get-started-with-claude-in-chrome): the extension itself, including its shortcuts and permissions.
 
 ---
 

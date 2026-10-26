@@ -52,7 +52,7 @@ Optional lessons beside the core path, each ending with a checklist you confirm 
 
 - [IDE extensions](electives/ide-extensions.md)
 - [Screenshots and images](electives/screenshots-and-images.md)
-- [The built-in teachers](electives/built-in-teachers.md): `/powerup`, the Learning and Explanatory output styles, and the `claude-code-guide` subagent
+- [The built-in teachers](electives/built-in-teachers.md): `/powerup`, the Learning and Explanatory [output styles](https://code.claude.com/docs/en/output-styles), and the `claude-code-guide` [subagent](https://code.claude.com/docs/en/sub-agents)
 
 ## Official companions
 

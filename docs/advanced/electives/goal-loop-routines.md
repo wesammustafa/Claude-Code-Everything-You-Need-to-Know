@@ -88,7 +88,7 @@ If no log line shows a failure, the loop didn't run while the test was broken: s
 
 - A loop fires even while you're away, sending the session's whole context each time, and keeps going until you cancel it or it expires ([Stop a loop](https://code.claude.com/docs/en/scheduled-tasks#stop-a-loop)). On a Pro, Max, Team or Enterprise plan, `/usage` lists your heaviest loops ([Plan usage breakdown](https://code.claude.com/docs/en/costs#plan-usage-breakdown)).
 - `Esc` doesn't stop a fixed-interval loop such as `/loop 1m`: ask Claude to cancel it ([Stop a loop](https://code.claude.com/docs/en/scheduled-tasks#stop-a-loop)).
-- A green status in a cloud scheduled task's run list only means the session started and exited without an infrastructure error. Open the run and read the transcript to see whether the task worked ([View and interact with runs](https://code.claude.com/docs/en/routines#view-and-interact-with-runs)).
+- A cloud scheduled task run that succeeded, with neither **Error** nor **Cancelled** at the end of its row, only means the session ended without Claude Code reporting a failure. Open the run and read the transcript to see whether the task worked ([View and interact with runs](https://code.claude.com/docs/en/routines#view-and-interact-with-runs)).
 
 ## Go further
 

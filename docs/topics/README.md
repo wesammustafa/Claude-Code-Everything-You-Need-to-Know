@@ -8,9 +8,9 @@ Each topic page lists its lessons in level order, its Electives, its reference p
 - [Permissions and safety](permissions-and-safety.md): what Claude Code may do without asking, and how to keep it away from what it shouldn't touch.
 - [Skills](skills.md): packaged instructions that run by name or load when they apply.
 - [Hooks](hooks.md): commands that run at fixed points in a session, so a rule holds without relying on Claude to remember it.
-- [Subagents and parallel work](subagents-and-parallel-work.md): ways to split work across contexts and sessions: subagents, worktrees, dynamic workflows and agent teams.
+- [Subagents and parallel work](subagents-and-parallel-work.md): ways to split work across contexts and sessions: subagents, worktrees, `/batch`, dynamic workflows and agent teams.
 - [MCP](mcp.md): connecting Claude Code to outside tools and data with the Model Context Protocol.
-- [Plugins](plugins.md): bundles of skills, agents, hooks and MCP servers that you install from a marketplace.
+- [Plugins](plugins.md): bundles of skills, agents, hooks and MCP servers, usually installed from a marketplace.
 - [Automation](automation.md): running Claude Code without a person at the keyboard: scripts, CI and schedules.
 - [Models, effort and cost](models-effort-and-cost.md): which model and effort level a task needs, and what a session costs.
 

@@ -12,7 +12,7 @@ By the end of this Elective you can tell when fast mode is worth its cost, and t
 ## You need
 
 - Claude Code signed in with a Claude plan, or with a Claude Console account whose organization has fast mode access. Fast mode isn't available on Amazon Bedrock, Google Cloud's Agent Platform, Microsoft Foundry or Claude Platform on AWS ([Requirements](https://code.claude.com/docs/en/fast-mode#requirements)).
-- On a Pro, Max, Team or Enterprise plan: usage credits turned on. `/usage-credits` opens the page that turns them on; on Team and Enterprise, a member without billing access runs it to ask the organization's admins. On Team and Enterprise, an Owner also turns fast mode on for the organization.
+- On a Pro, Max, Team or Enterprise plan: usage credits turned on. On Pro and Max, `/usage-credits` opens the page that turns them on; on Team and Enterprise, a member with billing access turns them on for the organization, and a member without it runs `/usage-credits` to ask the organization's admins. On Team and Enterprise, an Owner also turns fast mode on for the organization.
 - Usage: billed beyond your plan (usage credits). Fast mode draws on usage credits even when your plan has usage left. The exercise is optional.
 
 ## The idea
@@ -21,7 +21,7 @@ Fast mode runs Claude Opus with an API configuration that answers faster, at a h
 
 Use it for interactive work where waiting costs you more than tokens do: rapid iteration, live debugging. Leave it off for long autonomous runs, CI and cost-sensitive work. On a subscription plan, every fast-mode token comes from usage credits, never from your plan's included usage.
 
-Turning it on partway through a conversation charges the whole conversation so far once at fast mode's uncached rate, so turn it on at the start of a session.
+Turning it on partway through a conversation charges the whole conversation so far at fast mode's uncached rate, and each later switch rereads some or all of it uncached, so turn it on at the start of a session and leave it.
 
 ## Worked example
 

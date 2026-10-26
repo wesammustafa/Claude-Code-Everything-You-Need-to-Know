@@ -82,7 +82,7 @@ Teams "use significantly more tokens than a single session" ([Token usage](https
    Ask the security and tests teammates to shut down.
    ```
 
-   Each teammate approves and exits, or rejects the request with an explanation ([Shut down teammates](https://code.claude.com/docs/en/agent-teams#shut-down-teammates)); if one rejects, read its reason and ask again. A teammate whose row has disappeared from the panel is hidden, not stopped, so name it in the request too ([Start your first agent team](https://code.claude.com/docs/en/agent-teams#start-your-first-agent-team)). Then exit the session. Claude Code removes the team's config when the session ends and keeps its task list for resumed sessions, so there's no separate cleanup step ([Architecture](https://code.claude.com/docs/en/agent-teams#architecture)).
+   Each teammate approves and exits, or rejects the request with an explanation ([Shut down teammates](https://code.claude.com/docs/en/agent-teams#shut-down-teammates)); if one rejects, read its reason and ask again. A teammate whose row has disappeared from the panel is hidden, not stopped, so name it in the request too ([Start your first agent team](https://code.claude.com/docs/en/agent-teams#start-your-first-agent-team)). Then exit the session. Claude Code removes the team's config when the session ends and leaves its task list on disk, so there's no separate cleanup step ([Architecture](https://code.claude.com/docs/en/agent-teams#architecture)).
 7. Read the log:
 
    ```bash

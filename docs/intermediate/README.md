@@ -30,7 +30,7 @@ A copy older than the app has no `learn` script, so `npm run learn` says `Missin
 
 ### Prepare your own repository
 
-Lessons save the files their checks read in a `.practice/` folder, in the repository you practice in. Before your first lesson in one of your own repositories, create that folder there and tell git to ignore it without a commit ([gitignore](https://git-scm.com/docs/gitignore)):
+Lessons save the files their checks read in a `.practice/` folder, in the repository you practice in. Before your first lesson in one of your own repositories, create that folder there and tell git to ignore it without a commit ([gitignore](https://git-scm.com/docs/gitignore), [git rev-parse](https://git-scm.com/docs/git-rev-parse)):
 
 ```bash
 mkdir -p .practice
@@ -68,7 +68,7 @@ They combine: a [plugin](https://code.claude.com/docs/en/plugins) packages skill
 7. [Connect a tool with MCP](07-mcp.md)
 8. [Install and manage plugins](08-plugins.md)
 
-Each lesson takes 20 to 25 minutes.
+Each lesson takes 20 to 25 minutes, and the capstone 30 to 60.
 
 ## Capstone
 
@@ -77,7 +77,7 @@ Each lesson takes 20 to 25 minutes.
 ## By the end of this level you can
 
 - [ ] Write a project skill that runs by name and loads on its own when it applies.
-- [ ] Write a hook that enforces a rule, and show it firing.
+- [ ] Write a hook that enforces a rule and fails closed, and show it firing.
 - [ ] Delegate to a custom subagent with limited tools.
 - [ ] Add an MCP server at project scope, and install a plugin from an Anthropic marketplace.
 - [ ] Put permission rules in the right scope, turn on the sandbox, and pick the model and effort for a task.
@@ -103,6 +103,6 @@ Optional lessons beside the core path:
 
 ---
 
-<sub>Sources: [Extend Claude Code](https://code.claude.com/docs/en/features-overview) · [How Claude remembers your project](https://code.claude.com/docs/en/memory) · [Extend Claude with skills](https://code.claude.com/docs/en/skills) · [Hooks](https://code.claude.com/docs/en/hooks) · [Create custom subagents](https://code.claude.com/docs/en/sub-agents) · [Workflows](https://code.claude.com/docs/en/workflows) · [Connect Claude Code to tools via MCP](https://code.claude.com/docs/en/mcp) · [Plugins](https://code.claude.com/docs/en/plugins) · [Code intelligence plugins](https://code.claude.com/docs/en/plugins/code-intelligence) · [Configure the sandboxed Bash tool](https://code.claude.com/docs/en/sandboxing) · [gitignore](https://git-scm.com/docs/gitignore) · [Claude Code in action](https://academy.claude.com/courses/claude-code-in-action) · [Introduction to agent skills](https://academy.claude.com/courses/introduction-to-agent-skills) · [Introduction to subagents](https://academy.claude.com/courses/introduction-to-subagents)</sub>
+<sub>Sources: [Extend Claude Code](https://code.claude.com/docs/en/features-overview) · [How Claude remembers your project](https://code.claude.com/docs/en/memory) · [Extend Claude with skills](https://code.claude.com/docs/en/skills) · [Hooks](https://code.claude.com/docs/en/hooks) · [Create custom subagents](https://code.claude.com/docs/en/sub-agents) · [Workflows](https://code.claude.com/docs/en/workflows) · [Connect Claude Code to tools via MCP](https://code.claude.com/docs/en/mcp) · [Plugins](https://code.claude.com/docs/en/plugins) · [Code intelligence plugins](https://code.claude.com/docs/en/plugins/code-intelligence) · [Configure the sandboxed Bash tool](https://code.claude.com/docs/en/sandboxing) · [gitignore](https://git-scm.com/docs/gitignore) · [git rev-parse](https://git-scm.com/docs/git-rev-parse) · [Claude Code in action](https://academy.claude.com/courses/claude-code-in-action) · [Introduction to agent skills](https://academy.claude.com/courses/introduction-to-agent-skills) · [Introduction to subagents](https://academy.claude.com/courses/introduction-to-subagents)</sub>
 
 <sub>Up: [Claude Code: Everything You Need to Know](../../README.md#pick-your-level)</sub>

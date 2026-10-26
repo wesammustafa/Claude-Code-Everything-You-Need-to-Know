@@ -60,7 +60,7 @@ You'll take one change from request to commit, safely, and give your project a m
 
 ### Intermediate
 **Ready if** you can plan a change in plan mode, review the diff and commit it, and keep a long session on track.\
-You'll shape Claude Code to your project with skills, hooks, subagents, MCP and plugins. About 3 hours: 8 lessons, a capstone and 4 Electives.\
+You'll shape Claude Code to your project with skills, hooks, subagents, MCP and plugins. About 4 hours: 8 lessons, a capstone and 4 Electives.\
 **[Start Intermediate](docs/intermediate/README.md)**
 
 ### Advanced

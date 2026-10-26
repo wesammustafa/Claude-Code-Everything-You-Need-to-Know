@@ -7,7 +7,7 @@ Beyond one session: parallel sessions, orchestration, unattended runs in scripts
 ## You're ready for this level if you can
 
 - [ ] Write a project skill that runs by name and loads on its own when it applies.
-- [ ] Write a hook that enforces a rule, and show it firing.
+- [ ] Write a hook that enforces a rule and fails closed, and show it firing.
 - [ ] Delegate to a custom subagent with limited tools.
 - [ ] Add an MCP server at project scope, and install a plugin from an Anthropic marketplace.
 - [ ] Put permission rules in the right scope, turn on the sandbox, and pick the model and effort for a task.
@@ -15,7 +15,7 @@ Beyond one session: parallel sessions, orchestration, unattended runs in scripts
 
 ## Practice
 
-Practice in your own repository, and run each check from your copy of the [practice template](https://github.com/wesammustafa/claude-code-practice) as `npm run check -- <lesson-id> --dir <your repo>`. The GitHub Actions lesson and the capstone are the exceptions: they run in a separate template copy, which you tear down afterwards so no workflow or secret is left behind.
+Practice in your own repository, and run each check from your copy of the [practice template](https://github.com/wesammustafa/claude-code-practice) as `npm run check -- <lesson-id> --dir <your repo>`. The GitHub Actions lesson and the capstone are the exceptions: each runs in a new template copy of its own, which you tear down afterwards so no workflow or secret is left behind.
 
 To go step by step, run `npm run learn` in your copy and use Claude Code in a second terminal beside it. The app takes you through every lesson and the capstone, one step at a time, and checks your work as you go. Each page below teaches the same lesson on its own.
 

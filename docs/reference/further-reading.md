@@ -5,7 +5,7 @@
 
 Courses, docs and posts that go deeper than the guide, grouped by the level where they help most. Lessons link the pages they rely on; this page collects the rest. Every item is published by Anthropic, except the Agent Skills specification, an open standard that Anthropic started.
 
-Listings checked against the listing bar on 2026-10-05.
+Listings checked against the listing bar on 2026-10-26.
 
 <a id="official-claude--anthropic-resources"></a><a id="official"></a><a id="claude-code-documentation"></a><a id="claude-models--api"></a><a id="model-announcements-2026"></a>
 ## Start anywhere
@@ -48,6 +48,6 @@ The third-party tools, model announcements and agent-interoperability links this
 
 ---
 
-<sub>Sources: the pages linked above, each checked on 2026-10-05.</sub>
+<sub>Sources: the pages linked above, each checked on 2026-10-26.</sub>
 
 <sub>Up: [Reference](README.md)</sub>

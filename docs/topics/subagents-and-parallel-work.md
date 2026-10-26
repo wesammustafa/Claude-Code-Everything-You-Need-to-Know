@@ -2,7 +2,7 @@
 
 <sub>Topic · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
 
-Ways to split work across contexts and sessions: subagents, worktrees, dynamic workflows and agent teams.
+Ways to split work across contexts and sessions: subagents, worktrees, `/batch`, dynamic workflows and agent teams.
 
 ## Lessons
 
@@ -18,11 +18,12 @@ Ways to split work across contexts and sessions: subagents, worktrees, dynamic w
 - [Run agents in parallel](https://code.claude.com/docs/en/agents)
 - [Manage multiple agents with agent view](https://code.claude.com/docs/en/agent-view)
 - [Run parallel sessions with worktrees](https://code.claude.com/docs/en/worktrees)
+- [Commands](https://code.claude.com/docs/en/commands)
 - [Orchestrate subagents at scale with dynamic workflows](https://code.claude.com/docs/en/workflows)
 - [Orchestrate teams of Claude Code sessions](https://code.claude.com/docs/en/agent-teams)
 
 ---
 
-<sub>Sources: [Create custom subagents](https://code.claude.com/docs/en/sub-agents) · [Run agents in parallel](https://code.claude.com/docs/en/agents) · [Manage multiple agents with agent view](https://code.claude.com/docs/en/agent-view) · [Run parallel sessions with worktrees](https://code.claude.com/docs/en/worktrees) · [Orchestrate subagents at scale with dynamic workflows](https://code.claude.com/docs/en/workflows) · [Orchestrate teams of Claude Code sessions](https://code.claude.com/docs/en/agent-teams)</sub>
+<sub>Sources: [Create custom subagents](https://code.claude.com/docs/en/sub-agents) · [Run agents in parallel](https://code.claude.com/docs/en/agents) · [Manage multiple agents with agent view](https://code.claude.com/docs/en/agent-view) · [Run parallel sessions with worktrees](https://code.claude.com/docs/en/worktrees) · [Commands](https://code.claude.com/docs/en/commands) · [Orchestrate subagents at scale with dynamic workflows](https://code.claude.com/docs/en/workflows) · [Orchestrate teams of Claude Code sessions](https://code.claude.com/docs/en/agent-teams)</sub>
 
 <sub>Up: [Topics](README.md)</sub>
