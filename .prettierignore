@@ -1,0 +1,4 @@
+# Prettier formats Claude Code Quest's source under quest/ and nothing else.
+/*
+!/quest/
+/quest/*/dist/
