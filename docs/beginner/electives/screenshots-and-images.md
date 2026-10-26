@@ -56,7 +56,7 @@ Some things are faster to show than to describe: an error on screen, a layout, a
    ```
 
    **WSL:** Windows saves the file on its own drive, which WSL reaches under `/mnt/c` ([Working across file systems](https://learn.microsoft.com/en-us/windows/wsl/filesystems)): `C:\Users\<user name>\shot.png` is `/mnt/c/Users/<user name>/shot.png`.
-2. In Claude Code (start `claude` if it isn't running), ask about it by path: `Look at this image: .practice/test-summary.png. What does each line of this summary mean?`
+2. In Claude Code (start `claude` if it isn't running), run `/clear` so the conversation no longer holds the stashed change, then ask about it by path: `Look at this image: .practice/test-summary.png. What does each line of this summary mean?`
 3. Ask for a small change based on the image, such as a clearer name for one of the tests it shows, and approve the edit if Claude asks. Check it with `git diff` in the second terminal.
 
 ## Check

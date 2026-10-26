@@ -62,7 +62,7 @@ Keep `SKILL.md` short: once a skill runs, its whole text stays in the conversati
 Make the review take a focus:
 
 1. Add `arguments: [focus]` to the frontmatter of `changes-review`.
-2. Change the task to put the review's focus first: `Review the changes above against checklist.md, looking hardest at $focus.`
+2. Change the task to put the review's focus first: `Review the changes above against [checklist.md](checklist.md), looking hardest at $focus.`
 3. Run `/changes-review tests`, then `/changes-review secrets`, and compare the two reports.
 
 ## Check
