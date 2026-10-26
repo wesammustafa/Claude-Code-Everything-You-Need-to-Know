@@ -1,6 +1,7 @@
 # Rules for agents editing this guide
 
 These rules apply when you edit this guide, a Markdown guide to learning Claude Code. If the user is learning Claude Code with this repo (running or changing its examples, asking questions), they do not apply: just help them. For anything this file does not cover (where to report problems, AI-assisted contributions, file layout, adding a skill), read [CONTRIBUTING.md](CONTRIBUTING.md), the full contributor policy this file digests.
+App work (`quest/`, `course/`, `practice-template/`, `solutions/`) also follows [quest/AGENTS.md](quest/AGENTS.md).
 
 ## Verify every volatile claim
 
