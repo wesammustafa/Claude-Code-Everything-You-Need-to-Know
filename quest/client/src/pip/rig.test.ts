@@ -22,6 +22,7 @@ const model = (fields: Partial<PipModel> = {}): PipModel => ({
   mode: "idle",
   reaction: null,
   gaze: null,
+  restingGaze: { x: 0, y: 0 },
   reducedMotion: false,
   size: "beside",
   ...fields,
@@ -98,22 +99,44 @@ describe("the poster", () => {
       const rest = restingGaze(screen);
       for (const size of Object.keys(PIP_SIZES) as RigSize[]) {
         if (size === "hero" && rest.x !== 0) continue;
-        const turn = posterTurnFor(model({ gaze: rest, size }), size);
+        const turn = posterTurnFor(
+          model({ gaze: rest, restingGaze: rest, size }),
+          size,
+        );
         expect(posterGazeX(turn), `${screen} at ${size}`).toBe(rest.x);
       }
     }
   });
 
-  test("beside, turns toward the content near its gaze and faces the Learner otherwise", () => {
+  test("beside, turns toward the content near its resting gaze and faces the Learner otherwise", () => {
     const at = (x: number) =>
-      posterTurnFor(model({ gaze: { x, y: 0 } }), "beside");
+      posterTurnFor(model({ restingGaze: { x, y: 0 } }), "beside");
     expect(at(REST_TOWARD_CONTENT)).toBe("content");
     expect(at(0.94)).toBe("content");
     expect(at(0)).toBe("front");
     expect(at(-0.6)).toBe("front");
-    expect(posterTurnFor(model({ gaze: null }), "beside")).toBe("front");
-    expect(posterTurnFor(model({ gaze: { x: 0.4, y: 0 } }), "hero")).toBe(
-      "front",
-    );
+    expect(
+      posterTurnFor(model({ restingGaze: { x: 0.4, y: 0 } }), "hero"),
+    ).toBe("front");
+  });
+
+  test("keeps its turn wherever the gaze goes for a moment: the pointer, a glance or a look is the rig's alone", () => {
+    const beside = { x: REST_TOWARD_CONTENT, y: 0 };
+    for (const x of [-1, -0.6, 0, 0.19, 0.21, 1]) {
+      expect(
+        posterTurnFor(
+          model({ gaze: { x, y: 0.3 }, restingGaze: beside }),
+          "beside",
+        ),
+        `gaze ${String(x)} beside the content`,
+      ).toBe("content");
+      expect(
+        posterTurnFor(
+          model({ gaze: { x, y: 0.3 }, restingGaze: { x: 0, y: 0 } }),
+          "beside",
+        ),
+        `gaze ${String(x)} centred`,
+      ).toBe("front");
+    }
   });
 });

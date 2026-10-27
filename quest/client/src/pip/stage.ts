@@ -36,7 +36,9 @@ export function samePipModel(a: PipModel, b: PipModel): boolean {
     a.reaction?.kind === b.reaction?.kind &&
     a.reaction?.intensity === b.reaction?.intensity &&
     a.gaze?.x === b.gaze?.x &&
-    a.gaze?.y === b.gaze?.y
+    a.gaze?.y === b.gaze?.y &&
+    a.restingGaze.x === b.restingGaze.x &&
+    a.restingGaze.y === b.restingGaze.y
   );
 }
 

@@ -53,12 +53,14 @@ export function posterPose(
 }
 
 /**
- * The turn of the poster for a model: the one drawn nearest the gaze it asks
- * for, so at rest exactly its resting gaze (turned toward the content beside
- * the step, facing the Learner elsewhere).
+ * The turn of the poster for a model: the one drawn nearest its resting
+ * gaze, so exactly that gaze (turned toward the content beside the step,
+ * facing the Learner elsewhere). A gaze that leaves the rest for a moment
+ * (the pointer, a glance, a look) never turns the poster: a still picture
+ * can't ease after it, and would flip between turns.
  */
 export function posterTurnFor(model: PipModel, size: RigSize): PosterTurn {
-  return posterTurn(size, rigValues(model).gazeX);
+  return posterTurn(size, clamp(model.restingGaze.x));
 }
 
 /** The gazeX a poster's turn shows, where the rig rests until it takes over from it. */

@@ -16,6 +16,11 @@ import {
 export default defineConfig({
   root: join(clientRoot, "pip/contract-page"),
   plugins: [react(), bundledPackagesOnly(), stampInputs(PIP_CONTRACT_STAMP)],
+  // A dependency cache of its own. Vite would share the app's (the nearest
+  // package.json is the client's), so a dev server of this page re-optimized
+  // the app's dependencies under a running app dev server, which then served
+  // React twice (the Playground e2e's "Invalid hook call").
+  cacheDir: join(clientRoot, "node_modules/.vite-pip-contract"),
   build: {
     outDir: join(clientRoot, "dist/pip-contract"),
     emptyOutDir: true,

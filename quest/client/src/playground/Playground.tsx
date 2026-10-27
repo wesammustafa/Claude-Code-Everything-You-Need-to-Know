@@ -205,6 +205,8 @@ export function Playground() {
           mode,
           reaction: fired,
           gaze: gazeSet ? { x: gazeX, y: gazeY } : null,
+          // Set directly, the gaze is where Pip rests, so the poster matches it.
+          restingGaze: gazeSet ? { x: gazeX, y: gazeY } : { x: 0, y: 0 },
           reducedMotion,
           size,
         }
@@ -651,8 +653,8 @@ function Card({
 
 /**
  * What the Fallback figure shows: the poster, as without Rive, and the gazeX
- * it is drawn at (the turn nearest the gaze), which the live rig matches only
- * at that gazeX.
+ * it is drawn at (the turn nearest the resting gaze; with the gaze set
+ * directly, the gaze), which the live rig matches only at that gazeX.
  */
 function posterDetail(model: PipModel): string {
   if (model.size === "icon") return "The icon, as without Rive";

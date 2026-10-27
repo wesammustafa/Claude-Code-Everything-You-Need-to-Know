@@ -61,6 +61,7 @@ const model = (fields: Partial<PipModel> = {}): PipModel => ({
   mode: "idle",
   reaction: null,
   gaze: null,
+  restingGaze: { x: 0, y: 0 },
   reducedMotion: false,
   size: "beside",
   ...fields,
@@ -174,6 +175,56 @@ describe("Pip's renderer", () => {
     vi.restoreAllMocks();
   });
 
+  test("hands over when the fades the browser runs have finished, however long past their length", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    runtime.settled = fakeRuntime;
+    const { promise: finished, resolve: finish } =
+      Promise.withResolvers<undefined>();
+    // jsdom runs no transitions: these run until the test finishes them, as
+    // a fade a busy page started late would.
+    Object.defineProperty(Element.prototype, "getAnimations", {
+      configurable: true,
+      value: () => [{ finished } as unknown as Animation],
+    });
+    try {
+      render(<PipRenderer model={model()} />);
+      act(() => {
+        vi.advanceTimersByTime(5_000);
+      });
+      expect(runtime.props.at(-1)?.handedOver).toBe(false);
+      await act(async () => {
+        finish(undefined);
+        await finished;
+      });
+      expect(runtime.props.at(-1)?.handedOver).toBe(true);
+    } finally {
+      Reflect.deleteProperty(Element.prototype, "getAnimations");
+    }
+  });
+
+  test("on a hidden page, which runs no fades, the fade's own length times the hand-over", () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    runtime.settled = fakeRuntime;
+    Object.defineProperty(Element.prototype, "getAnimations", {
+      configurable: true,
+      value: () => [{ finished: new Promise(() => undefined) }],
+    });
+    const visibility = vi
+      .spyOn(document, "visibilityState", "get")
+      .mockReturnValue("hidden");
+    try {
+      render(<PipRenderer model={model()} />);
+      expect(runtime.props.at(-1)?.handedOver).toBe(false);
+      act(() => {
+        vi.runAllTimers();
+      });
+      expect(runtime.props.at(-1)?.handedOver).toBe(true);
+    } finally {
+      visibility.mockRestore();
+      Reflect.deleteProperty(Element.prototype, "getAnimations");
+    }
+  });
+
   test("keeps the poster while the rig has not drawn yet", async () => {
     runtime.draws = false;
     runtime.load.mockResolvedValue(fakeRuntime);
@@ -186,6 +237,46 @@ describe("Pip's renderer", () => {
       container.querySelector("canvas")?.parentElement?.className,
     ).toContain("opacity-0");
     expect(poster(container, "idle")?.className).toContain("opacity-100");
+  });
+
+  test("keeps the poster at Pip's resting turn while the gaze moves, and the rig waiting behind it rests there too", async () => {
+    runtime.draws = false;
+    runtime.load.mockResolvedValue(fakeRuntime);
+    const rest = { x: 0.4, y: 0 };
+    const at = (x: number) => model({ gaze: { x, y: 0 }, restingGaze: rest });
+    const { container, rerender } = render(<PipRenderer model={at(0.4)} />);
+    await waitFor(() => {
+      expect(container.querySelector("canvas")).not.toBeNull();
+    });
+    // The pointer, a glance and a look, either side of the turns' midpoint.
+    for (const x of [-0.6, 0.1, 0.3, 0.19, 0.21, -1, 0.4]) {
+      rerender(<PipRenderer model={at(x)} />);
+      expect(pipOf(container)).toHaveAttribute(
+        "data-pip-gaze",
+        `${x.toFixed(2)} 0.00`,
+      );
+      const posters = [...container.querySelectorAll("img")];
+      expect(posters.map((img) => img.dataset.pipPosterTurn)).toEqual([
+        "content",
+      ]);
+      expect(posters[0]?.className).toContain("opacity-100");
+    }
+    expect(new Set(runtime.props.map((props) => props.heldGazeX))).toEqual(
+      new Set([0.4]),
+    );
+  });
+
+  test("with the gaze resting where it looks, as the Playground sets it, the poster faces that way", () => {
+    runtime.load.mockReturnValue(new Promise(() => undefined));
+    const set = (x: number) =>
+      model({ gaze: { x, y: 0 }, restingGaze: { x, y: 0 } });
+    const { container, rerender } = render(<PipRenderer model={set(0.4)} />);
+    const turn = () =>
+      container.querySelector<HTMLImageElement>("img.opacity-100")?.dataset
+        .pipPosterTurn;
+    expect(turn()).toBe("content");
+    rerender(<PipRenderer model={set(-0.5)} />);
+    expect(turn()).toBe("front");
   });
 
   test("keeps the poster for good when the runtime is unavailable", async () => {

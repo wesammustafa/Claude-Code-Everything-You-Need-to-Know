@@ -100,6 +100,7 @@ const model = (fields: Partial<PipModel> = {}): PipModel => ({
   mode: "idle",
   reaction: null,
   gaze: null,
+  restingGaze: { x: 0, y: 0 },
   reducedMotion: false,
   size: "beside",
   ...fields,
