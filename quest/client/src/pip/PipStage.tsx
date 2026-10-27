@@ -18,6 +18,7 @@ import {
 } from "../live/events";
 import { motionReduced, pageHidden, useReducedMotion } from "../lib/page";
 import type { DirectorInput, LookTarget } from "./director";
+import { followPointer } from "./pointer";
 import { screenFor } from "./screens";
 import {
   createPipStage,
@@ -40,6 +41,7 @@ const STILL: PipModel = {
   mode: "idle",
   reaction: null,
   gaze: null,
+  restingGaze: { x: 0, y: 0 },
   reducedMotion: false,
   size: "beside",
 };
@@ -106,6 +108,23 @@ export function usePipStep(step: string | null, hintReady: boolean): void {
   useEffect(() => {
     send({ type: "hint", ready: hintReady });
   }, [send, step, hintReady]);
+}
+
+/**
+ * Has the page's Pip follow the mouse: where it moves goes to the director
+ * at most once per animation frame, and nothing runs while it is still or
+ * Pip holds still. The director decides whether Pip follows it.
+ */
+export function usePipFollowsPointer(): void {
+  const stage = useContext(StageContext);
+  useEffect(() => {
+    if (stage === stillStage) return;
+    return followPointer(window, {
+      pip: () => document.querySelector("[data-pip]"),
+      still: () => stage.model().reducedMotion,
+      send: stage.send,
+    });
+  }, [stage]);
 }
 
 /** Input that counts as the Learner's activity: pointing, typing, scrolling. */

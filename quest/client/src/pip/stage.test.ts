@@ -145,6 +145,7 @@ describe("samePipModel", () => {
     mode: "idle",
     reaction: { id: "e.1", kind: "success", intensity: 1 },
     gaze: { x: 0.5, y: 0 },
+    restingGaze: { x: 0.4, y: 0 },
     reducedMotion: false,
     size: "beside",
   } as const;
@@ -155,6 +156,7 @@ describe("samePipModel", () => {
         ...base,
         reaction: { ...base.reaction },
         gaze: { ...base.gaze },
+        restingGaze: { ...base.restingGaze },
       }),
     ).toBe(true);
   });
@@ -171,6 +173,7 @@ describe("samePipModel", () => {
     ["no Reaction", { reaction: null }],
     ["the gaze", { gaze: { x: 0.5, y: 0.1 } }],
     ["no gaze", { gaze: null }],
+    ["the resting gaze", { restingGaze: { x: 0, y: 0 } }],
   ] as const)("tells a change of %s", (_name, change) => {
     expect(samePipModel(base, { ...base, ...change })).toBe(false);
   });

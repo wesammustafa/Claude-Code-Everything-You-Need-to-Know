@@ -151,7 +151,8 @@ function RigPip({ model, size, className, onScreenChange, rig }: RigPipProps) {
     reaction === null ? false : reactionLedger.holding(reaction.id),
   );
   const pose = posterPose(model, holding);
-  // The poster faces the way the model's gaze asks, among its size's turns.
+  // The poster faces the way Pip rests, among its size's turns; the live gaze
+  // is the rig's alone.
   const turn = posterTurnFor(model, size);
   const current: PosterKey = `${pose} ${turn}`;
   // The gaze the model asks for, readable on the page; the rig takes it once
@@ -173,22 +174,39 @@ function RigPip({ model, size, className, onScreenChange, rig }: RigPipProps) {
   if (!rigShown && heldTurn !== turn) setHeldTurn(turn);
 
   // Once the rig has faded in over the poster, it alone shows Pip, and a
-  // Reaction can start on it (PipRive). The fade's own duration times it, so
-  // a fade the browser never runs (the page hidden) still ends.
+  // Reaction can start on it (PipRive). The hand-over waits for the fades as
+  // the browser runs them, the rig's in and the posters' out: a fade starts
+  // on a frame after the change, later on a busy page, so a timer of its
+  // length started now can end while the poster still shows. A hidden page
+  // runs no fades, so there (and in a browser with no Web Animations) the
+  // fade's own duration times it.
   const rigLayer = useRef<HTMLSpanElement>(null);
   const [handedOver, setHandedOver] = useState<PipRuntime["file"] | null>(null);
   if (!rigShown && handedOver !== null) setHandedOver(null);
   useEffect(() => {
     if (!rigShown || handedOver === file) return;
+    let current = true;
+    const handOver = () => {
+      if (current) setHandedOver(file);
+    };
+    const el = box.current;
+    if (!hidden && el !== null && "getAnimations" in el) {
+      const fades = el.getAnimations({ subtree: true });
+      void Promise.allSettled(fades.map((fade) => fade.finished)).then(
+        handOver,
+      );
+      return () => {
+        current = false;
+      };
+    }
     const layer = rigLayer.current;
     const fade = layer ? longestDuration(getComputedStyle(layer)) : 0;
-    const timer = setTimeout(() => {
-      setHandedOver(file);
-    }, fade);
+    const timer = setTimeout(handOver, fade);
     return () => {
+      current = false;
       clearTimeout(timer);
     };
-  }, [rigShown, file, handedOver]);
+  }, [rigShown, file, handedOver, hidden]);
 
   const onDrawn = useCallback(() => {
     setDrawn(file);

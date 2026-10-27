@@ -3,7 +3,7 @@ import type { PipModel } from "../../pip/contract";
 import { cx } from "../lib/cx";
 import { PipIcon } from "./PipIcon";
 import { PipRenderer } from "./PipRenderer";
-import { usePipInput, usePipModel } from "./PipStage";
+import { usePipFollowsPointer, usePipInput, usePipModel } from "./PipStage";
 
 export interface PipProps {
   /** Where the screen puts Pip; `icon` is always the static SVG. */
@@ -14,8 +14,8 @@ export interface PipProps {
 /**
  * Pip at one of its sizes. The icon size is always the static icon, 24 px
  * here, and never the rig. The larger sizes draw the page's director's model
- * at the size the screen gives, and tell the director when Pip scrolls out
- * of view or leaves the screen.
+ * at the size the screen gives, tell the director when Pip scrolls out of
+ * view or leaves the screen, and follow the mouse.
  */
 export function Pip({ size, className }: PipProps) {
   if (size === "icon") return <PipIcon className={cx("size-6", className)} />;
@@ -31,6 +31,7 @@ function StagedPip({
 }) {
   const model = usePipModel();
   const send = usePipInput();
+  usePipFollowsPointer();
   const onScreenChange = useCallback(
     (visible: boolean) => {
       send({ type: "onScreen", visible });
