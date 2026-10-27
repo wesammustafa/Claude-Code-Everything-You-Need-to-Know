@@ -58,7 +58,7 @@ Edition 1: the Beginner path, with checked exercises, and the structure the next
 - Issue forms for lesson trouble, bugs and stale facts, with a "Stuck on this lesson?" link at the bottom of every lesson.
 - Checks on every pull request: internal links and anchors, page stamps, lesson structure, images, em dashes, config validation and the safety of `examples/`. Scheduled checks watch external links, expiry markers and new `stable` releases, and open an issue when something needs attention.
 - A listing policy in [CONTRIBUTING.md](CONTRIBUTING.md#listing-policy) and a form to suggest a resource.
-- Agent rules in [AGENTS.md](AGENTS.md), which a new [CLAUDE.md](CLAUDE.md) imports.
+- Agent rules in `AGENTS.md`, which a new `CLAUDE.md` imports.
 - A rewritten [CONTRIBUTING.md](CONTRIBUTING.md), a pull request template with a claim table and a dry-run section, and a CODEOWNERS file.
 
 ### Changed
