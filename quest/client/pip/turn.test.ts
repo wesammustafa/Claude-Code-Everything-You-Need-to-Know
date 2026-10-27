@@ -6,7 +6,18 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { PIP_DIR } from "./record.ts";
-import { RIG_RML, TURN_BEGIN, TURN_END, turnValues, withTurn } from "./turn.ts";
+import {
+  PITCH_LIMIT_DEGREES,
+  RIG_RML,
+  TURN_BEGIN,
+  TURN_END,
+  TURN_LIMIT_DEGREES,
+  headFaces,
+  pitchValues,
+  projectPoint,
+  turnValues,
+  withTurn,
+} from "./turn.ts";
 
 const rml = readFileSync(join(PIP_DIR, RIG_RML), "utf8");
 
@@ -34,10 +45,7 @@ describe("the head turn in rig/pip.rml", () => {
       rml.slice(0, at) +
       rml
         .slice(at)
-        .replace(
-          /(<KeyFrameDouble value=")[^"]*(" frame="4" interpolationType="linear"\/>)/,
-          "$1999$2",
-        );
+        .replace(/(<KeyFrameDouble value=")[^"]*(" frame=")/, "$1999$2");
     expect(key).not.toBe(rml);
     expect(withTurn(key)).toBe(rml);
   });
@@ -98,21 +106,32 @@ describe("the head turn in rig/pip.rml", () => {
     }
   });
 
+  const HEAD_POINTS = headFaces()
+    .filter((face) => face.kind === "wall")
+    .flatMap((face) => face.points);
+  const headEdge = (gaze: number, sign: number) => {
+    const phi = (gaze * TURN_LIMIT_DEGREES * Math.PI) / 180;
+    const xs = HEAD_POINTS.map((point) => 400 - projectPoint(point, phi, 0).x);
+    return sign > 0 ? Math.min(...xs) : Math.max(...xs);
+  };
+
   test("keeps the far ear outside the head between the samples too, as the keys interpolate", () => {
     // Ear Left is the far ear for a positive gaze, and its right edge meets
-    // the silhouette's left edge (vertex 0:662); Ear Right mirrors it.
+    // the silhouette's left edge; Ear Right mirrors it.
     const cases = [
-      { ear: EARS.left, sign: 1, edge: 662 },
-      { ear: EARS.right, sign: -1, edge: 666 },
+      { ear: EARS.left, sign: 1 },
+      { ear: EARS.right, sign: -1 },
     ] as const;
-    for (const { ear, sign, edge } of cases) {
+    for (const { ear, sign } of cases) {
       for (let i = 6; i < 8; i++) {
-        const a = turnValues((sign * (i - 4)) / 4);
-        const b = turnValues((sign * (i - 3)) / 4);
+        const gazeA = (sign * (i - 4)) / 4;
+        const gazeB = (sign * (i - 3)) / 4;
+        const a = turnValues(gazeA);
+        const b = turnValues(gazeB);
         for (let step = 0; step <= 10; step++) {
           const t = step / 10;
           const mix = (u: number, v: number) => u + (v - u) * t;
-          const head = mix(value(a, edge, "x"), value(b, edge, "x"));
+          const head = mix(headEdge(gazeA, sign), headEdge(gazeB, sign));
           for (const part of Object.values(ear)) {
             const [from, to] = span(a, part);
             const [from2, to2] = span(b, part);
@@ -122,6 +141,30 @@ describe("the head turn in rig/pip.rml", () => {
             else
               expect(mix(from, from2), at).toBeGreaterThanOrEqual(head - 1e-3);
           }
+        }
+      }
+    }
+  });
+
+  test("pitch moves the whole face down and up, revealing the top and underside in turn", () => {
+    const down = pitchValues(1);
+    const up = pitchValues(-1);
+    expect(value(down, 600, "y")).toBeGreaterThan(value(up, 600, "y"));
+    expect(value(down, 1020, "opacity")).toBe(1);
+    expect(value(down, 1021, "opacity")).toBe(0);
+    expect(value(up, 1020, "opacity")).toBe(0);
+    expect(value(up, 1021, "opacity")).toBe(1);
+  });
+
+  test("turn and pitch compose the same projection at every diagonal", () => {
+    for (const x of [-1, 0, 1]) {
+      for (const y of [-1, 0, 1]) {
+        const phi = (x * TURN_LIMIT_DEGREES * Math.PI) / 180;
+        const theta = (y * PITCH_LIMIT_DEGREES * Math.PI) / 180;
+        for (const point of HEAD_POINTS) {
+          const diagonal = projectPoint(point, phi, theta);
+          expect(diagonal.x).toBeCloseTo(projectPoint(point, phi, 0).x, 12);
+          expect(diagonal.y).toBeCloseTo(projectPoint(point, 0, theta).y, 12);
         }
       }
     }

@@ -132,6 +132,8 @@ test("the model's controls work with the keyboard", async ({ page }) => {
     ["Left", "-1.00, 0.00"],
     ["Right", "1.00, 0.00"],
     ["Toward the step", "0.40, 0.00"],
+    ["Up", "0.00, -1.00"],
+    ["Down", "0.00, 1.00"],
     ["Forward", "0.00, 0.00"],
   ] as const) {
     await page.getByRole("button", { name, exact: true }).focus();

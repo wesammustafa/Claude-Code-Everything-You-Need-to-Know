@@ -1,6 +1,6 @@
 # Rules for agents working on Claude Code Quest
 
-These rules apply when you change Claude Code Quest, the web learning app: its source in `quest/`, the course in `course/`, the Practice template's files in `practice-template/` and the Reference solutions in `solutions/`. The Guide's rules in the root [AGENTS.md](../AGENTS.md) still apply to every Guide page you touch. [CONTRIBUTING.md#app-code](../CONTRIBUTING.md#app-code) is the full policy this file digests.
+These rules apply when you change Claude Code Quest, the web learning app: its source in `quest/`, the course in `course/`, the Practice template's files in `practice-template/` and the Reference solutions in `solutions/`. The Guide's contributor policy in [CONTRIBUTING.md](../CONTRIBUTING.md) still applies to every Guide page you touch; its App code section is the full policy this file digests.
 
 ## Safety contract
 

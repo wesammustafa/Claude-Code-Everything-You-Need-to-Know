@@ -103,7 +103,7 @@ for (const [name, path] of [
   ["Lesson complete", COMPLETE],
 ] as const) {
   test.describe(name, () => {
-    test("the gaze follows the mouse left, right, above and below Pip", async ({
+    test("the gaze follows the mouse left, right, above, below and at the diagonals of Pip", async ({
       page,
     }) => {
       const seen = watch(page);
@@ -114,8 +114,17 @@ for (const [name, path] of [
       await pointTo(page, 320, 0, RIGHT);
       // Welcome's Pip sits near the window's top: above him, inside it.
       const { y } = await centre(page);
-      await pointTo(page, 0, -Math.min(180, y - 8), ABOVE);
+      const above = Math.min(180, y - 8);
+      await pointTo(page, 0, -above, ABOVE);
       await pointTo(page, 0, 180, BELOW);
+      for (const [dx, dy, check] of [
+        [-320, -above, (x: number, y: number) => x < -0.2 && y < -0.2],
+        [320, -above, (x: number, y: number) => x > 0.2 && y < -0.2],
+        [-320, 180, (x: number, y: number) => x < -0.2 && y > 0.2],
+        [320, 180, (x: number, y: number) => x > 0.2 && y > 0.2],
+      ] as const) {
+        await pointTo(page, dx, dy, check);
+      }
       expect(seen.problems).toEqual([]);
     });
 

@@ -62,7 +62,7 @@ export interface Pose {
 }
 
 /**
- * The poses: idle (past the gaze's 220 ms ease, before Idle's first glance at
+ * The poses: idle (past the gaze's 260 ms ease, before Idle's first glance at
  * 2.5 s), thinking, a happy frame near the top of a full Success, and a
  * reassuring frame in Retry's nod. Every pose runs past the gaze's ease.
  */

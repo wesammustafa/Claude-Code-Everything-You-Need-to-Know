@@ -33,8 +33,8 @@ export interface OpenedRig {
   context: WebGL2RenderingContext;
 }
 
-/** The rig's gaze ease (view-model.rml, 220 ms) and a frame's margin. */
-export const GAZE_SETTLE_MS = 240;
+/** The rig's gaze ease (view-model.rml, 260 ms) and a frame's margin. */
+export const GAZE_SETTLE_MS = 280;
 
 /** Whether a runtime instance was started before, so the next must be a new one. */
 let started = false;
@@ -258,7 +258,7 @@ export function PipRive({
 
   // Once the model is applied, a frame is drawn on the next animation frame;
   // the one after it is on screen, and the poster can hand over. A turn away
-  // from the Learner eases in over the rig's 220 ms from the front view, so
+  // from the Learner eases in over the rig's 260 ms from the front view, so
   // then the hand-over also waits for the turn to settle: the rig holds the
   // poster's turn (above), and the crossfade joins the same pose.
   const drawn = useRef(onDrawn);
