@@ -384,6 +384,6 @@ Dependencies follow these rules:
 
 ## License
 
-By contributing, you agree your contributions are licensed under the MIT license (see [`LICENSE`](LICENSE)).
+By contributing, you agree your contributions are licensed under the PolyForm Noncommercial License 1.0.0 (see [`LICENSE`](LICENSE)).
 
 Sources: [Extend Claude with skills](https://code.claude.com/docs/en/skills), [Plugin loading reference](https://code.claude.com/docs/en/plugins/loading), [Marketplace reference](https://code.claude.com/docs/en/plugins/marketplace-reference), [Advanced setup](https://code.claude.com/docs/en/setup), [Environment variables](https://code.claude.com/docs/en/env-vars), [Settings](https://code.claude.com/docs/en/settings), [Output styles](https://code.claude.com/docs/en/output-styles), [Your first day in Claude Code](https://support.claude.com/en/articles/14552382-your-first-day-in-claude-code), [The MCP Registry](https://modelcontextprotocol.io/registry/about), [official plugin `marketplace.json`](https://github.com/anthropics/claude-plugins-official/blob/main/.claude-plugin/marketplace.json), [Basic writing and formatting syntax](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax), [Authentication](https://code.claude.com/docs/en/authentication), [Disabling and enabling a workflow](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/disable-and-enable-workflows), [REST API endpoints for repository traffic](https://docs.github.com/en/rest/metrics/traffic)
