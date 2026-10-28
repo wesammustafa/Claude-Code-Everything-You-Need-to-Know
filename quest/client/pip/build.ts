@@ -255,7 +255,7 @@ function checkBehaviour(white: string, work: string): string[] {
   if (changedShare(shot({}, "1s"), shot({ mode: "thinking" }, "1s")) < 0.01)
     fail("mode thinking barely changes Pip");
 
-  // Past the gaze's 260 ms ease.
+  // Past the gaze's 150 ms ease.
   const right = eyesCentre(shot({ gazeX: "1" }, "500ms"));
   const left = eyesCentre(shot({ gazeX: "-1" }, "500ms"));
   const down = eyesCentre(shot({ gazeY: "1" }, "500ms"));

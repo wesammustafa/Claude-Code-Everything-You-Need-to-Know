@@ -1,6 +1,6 @@
 {
   "rive": "1.7.0",
-  "rig": "19ab48917f1cfcd8a061a0080e93c547b389902e2b139905365357b8011d779c",
+  "rig": "7db91d5c48a5b601d009265fbd52578bef201d9288f81d6675e4835ad4fa575f",
   "posters": {
     "poses": {
       "happy": {
@@ -43,7 +43,7 @@
     }
   },
   "outputs": {
-    "pip.riv": "3e971ac09f95275b95a3a1b726c6e6f6d272290327f2ca3a54aec145cae7c876",
+    "pip.riv": "c055d1d0b4b84aa4d75ea4734096b2899da409d69e834457dc339d453c8e88dc",
     "posters/happy-beside-content.png": "da102b908bf4e14cb76c32a35b40ced5f08937c576dbfcc40fdf00c3c5a26669",
     "posters/happy-beside-front.png": "8422327179997b73f9050c6d57c2c2a40916d0ef5c10dc88d343b39c74238a26",
     "posters/happy-hero-front.png": "6764e5efc6add5338f1ffc07276bfe9ba185374c6a11f72892f1c109afe11992",
