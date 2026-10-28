@@ -784,6 +784,35 @@ test("gazeX turns Pip's head: the face slides toward the gaze and narrows as it 
   );
 });
 
+test("the gaze starts toward a new pointer position promptly and settles within 150 ms", async ({
+  page,
+}) => {
+  test.slow();
+  await openPaused(page);
+  await setMode(page, "rest");
+  await settle(page, 40);
+  await setGaze(page, 0, 0);
+  await settle(page, 30);
+  const ahead = (await measure(page)).eyes;
+  if (!ahead) throw new Error("Pip's eyes are not drawn");
+
+  await setGaze(page, 1, 0);
+  await run(page, 4);
+  const early = (await measure(page)).eyes;
+  if (!early) throw new Error("Pip's eyes are not drawn after 64 ms");
+  await run(page, 6);
+  const settled = (await measure(page)).eyes;
+  if (!settled) throw new Error("Pip's eyes are not drawn after 160 ms");
+
+  const distance = settled.x - ahead.x;
+  expect(distance).toBeGreaterThan(10);
+  expect((early.x - ahead.x) / distance).toBeGreaterThan(0.45);
+  await run(page, 4);
+  const later = (await measure(page)).eyes;
+  if (!later) throw new Error("Pip's eyes are not drawn after 224 ms");
+  expect(Math.abs(later.x - settled.x)).toBeLessThanOrEqual(1);
+});
+
 /** Connected dark shapes in the face: two eyes and the mouth below them. */
 function faceParts(
   image: Rgba,

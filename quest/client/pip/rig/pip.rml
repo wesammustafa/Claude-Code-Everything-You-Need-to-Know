@@ -1227,7 +1227,7 @@
 
         <!-- The head gaze's driver, outside Pip so its position is plain artboard
              space. Look follows gazeX and gazeY through the eyes' converters (EyesX:
-             24 at -1, -24 at 1; EyesY: -14 to 14, both eased 260 ms); Glance, inside
+             24 at -1, -24 at 1; EyesY: -14 to 14, both eased 150 ms); Glance, inside
              it, is the Body layer's own small looks around that gaze, so the two add.
              The Look joystick reads Glance across its box and scrubs Turn and Pitch:
              Turn frame 0 left, 44 forward, 88 right; Pitch frame 0 up, 40 level, 80 down. -->
