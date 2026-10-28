@@ -45,7 +45,7 @@ export const items = [
     text: 'a commit after your copy\'s first one changes `src/check-links.js`, which still exports a synchronous `brokenLinks`',
     check(repo) {
       if (!laterCommits(repo, CHECK).length) return 'No commit since your copy\'s first one changes `src/check-links.js`. Finish the refactor in Worked example step 5 and commit it.';
-      const text = withoutComments(repo.gitLocal('show', `HEAD:${CHECK}`));
+      const text = withoutComments(repo.gitLocal('show', `HEAD:./${CHECK}`));
       if (!hasExport(text, 'brokenLinks')) {
         return 'The last commit\'s `src/check-links.js` exports no `brokenLinks`, which `src/cli.js` imports by that name. Ask Claude to keep `brokenLinks` exported, as Worked example step 5 asks, and commit.';
       }
@@ -96,7 +96,7 @@ export const items = [
         return `Still changed: ${left.join(', ')}.${why}${fix}${extra}`;
       }
       // The rename is dropped in Your turn: another tool imports findLinks by name.
-      if (!hasExport(repo.gitLocal('show', `HEAD:${LINKS}`), 'findLinks')) return 'Your last commit\'s `src/links.js` no longer exports `findLinks`. Undo the dropped rename with `git revert <sha>`; find that commit with `git log`.';
+      if (!hasExport(repo.gitLocal('show', `HEAD:./${LINKS}`), 'findLinks')) return 'Your last commit\'s `src/links.js` no longer exports `findLinks`. Undo the dropped rename with `git revert <sha>`; find that commit with `git log`.';
       const run = spawnSync(process.execPath, [CLI, 'samples'], { cwd: repo.dir, encoding: 'utf8', timeout: LINKCHECK_LIMIT });
       if ([0, 1].includes(run.status) && /\d+ broken link\(s\)|All relative links resolve\./.test(run.stdout)) return true;
       return '`npm run linkcheck -- samples` stops with an error. Run it, read the error, and ask Claude to fix the code you committed.';

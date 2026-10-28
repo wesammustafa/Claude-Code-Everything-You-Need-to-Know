@@ -43,7 +43,7 @@ export function commit(dir, message, paths) {
 // change before you test it.
 export function exportHead(root, drop) {
   const dir = repo();
-  const tar = execFileSync('git', ['archive', '--format=tar', 'HEAD'], { cwd: root, maxBuffer: 1 << 28 });
+  const tar = execFileSync('git', ['archive', '--format=tar', 'HEAD:practice-template'], { cwd: join(root, '..'), maxBuffer: 1 << 28 });
   execFileSync('tar', ['-x', '-C', dir], { input: tar });
   if (drop) {
     rmSync(join(dir, drop), { recursive: true, force: true });

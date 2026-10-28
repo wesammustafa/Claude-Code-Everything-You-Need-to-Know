@@ -212,7 +212,7 @@ It needs Node.js LTS, git, Ruby (for YAML), jq (for the examples' smoke tests), 
 
 | Rule | Fails when |
 |---|---|
-| `internal-links` | A link or fragment inside the repo does not resolve, outside `course/steps/` (whose quotes are checked against their pages) and `practice-template/samples/` (the linkcheck tests' deliberate broken link) |
+| `internal-links` | A link or fragment inside the repo does not resolve, outside `course/steps/`, `practice-template/learn/lessons/` and `practice-template/checks/test/fixtures/reducer-course/` (whose quotes are checked against their pages), and `practice-template/project/samples/` (the linkcheck tests' deliberate broken link) |
 | `anchor-diff` | An anchor in `anchors.txt`, or on the base branch, is gone |
 | `stub-paths` | A page path in `paths.txt` is gone |
 | `stamps` | A stamped page's Stamp is missing or malformed, or the trust strip disagrees with the CHANGELOG |

@@ -1,0 +1,21 @@
+{
+  "name": "claude-code-practice",
+  "version": "1.0.0",
+  "description": "Practice repository for Claude Code: Everything You Need to Know, with a check for every core lesson and capstone",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "linkcheck": "src/cli.js"
+  },
+  "scripts": {
+    "test": "node --test \"test/**/*.test.js\"",
+    "test:checks": "node --test \"checks/test/*.test.mjs\"",
+    "check": "node checks/run.mjs",
+    "learn": "node learn/app.mjs",
+    "linkcheck": "node src/cli.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT"
+}
