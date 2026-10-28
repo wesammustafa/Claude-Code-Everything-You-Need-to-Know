@@ -1,0 +1,10 @@
+# Saved state for checks: things that exist only for a moment, such as a
+# plan before you approve it. Checks read it locally; it is never pushed.
+.practice/
+
+node_modules/
+.DS_Store
+
+# JetBrains IDEs keep project settings here; the checks would count the
+# folder as an uncommitted change.
+.idea/

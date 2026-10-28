@@ -1,0 +1,24 @@
+name: Progress
+
+# Checks every exercise on each push and writes the results to the run's
+# summary. It never fails, so an exercise you have not finished yet never
+# shows up as a failed run.
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  progress:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+      - name: Check every exercise
+        run: npm run --silent check -- all --summary >> "$GITHUB_STEP_SUMMARY"

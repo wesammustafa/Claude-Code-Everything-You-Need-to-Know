@@ -1,0 +1,9 @@
+{
+  "name": "Claude Code practice",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "lts" },
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
+  },
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y bubblewrap socat"
+}

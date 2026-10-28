@@ -2,6 +2,6 @@
   "rule": "external-links",
   "expect": "pass",
   "mode": "scheduled",
-  "about": "The weekly external run skips course/steps/ and practice-template/samples/ too, so their broken relative links do not open an issue.",
+  "about": "The weekly external run skips course/steps/ and practice-template/project/samples/ too, so their broken relative links do not open an issue.",
   "output": ["PASS external-links: \\d+ links in 2 pages"]
 }

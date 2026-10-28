@@ -10,12 +10,14 @@
     "typecheck": "tsc -b",
     "lint": "eslint quest --max-warnings 0 && prettier --check quest",
     "test:quest": "vitest run",
+    "test:checks": "node --test 'practice-template/checks/test/*.test.mjs'",
+    "test:starter": "node --test 'practice-template/project/test/**/*.test.js'",
     "build": "npm run build --workspaces --if-present",
     "e2e": "playwright test -c quest/client/playwright.config.ts",
     "pip:build": "node quest/client/pip/build.ts",
     "pip:turn": "node quest/client/pip/turn.ts",
     "dev": "node quest/client/dev.ts",
-    "verify": "npm run guide:selftest && npm run guide && npm run typecheck && npm run lint && npm run test:quest"
+    "verify": "npm run guide:selftest && npm run guide && npm run typecheck && npm run lint && npm run test:quest && npm run test:checks && npm run test:starter"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

@@ -43,6 +43,8 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run test:quest
+      - run: npm run test:checks
+      - run: npm run test:starter
 
   # The build refuses any bundled module outside the shipped-package set,
   # Rive's WASM included, and the Pip contract test loads the committed pip.riv

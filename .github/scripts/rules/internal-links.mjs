@@ -2,8 +2,8 @@
 // Two folders are skipped, here and in the weekly external-links run that
 // shares lychee(): course/steps/, whose quotes are checked against the pages
 // they come from (a quoted relative link resolves from the page, not the step
-// file), and practice-template/samples/, which holds the linkcheck tests'
-// deliberately broken link.
+// file), and practice-template/project/samples/, which holds the linkcheck
+// tests' deliberately broken link.
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { relative, sep } from 'node:path';
@@ -11,7 +11,7 @@ import { relative, sep } from 'node:path';
 export const id = 'internal-links';
 export const modes = ['pr', 'release'];
 
-const SKIPPED = ['course/steps/', 'practice-template/samples/'];
+const SKIPPED = ['course/steps/', 'practice-template/project/samples/'];
 
 export function run(ctx) {
   return lychee(ctx, ['--offline', '--include-fragments']);
