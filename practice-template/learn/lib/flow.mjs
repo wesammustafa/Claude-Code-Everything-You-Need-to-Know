@@ -8,6 +8,10 @@ import { evidenceOf, grewFrom, judge } from './holds.mjs';
 import { cleanListed, eachFile, judgeGit, needsChange, statusStamp } from './status.mjs';
 import { effectiveTier, ruleTiers, TIERS } from './tiers.mjs';
 
+import { TYPED_MAX, WARMUPS } from '../../../quest/engine/src/rules.mjs';
+
+export { TYPED_MAX, WARMUPS };
+
 export const IDLE_MS = 120_000;
 // The longest the reading grace holds ambient motion (motion.mjs).
 export const GRACE_MAX_MS = 20_000;
@@ -20,10 +24,6 @@ const ACTIVITY_KEPT = 8;
 
 const clone = (x) => structuredClone(x);
 const blankProgress = () => ({ step: null, beat: 0, done: [], answers: {}, levels: [], lessHelp: false, moreHelpAt: null, easedSteps: {}, complete: false, warm: [], recalled: [], stamps: {}, bottomAt: null });
-// How many warm-up questions open a lesson, at most: one, on a skill the
-// learner missed (ticket 194, the lesson value rework's rule 4).
-export const WARMUPS = 1;
-
 // The screens Pip greets the learner on, once per opening (176).
 const GREETS = ['welcome', 'resume'];
 
@@ -965,9 +965,6 @@ function reveal(s, effects) {
   st.status = 'done';
   effects.push({ type: 'save' });
 }
-
-// The most a typed answer holds: a lesson's accepted answers fit in it.
-export const TYPED_MAX = 40;
 
 // Case, spaces, a leading slash and the + or - between keys don't matter, and
 // Escape is Esc.

@@ -1,0 +1,12 @@
+{
+  "name": "@quest/engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./content": "./src/content.mjs"
+  },
+  "dependencies": {
+    "zod": "4.6.7"
+  }
+}
