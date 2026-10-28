@@ -366,7 +366,7 @@ The root `.claude/` is reserved for maintainer tooling. Do not add skills or oth
 
 ## App code
 
-Claude Code Quest, the web learning app, lives in `quest/`, with its course in `course/`, the Practice template's hand-written files in `practice-template/` and one Reference solution per Lesson in `solutions/`. Agents working there follow [quest/AGENTS.md](quest/AGENTS.md), which digests this section.
+Claude Code Quest, the web learning app, lives in `quest/`, with its course in `course/`, the Practice template's hand-written files in `practice-template/` and one Reference solution per Lesson in `solutions/`. The rules in this section apply to every agent and contributor working there.
 
 Every change to the app keeps this safety contract:
 

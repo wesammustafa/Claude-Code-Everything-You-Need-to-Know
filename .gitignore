@@ -15,9 +15,6 @@
 
 # Logs folder
 logs/
-.serena/
-.playwright-mcp/
-.opencode/
 
 # Secrets
 .env
