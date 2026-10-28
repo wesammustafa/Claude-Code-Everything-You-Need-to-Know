@@ -26,3 +26,4 @@ quest/*/dist/
 playwright-report/
 test-results/
 blob-report/
+node_modules
