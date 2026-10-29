@@ -13,10 +13,13 @@ export interface CheckLinesProps {
   lines: readonly CheckLine[];
 }
 
-/** The Check's lines: met ones quiet, the rest amber with their evidence, never red. */
+/**
+ * The Check's lines: met ones quiet, the rest amber with their evidence,
+ * never red. Pip watches them as they arrive.
+ */
 export function CheckLines({ lines }: CheckLinesProps) {
   return (
-    <ul className="grid gap-2.5">
+    <ul data-pip-target="lines" className="grid gap-2.5">
       {lines.map((line, i) => (
         <li
           key={line.text}
