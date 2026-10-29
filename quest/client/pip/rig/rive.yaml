@@ -1,0 +1,5 @@
+# Pip's rig: a Rive CLI project, built only by `npm run pip:build` at the
+# pinned CLI version. pip.rml holds the artboard (art, state machine and
+# timelines); view-model.rml holds the view model, its enum and converters.
+name: pip
+main: Pip

@@ -7,5 +7,5 @@
     "types": ["vite/client"],
     "tsBuildInfoFile": "dist/.tsbuildinfo/app"
   },
-  "include": ["src", "test"]
+  "include": ["src", "test", "pip/contract.ts", "pip/contract-page"]
 }

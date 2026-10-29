@@ -1,0 +1,48 @@
+{
+  "rive": "1.7.0",
+  "rig": "ad4b195a8c0dd532e723329ba0aaea5b110b7f187c4e310154a11623f51d0a2b",
+  "posters": {
+    "poses": {
+      "happy": {
+        "advance": "450ms",
+        "data": {
+          "intensity": "1",
+          "success": "1"
+        }
+      },
+      "idle": {
+        "advance": "1",
+        "data": {}
+      },
+      "reassuring": {
+        "advance": "560ms",
+        "data": {
+          "intensity": "1",
+          "retry": "1"
+        }
+      },
+      "thinking": {
+        "advance": "1s",
+        "data": {
+          "mode": "thinking"
+        }
+      }
+    },
+    "scale": 2,
+    "sizes": {
+      "beside": 76,
+      "hero": 208
+    }
+  },
+  "outputs": {
+    "pip.riv": "ca0e8237c038925a2b91d9602b43a689c961bd2ca9aa2accba27bc1f7785786f",
+    "posters/happy-beside.png": "99e93da1cbb543c4db531a0e0a638456f69f85d00e9c8ac696e790b04fe85332",
+    "posters/happy-hero.png": "5c83ce28da3b3d76e34a1601f871bcb2a2e722f50d4a94e9e7dd0c3f166c6ed3",
+    "posters/idle-beside.png": "1e4d51658ed28a0f9d4074e9dc0db5aa97daa771aace8c4e76d08ae725053ac6",
+    "posters/idle-hero.png": "dd2cd632daa2ee3b5b7b11ce9d98d35a676a56c97370095690be1f6e2b5ab602",
+    "posters/reassuring-beside.png": "513902ca0a88a9ef59f8e02df81bcb3c1ebf3aae05cd0b0501a8cbfe34ff5dbb",
+    "posters/reassuring-hero.png": "5b37199435f6e94b832b433a6a0566469914098056d39b1f8e1a28629912f2f6",
+    "posters/thinking-beside.png": "d60ad9c2275e167c1f940a7af98df27fa7fd10bd0fd277da53209f8107754627",
+    "posters/thinking-hero.png": "68e685f7d980bead52c2ce4f9f7d9e3778737b79603cdb6628f4425fb580826f"
+  }
+}

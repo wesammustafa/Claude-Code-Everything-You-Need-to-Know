@@ -9,9 +9,12 @@
   },
   "include": [
     "vite.config.ts",
+    "vite.pip-contract.config.ts",
     "playwright.config.ts",
     "e2e",
     "build",
+    "pip",
     "../release/src/licenses.ts"
-  ]
+  ],
+  "exclude": ["pip/contract-page"]
 }

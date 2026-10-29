@@ -382,6 +382,12 @@ Dependencies follow these rules:
 - Every dependency is pinned to an exact version in the one root lockfile, and installs use `npm ci`.
 - A dev dependency is named, with its reason, in the pull request that adds it.
 
+Pip's rig, in `quest/client/pip/`, follows these rules:
+
+- Keep the rig script-free: never add a Luau script.
+- Build the rig only with the pinned Rive CLI, through `npm run pip:build`, and commit the `.riv`, the posters and `build-record.json` it writes.
+- Never commit the `CLAUDE.md` or `AGENTS.md` that `rive create` writes.
+
 ## License
 
 By contributing, you agree your contributions are licensed under the MIT license (see [`LICENSE`](LICENSE)).

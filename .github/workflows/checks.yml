@@ -44,6 +44,23 @@ jobs:
       - run: npm run lint
       - run: npm run test:quest
 
+  # The build refuses any bundled module outside the shipped-package set,
+  # Rive's WASM included, and the Pip contract test loads the committed pip.riv
+  # in Chromium, offline, with the bundled WASM. The app shell's e2e tests join
+  # this job with the browser security suite: one of them still checks Inter's
+  # optical-size instance by a name only macOS gives it.
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - run: npm run e2e -- pip-contract.spec.ts
+
   # The ruleset on main requires the check run named "checks", which this job
   # reports today. Keep the job id and add no name:, or that check may never
   # report and every merge would block.
@@ -51,7 +68,7 @@ jobs:
   # through, so this job always runs and fails unless every job it needs
   # succeeded.
   checks:
-    needs: [guide, quest]
+    needs: [guide, quest, e2e]
     if: always()
     runs-on: ubuntu-latest
     steps:

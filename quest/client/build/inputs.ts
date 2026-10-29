@@ -7,12 +7,17 @@ import { join, relative } from "node:path";
 /** Where the build records the digest of the sources it was built from: beside dist/app, never shipped. */
 export const STAMP = "dist/app.inputs";
 
+/** The same for the Pip contract page, a test page built beside the app and never into it. */
+export const PIP_CONTRACT_STAMP = "dist/pip-contract.inputs";
+
 // Relative to quest/client. Unit tests are left out: they never reach the bundle.
 const INPUTS = [
   "index.html",
   "package.json",
   "vite.config.ts",
+  "vite.pip-contract.config.ts",
   "build",
+  "pip",
   "public",
   "src",
   "../release/src",

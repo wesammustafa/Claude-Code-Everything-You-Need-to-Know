@@ -1,0 +1,4 @@
+# What the Rive CLI writes into the rig when a maintainer previews it
+# (`rive quest/client/pip/rig`): its build folder and logs. pip:build works on
+# a copy and never writes here.
+rig/build/

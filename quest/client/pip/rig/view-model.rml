@@ -1,0 +1,104 @@
+<!--
+  Pip's view model: the contract the app drives Pip through, by name. The app's
+  Rive adapter maps PipModel onto it (quest/client/pip/contract.ts holds the
+  same names, and the contract test checks the built file against them).
+  - mode: the mode Pip holds (idle, thinking, rest);
+  - greeting, curious, explaining, success, retry, celebration: one trigger per
+    Reaction, each fired from the Any state;
+  - intensity (0 to 1): blends Success, Retry and Celebration between their
+    small and full version (Greeting, Curious and Explaining have one version);
+  - reducedMotion: a Reaction plays as expression only, with no travel;
+  - gazeX, gazeY (-1 to 1, clamped): where Pip looks, +x toward the content.
+-->
+<Rive version="1" kind="fragment">
+    <DataEnumCustom name="PipMode" id="0:60">
+        <DataEnumValue key="idle" value="idle" id="0:61"/>
+        <DataEnumValue key="thinking" value="thinking" id="0:62"/>
+        <DataEnumValue key="rest" value="rest" id="0:63"/>
+    </DataEnumCustom>
+
+    <ViewModel defaultInstanceId="0:42" name="Pip" id="0:40">
+        <ViewModelPropertyEnumCustom enumId="0:60" name="mode" id="0:45"/>
+        <ViewModelPropertyTrigger name="greeting" id="0:401"/>
+        <ViewModelPropertyTrigger name="curious" id="0:402"/>
+        <ViewModelPropertyTrigger name="explaining" id="0:403"/>
+        <ViewModelPropertyTrigger name="success" id="0:44"/>
+        <ViewModelPropertyTrigger name="retry" id="0:48"/>
+        <ViewModelPropertyTrigger name="celebration" id="0:404"/>
+        <ViewModelPropertyNumber name="intensity" id="0:46"/>
+        <ViewModelPropertyBoolean name="reducedMotion" id="0:47"/>
+        <ViewModelPropertyNumber name="gazeX" id="0:41"/>
+        <ViewModelPropertyNumber name="gazeY" id="0:43"/>
+        <ViewModelInstance exports="true" name="Default" id="0:42">
+            <ViewModelInstanceEnum propertyValue="0:61" viewModelPropertyId="0:45"/>
+            <ViewModelInstanceTrigger propertyValue="0" viewModelPropertyId="0:401"/>
+            <ViewModelInstanceTrigger propertyValue="0" viewModelPropertyId="0:402"/>
+            <ViewModelInstanceTrigger propertyValue="0" viewModelPropertyId="0:403"/>
+            <ViewModelInstanceTrigger propertyValue="0" viewModelPropertyId="0:44"/>
+            <ViewModelInstanceTrigger propertyValue="0" viewModelPropertyId="0:48"/>
+            <ViewModelInstanceTrigger propertyValue="0" viewModelPropertyId="0:404"/>
+            <ViewModelInstanceNumber propertyValue="1" viewModelPropertyId="0:46"/>
+            <ViewModelInstanceBoolean propertyValue="false" viewModelPropertyId="0:47"/>
+            <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:41"/>
+            <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:43"/>
+        </ViewModelInstance>
+    </ViewModel>
+
+    <!-- Gaze. The root node is mirrored, so +x on screen is -x in the art: the
+         x converters' outputs run from + to -, and the head tilts the other way
+         too. y is not mirrored. Each part eases to a new gaze over 220 ms on
+         the app's motion curve, so a new target or a release back to the
+         centre turns the eyes, the mouth and the head, never snaps them. -->
+    <DataConverterGroup name="EyesX" id="0:50">
+        <DataConverterGroupItem converterId="0:70"/>
+        <DataConverterGroupItem converterId="0:75"/>
+    </DataConverterGroup>
+    <DataConverterGroup name="EyesY" id="0:51">
+        <DataConverterGroupItem converterId="0:71"/>
+        <DataConverterGroupItem converterId="0:76"/>
+    </DataConverterGroup>
+    <DataConverterGroup name="MouthX" id="0:52">
+        <DataConverterGroupItem converterId="0:72"/>
+        <DataConverterGroupItem converterId="0:77"/>
+    </DataConverterGroup>
+    <DataConverterGroup name="MouthY" id="0:53">
+        <DataConverterGroupItem converterId="0:73"/>
+        <DataConverterGroupItem converterId="0:78"/>
+    </DataConverterGroup>
+    <DataConverterGroup name="HeadTilt" id="0:54">
+        <DataConverterGroupItem converterId="0:74"/>
+        <DataConverterGroupItem converterId="0:79"/>
+    </DataConverterGroup>
+    <DataConverterRangeMapper minInput="-1" maxInput="1" minOutput="24" maxOutput="-24" clampLower="true" clampUpper="true" name="EyesXRange" id="0:70"/>
+    <DataConverterRangeMapper minInput="-1" maxInput="1" minOutput="-14" maxOutput="14" clampLower="true" clampUpper="true" name="EyesYRange" id="0:71"/>
+    <DataConverterRangeMapper minInput="-1" maxInput="1" minOutput="16" maxOutput="-16" clampLower="true" clampUpper="true" name="MouthXRange" id="0:72"/>
+    <DataConverterRangeMapper minInput="-1" maxInput="1" minOutput="-9" maxOutput="9" clampLower="true" clampUpper="true" name="MouthYRange" id="0:73"/>
+    <DataConverterRangeMapper minInput="-1" maxInput="1" minOutput="0.045" maxOutput="-0.045" clampLower="true" clampUpper="true" name="HeadTiltRange" id="0:74"/>
+    <DataConverterInterpolator interpolationType="cubic" duration="0.22" name="EyesXEase" id="0:75">
+        <CubicEaseInterpolator x1="0.2" y1="0.8" x2="0.2" y2="1"/>
+    </DataConverterInterpolator>
+    <DataConverterInterpolator interpolationType="cubic" duration="0.22" name="EyesYEase" id="0:76">
+        <CubicEaseInterpolator x1="0.2" y1="0.8" x2="0.2" y2="1"/>
+    </DataConverterInterpolator>
+    <DataConverterInterpolator interpolationType="cubic" duration="0.22" name="MouthXEase" id="0:77">
+        <CubicEaseInterpolator x1="0.2" y1="0.8" x2="0.2" y2="1"/>
+    </DataConverterInterpolator>
+    <DataConverterInterpolator interpolationType="cubic" duration="0.22" name="MouthYEase" id="0:78">
+        <CubicEaseInterpolator x1="0.2" y1="0.8" x2="0.2" y2="1"/>
+    </DataConverterInterpolator>
+    <DataConverterInterpolator interpolationType="cubic" duration="0.22" name="HeadTiltEase" id="0:79">
+        <CubicEaseInterpolator x1="0.2" y1="0.8" x2="0.2" y2="1"/>
+    </DataConverterInterpolator>
+
+    <!-- intensity 0 to 1 onto a blend state's 0 to 100 axis, eased over 150 ms:
+         the blend states read it on every frame, so a new intensity glides the
+         pose, the one playing as it hands over included, and never jumps it. -->
+    <DataConverterGroup name="IntensityToBlend" id="0:55">
+        <DataConverterGroupItem converterId="0:56"/>
+        <DataConverterGroupItem converterId="0:57"/>
+    </DataConverterGroup>
+    <DataConverterRangeMapper minInput="0" maxInput="1" minOutput="0" maxOutput="100" clampLower="true" clampUpper="true" name="IntensityRange" id="0:56"/>
+    <DataConverterInterpolator interpolationType="cubic" duration="0.15" name="IntensityEase" id="0:57">
+        <CubicEaseInterpolator x1="0.42" y1="0" x2="0.58" y2="1"/>
+    </DataConverterInterpolator>
+</Rive>

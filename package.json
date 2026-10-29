@@ -12,6 +12,7 @@
     "test:quest": "vitest run",
     "build": "npm run build --workspaces --if-present",
     "e2e": "playwright test -c quest/client/playwright.config.ts",
+    "pip:build": "node quest/client/pip/build.ts",
     "verify": "npm run guide:selftest && npm run guide && npm run typecheck && npm run lint && npm run test:quest"
   },
   "devDependencies": {
