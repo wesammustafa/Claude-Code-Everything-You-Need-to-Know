@@ -42,7 +42,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
-      - run: npm run test:quest
+      - run: exit 1 # deliberately failing: proves the gate, reverted next
 
   # The ruleset on main requires the check run named "checks", which this job
   # reports today. Keep the job id and add no name:, or that check may never
