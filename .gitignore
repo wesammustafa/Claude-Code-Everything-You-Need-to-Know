@@ -34,3 +34,10 @@ CLAUDE.local.md
 !.claude/
 .claude/settings.local.json
 .claude/worktrees/
+
+# Claude Code Quest: dependencies, build output under quest/, Playwright reports
+node_modules/
+quest/*/dist/
+playwright-report/
+test-results/
+blob-report/

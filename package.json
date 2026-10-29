@@ -1,0 +1,26 @@
+{
+  "name": "claude-code-everything-you-need-to-know",
+  "private": true,
+  "workspaces": [
+    "quest/*"
+  ],
+  "scripts": {
+    "guide": "node .github/scripts/check.mjs",
+    "guide:selftest": "node --test '.github/scripts/test/**/*.test.mjs'",
+    "typecheck": "tsc -b",
+    "lint": "eslint quest --max-warnings 0 && prettier --check quest",
+    "test:quest": "vitest run",
+    "verify": "npm run guide:selftest && npm run guide && npm run typecheck && npm run lint && npm run test:quest"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "eslint": "9.39.5",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "prettier": "3.9.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.0",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  }
+}
