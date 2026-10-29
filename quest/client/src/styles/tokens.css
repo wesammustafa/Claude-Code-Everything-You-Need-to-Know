@@ -79,6 +79,17 @@
   /* Code blocks stay navy in both themes, so a ring inside one is coral in both. */
   --color-focus-on-code: var(--color-accent);
   --color-scrim: #060810;
+  /* Pip's icon: the head and antenna caps, the shaded side and stalks, and
+     the eyes. The head is a coral mark, so the light theme's deeper coral
+     keeps it at 3:1 on every surface. public/favicon.svg carries these values
+     as literals; src/pip/icon.test.ts holds the two together. */
+  --color-pip: var(--color-accent-mark);
+  --color-pip-shade: color-mix(
+    in srgb,
+    var(--color-pip) 80%,
+    var(--color-accent-ink)
+  );
+  --color-pip-eye: var(--color-accent-ink);
 
   /* Derived, for both themes: pressed and soft fills, measured as sRGB mixes. */
   --color-accent-pressed: color-mix(
