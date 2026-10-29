@@ -305,6 +305,29 @@ export function drawnBounds(image: Rgba): Bounds | null {
 }
 
 /**
+ * The top of Pip's head on an image captured over white: the first row
+ * holding an unbroken run of drawn pixels at least a quarter of the image
+ * wide. The board's elements round Pip (confetti, strokes, the "...") and the
+ * antennas are narrower, so they never count. Null when there is none.
+ */
+export function headTop(image: Rgba): number | null {
+  const wide = image.width / 4;
+  for (let y = 0; y < image.height; y++) {
+    let run = 0;
+    for (let x = 0; x < image.width; x++) {
+      const i = (y * image.width + x) * 4;
+      const sum =
+        (image.data[i] ?? 255) +
+        (image.data[i + 1] ?? 255) +
+        (image.data[i + 2] ?? 255);
+      run = sum >= 3 * 240 ? 0 : run + 1;
+      if (run >= wide) return y;
+    }
+  }
+  return null;
+}
+
+/**
  * Pip's eyes on an image captured over white: how many pixels are near-black
  * (the eyes are the darkest part of Pip), and their centre. Null when there
  * are none.

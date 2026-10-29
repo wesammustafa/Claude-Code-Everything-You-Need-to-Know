@@ -15,7 +15,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
-import { pngSize } from "./png.ts";
+import { encodePng, pngSize } from "./png.ts";
 import {
   POSTER_TURNS,
   REST_TOWARD_CONTENT,
@@ -23,12 +23,15 @@ import {
   posterSpec,
 } from "./posters.ts";
 import {
+  NVMRC,
   PIP_DIR,
   RECORD,
   RIVE_CLI_VERSION,
   canonical,
+  encoderMismatch,
   expectedOutputs,
   fileDigest,
+  nodeMismatch,
   readRecord,
   recordProblems,
   rigDigest,
@@ -57,6 +60,54 @@ describe("the committed Pip build", () => {
         height: px,
       });
     }
+  });
+});
+
+describe("nodeMismatch", () => {
+  test("lets pip:build run on the Node major .nvmrc pins, however .nvmrc writes it", () => {
+    for (const nvmrc of ["26", "26\n", "v26", "26.13.0", " v26.1 \n"])
+      expect(nodeMismatch("v26.13.0", nvmrc)).toBeNull();
+  });
+
+  test("refuses another major, naming both and the way back", () => {
+    for (const node of ["v25.9.0", "v27.0.0", "v2.6.0", "v260.0.0"]) {
+      const problem = nodeMismatch(node, "26\n");
+      expect(problem).toContain(`Node 26, the major .nvmrc pins`);
+      expect(problem).toContain(`this is Node ${node}`);
+      expect(problem).toContain("`nvm use`");
+    }
+  });
+
+  test("refuses an .nvmrc it cannot read a major from", () => {
+    for (const nvmrc of ["", "lts/*", "node", "twenty-six"])
+      expect(nodeMismatch("v26.13.0", nvmrc)).toMatch(
+        /^\.nvmrc pins no Node version pip:build can read/,
+      );
+  });
+
+  test("reads the repository's own .nvmrc", () => {
+    const nvmrc = readFileSync(NVMRC, "utf8");
+    const major = /\d+/.exec(nvmrc)?.[0] ?? "none";
+    expect(nodeMismatch(`v${major}.0.0`, nvmrc)).toBeNull();
+  });
+});
+
+describe("encoderMismatch", () => {
+  const poster = readFileSync(join(PIP_DIR, allPosters()[0]?.file ?? ""));
+
+  test("lets pip:build write posters when this Node re-encodes a committed poster to its own bytes", () => {
+    expect(encoderMismatch(poster)).toBeNull();
+  });
+
+  test("refuses a zlib that deflates the same pixels to other bytes, naming its version", () => {
+    const otherZlib = (image: Parameters<typeof encodePng>[0]) => {
+      const bytes = Buffer.from(encodePng(image));
+      bytes[bytes.length - 20] = (bytes[bytes.length - 20] ?? 0) ^ 1;
+      return bytes;
+    };
+    const problem = encoderMismatch(poster, otherZlib);
+    expect(problem).toContain(`this Node's zlib (${process.versions.zlib})`);
+    expect(problem).toContain("would rewrite every poster");
   });
 });
 
