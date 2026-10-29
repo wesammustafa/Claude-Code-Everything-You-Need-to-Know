@@ -73,11 +73,13 @@ const SCREENS = [
 /** The intensities the Reaction map uses, marked on the range. */
 const INTENSITY_MARKS = [0.2, 0.3, 0.4, 0.5, 0.7, 0.85, 0.9, 1] as const;
 
-/** The head's three looks, and where Pip rests beside the step. */
+/** The head's looks, and where Pip rests beside the step. */
 const GAZE_PRESETS = [
   { label: "Left", x: -1, y: 0 },
   { label: "Forward", x: 0, y: 0 },
   { label: "Right", x: 1, y: 0 },
+  { label: "Up", x: 0, y: -1 },
+  { label: "Down", x: 0, y: 1 },
   { label: "Toward the step", x: 0.4, y: 0 },
 ] as const;
 
@@ -404,7 +406,7 @@ export function Playground() {
                 title="Gaze"
                 hint={
                   source === "model"
-                    ? "gazeX turns the head as well as the eyes: -1 left, 0 at the Learner, 1 right."
+                    ? "gazeX turns and gazeY nods the head as well as the eyes: -1 left or up, 0 ahead, 1 right or down."
                     : "Where the hint, the tiers and the work sit: Explaining and Curious look there."
                 }
               >

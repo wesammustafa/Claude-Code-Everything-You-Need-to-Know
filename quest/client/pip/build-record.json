@@ -1,6 +1,6 @@
 {
   "rive": "1.7.0",
-  "rig": "c4fb82ccbe0fcd7255b1d4ee9af42dff586ce4a034f76eff404396616dfc1daa",
+  "rig": "7db91d5c48a5b601d009265fbd52578bef201d9288f81d6675e4835ad4fa575f",
   "posters": {
     "poses": {
       "happy": {
@@ -43,18 +43,18 @@
     }
   },
   "outputs": {
-    "pip.riv": "b5261040e15637d1cb8f703ceac75f86aa97c594928863e43068512e8af47f5a",
-    "posters/happy-beside-content.png": "d836a7eb9610ade27faa19e78a37d80c6b43ee0adfe9244b539a9d942efc1c5c",
-    "posters/happy-beside-front.png": "d1313a1ed8a6c08ef202bce7eaa0b3e23c80e9a92e552edae4ce6559d5fd7e9c",
-    "posters/happy-hero-front.png": "4b0e19810532738de1ad49bcb0a52209628a89b26a8d537559f9a400c0d44a4b",
-    "posters/idle-beside-content.png": "4e7ec6dcc9756259e272c133eb5b066e2fdafdabdfdb8803f9cc752508e9a228",
-    "posters/idle-beside-front.png": "b5fdcda1f6be9969453fc54e5720a5a7a5c38c0a3942cd9006826c5731042a5c",
-    "posters/idle-hero-front.png": "959994d37cf0a20708daf1637ee51eb53d5590202702355c91e2ab00a0160186",
-    "posters/reassuring-beside-content.png": "b328b5638954df365767e059f3ab1437a78011a3e33b7a63b52d918d841a7dc2",
-    "posters/reassuring-beside-front.png": "d75bc686f44c5c0ac25edf537e7a98a6a99f38ace284b261e5d3641594309126",
-    "posters/reassuring-hero-front.png": "9f3a19047ddc37f13cbdb9e1f73e5e857b042c854535a91b3d010359a2793dd9",
-    "posters/thinking-beside-content.png": "e4fbe6e44c8d0a6ee4d8fb75d09aae78b28a8b470d6f7059e35185b1e4285489",
-    "posters/thinking-beside-front.png": "e74210652e7a097f9f0569b8bea2baab57a4377e83a070cef5a3e21d725a6db7",
-    "posters/thinking-hero-front.png": "4508990d4d71df7ef2147f86693ec279f49dec030f6dbbdadae3c47d20095233"
+    "pip.riv": "c055d1d0b4b84aa4d75ea4734096b2899da409d69e834457dc339d453c8e88dc",
+    "posters/happy-beside-content.png": "da102b908bf4e14cb76c32a35b40ced5f08937c576dbfcc40fdf00c3c5a26669",
+    "posters/happy-beside-front.png": "8422327179997b73f9050c6d57c2c2a40916d0ef5c10dc88d343b39c74238a26",
+    "posters/happy-hero-front.png": "6764e5efc6add5338f1ffc07276bfe9ba185374c6a11f72892f1c109afe11992",
+    "posters/idle-beside-content.png": "9d4d6108f0d3efcb19f3e49e1a4570499a14e1ee19f3181bb0107a7980749d83",
+    "posters/idle-beside-front.png": "d8660595d97ecd831472e207eb68f7370c07cd6b439c25b571fcc1af8bc5b13a",
+    "posters/idle-hero-front.png": "4a6a8584831478d070bcef96d915c8f617aa79130c9496f3f78e89c9ff1baac5",
+    "posters/reassuring-beside-content.png": "8d69b66b663a14525dfbbf2699a395d5b263cde8421ee6afc1a551594219b846",
+    "posters/reassuring-beside-front.png": "bb2795f13d8dee75a9d86e5365113c371e10ce7711a3271222d285912171a952",
+    "posters/reassuring-hero-front.png": "00c68c8111832d319cd63a0875d42f212070508596e37ea01cf4546b839e96b6",
+    "posters/thinking-beside-content.png": "d09b085a07431a4a25a7b1146fca42e1fb80ce3680c40b24727ce7d015a43d8c",
+    "posters/thinking-beside-front.png": "a52d56af7a9bc2045e91239481a17b7cf9a487147b51bdf70cdf812f8b730c1f",
+    "posters/thinking-hero-front.png": "dc5ee9fd69666e035c829ca96f2c19b16f6cd88878d484ded5bc027ef9292d00"
   }
 }

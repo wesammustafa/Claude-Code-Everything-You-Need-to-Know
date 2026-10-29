@@ -177,7 +177,10 @@ function withMarkers(rig: string, work: string): string {
     /<Shape\b[^>]*name="Thumb (?:Left|Right)">[\s\S]*?<\/Shape>/g,
     "FF00FF00",
   );
-  paint(/<Node name="Ear (?:Left|Right)">[\s\S]*?<\/Node>/g, "FF0000FF");
+  paint(
+    /<Node\b[^>]*name="Ear (?:Left|Right)"[^>]*>[\s\S]*?<\/Node>/g,
+    "FF0000FF",
+  );
   // The front face's two colours, in the art and in the Turn's keys of them.
   const before = text;
   text = text.replace(
@@ -252,7 +255,7 @@ function checkBehaviour(white: string, work: string): string[] {
   if (changedShare(shot({}, "1s"), shot({ mode: "thinking" }, "1s")) < 0.01)
     fail("mode thinking barely changes Pip");
 
-  // Past the gaze's 220 ms ease.
+  // Past the gaze's 150 ms ease.
   const right = eyesCentre(shot({ gazeX: "1" }, "500ms"));
   const left = eyesCentre(shot({ gazeX: "-1" }, "500ms"));
   const down = eyesCentre(shot({ gazeY: "1" }, "500ms"));
@@ -406,6 +409,19 @@ function checkBehaviour(white: string, work: string): string[] {
   if (turn < 0.05)
     fail(`gazeX 1 barely turns Pip's head (${fmtShare(turn)} of pixels)`);
   lines.push(`head turn: gazeX 1 changes ${fmtShare(turn)} of pixels`);
+
+  // The head nod: gazeY moves the whole head, not only the eyes, both ways.
+  const headDown = shot({ mode: "rest", gazeY: "1" }, "500ms");
+  const headUp = shot({ mode: "rest", gazeY: "-1" }, "500ms");
+  const pitch = Math.min(
+    changedShare(ahead, headDown),
+    changedShare(ahead, headUp),
+  );
+  if (pitch < 0.05)
+    fail(`gazeY barely nods Pip's head (${fmtShare(pitch)} of pixels)`);
+  lines.push(
+    `head pitch: both gazeY directions change at least ${fmtShare(pitch)} of pixels`,
+  );
   return lines;
 }
 

@@ -722,7 +722,7 @@ test("a new gaze turns Pip's eyes over several frames, and so does a release bac
     expect(
       largest,
       `${at}: no frame jumps the eyes (largest step ${largest.toFixed(2)} of ${travel.toFixed(2)} px)`,
-    ).toBeLessThanOrEqual(travel / 2);
+    ).toBeLessThanOrEqual(travel / 4);
     // Settled at the end: the last frames hold still.
     expect(steps.slice(-6).every((step) => step < 0.05)).toBe(true);
   }
@@ -782,6 +782,212 @@ test("gazeX turns Pip's head: the face slides toward the gaze and narrows as it 
   expect(Math.abs(right.x - ahead.x - (ahead.x - left.x))).toBeLessThan(
     width * 0.05,
   );
+});
+
+test("the gaze starts toward a new pointer position promptly and settles within 150 ms", async ({
+  page,
+}) => {
+  test.slow();
+  await openPaused(page);
+  await setMode(page, "rest");
+  await settle(page, 40);
+  await setGaze(page, 0, 0);
+  await settle(page, 30);
+  const ahead = (await measure(page)).eyes;
+  if (!ahead) throw new Error("Pip's eyes are not drawn");
+
+  await setGaze(page, 1, 0);
+  await run(page, 4);
+  const early = (await measure(page)).eyes;
+  if (!early) throw new Error("Pip's eyes are not drawn after 64 ms");
+  await run(page, 6);
+  const settled = (await measure(page)).eyes;
+  if (!settled) throw new Error("Pip's eyes are not drawn after 160 ms");
+
+  const distance = settled.x - ahead.x;
+  expect(distance).toBeGreaterThan(10);
+  expect((early.x - ahead.x) / distance).toBeGreaterThan(0.45);
+  await run(page, 4);
+  const later = (await measure(page)).eyes;
+  if (!later) throw new Error("Pip's eyes are not drawn after 224 ms");
+  expect(Math.abs(later.x - settled.x)).toBeLessThanOrEqual(1);
+});
+
+/** Connected dark shapes in the face: two eyes and the mouth below them. */
+function faceParts(
+  image: Rgba,
+): { top: number; bottom: number; area: number }[] {
+  const { width, height } = image;
+  const rows = Math.floor(height * 0.8);
+  const seen = new Uint8Array(width * rows);
+  const parts: { top: number; bottom: number; area: number }[] = [];
+  const dark = (x: number, y: number) => {
+    const i = (y * width + x) * 4;
+    return (
+      (image.data[i] ?? 255) +
+        (image.data[i + 1] ?? 255) +
+        (image.data[i + 2] ?? 255) <
+      3 * 80
+    );
+  };
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < width; x++) {
+      const start = y * width + x;
+      if (seen[start] || !dark(x, y)) continue;
+      const stack = [start];
+      seen[start] = 1;
+      let top = y;
+      let bottom = y;
+      let area = 0;
+      while (stack.length > 0) {
+        const at = stack.pop() ?? 0;
+        const px = at % width;
+        const py = Math.floor(at / width);
+        area++;
+        top = Math.min(top, py);
+        bottom = Math.max(bottom, py);
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            const nx = px + dx;
+            const ny = py + dy;
+            if (nx < 0 || nx >= width || ny < 0 || ny >= rows) continue;
+            const next = ny * width + nx;
+            if (!seen[next] && dark(nx, ny)) {
+              seen[next] = 1;
+              stack.push(next);
+            }
+          }
+        }
+      }
+      if (area >= 2) parts.push({ top, bottom, area });
+    }
+  }
+  return parts;
+}
+
+const TOP_FACE = [252, 178, 124] as const;
+const UNDERSIDE = [180, 70, 31] as const;
+
+/** Pixels of one head plane, proving which way the compiled rig pitches. */
+function colourPixels(image: Rgba, colour: readonly number[]): number {
+  let count = 0;
+  for (let i = 0; i < image.data.length; i += 4) {
+    if (
+      colour.every(
+        (channel, k) => Math.abs((image.data[i + k] ?? 0) - channel) <= 8,
+      )
+    )
+      count++;
+  }
+  return count;
+}
+
+test("gazeY nods Pip's head both ways, and the diagonal poses keep his face readable", async ({
+  page,
+}) => {
+  test.slow();
+  await openPaused(page);
+  await setMode(page, "rest");
+  await settle(page, 40);
+  await setGaze(page, 0, 0);
+  await settle(page, 30);
+  const level = await frame(page);
+  const levelEyes = eyes(level);
+  if (!levelEyes) throw new Error("Pip's eyes are not drawn");
+  const at: Record<
+    string,
+    { x: number; y: number; topFace: number; underside: number }
+  > = {};
+
+  for (const [x, y] of [
+    [0, 1],
+    [0, -1],
+    [-1, -1],
+    [1, -1],
+    [-1, 1],
+    [1, 1],
+  ] as const) {
+    await setGaze(page, x, y);
+    await settle(page, 30);
+    const image = await frame(page);
+    const centre = eyes(image);
+    if (!centre) throw new Error("Pip's eyes are not drawn");
+    at[`${String(x)},${String(y)}`] = {
+      ...centre,
+      topFace: colourPixels(image, TOP_FACE),
+      underside: colourPixels(image, UNDERSIDE),
+    };
+    expect(
+      changedShare(level, image),
+      `gaze ${String(x)}, ${String(y)} moves the whole head`,
+    ).toBeGreaterThan(0.05);
+    expect(
+      eyeSpread(image),
+      `gaze ${String(x)}, ${String(y)} keeps two eyes apart`,
+    ).toBeGreaterThan(0);
+    const parts = faceParts(image);
+    expect(
+      parts.length,
+      `gaze ${String(x)}, ${String(y)} keeps two eyes and the mouth visible`,
+    ).toBeGreaterThanOrEqual(3);
+    expect(
+      parts.some((part) => part.bottom - part.top > 4),
+      `gaze ${String(x)}, ${String(y)} keeps the eyes open`,
+    ).toBe(true);
+  }
+  expect(at["0,1"]?.y).toBeGreaterThan(levelEyes.y + 2);
+  expect(at["0,-1"]?.y).toBeLessThan(levelEyes.y - 2);
+  expect(at["0,1"]?.topFace).toBeGreaterThan(0);
+  expect(at["0,-1"]?.underside).toBeGreaterThan(0);
+});
+
+test("on Welcome the pointer pitches the rendered head in every direction and eases it without a jump", async ({
+  page,
+}) => {
+  test.slow();
+  await page.clock.install();
+  await page.goto("/");
+  await expect
+    .poll(
+      async () => {
+        await page.clock.runFor(100);
+        return page.locator("[data-pip]").getAttribute("data-pip-rendering");
+      },
+      { timeout: 20_000 },
+    )
+    .toBe("rig");
+  await installMeasures(page);
+  const box = await page.locator("[data-pip]").boundingBox();
+  if (!box) throw new Error("Pip has no box");
+  const cx = box.x + box.width / 2;
+  const cy = box.y + box.height / 2;
+  await page.mouse.move(cx, cy);
+  await page.clock.runFor(3_000);
+  await settle(page, 30);
+  await keep(page, "level");
+
+  for (const [dx, dy] of [
+    [0, -120],
+    [0, 180],
+    [-320, -120],
+    [320, -120],
+    [-320, 180],
+    [320, 180],
+  ] as const) {
+    await page.mouse.move(cx + dx, cy + dy);
+    await settle(page, 30);
+    expect(await changed(page, "level")).toBeGreaterThan(0.05);
+    const image = await frame(page);
+    if (dy < 0) expect(colourPixels(image, UNDERSIDE)).toBeGreaterThan(0);
+    else expect(colourPixels(image, TOP_FACE)).toBeGreaterThan(0);
+  }
+
+  await page.mouse.move(cx, cy);
+  await settle(page, 30);
+  await page.mouse.move(cx, cy + 180);
+  const steps = (await sample(page, 24, 1, "step")) as number[];
+  expect(steps.filter((step) => step > 0.001).length).toBeGreaterThanOrEqual(5);
+  expect(Math.max(...steps)).toBeLessThanOrEqual(0.15);
 });
 
 /**

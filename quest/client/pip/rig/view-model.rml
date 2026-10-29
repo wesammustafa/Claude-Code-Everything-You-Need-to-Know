@@ -46,9 +46,10 @@
 
     <!-- Gaze. The root node is mirrored, so +x on screen is -x in the art: the
          x converters' outputs run from + to -, and the head tilts the other way
-         too. y is not mirrored. Each part eases to a new gaze over 220 ms on
-         the app's motion curve, so a new target or a release back to the
-         centre turns the eyes, the mouth and the head, never snaps them.
+         too. y is not mirrored. Each part eases to a new gaze over 150 ms on
+         an ease-out curve, so a new pointer target starts moving at once and
+         settles gently, without snapping the eyes, mouth or head. The Body
+         layer's own small glances keep their independent timelines.
          EyesX also moves the head turn's driver (Look in pip.rml), so the
          head turns with the eyes, on the same curve. -->
     <DataConverterGroup name="EyesX" id="0:50">
@@ -76,20 +77,20 @@
     <DataConverterRangeMapper minInput="-1" maxInput="1" minOutput="16" maxOutput="-16" clampLower="true" clampUpper="true" name="MouthXRange" id="0:72"/>
     <DataConverterRangeMapper minInput="-1" maxInput="1" minOutput="-9" maxOutput="9" clampLower="true" clampUpper="true" name="MouthYRange" id="0:73"/>
     <DataConverterRangeMapper minInput="-1" maxInput="1" minOutput="0.045" maxOutput="-0.045" clampLower="true" clampUpper="true" name="HeadTiltRange" id="0:74"/>
-    <DataConverterInterpolator interpolationType="cubic" duration="0.22" name="EyesXEase" id="0:75">
-        <CubicEaseInterpolator x1="0.2" y1="0.8" x2="0.2" y2="1"/>
+    <DataConverterInterpolator interpolationType="cubic" duration="0.15" name="EyesXEase" id="0:75">
+        <CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/>
     </DataConverterInterpolator>
-    <DataConverterInterpolator interpolationType="cubic" duration="0.22" name="EyesYEase" id="0:76">
-        <CubicEaseInterpolator x1="0.2" y1="0.8" x2="0.2" y2="1"/>
+    <DataConverterInterpolator interpolationType="cubic" duration="0.15" name="EyesYEase" id="0:76">
+        <CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/>
     </DataConverterInterpolator>
-    <DataConverterInterpolator interpolationType="cubic" duration="0.22" name="MouthXEase" id="0:77">
-        <CubicEaseInterpolator x1="0.2" y1="0.8" x2="0.2" y2="1"/>
+    <DataConverterInterpolator interpolationType="cubic" duration="0.15" name="MouthXEase" id="0:77">
+        <CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/>
     </DataConverterInterpolator>
-    <DataConverterInterpolator interpolationType="cubic" duration="0.22" name="MouthYEase" id="0:78">
-        <CubicEaseInterpolator x1="0.2" y1="0.8" x2="0.2" y2="1"/>
+    <DataConverterInterpolator interpolationType="cubic" duration="0.15" name="MouthYEase" id="0:78">
+        <CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/>
     </DataConverterInterpolator>
-    <DataConverterInterpolator interpolationType="cubic" duration="0.22" name="HeadTiltEase" id="0:79">
-        <CubicEaseInterpolator x1="0.2" y1="0.8" x2="0.2" y2="1"/>
+    <DataConverterInterpolator interpolationType="cubic" duration="0.15" name="HeadTiltEase" id="0:79">
+        <CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/>
     </DataConverterInterpolator>
 
     <!-- intensity 0 to 1 onto a blend state's 0 to 100 axis, eased over 150 ms:
