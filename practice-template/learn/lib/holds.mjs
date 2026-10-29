@@ -6,7 +6,7 @@
 import { createHash } from 'node:crypto';
 import { isGlob } from './content.mjs';
 import { C } from './copy.mjs';
-import { cut, graphemes, isEmoji, strip } from './text.mjs';
+import { cut, graphemes, isEmoji, strip } from '../../../quest/engine/src/text.mjs';
 
 // A file's text: UTF-16 with a byte-order mark (Windows PowerShell 5.1
 // writes it), or UTF-8 with or without one.
