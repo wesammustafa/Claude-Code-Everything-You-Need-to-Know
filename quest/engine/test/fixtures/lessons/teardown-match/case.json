@@ -1,0 +1,10 @@
+{
+  "origin": "lesson-quotes-teardown-match",
+  "was": "pass",
+  "expect": "pass",
+  "about": "The capstone's Tear down step count matches the numbered steps under its Tear down heading, and a Your turn part heading is not counted.",
+  "problems": [],
+  "compared": {
+    "lessons": 1
+  }
+}

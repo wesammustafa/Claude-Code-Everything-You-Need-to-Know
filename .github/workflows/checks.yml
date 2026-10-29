@@ -43,6 +43,8 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run test:quest
+      - name: Run the lesson test
+        run: npm run test:lessons
       - run: npm run test:checks
       - run: npm run test:starter
 

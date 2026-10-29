@@ -10,6 +10,7 @@
     "typecheck": "tsc -b",
     "lint": "eslint quest --max-warnings 0 && prettier --check quest",
     "test:quest": "npm run course:compile && vitest run",
+    "test:lessons": "vitest run --project engine --no-passWithNoTests test/lessons.test.mjs",
     "test:checks": "npm run course:compile && node --test 'practice-template/checks/test/*.test.mjs'",
     "test:starter": "node --test 'practice-template/project/test/**/*.test.js'",
     "course:compile": "npm run compile:course --workspace @quest/release",

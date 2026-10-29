@@ -283,6 +283,12 @@ function value(raw) {
 
 // Parses one content file. Throws an Error naming the file and line on any
 // line it can't read, so a broken file fails its test, not the learner.
+// `context.onPageText`, when given, receives each piece of the page the file
+// shows, as the parser reads it: every double-quoted value (`kind: "quote"`,
+// with its `text`) and every code block (`kind: "block"`, with its `lines`),
+// each with its 1-based `line`, the `heading` it sits under, and `from`, the
+// Lesson or Level index a warm-up names, or null for the file's own page.
+// The lesson test compares them with the pages.
 export function parseLesson(text, file = "lesson", context = {}) {
   const manifest = context.manifest ?? { levels: [], lessons: [] };
   const checks = context.checks ?? {};
@@ -333,6 +339,21 @@ export function parseLesson(text, file = "lesson", context = {}) {
   let payoffLine = null;
   const fail = (n, msg) => {
     throw new Error(`${file}:${n + 1}: ${msg}`);
+  };
+  // Where a quote or block on line n sits, for onPageText: only a warm-up's
+  // from line points it at another page.
+  const pageText = (entry, n) => {
+    const inStep = (section === "steps" || section === "warm-up") && step;
+    context.onPageText?.({
+      ...entry,
+      line: n + 1,
+      heading: inStep
+        ? lines[step.line - 1].slice(4)
+        : section === "ladder" && rung
+          ? rung.item
+          : (section ?? "front matter"),
+      from: section === "warm-up" && step ? (step.from ?? null) : null,
+    });
   };
   const leadIn = (bottom, text, n) => {
     if (bottom.leadIn) fail(n, "a second lead-in line on one bottom line");
@@ -399,6 +420,7 @@ export function parseLesson(text, file = "lesson", context = {}) {
     if (!kv) fail(i, `a line the app can't read: ${line}`);
     const [, key, raw] = kv;
     const v = value(raw.trim());
+    if (v.quoted) pageText({ kind: "quote", text: v.text }, i);
     if (section === "intro") {
       if (!(key in INTRO_KEYS)) fail(i, `unknown intro key ${key}`);
       if (!v.quoted) fail(i, `${key} must be a quote of the lesson`);
@@ -435,6 +457,8 @@ export function parseLesson(text, file = "lesson", context = {}) {
       if (key === "back") {
         if (rung.back) fail(i, "a second back line in one ladder block");
         rung.back = backLine(raw, i, fail);
+        if (rung.back.quoted)
+          pageText({ kind: "quote", text: rung.back.text }, i);
         continue;
       }
       if (!v.quoted) fail(i, `${key} must be a quote of the lesson`);
@@ -525,6 +549,7 @@ export function parseLesson(text, file = "lesson", context = {}) {
       const end = lines.findIndex((l, k) => k > i + 1 && closes(open[1], l));
       if (end < 0) fail(i, "a code block with no closing fence");
       const block = lines.slice(i + 2, end);
+      pageText({ kind: "block", lines: block }, i + 1);
       if (!block.some((l) => l.trim())) fail(i, "an empty code block");
       if (block.some((l) => /<your (practice copy|repo)>/.test(l)))
         fail(
@@ -572,6 +597,8 @@ export function parseLesson(text, file = "lesson", context = {}) {
         );
       if (beat.back) fail(i, "a second back line on one beat");
       beat.back = backLine(raw, i, fail);
+      if (beat.back.quoted)
+        pageText({ kind: "quote", text: beat.back.text }, i);
     } else if (key === "when") {
       if (beat.when) fail(i, "a second when line on one beat");
       if (step.part === "Warm-up")

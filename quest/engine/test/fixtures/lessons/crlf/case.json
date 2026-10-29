@@ -1,0 +1,10 @@
+{
+  "origin": "lesson-quotes-crlf",
+  "was": "fail",
+  "expect": "fail",
+  "about": "The page reworded a sentence that a step file with Windows line endings quotes (the test gives this case's step files CRLF line endings).",
+  "crlf": true,
+  "problems": [
+    "course/steps/b-1\\.md:17: quotes \"Type `/status`\\.\""
+  ]
+}

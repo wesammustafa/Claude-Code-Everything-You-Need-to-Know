@@ -1,0 +1,9 @@
+{
+  "origin": "lesson-quotes-block-unclosed",
+  "was": "fail",
+  "expect": "fail",
+  "about": "A code block in the step file opens on four backticks and never closes: a three-backtick line inside it is the block's own line, not its end.",
+  "problems": [
+    "course/steps/b-1\\.md:18: a code block with no closing fence"
+  ]
+}
