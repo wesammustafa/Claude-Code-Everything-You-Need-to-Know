@@ -177,7 +177,7 @@ export function PipRive({
       // The view model instance is bound below, by name.
       autoBind: false,
       enableRiveAssetCDN: false,
-      // Pip follows no pointer and takes no input.
+      // The rig takes no input; the page follows the pointer (pointer.ts).
       shouldDisableRiveListeners: true,
       onLoadError: () => {
         failed.current();

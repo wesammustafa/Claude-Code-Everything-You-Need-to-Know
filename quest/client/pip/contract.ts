@@ -36,6 +36,12 @@ export interface PipModel {
   reaction: { id: string; kind: PipReactionKind; intensity: number } | null;
   /** -1..1, clamped; null: the rig's own glances. */
   gaze: { x: number; y: number } | null;
+  /**
+   * Where Pip rests on this screen, -1..1: the gaze the poster is drawn at.
+   * The gaze moves away from it for a moment (the pointer, a glance, a look),
+   * which only the live rig follows, so the poster stays a calm stand-in.
+   */
+  restingGaze: { x: number; y: number };
   /** The system setting or the Settings override. */
   reducedMotion: boolean;
   size: PipSize;

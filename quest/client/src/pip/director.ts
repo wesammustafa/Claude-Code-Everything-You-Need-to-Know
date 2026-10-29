@@ -22,6 +22,7 @@ import {
   initialHelpState,
   type HelpState,
 } from "./help";
+import { REACTION_POSTER_MS } from "./playback";
 import {
   FULL,
   NOD,
@@ -57,6 +58,16 @@ export const LOOK_HOLD_MS = 1500;
 // Pip's resting gaze beside the content lives with the posters, which are
 // rendered at it, so the two never drift apart.
 export { REST_TOWARD_CONTENT };
+/**
+ * After this long without the pointer moving, Pip stops following it and
+ * the rig's own glances resume.
+ */
+export const POINTER_HOLD_MS = 2000;
+/**
+ * How long a Reaction plays: about the rig's longest (the time its poster
+ * holds, playback.ts). Following the pointer waits for it to finish.
+ */
+export const REACTION_PLAYS_MS = REACTION_POSTER_MS;
 /** The help offer's Explaining: soft, an offer rather than an explanation. */
 export const OFFER_INTENSITY = 0.5;
 /**
@@ -110,6 +121,23 @@ const BESIDE_CONTENT: ReadonlySet<PipScreen> = new Set([
   "step",
   "progress",
 ]);
+/**
+ * Where nothing is read or typed, Pip follows the pointer anywhere on the
+ * page; on the Lesson overview and the step, where the Learner reads and
+ * types, only while it is near him and off the content.
+ */
+const FOLLOWS_ANYWHERE: ReadonlySet<PipScreen> = new Set([
+  "welcome",
+  "resume",
+  "map",
+  "progress",
+  "levelup",
+  "complete",
+  "next",
+  "levelComplete",
+  "courseComplete",
+]);
+const FOLLOWS_NEAR: ReadonlySet<PipScreen> = new Set(["intro", "step"]);
 /** Greeting and Celebration face the Learner (the spec's rig). */
 const FACES_LEARNER: ReadonlySet<PipReactionKind> = new Set([
   "greeting",
@@ -164,6 +192,14 @@ export type DirectorInput =
     }
   /** The Learner did something Pip watches: `at` is where, relative to Pip. */
   | { type: "look"; target: LookTarget; at: GazePoint }
+  /**
+   * The mouse moved: where Pip would look to follow it, and how strongly he
+   * follows it on the Lesson overview and the step, 0..1: 1 near him and off
+   * the content, fading to 0 toward either edge (pointer.ts).
+   */
+  | { type: "pointer"; at: GazePoint; pull: number }
+  /** The mouse left the window, or touch or pen took over. */
+  | { type: "pointerGone" }
   /** The step on screen, by the page's key for it; null when it leaves. */
   | { type: "step"; step: string | null }
   /** Whether an unopened hint is ready on the step. */
@@ -188,6 +224,13 @@ interface Playing {
 /** A Reaction waiting for a Celebration's floor to pass. */
 interface Waiting {
   reaction: Reaction | BrowserReaction;
+}
+
+/** Where the mouse last moved, as Pip would follow it, and when. */
+interface Pointer {
+  at: GazePoint;
+  pull: number;
+  since: number;
 }
 
 /** What Pip is watching, and since when. */
@@ -235,6 +278,7 @@ export interface DirectorState {
   lastGlanceAt: number | null;
   targets: Partial<Record<GazeTargetName, GazePoint>>;
   looking: Looking | null;
+  pointer: Pointer | null;
   /** The step's help offer: the browser's stuck rule (help.ts). */
   help: HelpState;
 }
@@ -267,6 +311,7 @@ export function initialDirectorState(
     lastGlanceAt: null,
     targets: {},
     looking: null,
+    pointer: null,
     help: initialHelpState,
   };
   // A page that loads on Welcome or Resume greets at once.
@@ -469,15 +514,19 @@ export function directorReduce(
     case "events":
       next = applyEvents(s, input.events, now);
       break;
-    case "screen":
-      // What Pip was watching belonged to the screen he left.
+    case "screen": {
+      // What Pip was watching, and the pointer he followed, were placed
+      // around him on the screen he left.
+      const same = input.screen === s.screen;
       next = {
         ...s,
         screen: input.screen,
         lastActivityAt: now,
-        looking: input.screen === s.screen ? s.looking : null,
+        looking: same ? s.looking : null,
+        pointer: same ? s.pointer : null,
       };
       break;
+    }
     case "pagePanel":
       next = { ...s, pagePanelOpen: input.open };
       break;
@@ -485,7 +534,11 @@ export function directorReduce(
       next = { ...s, pageInert: input.inert };
       break;
     case "visibility":
-      next = { ...s, hidden: input.hidden };
+      next = {
+        ...s,
+        hidden: input.hidden,
+        pointer: input.hidden ? null : s.pointer,
+      };
       break;
     case "onScreen":
       next = { ...s, offScreen: !input.visible };
@@ -507,6 +560,21 @@ export function directorReduce(
         ...s,
         looking: { target: input.target, at: input.at, since: now },
       };
+      break;
+    case "pointer":
+      // A moving mouse is the Learner, there: it keeps Pip from resting.
+      next = {
+        ...s,
+        lastActivityAt: now,
+        pointer: {
+          at: clampPoint(input.at),
+          pull: Math.max(0, Math.min(1, input.pull)),
+          since: now,
+        },
+      };
+      break;
+    case "pointerGone":
+      next = { ...s, pointer: null };
       break;
     case "step":
       next = { ...s, help: helpStep(s.help, input.step) };
@@ -564,26 +632,75 @@ export function restingGaze(screen: PipScreen): GazePoint {
     : FORWARD;
 }
 
+/** Where Pip follows the pointer, and how strongly, 0..1. */
+interface Follow {
+  at: GazePoint;
+  pull: number;
+}
+
 /**
- * Pip's gaze, first match wins: a Reaction that turns him (Explaining and
- * Curious to their target, Greeting, Celebration and the help offer to the
- * Learner) while it holds; then what the Learner just did, while Pip watches
- * it; then the screen's resting gaze. Under reduced motion only the resting
- * gaze, so Pip holds still there.
+ * Where Pip follows the pointer now, or null when he doesn't: it moved in
+ * the last 2 s, on a screen that follows it (on the Lesson overview and the
+ * step only with some pull, near him and off the content), no Reaction is
+ * playing, no Panel is open, and Pip is awake and seen (Rest covers reduced
+ * motion, the lesson page open, the page hidden, Pip off-screen).
+ */
+function following(s: DirectorState, now: number): Follow | null {
+  const pointer = s.pointer;
+  if (pointer === null || now - pointer.since >= POINTER_HOLD_MS) return null;
+  const screen = s.screen;
+  const pull = FOLLOWS_ANYWHERE.has(screen)
+    ? 1
+    : FOLLOWS_NEAR.has(screen)
+      ? pointer.pull
+      : 0;
+  if (pull <= 0) return null;
+  if (s.playing !== null && now - s.playing.startedAt < REACTION_PLAYS_MS)
+    return null;
+  if (s.pageInert || modeAt(s, now) === "rest") return null;
+  return { at: pointer.at, pull };
+}
+
+const hundredths = (v: number) => Math.round(v * 100) / 100 || 0;
+
+/**
+ * From where Pip would look without the pointer toward where he follows it,
+ * as far as its pull: a pointer at the edge of his reach turns him only a
+ * little from it.
+ */
+function toward(from: GazePoint, follow: Follow | null): GazePoint {
+  if (follow === null) return from;
+  if (follow.pull >= 1) return follow.at;
+  const { at, pull } = follow;
+  return {
+    x: hundredths(from.x + (at.x - from.x) * pull),
+    y: hundredths(from.y + (at.y - from.y) * pull),
+  };
+}
+
+/**
+ * Pip's gaze, first match wins: a Reaction that turns him to its target
+ * (Explaining, Curious) while it holds; one that turns him to the Learner
+ * (Greeting, Celebration, the help offer) while it holds, unless the
+ * pointer has him following once the Reaction has played; then what the
+ * Learner just did, while Pip watches it; then the pointer, while he
+ * follows it; then the screen's resting gaze. Under reduced motion only the
+ * resting gaze, so Pip holds still there.
  */
 function gazeAt(s: DirectorState, now: number): GazePoint {
   const rest = restingGaze(s.screen);
   if (s.reducedMotion) return rest;
+  const follow = following(s, now);
   const p = s.playing;
   if (p?.gaze != null && now - p.startedAt < GAZE_HOLD_MS) {
-    if (p.gaze === "learner") return FORWARD;
+    if (p.gaze === "learner") return toward(FORWARD, follow);
     const point = s.targets[p.gaze];
     if (point !== undefined) return clampPoint(point);
   }
   const look = s.looking;
   if (look !== null && now - look.since < LOOK_HOLD_MS)
     return clampPoint(look.at);
-  return rest;
+  return toward(rest, follow);
 }
 
 /** Whether the step's help offer is in the bubble. */
@@ -605,6 +722,7 @@ export function pipModel(s: DirectorState, now: number): PipModel {
             intensity: s.playing.intensity,
           },
     gaze: gazeAt(s, now),
+    restingGaze: restingGaze(s.screen),
     reducedMotion: s.reducedMotion,
     size,
   };
@@ -612,9 +730,10 @@ export function pipModel(s: DirectorState, now: number): PipModel {
 
 /**
  * The next time the model changes with no input: a waiting Reaction's turn,
- * a gaze's release, the help offer (or the end of the Reaction it waits on),
- * or the 5-minute rest. A tick then brings
- * it about. Null when nothing is due.
+ * a gaze's release, the pointer's release (or the end of the Reaction
+ * following waits on), the help offer (or the end of the Reaction it waits
+ * on), or the 5-minute rest. A tick then brings it about. Null when nothing
+ * is due.
  */
 export function nextWakeAt(s: DirectorState, now: number): number | null {
   const due: number[] = [];
@@ -626,6 +745,10 @@ export function nextWakeAt(s: DirectorState, now: number): number | null {
   }
   if (s.looking !== null && !s.reducedMotion) {
     due.push(s.looking.since + LOOK_HOLD_MS);
+  }
+  if (s.pointer !== null && !s.reducedMotion) {
+    due.push(s.pointer.since + POINTER_HOLD_MS);
+    if (s.playing !== null) due.push(s.playing.startedAt + REACTION_PLAYS_MS);
   }
   // The help offer: when it falls due, or when the Reaction it waits on ends.
   const help = helpDueAt(s.help);

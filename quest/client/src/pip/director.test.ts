@@ -9,6 +9,8 @@ import {
   LOOK_HOLD_MS,
   NOD_WINDOW_MS,
   OFFER_INTENSITY,
+  POINTER_HOLD_MS,
+  REACTION_PLAYS_MS,
   RESULT_REACTION_MS,
   REST_TOWARD_CONTENT,
   createPipDirector,
@@ -519,7 +521,26 @@ describe("resting gaze", () => {
   ] as const)("on %s Pip rests at %o, never no gaze", (screen, rest) => {
     const { director } = setup({ screen });
     expect(director.model().gaze).toEqual(rest);
+    expect(director.model().restingGaze).toEqual(rest);
     expect(restingGaze(screen)).toEqual(rest);
+  });
+
+  test("the model carries it while the pointer, a Reaction and a look move the gaze, so the poster holds still", () => {
+    const { director, at, send } = setup({ screen: "step" });
+    director.send({ type: "gazeTargets", targets });
+    const left = { x: -0.7, y: 0 };
+    const moved = [
+      director.send({ type: "pointer", at: left, pull: 1 }),
+      director.send({ type: "pointer", at: left, pull: 0.2 }),
+      send({ type: "hint.shown", rung: 1 }),
+      director.send({ type: "look", target: "command", at: { x: -1, y: 1 } }),
+    ];
+    expect(moved.map((model) => model.gaze)).not.toContainEqual(REST);
+    for (const model of moved) expect(model.restingGaze).toEqual(REST);
+    at(GAZE_HOLD_MS);
+    expect(director.send({ type: "screen", screen: "welcome" })).toMatchObject({
+      restingGaze: FORWARD,
+    });
   });
 
   test("follows the screen", () => {
@@ -707,6 +728,211 @@ describe("watching", () => {
     const { director } = setup({ screen: "step" });
     director.send({ type: "look", target: "command", at: command });
     expect(director.send({ type: "screen", screen: "map" }).gaze).toEqual(REST);
+  });
+});
+
+describe("following the pointer", () => {
+  const left = { x: -0.7, y: 0 };
+  const point = (at: { x: number; y: number }, pull = 1): DirectorInput => ({
+    type: "pointer",
+    at,
+    pull,
+  });
+  // Welcome with its Greeting played, so nothing holds Pip's gaze.
+  function welcome() {
+    const s = setup({ screen: "welcome" });
+    s.at(GAZE_HOLD_MS);
+    return s;
+  }
+
+  test("the spec's values: released after 2 s still; a Reaction plays about 1.6 s", () => {
+    expect(POINTER_HOLD_MS).toBe(2000);
+    expect(REACTION_PLAYS_MS).toBe(1600);
+  });
+
+  test.each([
+    "welcome",
+    "resume",
+    "map",
+    "progress",
+    "levelup",
+    "complete",
+    "next",
+    "levelComplete",
+    "courseComplete",
+  ] as const)("on %s Pip follows the pointer anywhere", (screen) => {
+    const { director, at } = setup({ screen });
+    at(GAZE_HOLD_MS);
+    expect(director.send(point(left, 0)).gaze).toEqual(left);
+    expect(director.send(point({ x: 0.3, y: 0.5 }, 0)).gaze).toEqual({
+      x: 0.3,
+      y: 0.5,
+    });
+  });
+
+  test.each(["intro", "step"] as const)(
+    "on %s only while the pointer is near him",
+    (screen) => {
+      const { director } = setup({ screen });
+      expect(director.send(point(left, 0)).gaze).toEqual(REST);
+      expect(director.send(point(left, 1)).gaze).toEqual(left);
+      expect(director.send(point(left, 0)).gaze).toEqual(REST);
+    },
+  );
+
+  test.each(["intro", "step"] as const)(
+    "on %s a weak pull turns Pip only a little from his resting gaze",
+    (screen) => {
+      const { director } = setup({ screen });
+      // From 0.4 toward -0.7: a tenth of the way, then half.
+      expect(director.send(point(left, 0.1)).gaze).toEqual({ x: 0.29, y: 0 });
+      expect(director.send(point(left, 0.5)).gaze).toEqual({
+        x: -0.15,
+        y: 0,
+      });
+    },
+  );
+
+  test("the help offer's turn to the Learner blends toward the pointer from facing him", () => {
+    const { director, at } = setup({ screen: "step" });
+    director.send({ type: "step", step: "b-1:0" });
+    director.send({ type: "hint", ready: true });
+    at(HINT_UNUSED_MS);
+    expect(director.send({ type: "tick" }).reaction).toMatchObject({
+      kind: "explaining",
+    });
+    at(HINT_UNUSED_MS + REACTION_PLAYS_MS);
+    expect(director.send(point(left, 0.5)).gaze).toEqual({ x: -0.35, y: 0 });
+  });
+
+  test("never on a screen the app has no route for", () => {
+    const { director } = setup({ screen: "other" });
+    expect(director.send(point(left)).gaze).toEqual(FORWARD);
+  });
+
+  test("released after 2 s without movement, by the stage's tick", () => {
+    const { director, at } = welcome();
+    const t = GAZE_HOLD_MS;
+    director.send(point(left));
+    expect(director.nextWakeAt()).toBe(t + POINTER_HOLD_MS);
+    at(t + POINTER_HOLD_MS - 1);
+    expect(director.send({ type: "tick" }).gaze).toEqual(left);
+    at(t + POINTER_HOLD_MS);
+    expect(director.send({ type: "tick" }).gaze).toEqual(FORWARD);
+  });
+
+  test("every move holds it 2 s from that move", () => {
+    const { director, at } = welcome();
+    director.send(point(left));
+    at(GAZE_HOLD_MS + 1500);
+    director.send(point({ x: -0.6, y: 0 }));
+    at(GAZE_HOLD_MS + 3000);
+    expect(director.model().gaze).toEqual({ x: -0.6, y: 0 });
+  });
+
+  test("released at once when the pointer leaves the window", () => {
+    const { director } = welcome();
+    director.send(point(left));
+    expect(director.send({ type: "pointerGone" }).gaze).toEqual(FORWARD);
+  });
+
+  test("clamped to -1..1", () => {
+    const { director } = welcome();
+    expect(director.send(point({ x: -3, y: 2 })).gaze).toEqual({
+      x: -1,
+      y: 1,
+    });
+  });
+
+  test("Greeting plays as usual, and following resumes once it has played", () => {
+    const { director, at } = setup({ screen: "welcome" });
+    expect(director.send(point(left)).gaze).toEqual(FORWARD);
+    // The stage wakes when the Greeting has played, to start following.
+    expect(director.nextWakeAt()).toBe(REACTION_PLAYS_MS);
+    at(REACTION_PLAYS_MS - 1);
+    expect(director.send({ type: "tick" }).gaze).toEqual(FORWARD);
+    at(REACTION_PLAYS_MS);
+    expect(director.send({ type: "tick" }).gaze).toEqual(left);
+  });
+
+  test("waits while any Reaction plays, Success included", () => {
+    const { director, at, send } = setup({ screen: "complete" });
+    director.send(point(left));
+    expect(send(passed).gaze).toEqual(FORWARD);
+    at(REACTION_PLAYS_MS);
+    expect(director.send(point(left)).gaze).toEqual(left);
+  });
+
+  test("Explaining and Curious keep their own gaze while they hold", () => {
+    const { director, at, send } = setup({ screen: "step" });
+    director.send({ type: "gazeTargets", targets });
+    send({ type: "hint.shown", rung: 1 });
+    at(REACTION_PLAYS_MS);
+    expect(director.send(point(left)).gaze).toEqual(targets.hint);
+    at(GAZE_HOLD_MS);
+    expect(director.send(point(left)).gaze).toEqual(left);
+    at(GAZE_HOLD_MS + 100);
+    send({ type: "work.changed" });
+    at(GAZE_HOLD_MS + 100 + REACTION_PLAYS_MS);
+    expect(director.send(point(left)).gaze).toEqual(targets.work);
+  });
+
+  test("what the Learner just did is watched first", () => {
+    const { director, at } = setup({ screen: "progress" });
+    director.send(point(left));
+    expect(
+      director.send({ type: "look", target: "goal", at: { x: 0.2, y: 0.8 } })
+        .gaze,
+    ).toEqual({ x: 0.2, y: 0.8 });
+    at(LOOK_HOLD_MS);
+    expect(director.send(point(left)).gaze).toEqual(left);
+  });
+
+  test("off under reduced motion: Pip holds his resting gaze, with no wake for it", () => {
+    const { director } = setup({ screen: "welcome", reducedMotion: true });
+    expect(director.send(point(left)).gaze).toEqual(FORWARD);
+    expect(director.nextWakeAt()).toBe(IDLE_REST_MS);
+    const step = setup({ screen: "step", reducedMotion: true });
+    expect(step.director.send(point(left)).gaze).toEqual(REST);
+  });
+
+  test("off while Pip is off-screen, a Panel is open or the lesson page is", () => {
+    for (const input of [
+      { type: "onScreen", visible: false },
+      { type: "pageInert", inert: true },
+      { type: "pagePanel", open: true },
+    ] as const) {
+      const { director } = welcome();
+      director.send(input);
+      expect(director.send(point(left)).gaze).toEqual(FORWARD);
+    }
+  });
+
+  test("hiding the page lets go of the pointer", () => {
+    const { director } = welcome();
+    director.send(point(left));
+    director.send({ type: "visibility", hidden: true });
+    expect(director.send({ type: "visibility", hidden: false }).gaze).toEqual(
+      FORWARD,
+    );
+  });
+
+  test("a new screen lets go of the pointer, placed around Pip on the last one", () => {
+    const { director } = welcome();
+    director.send(point(left));
+    expect(director.send({ type: "screen", screen: "complete" }).gaze).toEqual(
+      FORWARD,
+    );
+  });
+
+  test("a moving pointer keeps Pip from resting, and wakes him", () => {
+    const { director, at } = welcome();
+    at(IDLE_REST_MS);
+    expect(director.model().mode).toBe("rest");
+    expect(director.send(point(left))).toMatchObject({
+      mode: "idle",
+      gaze: left,
+    });
   });
 });
 

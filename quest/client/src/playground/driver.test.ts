@@ -280,6 +280,7 @@ describe("the Playground's driver", () => {
       mode: "idle",
       reaction: { id: "greeting", kind: "greeting", intensity: 1 },
       gaze: null,
+      restingGaze: { x: 0, y: 0 },
       reducedMotion: false,
       size: "hero",
     };
