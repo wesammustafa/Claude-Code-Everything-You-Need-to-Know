@@ -1,4 +1,9 @@
 // Internal links and their fragments resolve, checked offline with lychee.
+// Two folders are skipped, here and in the weekly external-links run that
+// shares lychee(): course/steps/, whose quotes are checked against the pages
+// they come from (a quoted relative link resolves from the page, not the step
+// file), and practice-template/samples/, which holds the linkcheck tests'
+// deliberately broken link.
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { relative, sep } from 'node:path';
@@ -6,13 +11,16 @@ import { relative, sep } from 'node:path';
 export const id = 'internal-links';
 export const modes = ['pr', 'release'];
 
+const SKIPPED = ['course/steps/', 'practice-template/samples/'];
+
 export function run(ctx) {
   return lychee(ctx, ['--offline', '--include-fragments']);
 }
 
-// Runs lychee over every Markdown page in the tree with the given options.
+// Runs lychee over every Markdown page in the tree outside SKIPPED with the
+// given options.
 export function lychee(ctx, options) {
-  const pages = ctx.files.filter((f) => f.endsWith('.md'));
+  const pages = ctx.files.filter((f) => f.endsWith('.md') && !SKIPPED.some((prefix) => f.startsWith(prefix)));
   if (pages.length === 0) return { status: 'pass', summary: 'no Markdown files' };
   const result = spawnSync(
     process.env.LYCHEE || 'lychee',
