@@ -48,7 +48,9 @@
          x converters' outputs run from + to -, and the head tilts the other way
          too. y is not mirrored. Each part eases to a new gaze over 220 ms on
          the app's motion curve, so a new target or a release back to the
-         centre turns the eyes, the mouth and the head, never snaps them. -->
+         centre turns the eyes, the mouth and the head, never snaps them.
+         EyesX also moves the head turn's driver (Look in pip.rml), so the
+         head turns with the eyes, on the same curve. -->
     <DataConverterGroup name="EyesX" id="0:50">
         <DataConverterGroupItem converterId="0:70"/>
         <DataConverterGroupItem converterId="0:75"/>

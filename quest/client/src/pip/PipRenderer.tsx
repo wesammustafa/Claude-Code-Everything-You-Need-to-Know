@@ -7,13 +7,25 @@ import {
   useSyncExternalStore,
 } from "react";
 import type { PipModel } from "../../pip/contract";
-import { POSTER_POSES, type PosterPose } from "../../pip/posters";
+import {
+  POSTER_POSES,
+  POSTER_TURNS,
+  type PosterPose,
+  type PosterTurn,
+} from "../../pip/posters";
 import { cx } from "../lib/cx";
 import { usePageHidden } from "../lib/page";
 import { afterFirstPaint } from "../lib/paint";
 import { PipIcon } from "./PipIcon";
 import { reactionLedger } from "./playback";
-import { posterPose, posterUrl, rigValues, type RigSize } from "./rig";
+import {
+  posterGazeX,
+  posterPose,
+  posterTurnFor,
+  posterUrl,
+  rigValues,
+  type RigSize,
+} from "./rig";
 import {
   loadPipRuntime,
   settledPipRuntime,
@@ -28,7 +40,15 @@ const BOX: Readonly<Record<RigSize, string>> = {
   hero: "size-52",
 };
 
-const POSES = Object.keys(POSTER_POSES) as PosterPose[];
+/** A poster by its pose and turn. */
+type PosterKey = `${PosterPose} ${PosterTurn}`;
+const POSTERS = (Object.keys(POSTER_POSES) as PosterPose[]).flatMap((pose) =>
+  (Object.keys(POSTER_TURNS) as PosterTurn[]).map((turn) => ({
+    pose,
+    turn,
+    key: `${pose} ${turn}` satisfies PosterKey,
+  })),
+);
 
 /** Which picture Pip shows: its poster while the rig loads, the rig, or the poster for good. */
 export type PipRendering = "poster" | "rig" | "unavailable";
@@ -131,7 +151,11 @@ function RigPip({ model, size, className, onScreenChange, rig }: RigPipProps) {
     reaction === null ? false : reactionLedger.holding(reaction.id),
   );
   const pose = posterPose(model, holding);
-  // The gaze the adapter writes to the rig, readable on the page.
+  // The poster faces the way the model's gaze asks, among its size's turns.
+  const turn = posterTurnFor(model, size);
+  const current: PosterKey = `${pose} ${turn}`;
+  // The gaze the model asks for, readable on the page; the rig takes it once
+  // it has taken over from the poster.
   const { gazeX, gazeY } = rigValues(model);
 
   // With the rig switched off, the frame it drew is gone: switched back on,
@@ -141,8 +165,30 @@ function RigPip({ model, size, className, onScreenChange, rig }: RigPipProps) {
   const rigShown = file !== null && drawn === file && !rigFailed;
   // The posters Pip has shown so far. A pose joins only while the poster is
   // what the Learner sees, so the rig never fetches a poster it won't show.
-  const [poses, setPoses] = useState<readonly PosterPose[]>([pose]);
-  if (!rigShown && !poses.includes(pose)) setPoses([...poses, pose]);
+  const [shown, setShown] = useState<readonly PosterKey[]>([current]);
+  if (!rigShown && !shown.includes(current)) setShown([...shown, current]);
+  // The turn of the poster the Learner last saw: the rig holds it until it
+  // has taken over, whatever the gaze does during the crossfade.
+  const [heldTurn, setHeldTurn] = useState<PosterTurn>(turn);
+  if (!rigShown && heldTurn !== turn) setHeldTurn(turn);
+
+  // Once the rig has faded in over the poster, it alone shows Pip, and a
+  // Reaction can start on it (PipRive). The fade's own duration times it, so
+  // a fade the browser never runs (the page hidden) still ends.
+  const rigLayer = useRef<HTMLSpanElement>(null);
+  const [handedOver, setHandedOver] = useState<PipRuntime["file"] | null>(null);
+  if (!rigShown && handedOver !== null) setHandedOver(null);
+  useEffect(() => {
+    if (!rigShown || handedOver === file) return;
+    const layer = rigLayer.current;
+    const fade = layer ? longestDuration(getComputedStyle(layer)) : 0;
+    const timer = setTimeout(() => {
+      setHandedOver(file);
+    }, fade);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [rigShown, file, handedOver]);
 
   const onDrawn = useCallback(() => {
     setDrawn(file);
@@ -180,22 +226,24 @@ function RigPip({ model, size, className, onScreenChange, rig }: RigPipProps) {
     >
       {/* The posters Pip has shown, stacked; the current one is opaque and
           the rest fade out, so a change of pose crossfades. */}
-      {POSES.filter((p) => poses.includes(p)).map((p) => (
+      {POSTERS.filter((p) => shown.includes(p.key)).map((p) => (
         <img
-          key={p}
-          src={posterUrl(p, size)}
+          key={p.key}
+          src={posterUrl(p.pose, size, p.turn)}
           alt=""
           draggable={false}
-          data-pip-poster={p}
+          data-pip-poster={p.pose}
+          data-pip-poster-turn={p.turn}
           className={cx(
             "absolute inset-0 size-full select-none",
             "transition-opacity duration-(--duration-base) ease-out",
-            p === pose && !rigShown ? "opacity-100" : "opacity-0",
+            p.key === current && !rigShown ? "opacity-100" : "opacity-0",
           )}
         />
       ))}
       {runtime != null && !rigFailed && (
         <span
+          ref={rigLayer}
           className={cx(
             "absolute inset-0",
             "transition-opacity duration-(--duration-base) ease-out",
@@ -206,6 +254,8 @@ function RigPip({ model, size, className, onScreenChange, rig }: RigPipProps) {
             file={runtime.file}
             model={model}
             active={onScreen && !hidden}
+            handedOver={rigShown && handedOver === file}
+            heldGazeX={posterGazeX(heldTurn)}
             onDrawn={onDrawn}
             onFailed={onFailed}
             onReaction={onReaction}
@@ -213,5 +263,26 @@ function RigPip({ model, size, className, onScreenChange, rig }: RigPipProps) {
         </span>
       )}
     </span>
+  );
+}
+
+/** An element's longest transition, delay included, in milliseconds. */
+function longestDuration(style: CSSStyleDeclaration): number {
+  const times = (list: string) =>
+    list
+      .split(",")
+      .map((time) => time.trim())
+      .filter((time) => time !== "")
+      .map((time) =>
+        time.endsWith("ms")
+          ? Number.parseFloat(time)
+          : Number.parseFloat(time) * 1000,
+      )
+      .map((ms) => (Number.isFinite(ms) ? ms : 0));
+  const durations = times(style.transitionDuration);
+  const delays = times(style.transitionDelay);
+  return Math.max(
+    0,
+    ...durations.map((duration, i) => duration + (delays[i] ?? 0)),
   );
 }

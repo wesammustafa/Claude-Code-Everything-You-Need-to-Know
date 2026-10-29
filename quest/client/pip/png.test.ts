@@ -4,6 +4,7 @@
 import { describe, expect, test } from "vitest";
 import {
   changedShare,
+  colourBounds,
   decodePng,
   drawnBounds,
   encodePng,
@@ -105,6 +106,19 @@ describe("changedShare", () => {
     expect(changedShare(a, b)).toBeCloseTo(0.3);
     expect(changedShare(a, a)).toBe(0);
   });
+
+  test("counts only within a box, as a share of the box", () => {
+    const a = image(10, 10, () => [10, 10, 10, 255]);
+    const b = image(10, 10, (x) =>
+      x < 3 ? [40, 10, 10, 255] : [10, 10, 10, 255],
+    );
+    expect(
+      changedShare(a, b, 8, { top: 0, bottom: 9, left: 0, right: 4 }),
+    ).toBeCloseTo(0.6);
+    expect(
+      changedShare(a, b, 8, { top: 2, bottom: 3, left: 5, right: 9 }),
+    ).toBe(0);
+  });
 });
 
 describe("drawnBounds", () => {
@@ -151,5 +165,38 @@ describe("soles", () => {
     );
     expect(soles(drawn)).toBe(4);
     expect(soles(image(4, 4, () => [255, 255, 255, 255]))).toBeNull();
+  });
+});
+
+describe("colourBounds", () => {
+  // A green block at x 2-4, y 1-2 and another at x 8, y 5, on white.
+  const marked = image(10, 7, (x, y) =>
+    (x >= 2 && x <= 4 && y >= 1 && y <= 2) || (x === 8 && y === 5)
+      ? [10, 250, 5, 255]
+      : [255, 255, 255, 255],
+  );
+
+  test("boxes every pixel near the colour", () => {
+    expect(colourBounds(marked, [0, 255, 0])).toEqual({
+      top: 1,
+      bottom: 5,
+      left: 2,
+      right: 8,
+    });
+  });
+
+  test("looks only inside the given box", () => {
+    expect(
+      colourBounds(marked, [0, 255, 0], {
+        top: 0,
+        bottom: 6,
+        left: 0,
+        right: 5,
+      }),
+    ).toEqual({ top: 1, bottom: 2, left: 2, right: 4 });
+  });
+
+  test("is null when the colour is absent", () => {
+    expect(colourBounds(marked, [0, 0, 255])).toBeNull();
   });
 });

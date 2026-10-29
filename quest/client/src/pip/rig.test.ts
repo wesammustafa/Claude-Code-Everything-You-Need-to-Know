@@ -4,9 +4,19 @@ import {
   PIP_SIZES,
   POSTER_FOR,
   POSTER_POSES,
+  REST_TOWARD_CONTENT,
+  SIZE_TURNS,
   type PosterPose,
 } from "../../pip/posters";
-import { posterPose, posterUrl, rigValues, type RigSize } from "./rig";
+import { restingGaze, type PipScreen } from "./director";
+import {
+  posterGazeX,
+  posterPose,
+  posterTurnFor,
+  posterUrl,
+  rigValues,
+  type RigSize,
+} from "./rig";
 
 const model = (fields: Partial<PipModel> = {}): PipModel => ({
   mode: "idle",
@@ -60,9 +70,50 @@ describe("the poster", () => {
     },
   );
 
-  test("every pose has a poster in the build at both sizes", () => {
+  test("every pose has a poster in the build at each size and turn", () => {
     for (const pose of Object.keys(POSTER_POSES) as PosterPose[])
       for (const size of Object.keys(PIP_SIZES) as RigSize[])
-        expect(posterUrl(pose, size)).toContain(`${pose}-${size}`);
+        for (const turn of SIZE_TURNS[size])
+          expect(posterUrl(pose, size, turn)).toContain(
+            `${pose}-${size}-${turn}`,
+          );
+  });
+
+  test("shows exactly the resting gaze of every screen, beside and at the hero size", () => {
+    const screens = [
+      "welcome",
+      "resume",
+      "map",
+      "intro",
+      "step",
+      "levelup",
+      "complete",
+      "next",
+      "levelComplete",
+      "courseComplete",
+      "progress",
+      "other",
+    ] as const satisfies readonly PipScreen[];
+    for (const screen of screens) {
+      const rest = restingGaze(screen);
+      for (const size of Object.keys(PIP_SIZES) as RigSize[]) {
+        if (size === "hero" && rest.x !== 0) continue;
+        const turn = posterTurnFor(model({ gaze: rest, size }), size);
+        expect(posterGazeX(turn), `${screen} at ${size}`).toBe(rest.x);
+      }
+    }
+  });
+
+  test("beside, turns toward the content near its gaze and faces the Learner otherwise", () => {
+    const at = (x: number) =>
+      posterTurnFor(model({ gaze: { x, y: 0 } }), "beside");
+    expect(at(REST_TOWARD_CONTENT)).toBe("content");
+    expect(at(0.94)).toBe("content");
+    expect(at(0)).toBe("front");
+    expect(at(-0.6)).toBe("front");
+    expect(posterTurnFor(model({ gaze: null }), "beside")).toBe("front");
+    expect(posterTurnFor(model({ gaze: { x: 0.4, y: 0 } }), "hero")).toBe(
+      "front",
+    );
   });
 });

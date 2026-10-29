@@ -19,12 +19,13 @@ import {
   type PipReactionKind,
   type PipSize,
 } from "../../pip/contract";
-import { PIP_SIZES } from "../../pip/posters";
+import { PIP_SIZES, POSTER_TURNS } from "../../pip/posters";
 import { cx } from "../lib/cx";
 import { motionReduced } from "../lib/page";
 import type { PipScreen } from "../pip/director";
 import { PipIcon } from "../pip/PipIcon";
 import { PipRenderer } from "../pip/PipRenderer";
+import { posterTurnFor } from "../pip/rig";
 import { reactionFor } from "../pip/reactions";
 import type { StageClock } from "../pip/stage";
 import { PageTitle } from "../shell/PageTitle";
@@ -279,7 +280,7 @@ export function Playground() {
                       />
                     </div>
                   </Figure>
-                  <Figure label="Fallback" detail="The poster, as without Rive">
+                  <Figure label="Fallback" detail={posterDetail(model)}>
                     <PipRenderer
                       model={pipModelFor(model, "poster", scope)}
                       rig={false}
@@ -646,6 +647,17 @@ function Card({
       {children}
     </section>
   );
+}
+
+/**
+ * What the Fallback figure shows: the poster, as without Rive, and the gazeX
+ * it is drawn at (the turn nearest the gaze), which the live rig matches only
+ * at that gazeX.
+ */
+function posterDetail(model: PipModel): string {
+  if (model.size === "icon") return "The icon, as without Rive";
+  const turn = posterTurnFor(model, model.size);
+  return `The poster at gazeX ${String(POSTER_TURNS[turn])}`;
 }
 
 function Figure({
