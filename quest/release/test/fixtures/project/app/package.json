@@ -1,0 +1,14 @@
+{
+  "name": "app",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "gpl-lib": "1.0.0",
+    "ok-lib": "1.0.0",
+    "shared": "*"
+  },
+  "optionalDependencies": {
+    "opt-absent": "1.0.0",
+    "opt-lib": "1.0.0"
+  }
+}

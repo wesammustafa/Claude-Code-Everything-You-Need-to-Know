@@ -1,0 +1,78 @@
+/* The client's one stylesheet: Tailwind, the bundled fonts, the tokens and element defaults. */
+/* Utilities come only from the app's own source: tests, e2e specs and build scripts name classes they never ship. */
+@import "tailwindcss" source("../");
+@source not "../**/*.test.{ts,tsx}";
+@import "@fontsource-variable/inter/opsz.css";
+@import "@fontsource-variable/jetbrains-mono/index.css";
+@import "./tokens.css";
+
+@layer base {
+  html {
+    background-color: var(--color-bg);
+    -webkit-text-size-adjust: 100%;
+    /* Focus moved by the keyboard, and in-page scrolling, stop clear of the
+       sticky top and the fixed action bar, never behind them (WCAG 2.4.11). */
+    scroll-padding-top: calc(var(--top-height) + var(--focus-clearance));
+    scroll-padding-bottom: calc(
+      var(--action-bar-height) + var(--focus-clearance)
+    );
+  }
+
+  /* An open Panel holds the page still: see lockScroll in components/Panel.tsx. */
+  html[data-scroll-locked] {
+    overflow: hidden;
+    padding-right: var(--scroll-lock-gap);
+  }
+
+  body {
+    min-height: 100dvh;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-weight: var(--font-weight-heading);
+    letter-spacing: var(--tracking-heading);
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  code,
+  kbd,
+  pre {
+    font-family: var(--font-mono);
+    font-variant-ligatures: none;
+  }
+
+  a {
+    color: var(--color-accent-text);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+
+  a:hover {
+    text-decoration-thickness: 2px;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
+  }
+}
