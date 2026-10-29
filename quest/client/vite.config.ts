@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import type { Plugin } from "vite";
 import { defineConfig } from "vitest/config";
 import { STAMP } from "./build/inputs.ts";
+import { playgroundBoard } from "./build/playground-board.ts";
 import {
   PREVIEW_HEADERS,
   bundledPackagesOnly,
@@ -59,6 +60,8 @@ export default defineConfig({
     bundledPackagesOnly(),
     preloadFonts(),
     stampInputs(STAMP),
+    // The Pip Playground's private board, served by the dev server only.
+    playgroundBoard(import.meta.dirname),
   ],
   build: {
     outDir: "dist/app",
