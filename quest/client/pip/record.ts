@@ -14,6 +14,28 @@ export const PIP_DIR = import.meta.dirname;
 /** The Rive CLI version the rig is built with. A different one refuses to build until this changes on purpose. */
 export const RIVE_CLI_VERSION = "1.7.0";
 
+/** The repository's .nvmrc, which pins the Node major the maintainer builds with. */
+export const NVMRC = join(PIP_DIR, "..", "..", "..", ".nvmrc");
+
+/**
+ * Why `node` (a version such as `v26.13.0`) must not run pip:build under an
+ * .nvmrc holding `nvmrc`, or null when it may. The posters are encoded with
+ * Node's own zlib, whose output differs between majors, so a build on another
+ * major rewrites every poster with different bytes though the rig is unchanged.
+ */
+export function nodeMismatch(node: string, nvmrc: string): string | null {
+  const pinned = /^v?(\d+)(?:\.\d+){0,2}$/.exec(nvmrc.trim())?.[1];
+  if (!pinned)
+    return `.nvmrc pins no Node version pip:build can read ("${nvmrc.trim()}")`;
+  const running = /^v?(\d+)\./.exec(node)?.[1];
+  if (running === pinned) return null;
+  return (
+    `this build needs Node ${pinned}, the major .nvmrc pins, and this is Node ${node}. ` +
+    "The posters' bytes depend on the Node major (its zlib), so another major rewrites every poster. " +
+    "Switch with `nvm use`, then build again."
+  );
+}
+
 /** The rig's sources (the CLI project), relative to quest/client/pip/. */
 export const RIG = "rig";
 /** The built file, relative to quest/client/pip/. */

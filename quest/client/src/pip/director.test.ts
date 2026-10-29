@@ -5,7 +5,7 @@ import {
   CELEBRATION_FLOOR_MS,
   GAZE_HOLD_MS,
   GLANCE_INTERVAL_MS,
-  IDLE_REST_MS,
+  IDLE_SLEEP_MS,
   LOOK_HOLD_MS,
   NOD_WINDOW_MS,
   OFFER_INTENSITY,
@@ -55,8 +55,8 @@ describe("the spec's timings", () => {
   test("work.changed glances at most once every 20 s", () => {
     expect(GLANCE_INTERVAL_MS).toBe(20000);
   });
-  test("Pip rests after 5 minutes", () => {
-    expect(IDLE_REST_MS).toBe(300000);
+  test("Pip sleeps after 5 minutes", () => {
+    expect(IDLE_SLEEP_MS).toBe(300000);
   });
   test("the gaze holds 3 s", () => {
     expect(GAZE_HOLD_MS).toBe(3000);
@@ -127,25 +127,58 @@ describe("modes", () => {
     expect(setup({ reducedMotion: true }).director.model().mode).toBe("rest");
   });
 
-  test("Rest after 5 minutes with no event or input; either wakes Pip", () => {
+  test("Sleep after 5 minutes with no event or input; either wakes Pip", () => {
     const { director, at, send } = setup();
-    at(IDLE_REST_MS - 1);
+    at(IDLE_SLEEP_MS - 1);
     expect(director.model().mode).toBe("idle");
-    at(IDLE_REST_MS);
-    expect(director.model().mode).toBe("rest");
+    at(IDLE_SLEEP_MS);
+    expect(director.model().mode).toBe("sleep");
     expect(director.send({ type: "activity" }).mode).toBe("idle");
-    at(2 * IDLE_REST_MS);
-    expect(director.model().mode).toBe("rest");
+    at(2 * IDLE_SLEEP_MS);
+    expect(director.model().mode).toBe("sleep");
     // Any event counts, even one that makes no Reaction.
     expect(send({ type: "notice", kind: "saved" }).mode).toBe("idle");
-    at(3 * IDLE_REST_MS);
+    at(3 * IDLE_SLEEP_MS);
     expect(director.send({ type: "screen", screen: "map" }).mode).toBe("idle");
   });
 
   test("a mode-only input is not activity", () => {
     const { director, at } = setup();
-    at(IDLE_REST_MS);
-    expect(director.send({ type: "pagePanel", open: false }).mode).toBe("rest");
+    at(IDLE_SLEEP_MS);
+    expect(director.send({ type: "pagePanel", open: false }).mode).toBe(
+      "sleep",
+    );
+  });
+
+  test("never Sleep under reduced motion: Rest holds", () => {
+    const { director, at } = setup({ reducedMotion: true });
+    at(IDLE_SLEEP_MS);
+    expect(director.model().mode).toBe("rest");
+    expect(director.send({ type: "reducedMotion", on: false }).mode).toBe(
+      "sleep",
+    );
+    expect(director.send({ type: "reducedMotion", on: true }).mode).toBe(
+      "rest",
+    );
+  });
+
+  test("Rest outranks Sleep, which comes back when Rest ends", () => {
+    const { director, at } = setup();
+    at(IDLE_SLEEP_MS);
+    expect(director.send({ type: "visibility", hidden: true }).mode).toBe(
+      "rest",
+    );
+    expect(director.send({ type: "visibility", hidden: false }).mode).toBe(
+      "sleep",
+    );
+  });
+
+  test("Pip never falls asleep while a Check runs", () => {
+    const { director, at, send } = setup();
+    send({ type: "check.started" });
+    at(IDLE_SLEEP_MS);
+    expect(director.model().mode).toBe("thinking");
+    expect(send(passed).mode).toBe("idle");
   });
 
   test("Rest while the connection is lost", () => {
@@ -564,7 +597,7 @@ describe("resting gaze", () => {
       director.send({ type: "look", target: "command", at: { x: 1, y: 1 } })
         .gaze,
     ).toEqual(REST);
-    expect(director.nextWakeAt()).toBe(IDLE_REST_MS);
+    expect(director.nextWakeAt()).toBe(IDLE_SLEEP_MS);
   });
 });
 
@@ -891,7 +924,7 @@ describe("following the pointer", () => {
   test("off under reduced motion: Pip holds his resting gaze, with no wake for it", () => {
     const { director } = setup({ screen: "welcome", reducedMotion: true });
     expect(director.send(point(left)).gaze).toEqual(FORWARD);
-    expect(director.nextWakeAt()).toBe(IDLE_REST_MS);
+    expect(director.nextWakeAt()).toBe(IDLE_SLEEP_MS);
     const step = setup({ screen: "step", reducedMotion: true });
     expect(step.director.send(point(left)).gaze).toEqual(REST);
   });
@@ -925,10 +958,10 @@ describe("following the pointer", () => {
     );
   });
 
-  test("a moving pointer keeps Pip from resting, and wakes him", () => {
+  test("a moving pointer keeps Pip from sleeping, and wakes him", () => {
     const { director, at } = welcome();
-    at(IDLE_REST_MS);
-    expect(director.model().mode).toBe("rest");
+    at(IDLE_SLEEP_MS);
+    expect(director.model().mode).toBe("sleep");
     expect(director.send(point(left))).toMatchObject({
       mode: "idle",
       gaze: left,
@@ -1375,8 +1408,8 @@ describe("the model", () => {
 
   test("nextWakeAt names the 5-minute rest when nothing sooner is due", () => {
     const { director, at } = setup();
-    expect(director.nextWakeAt()).toBe(IDLE_REST_MS);
-    at(IDLE_REST_MS);
+    expect(director.nextWakeAt()).toBe(IDLE_SLEEP_MS);
+    at(IDLE_SLEEP_MS);
     expect(director.nextWakeAt()).toBeNull();
   });
 });

@@ -17,6 +17,7 @@ import {
   changedShare,
   drawnBounds,
   eyes,
+  headTop,
   soles,
   type Bounds,
   type Rgba,
@@ -114,7 +115,8 @@ function grabCanvas(): Rgba {
 }
 
 /** What a sample measures in each frame: see sampleFrames. */
-type SampleKind = "bounds" | "eyes" | "soles" | "step" | "keep" | "none";
+type SampleKind =
+  "bounds" | "head" | "eyes" | "soles" | "step" | "keep" | "none";
 
 /** Playwright's clock in the page: what page.clock.runFor drives. */
 interface PageClock {
@@ -155,6 +157,7 @@ async function sampleFrames(
     if (kind === "none") continue;
     const image = m.grab();
     if (kind === "bounds") out.push(m.drawnBounds(image));
+    else if (kind === "head") out.push(m.headTop(image));
     else if (kind === "eyes") out.push(m.eyes(image));
     else if (kind === "soles") out.push(m.soles(image));
     else if (kind === "step") {
@@ -174,6 +177,7 @@ interface PageMeasures {
   changedShare: typeof changedShare;
   drawnBounds: typeof drawnBounds;
   eyes: typeof eyes;
+  headTop: typeof headTop;
   soles: typeof soles;
   sample: typeof sampleFrames;
   /** Frames kept by name, to compare with later ones. */
@@ -188,6 +192,7 @@ const MEASURES = `window.pipMeasures = {
   changedShare: ${changedShare.toString()},
   drawnBounds: ${drawnBounds.toString()},
   eyes: ${eyes.toString()},
+  headTop: ${headTop.toString()},
   soles: ${soles.toString()},
   sample: ${sampleFrames.toString()},
   kept: new Map(),
@@ -333,6 +338,30 @@ async function bounds(page: Page): Promise<Bounds> {
 
 const tops = (trace: readonly Bounds[]) => trace.map((b) => b.top);
 
+/**
+ * The top of Pip's head after each of `samples` frames: the measure the
+ * hand-over tests compare, which the board's elements round him (Success's
+ * strokes, Celebration's confetti) never move, unlike his drawn box.
+ */
+async function headTrace(page: Page, samples: number) {
+  const trace = await sample(page, samples, 1, "head");
+  return trace.map((top) => {
+    if (typeof top !== "number") throw new Error("Pip's head is not drawn");
+    return top;
+  });
+}
+
+/** The top of Pip's head in the current frame. */
+async function headNow(page: Page) {
+  const top = await page.evaluate(() => {
+    const m = window.pipMeasures;
+    if (!m) throw new Error("the measures are not installed");
+    return m.headTop(m.grab());
+  });
+  if (top === null) throw new Error("Pip's head is not drawn");
+  return top;
+}
+
 test("the committed .riv loads offline with the bundled WASM, and its view model is exactly the contract", async ({
   page,
 }) => {
@@ -383,6 +412,28 @@ for (const reaction of PIP_REACTIONS) {
   });
 }
 
+for (const reaction of ["greeting", "curious", "explaining"] as const) {
+  test(`${reaction} under reduced motion changes expression without moving Pip`, async ({
+    page,
+  }) => {
+    await openPaused(page);
+    await setMode(page, "rest");
+    await setReducedMotion(page, true);
+    await settle(page, 40);
+    const rest = await bounds(page);
+    await keep(page, "rest");
+
+    await fire(page, reaction);
+    for (const drawn of await boundsTrace(page, 6, 4)) {
+      expect(Math.abs(drawn.top - rest.top)).toBeLessThanOrEqual(1);
+      expect(Math.abs(drawn.left - rest.left)).toBeLessThanOrEqual(1);
+      expect(Math.abs(drawn.right - rest.right)).toBeLessThanOrEqual(1);
+      expect(Math.abs(drawn.bottom - rest.bottom)).toBeLessThanOrEqual(1);
+    }
+    expect(await changed(page, "rest")).toBeGreaterThan(0.005);
+  });
+}
+
 test("every mode runs with no error, and the other properties take their full ranges", async ({
   page,
 }) => {
@@ -411,6 +462,55 @@ test("every mode runs with no error, and the other properties take their full ra
   await settle(page, 50);
   expect(await page.evaluate(() => window.pip?.playing())).toBe(true);
   expect(seen.problems).toEqual([]);
+});
+
+test("sleep lies Pip down, and he gets up smoothly when the mode changes", async ({
+  page,
+}) => {
+  test.slow();
+  const seen = watch(page);
+  await openPaused(page);
+  await settle(page, 32);
+  const awake = await eyesNow(page);
+  const { height } = await measure(page);
+
+  await setMode(page, "sleep");
+  await settle(page, 120);
+  const asleep = await eyesNow(page);
+  expect(asleep.y - awake.y, "asleep: the eyes lie low").toBeGreaterThan(
+    height * 0.1,
+  );
+
+  // Getting up: the eyes rise over many frames, never more than a quarter
+  // of the way in one.
+  await setMode(page, "idle");
+  const trace = await sample(page, 60, 1, "eyes");
+  const ys = [
+    asleep.y,
+    ...trace.flatMap((found) => (found ? [(found as { y: number }).y] : [])),
+  ];
+  const travel = asleep.y - Math.min(...ys);
+  const steepest = Math.max(
+    ...ys.slice(1).map((y, i) => Math.abs(y - (ys[i] ?? y))),
+  );
+  expect(travel, "awake: the eyes are back up").toBeGreaterThan(height * 0.1);
+  expect(steepest, "no jump on the way up").toBeLessThanOrEqual(travel * 0.25);
+  expect(seen.problems).toEqual([]);
+});
+
+test("under reduced motion Thinking and Sleep hold Rest", async ({ page }) => {
+  await openPaused(page);
+  await setReducedMotion(page, true);
+  await setMode(page, "rest");
+  await settle(page, 60);
+  await keep(page, "rest");
+  for (const mode of ["thinking", "sleep"] as const) {
+    await setMode(page, mode);
+    await settle(page, 60);
+    expect(await changed(page, "rest"), `${mode} holds Rest`).toBeLessThan(
+      0.002,
+    );
+  }
 });
 
 test("a Reaction fired again while it plays starts over, and a nod replays Success small", async ({
@@ -467,15 +567,15 @@ for (const [playing, next] of [
     // The new Reaction on its own, from Idle: where it starts, and how fast it
     // moves Pip by itself.
     await fire(page, next, 1);
-    const alone = tops(await boundsTrace(page, 14, 1));
+    const alone = await headTrace(page, 14);
     await settle(page, 120);
 
     // The same Reaction fired 288 ms into another, near the top of its hop.
     await fire(page, playing, 1);
     await run(page, 18);
-    const from = (await bounds(page)).top;
+    const from = await headNow(page);
     await fire(page, next, 1);
-    const handOver = tops(await boundsTrace(page, 14, 1));
+    const handOver = await headTrace(page, 14);
     await settle(page, 120);
 
     const at = `${next} interrupting ${playing}`;
@@ -504,7 +604,7 @@ for (const [playing, next] of [
     for (let i = 11; i < alone.length; i++) {
       expect(
         Math.abs((handOver[i] ?? 0) - (alone[i] ?? 0)),
-        `${at}: Pip's top edge ${String((i + 1) * FRAME_MS)} ms in`,
+        `${at}: the top of Pip's head ${String((i + 1) * FRAME_MS)} ms in`,
       ).toBeLessThanOrEqual(2);
     }
   });
