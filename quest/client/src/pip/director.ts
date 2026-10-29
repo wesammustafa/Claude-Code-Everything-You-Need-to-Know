@@ -41,8 +41,8 @@ export const CELEBRATION_FLOOR_MS = 1000;
 export const NOD_WINDOW_MS = 3000;
 /** `work.changed` glances at most once in this window. */
 export const GLANCE_INTERVAL_MS = 20_000;
-/** With no event and no input for this long, Pip rests. */
-export const IDLE_REST_MS = 5 * 60_000;
+/** With no event and no input for this long, Pip sleeps (owner, 2026-10-29). */
+export const IDLE_SLEEP_MS = 5 * 60_000;
 /**
  * How long a Reaction holds Pip's gaze on its target (Explaining and Curious)
  * or on the Learner (Greeting, Celebration, the help offer) before he returns
@@ -267,7 +267,7 @@ export interface DirectorState {
   connectionLost: boolean;
   /** A Check is running: from check.started to its result. */
   checking: boolean;
-  /** The last event or input, for the 5-minute rest. */
+  /** The last event or input, for the 5-minute sleep. */
   lastActivityAt: number;
   /** Greeting has played (or is waiting on the Celebration floor) this page load. */
   greeted: boolean;
@@ -487,7 +487,7 @@ function applyEvents(
   const lines = s.targets.lines;
   const linesArrived =
     lines !== undefined && events.some((event) => LINES_ARRIVE.has(event.type));
-  // Every event counts against the 5-minute rest, check.progress and notice
+  // Every event counts against the 5-minute sleep, check.progress and notice
   // included: they change no mode or Reaction, but they are events.
   let next: DirectorState = {
     ...s,
@@ -596,9 +596,11 @@ export function directorReduce(
 }
 
 /**
- * Rest while Pip can't be seen or isn't needed; otherwise Thinking or Idle.
- * Rest outranks Thinking, so reduced motion means Rest and a reduced-motion
- * Learner never sees Thinking (the owner's reading, 2026-10-26).
+ * Rest while Pip can't be seen or isn't needed; otherwise Thinking while a
+ * Check runs; otherwise Sleep after 5 minutes with no event or input (owner,
+ * 2026-10-29); otherwise Idle. Rest outranks Thinking, so reduced motion means
+ * Rest and a reduced-motion Learner never sees Thinking (the owner's reading,
+ * 2026-10-26), nor Sleep. Pip never falls asleep while a Check runs.
  */
 export function modeAt(s: DirectorState, now: number): PipMode {
   if (
@@ -606,12 +608,12 @@ export function modeAt(s: DirectorState, now: number): PipMode {
     s.hidden ||
     s.offScreen ||
     s.reducedMotion ||
-    s.connectionLost ||
-    now - s.lastActivityAt >= IDLE_REST_MS
+    s.connectionLost
   ) {
     return "rest";
   }
-  return s.checking ? "thinking" : "idle";
+  if (s.checking) return "thinking";
+  return now - s.lastActivityAt >= IDLE_SLEEP_MS ? "sleep" : "idle";
 }
 
 const clamp = (v: number) => Math.max(-1, Math.min(1, v));
@@ -657,7 +659,8 @@ function following(s: DirectorState, now: number): Follow | null {
   if (pull <= 0) return null;
   if (s.playing !== null && now - s.playing.startedAt < REACTION_PLAYS_MS)
     return null;
-  if (s.pageInert || modeAt(s, now) === "rest") return null;
+  const mode = modeAt(s, now);
+  if (s.pageInert || mode === "rest" || mode === "sleep") return null;
   return { at: pointer.at, pull };
 }
 
@@ -732,7 +735,7 @@ export function pipModel(s: DirectorState, now: number): PipModel {
  * The next time the model changes with no input: a waiting Reaction's turn,
  * a gaze's release, the pointer's release (or the end of the Reaction
  * following waits on), the help offer (or the end of the Reaction it waits
- * on), or the 5-minute rest. A tick then brings it about. Null when nothing
+ * on), or the 5-minute sleep. A tick then brings it about. Null when nothing
  * is due.
  */
 export function nextWakeAt(s: DirectorState, now: number): number | null {
@@ -757,7 +760,7 @@ export function nextWakeAt(s: DirectorState, now: number): number | null {
     if (held === null) due.push(help);
     else if (held !== Infinity) due.push(held);
   }
-  due.push(s.lastActivityAt + IDLE_REST_MS);
+  due.push(s.lastActivityAt + IDLE_SLEEP_MS);
   const later = due.filter((t) => t > now);
   return later.length === 0 ? null : Math.min(...later);
 }

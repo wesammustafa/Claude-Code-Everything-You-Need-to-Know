@@ -9,7 +9,7 @@ export const PIP_VIEW_MODEL = "Pip";
 export const PIP_MODE_ENUM = "PipMode";
 
 /** The modes Pip holds, in the enum's order. */
-export const PIP_MODES = ["idle", "thinking", "rest"] as const;
+export const PIP_MODES = ["idle", "thinking", "rest", "sleep"] as const;
 export type PipMode = (typeof PIP_MODES)[number];
 
 /** The Reactions Pip plays once, one trigger each. */

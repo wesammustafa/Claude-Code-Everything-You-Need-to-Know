@@ -57,7 +57,7 @@ export function createPipStage(
     timer = null;
   };
   // The director names when its model next changes with no input (a waiting
-  // Reaction, the gaze's release, the 5-minute rest); a tick then brings it.
+  // Reaction, the gaze's release, the 5-minute sleep); a tick then brings it.
   const schedule = () => {
     unschedule();
     if (listeners.size === 0) return;
