@@ -23,6 +23,24 @@ export const PIP_REACTIONS = [
 ] as const;
 export type PipReactionKind = (typeof PIP_REACTIONS)[number];
 
+/** Where Pip sits: large and centred, beside the step, or the static icon. */
+export type PipSize = "hero" | "beside" | "icon";
+
+/**
+ * The one model that drives both the Rive renderer and the static fallback,
+ * as the spec's renderer contract defines it. Pip's director produces it.
+ */
+export interface PipModel {
+  mode: PipMode;
+  /** 0..1 intensity; a new id plays once. */
+  reaction: { id: string; kind: PipReactionKind; intensity: number } | null;
+  /** -1..1, clamped; null: the rig's own glances. */
+  gaze: { x: number; y: number } | null;
+  /** The system setting or the Settings override. */
+  reducedMotion: boolean;
+  size: PipSize;
+}
+
 type ContractProperties = { mode: "enumType" } & Record<
   PipReactionKind,
   "trigger"
