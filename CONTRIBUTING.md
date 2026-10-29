@@ -364,6 +364,24 @@ Report a security problem in an example as [SECURITY.md](SECURITY.md) describes.
 
 The root `.claude/` is reserved for maintainer tooling. Do not add skills or other examples there.
 
+## App code
+
+Claude Code Quest, the web learning app, lives in `quest/`, with its course in `course/`, the Practice template's hand-written files in `practice-template/` and one Reference solution per Lesson in `solutions/`. The rules in this section apply to every agent and contributor working there.
+
+Every change to the app keeps this safety contract:
+
+- the app binds `127.0.0.1` and makes no outbound request at runtime (no telemetry, CDN, web font or update check);
+- reads only the Practice copy and the Learner's Work folders, writes only `.practice/` through the store, and runs only the Check child and read-only git;
+- never reads `.env` files, never calls the Claude API, never logs file contents or command output beyond the verification lines;
+- its own wording states no Claude Code fact;
+- every bundled dependency is pinned, on the license allowlist and credited in the notices.
+
+Dependencies follow these rules:
+
+- A dependency bundled into the Practice template needs the owner's OK and a license on the allowlist: MIT, ISC, BSD-2-Clause, BSD-3-Clause or Apache-2.0; MIT-Modern-Variant or MIT-0 for code compiled into Rive's WASM; OFL-1.1 for fonts.
+- Every dependency is pinned to an exact version in the one root lockfile, and installs use `npm ci`.
+- A dev dependency is named, with its reason, in the pull request that adds it.
+
 ## License
 
 By contributing, you agree your contributions are licensed under the MIT license (see [`LICENSE`](LICENSE)).
