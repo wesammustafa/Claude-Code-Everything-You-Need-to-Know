@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import {
@@ -48,35 +48,60 @@ describe("Command", () => {
   });
 
   test("each Copy restarts the confirmation and is announced again", async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    try {
-      const user = userEvent.setup({
-        advanceTimers: (ms) => vi.advanceTimersByTime(ms),
+    // Only the test moves the clock, so however slow the machine, the
+    // confirmation lasts exactly as long as the test says. user-event waits
+    // on a clock that moves by itself, so the clicks go straight to the
+    // button, with a clipboard of the test's own.
+    vi.useFakeTimers();
+    const clipboard = Object.getOwnPropertyDescriptor(navigator, "clipboard");
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: () => Promise.resolve() },
+    });
+    const click = (element: HTMLElement) =>
+      act(async () => {
+        fireEvent.click(element);
+        await Promise.resolve();
       });
+    try {
       render(<Command text="git status" />);
       const copy = screen.getByRole("button", { name: "Copy git status" });
       const status = screen.getByRole("status");
 
-      await user.click(copy);
+      await click(copy);
       expect(copy).toHaveAccessibleName("Copied");
       const first = status.firstElementChild;
       expect(first).toHaveTextContent("Copied");
 
-      await act(() => vi.advanceTimersByTimeAsync(1200));
-      await user.click(copy);
+      act(() => {
+        vi.advanceTimersByTime(1200);
+      });
+      await click(copy);
       // The same words, in a new node, so a screen reader hears the second copy.
       const second = status.firstElementChild;
       expect(second).toHaveTextContent("Copied");
       expect(second).not.toBe(first);
 
       // 2000 ms after the first Copy, 800 after the second: still confirmed.
-      await act(() => vi.advanceTimersByTimeAsync(800));
+      act(() => {
+        vi.advanceTimersByTime(800);
+      });
       expect(copy).toHaveAccessibleName("Copied");
-      await act(() => vi.advanceTimersByTimeAsync(900));
+      // 1600 ms after the second: Copy again.
+      act(() => {
+        vi.advanceTimersByTime(799);
+      });
+      expect(copy).toHaveAccessibleName("Copied");
+      act(() => {
+        vi.advanceTimersByTime(1);
+      });
       expect(copy).toHaveAccessibleName("Copy git status");
       expect(status).toBeEmptyDOMElement();
     } finally {
       vi.useRealTimers();
+      if (clipboard === undefined)
+        Reflect.deleteProperty(navigator, "clipboard");
+      else Object.defineProperty(navigator, "clipboard", clipboard);
     }
   });
 
