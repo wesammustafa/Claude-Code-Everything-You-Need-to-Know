@@ -55,10 +55,9 @@ describe("course manifest", () => {
     expect(JSON.stringify(course)).not.toContain("source-commit");
   });
 
-  test("the Terminal adapter loads the compiled course", async () => {
+  test("the course loader reads the compiled course", async () => {
     const expected = compileCourse(manifestValue, stepFiles, pages, checks);
-    const { loadCourse } =
-      await import("../../../practice-template/learn/lib/content.mjs");
+    const { loadCourse } = await import("../src/course.mjs");
     const actual = loadCourse(`${root}practice-template`);
     expect(actual).toHaveLength(23);
     expect(actual[0].content.steps).toEqual(expected.lessons[0].content.steps);

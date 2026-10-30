@@ -13,7 +13,7 @@ import { SLOW } from "./engine.mjs";
 
 const RUN_CHECK = join(
   dirname(fileURLToPath(import.meta.url)),
-  "../../../practice-template/learn/run-check.mjs",
+  "run-check.mjs",
 );
 // The most a run may print: a check's JSON, and a probe's.
 export const CHECK_BUFFER = 4 << 20;

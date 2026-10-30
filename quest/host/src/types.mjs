@@ -99,16 +99,12 @@
  */
 
 /**
- * The terminal's key translator, in place of the engine until ticket 210.
- * `effect` runs a terminal effect and says whether it was one.
- * @typedef {object} Translator
- * @property {(state: object, input: object) => { state: object, effects: object[], events?: object[] }} reduce
+ * The lesson engine the host runs: the real one by default. It is an
+ * option only so a test can wrap the real engine, to add effects to an
+ * input or log what was reduced.
+ * @typedef {object} EngineSeam
+ * @property {(state: object, input: object) => { state: object, effects: object[], events: object[] }} reduce
  * @property {(args: object) => object} initialState
- * @property {(state: object) => string | null} workFolder
- * @property {(state: object) => string | null} evidence
- * @property {(state: object) => boolean} opensWithCheck
- * @property {string[]} inputs
- * @property {(effect: object) => boolean} effect
  */
 
 /**
@@ -120,7 +116,7 @@
  * @property {string} [platform]
  * @property {Adapters} adapters
  * @property {object} [facts] facts the client knows, over the host's own
- * @property {Translator | null} [translator]
+ * @property {EngineSeam} [engine] the real engine unless a test wraps it
  * @property {FolderLook | null} [ahead] the folder --dir gave, looked at
  */
 

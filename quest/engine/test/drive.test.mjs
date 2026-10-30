@@ -1,19 +1,14 @@
-// The action driver's own tests (ticket 208): its fixtures are the key
-// driver's, it plays every Beginner fixture lesson by actions, and its
-// refusal check tells a no-op from a change.
+// The action driver's own tests (ticket 208): it plays every Beginner
+// fixture lesson by actions, and its refusal check tells a no-op from a
+// change.
 import { test } from "vitest";
 import assert from "node:assert/strict";
-import * as keys from "../../../practice-template/checks/test/learn-drive.mjs";
 import {
   ACTION_TYPES,
   EFFECT_TYPES,
   IDLE_MS,
-  bareExit,
   checkResult,
   course,
-  DEMO_B2,
-  DEMO_I1,
-  DEMO_I1_INDEX,
   driver,
   fileResult,
   onReading,
@@ -24,18 +19,7 @@ import {
   stateAt,
   struggles,
   where,
-  withCode,
 } from "./drive.mjs";
-
-test("the fixtures are the key driver's", () => {
-  assert.equal(DEMO_B2, keys.DEMO_B2);
-  assert.equal(DEMO_I1, keys.DEMO_I1);
-  assert.equal(DEMO_I1_INDEX, keys.DEMO_I1_INDEX);
-  const lines = ["```bash", "git status", "```"];
-  assert.equal(withCode(lines), keys.withCode(lines));
-  assert.deepEqual(course, keys.course);
-  assert.deepEqual(bareExit, keys.bareExit);
-});
 
 const beginner = course.filter((l) => l.level === "beginner");
 const allDone = (s) => beginner.every((l) => s.progress[l.id].complete);

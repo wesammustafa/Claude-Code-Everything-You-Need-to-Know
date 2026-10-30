@@ -1,6 +1,6 @@
 // The child processes a host started and has not seen end, so closing it
 // can stop them. Each host has its own registry (realAdapters); `shared` is
-// the one the terminal's old entry points use until ticket 211.
+// the default for a call made outside a host, as the tests make.
 export function createChildren() {
   const running = new Set();
   return {

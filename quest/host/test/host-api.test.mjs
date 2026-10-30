@@ -25,9 +25,9 @@ const fine = (path) => ({
   practice: true,
 });
 
-test("dispatch takes Learner actions only, and the translator's key inputs only with a translator", async () => {
-  const bare = fakeHost({ saved: AT_W3 });
-  await bare.host.open();
+test("dispatch takes exactly ACTION_TYPES; a key input is a TypeError", async () => {
+  const { host, heard } = fakeHost({ saved: AT_W3 });
+  await host.open();
   for (const type of [
     "check",
     "tick",
@@ -37,25 +37,15 @@ test("dispatch takes Learner actions only, and the translator's key inputs only 
     "probed",
     undefined,
   ])
-    assert.throws(() => bare.host.dispatch({ type }), {
+    assert.throws(() => host.dispatch({ type }), {
       name: "TypeError",
       message: `not an action: ${type}`,
     });
-  assert.equal(bare.heard.length, 0, "nothing was reduced");
-  const { translator } = scripted();
-  const t = fakeHost({ saved: AT_W3, translator });
-  await t.host.open();
+  assert.equal(heard.length, 0, "nothing was reduced");
   // Each with the fields some action reads.
   const fields = { lesson: "b-1", option: 0, text: "x", help: "planned" };
-  for (const type of ["key", "paste", "flush", ...ACTION_TYPES])
-    t.host.dispatch({ type, ...fields });
-  assert.deepEqual(typesOf(t.heard), [
-    "key",
-    "paste",
-    "flush",
-    ...ACTION_TYPES,
-  ]);
-  assert.throws(() => t.host.dispatch({ type: "tick" }), TypeError);
+  for (const type of ACTION_TYPES) host.dispatch({ type, ...fields });
+  assert.deepEqual(typesOf(heard), ACTION_TYPES);
 });
 
 test("the host's clock stamps every input: a client's own now is dropped, and an input the host makes keeps its own", async () => {
@@ -107,10 +97,10 @@ test("each listener hears each input once, with the state after it and its event
 });
 
 test("one input at a time: an answer that comes at once and a listener that dispatches wait their turn, in order", async () => {
-  const { translator, log } = scripted();
+  const { engine, log } = scripted();
   const { host } = fakeHost({
     saved: AT_W3,
-    translator,
+    engine,
     checks: (call) => {
       call.onRunning(1, 1);
       return w3(false);
@@ -140,22 +130,17 @@ test("one input at a time: an answer that comes at once and a listener that disp
   );
 });
 
-test("an effect the host doesn't run is an error, unless the translator claims it", async () => {
-  const { translator, claimed } = scripted({
-    effects: {
-      paste: [{ type: "terminal", text: "x" }],
-      flush: [{ type: "mystery" }],
-    },
+test("an effect the host doesn't run is an error", async () => {
+  const { engine } = scripted({
+    effects: { "hint.next": [{ type: "terminal", text: "x" }] },
   });
-  const { host } = fakeHost({ saved: AT_W3, translator });
+  const { host } = fakeHost({ saved: AT_W3, engine });
   await host.open();
-  host.dispatch({ type: "paste", text: "x" });
-  assert.deepEqual(claimed, [{ type: "terminal", text: "x" }]);
-  assert.throws(() => host.dispatch({ type: "flush" }), {
-    message: "unknown effect: mystery",
+  assert.throws(() => host.dispatch({ type: "hint.next" }), {
+    message: "unknown effect: terminal",
   });
   // The queue is free again.
-  host.dispatch({ type: "hint.next" });
+  host.dispatch({ type: "step.continue" });
 });
 
 test("open: git's answers and the copy make the facts, and the client's facts go over the host's", async () => {

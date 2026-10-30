@@ -9,9 +9,14 @@ import {
   finishedBefore,
   threeLevels,
 } from "../../engine/test/drive.mjs";
-import { initialState, reduce } from "../src/engine.mjs";
+import {
+  evidence,
+  initialState,
+  opensWithCheck,
+  reduce,
+  workFolder,
+} from "../src/engine.mjs";
 import { fakeClock } from "../src/fake.mjs";
-import * as look from "../src/look.mjs";
 import {
   AT_W3,
   fakeHost,
@@ -237,9 +242,9 @@ test("the work folder has its own watcher, armed again as the Learner moves to a
   );
 });
 
-// What 210 has to settle: the host's own selectors read the engine's state
-// alone, where the terminal reads its screens. Pinned so the change shows.
-test("the default selectors: evidence only on a card, the work folder of the step even while the terminal is away", () => {
+// The selectors the host reads off the engine's state alone (209's, lifted
+// into the engine in 210).
+test("the host's selectors: evidence only on a card, the work folder of the step", () => {
   const course = threeLevels({ "i-1": workedInCopy });
   const facts = { root: ROOT, name: "", gitError: null, practiceDir: true };
   let s = initialState({
@@ -253,20 +258,13 @@ test("the default selectors: evidence only on a card, the work folder of the ste
     facts,
     now: 0,
   });
-  assert.equal(look.workFolder(s), MINE, "an overview: the lesson's folder");
-  assert.equal(look.opensWithCheck(s), true);
+  assert.equal(workFolder(s), MINE, "an overview: the lesson's folder");
+  assert.equal(opensWithCheck(s), true);
   s = reduce(s, { type: "lesson.start", help: "planned", now: 1 }).state;
-  assert.equal(look.workFolder(s), ROOT, "a Worked example in the copy");
-  assert.equal(look.evidence(s), null, "W1 names no evidence file");
-  // The terminal's map (away): the terminal watches the lesson's folder;
-  // the default still the step's, and no card's evidence.
-  const away = reduce(s, { type: "screen.away", now: 2 }).state;
-  assert.equal(look.workFolder(away), ROOT);
+  assert.equal(workFolder(s), ROOT, "a Worked example in the copy");
+  assert.equal(evidence(s), null, "W1 names no evidence file");
   const b1 = initialState({ course, saved: AT_W3, facts, now: 0 });
+  assert.equal(evidence(b1), null, "a resume with no beat open: no card");
   const onW3 = reduce(b1, { type: "lesson.open", lesson: "b-1", now: 1 }).state;
-  assert.equal(look.evidence(onW3), VERSION);
-  assert.equal(
-    look.evidence(reduce(onW3, { type: "screen.away", now: 2 }).state),
-    null,
-  );
+  assert.equal(evidence(onW3), VERSION);
 });

@@ -1,8 +1,8 @@
 // Every lesson of the guide in the app (ticket 83), driven by actions (ticket
 // 208): the 23 lessons on PATH in course order, the ones with no lesson file
 // shown through their check, and a check-only lesson that can be completed.
-// The map, the card's rows, motion and plain output are the terminal's, and
-// stay in learn-course.test.mjs.
+// The map, the card's rows, motion and plain output were the terminal's,
+// and went with it in ticket 210.
 import { test } from "vitest";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

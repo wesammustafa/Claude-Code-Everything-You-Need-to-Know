@@ -11,7 +11,7 @@ import { watchDirs } from "../src/watch.mjs";
 // spec: watching
 test("the watcher arms a .practice folder made after it started", async () => {
   // Events only speed things up: they can lag or never come (WSL on
-  // /mnt/c, network folders), so main.mjs also polls. What must hold is that
+  // /mnt/c, network folders), so the host also polls. What must hold is that
   // a change re-arms the watcher on the new folder.
   const dir = repo();
   const w = watchDirs(dir, () => {}, { debounceMs: 20 });

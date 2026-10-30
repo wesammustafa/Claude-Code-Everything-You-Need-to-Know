@@ -124,7 +124,7 @@ export function readOnlyFindings(
 
 // Every relative module a file reaches: through an import, a re-export, a
 // bare import or a dynamic import(), on one line or wrapped as Prettier
-// wraps them (learn-engine.test.mjs's walk).
+// wraps them (quest/engine/test/engine.test.mjs's walk).
 const RELATIVE =
   /^(?:import|export)\s[^;]*?from\s+['"](\.{1,2}\/[^'"]+)['"]|^import\s+['"](\.{1,2}\/[^'"]+)['"]|\bimport\(\s*['"](\.{1,2}\/[^'"]+)['"]/gms;
 export const relativeOf = (text) =>

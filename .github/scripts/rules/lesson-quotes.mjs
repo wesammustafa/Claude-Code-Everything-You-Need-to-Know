@@ -10,14 +10,15 @@
 // are code, never quotes or headings. This rule fails when such a quote or
 // block, the title, the Stamp or a step count no longer matches its lesson, or
 // a block doesn't close. It reads each line and the front matter as the app
-// does (learn/lib/content.mjs and checks/frontmatter.mjs in the template), so
-// no spacing, quoting or line ending the app accepts can hide a quote. It
-// needs the template's lesson files: with LEARN_DIR set to a template
-// checkout's learn/lessons folder, any mode reads them there; the weekly
-// scheduled run fetches them from the template's main branch. A pull request
-// run without LEARN_DIR stays offline and only warns when the change touches a
-// listed lesson or level index. In every mode it fails when learn.txt pairs a
-// level index id with a page other than docs/<level>/README.md.
+// does (quest/engine/src/content.mjs here; learn/lib/content.mjs and
+// checks/frontmatter.mjs in the published template), so no spacing, quoting
+// or line ending the app accepts can hide a quote. It needs the template's
+// lesson files: with LEARN_DIR set to a template checkout's learn/lessons
+// folder, any mode reads them there; the weekly scheduled run fetches them
+// from the template's main branch. A pull request run without LEARN_DIR stays
+// offline and only warns when the change touches a listed lesson or level
+// index. In every mode it fails when learn.txt pairs a level index id with a
+// page other than docs/<level>/README.md.
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { readText } from '../lib/tree.mjs';
@@ -33,9 +34,9 @@ const RAW = 'https://raw.githubusercontent.com/wesammustafa/claude-code-practice
 const flat = (text) => text.replace(/\s+/g, ' ').trim();
 // A code block in a lesson file opens on a fence at the first column, three
 // backticks or tildes or more, and closes on a fence of the same character,
-// at least as long, as the app reads it (learn/lib/content.mjs in the
-// template). The app never shows the fence's info string, so only the
-// block's lines are compared.
+// at least as long, as the app reads it (quest/engine/src/content.mjs; in
+// the published template, learn/lib/content.mjs). The app never shows the
+// fence's info string, so only the block's lines are compared.
 const LESSON_FENCE = /^(`{3,}|~{3,})([^`]*)$/;
 const closes = (fence, line) => {
   const m = line.match(/^(`{3,}|~{3,})[ \t]*$/);

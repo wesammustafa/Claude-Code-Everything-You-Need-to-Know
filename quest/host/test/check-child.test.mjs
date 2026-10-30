@@ -5,7 +5,7 @@ import { test } from "vitest";
 import assert from "node:assert/strict";
 import { execFile, spawnSync } from "node:child_process";
 import { rmSync } from "node:fs";
-import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { STUB_RUNS } from "../../../practice-template/checks/lessons/a-4.mjs";
 import { NPM_TEST_LIMIT } from "../../../practice-template/checks/lessons/b-3.mjs";
 import { lessons } from "../../../practice-template/checks/lessons/index.mjs";
@@ -26,7 +26,9 @@ import { createChildren } from "../src/children.mjs";
 import { GIT_LIMIT } from "../src/git.mjs";
 import { root } from "../../engine/test/drive.mjs";
 
-const RUN_CHECK = join(root, "learn", "run-check.mjs");
+const RUN_CHECK = fileURLToPath(
+  new URL("../src/run-check.mjs", import.meta.url),
+);
 const SLOW_TEST = 60_000;
 const child = (args, extraEnv = {}) => {
   const { NODE_TEST_CONTEXT: _, ...env } = process.env;
