@@ -44,6 +44,13 @@ describe("motion tokens", () => {
     expect(reduced.get("--animate-breathe")).toBe("none");
   });
 
+  test("a Switch's thumb keeps its place under reduced motion, and snaps there", () => {
+    // Its travel marks which state the Switch is in, so reduced motion keeps
+    // it and drops only the transition (components/Switch.tsx).
+    expect(full.get("--switch-travel")).toBe("16px");
+    expect(reduced.has("--switch-travel")).toBe(false);
+  });
+
   test("reduced motion follows the system setting unless the Settings switch picks", () => {
     expect(css).toMatch(
       /@custom-variant reduced \{\s*@media \(prefers-reduced-motion: reduce\)/,

@@ -261,6 +261,18 @@ test.describe("motion", () => {
     expect(await start.evaluate((el) => getComputedStyle(el).scale)).toBe("1");
   });
 
+  test("a disclosure opens and closes from the keyboard", async ({ page }) => {
+    await page.goto("/#/lesson/b-1");
+    const details = page.locator("details");
+    const summary = details.locator("summary");
+    await summary.focus();
+    await expect(summary).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(details).toHaveAttribute("open", "");
+    await page.keyboard.press("Space");
+    await expect(details).not.toHaveAttribute("open");
+  });
+
   for (const [motion, duration] of [
     ["no-preference", "0.22s"],
     ["reduce", "0s"],

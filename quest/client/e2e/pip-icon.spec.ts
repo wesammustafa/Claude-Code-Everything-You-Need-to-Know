@@ -45,8 +45,8 @@ test("the favicon is Pip's icon, served from the app's own origin", async ({
 });
 
 for (const [scheme, body, shade] of [
-  ["dark", "rgb(255, 120, 78)", "rgb(209, 99, 64)"],
-  ["light", "rgb(217, 89, 47)", "rgb(179, 74, 40)"],
+  ["dark", "rgb(255, 120, 78)", "rgb(217, 90, 58)"],
+  ["light", "rgb(217, 90, 58)", "rgb(180, 78, 52)"],
 ] as const) {
   test(`the top bar's brand mark is Pip's icon, ${scheme}`, async ({
     page,
@@ -79,7 +79,7 @@ for (const [scheme, body, shade] of [
     const fills: Record<string, string> = {
       body,
       shade,
-      eye: "rgb(26, 15, 10)",
+      eye: "rgb(30, 30, 30)",
     };
     expect(parts.map(([d, fill = ""]) => [d, rgb(fill)])).toEqual(
       favicon.map(([tone = "", d]) => [d, fills[tone]]),
