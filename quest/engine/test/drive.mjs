@@ -24,7 +24,7 @@ import {
   stepOf,
   stepsOf,
 } from "../src/engine.mjs";
-import { loadCourse, parseLesson, WORK_LEVELS } from "../src/course.mjs";
+import { loadCourse, parseLesson, WORK_LEVELS } from "../src/course.ts";
 import { versionSaved } from "./fixtures/saved-version.mjs";
 import { openRepo } from "../../../practice-template/checks/repo.mjs";
 import {
@@ -111,7 +111,7 @@ export {
   PATH,
   SLOW,
   WORK_LEVELS,
-} from "../src/course.mjs";
+} from "../src/course.ts";
 // The store's format lives with the host since ticket 209.
 export { FORMAT, sanitize, snapshot } from "../../host/src/store.mjs";
 export { judge, stampFor } from "../src/holds.mjs";

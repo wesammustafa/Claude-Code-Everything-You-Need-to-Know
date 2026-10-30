@@ -293,7 +293,7 @@ export function folderKey(s, id = s.lesson) {
   return pinOf(l) === "copy" ? null : levelKey(s, id);
 }
 // Whether a level practises in a work folder: Intermediate and Advanced,
-// whose lessons' PATH entries say so (course.mjs).
+// whose lessons' PATH entries say so (course.ts).
 const isWorkLevel = (s, level) =>
   s.course.some((l) => l.level === level && l.work);
 // A lesson's level where that level practises in a work folder: Intermediate

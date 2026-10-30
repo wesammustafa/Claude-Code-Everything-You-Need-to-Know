@@ -8,7 +8,7 @@ import { test } from "vitest";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { ACTION_TYPES, EVENT_TYPES } from "./drive.mjs";
-import { LEVELS } from "../src/course.mjs";
+import { LEVELS } from "../src/course.ts";
 import { HELP_USED } from "../src/index.mjs";
 
 const contract = (file) =>

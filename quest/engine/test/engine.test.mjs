@@ -47,7 +47,7 @@ const MOMENTS = join(SRC, "moments.mjs");
 // The engine's modules that read files: the course loader reads the
 // manifest and the compiled course at load (ticket 212: the engine takes
 // its work levels from the course it is given instead).
-const READS_FILES = [join(SRC, "course.mjs")];
+const READS_FILES = [join(SRC, "course.ts")];
 
 // The fields the old terminal's translator owned, which no engine state
 // holds; `away` went with the translator in 210.

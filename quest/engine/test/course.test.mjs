@@ -54,7 +54,7 @@ describe("course manifest", () => {
 
   test("the course loader reads the compiled course", async () => {
     const expected = compileCourse(manifestValue, stepFiles, pages, checks);
-    const { loadCourse } = await import("../src/course.mjs");
+    const { loadCourse } = await import("../src/course.ts");
     const actual = loadCourse(`${root}practice-template`);
     expect(actual).toHaveLength(23);
     expect(actual[0].content.steps).toEqual(expected.lessons[0].content.steps);
