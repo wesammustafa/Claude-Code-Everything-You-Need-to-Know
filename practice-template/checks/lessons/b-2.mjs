@@ -11,6 +11,8 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { inPlan, planPaths, statusPaths } from '../paths.mjs';
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Permission modes and plan mode';
 
@@ -18,7 +20,7 @@ const SAVE_BEFORE = 'While the plan is on screen, run `git status --porcelain > 
 
 // Only the practice template's own tool is run: `--dir` pointed at another
 // repository must not execute that repository's src/cli.js.
-/** @param {import('../repo.mjs').Repo} repo */
+/** @param {Repo} repo */
 function notTemplate(repo) {
   try {
     if (JSON.parse(repo.read('package.json') ?? '').name === 'claude-code-practice') return null;
@@ -30,7 +32,7 @@ function notTemplate(repo) {
 
 // Runs the working tree's CLI on a scratch folder holding `files`.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {Record<string, string>} files
  */
 function runTool(repo, files) {
@@ -45,7 +47,7 @@ function runTool(repo, files) {
   }
 }
 
-/** @type {import('./index.mjs').Item[]} */
+/** @type {Item[]} */
 export const items = [
   {
     text: '`.practice/b-2-before.txt`, saved while the plan was on screen, lists no changed files',

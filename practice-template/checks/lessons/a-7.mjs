@@ -21,6 +21,9 @@ import { parseClaudeArgs, ruleList, scriptCalls } from '../claude-args.mjs';
 import { committedMode, missingJq } from '../hooks.mjs';
 import { commitHint, headText, parseJson } from '../marketplace.mjs';
 import { notRun, runStubbed, scratchPath, stderrTail, STUB_SESSION, TIME_LIMIT } from '../stub-claude.mjs';
+/** @import { Ran, Stubbed } from '../stub-claude.mjs' */
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Put bounds on autonomous runs';
 
@@ -48,7 +51,7 @@ const squash = (/** @type {string} */ flag) => /** @type {string} */ (flag.split
  * A `claude` call: from the stand-in's run (with its stdin), or read from
  * the script's text (`fromText`). `where` resolves a path it names.
  * @typedef {{ argv: string[], args: Args, stdin?: string, where: (path: string) => string | null, fromText?: true }} Call
- * @typedef {{ run: import('../stub-claude.mjs').Ran & import('../stub-claude.mjs').Stubbed, task: string, print: Call[], stray: Call[], calls: Call[] }} Analysis
+ * @typedef {{ run: Ran & Stubbed, task: string, print: Call[], stray: Call[], calls: Call[] }} Analysis
  * @typedef {{ value?: Record<string, any>, path?: string, label?: string, hint?: string, none?: true }} Loaded
  */
 
@@ -63,7 +66,7 @@ function misspelt(args, flag) {
 
 // The note for a committed file whose working copy differs, or ''.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} path
  */
 function pending(repo, path) {
@@ -82,10 +85,10 @@ function report(problems, notes = '') {
   return `${problems.slice(0, 3).join(' ')}${more}${notes}`;
 }
 
-const exitOf = (/** @type {import('../stub-claude.mjs').Ran} */ run) => run.status ?? run.signal;
+const exitOf = (/** @type {Ran} */ run) => run.status ?? run.signal;
 
 // How a run ended, for a hint.
-/** @param {import('../stub-claude.mjs').Ran} run */
+/** @param {Ran} run */
 function ended(run) {
   if (run.timedOut) return `It was still running after ${TIME_LIMIT / 1000} seconds, so the check stopped it.`;
   if (missingJq(run)) return 'It needs `jq`, which isn\'t installed: install it and run the check again.';
@@ -97,7 +100,7 @@ function ended(run) {
 // null when it points outside it. Used for calls read from the text, which
 // the check assumes run from the repository's root.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} path
  */
 function inRepo(repo, path) {
@@ -118,7 +121,7 @@ function inRepo(repo, path) {
 // The committed files the script may read before it calls `claude`: the
 // JSON files in .claude/, and any file a `--settings` in its text names.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} text
  */
 function companions(repo, text) {
@@ -146,11 +149,11 @@ function companions(repo, text) {
 // What the items read about the script, once per repository: the stand-in
 // run with a task and a result path; its `claude -p` calls, or, when it
 // made none, the calls in the committed text.
-/** @type {WeakMap<import('../repo.mjs').Repo, Map<string, Analysis>>} */
+/** @type {WeakMap<Repo, Map<string, Analysis>>} */
 const cache = new WeakMap();
 
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} script
  * @returns {Analysis}
  */
@@ -162,7 +165,7 @@ function analysis(repo, script) {
 }
 
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} script
  * @returns {Analysis}
  */
@@ -187,7 +190,7 @@ function analyze(repo, script) {
 
 // The hint when the check has no `claude -p` call to read, or null.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {Analysis} a
  * @param {string} script
  */
@@ -204,7 +207,7 @@ function noCall(repo, a, script) {
 const loaded = new WeakMap();
 
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {Call} call
  * @returns {Loaded}
  */
@@ -214,7 +217,7 @@ function settingsOf(repo, call) {
 }
 
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {Call} call
  * @returns {Loaded}
  */
@@ -246,7 +249,7 @@ function loadSettings(repo, call) {
 
 // What is wrong with one call's mode, output and settings file, for item 1.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {Call} call
  */
 function callProblems(repo, call) {
@@ -309,7 +312,7 @@ function savedProblems(a) {
 }
 
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} script
  */
 function modeHint(repo, script) {
@@ -320,7 +323,7 @@ function modeHint(repo, script) {
   return `${code(script)} is committed as ${mode === '120000' ? 'a symbolic link' : 'something other than a file'}. Commit the script file itself, and make it executable.`;
 }
 
-/** @returns {import('./index.mjs').Item} */
+/** @returns {Item} */
 export function boundedScript(script = SCRIPT) {
   return {
     text: `${code(script)} is committed and executable, takes a task and a result path, and starts \`claude -p\` in \`dontAsk\` mode with JSON output, no MCP server and a committed \`--settings\` file`,
@@ -376,7 +379,7 @@ function limitProblems(call) {
   return problems;
 }
 
-/** @returns {import('./index.mjs').Item} */
+/** @returns {Item} */
 export function runLimits(script = SCRIPT) {
   return {
     text: 'it sets a turn limit and a spend limit',
@@ -480,7 +483,7 @@ function loadsProject(call) {
 }
 
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @returns {{ value?: Record<string, any>, hint?: string }}
  */
 function projectSettings(repo) {
@@ -492,7 +495,7 @@ function projectSettings(repo) {
 }
 
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {Call} call
  */
 function ruleProblems(repo, call) {
@@ -538,7 +541,7 @@ function ruleProblems(repo, call) {
   return problems.length && notes ? [...problems, notes.trim()] : problems;
 }
 
-/** @returns {import('./index.mjs').Item} */
+/** @returns {Item} */
 export function narrowRules(script = SCRIPT) {
   return {
     text: 'every allow rule names one command or one folder, and the deny rules stop `git commit` and `git push`',
@@ -553,7 +556,7 @@ export function narrowRules(script = SCRIPT) {
 }
 
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {Call} call
  */
 function sandboxProblems(repo, call) {
@@ -574,7 +577,7 @@ function sandboxProblems(repo, call) {
   return [`In ${settings.label}: ${problems.join(' ')}${notes}`];
 }
 
-/** @returns {import('./index.mjs').Item} */
+/** @returns {Item} */
 export function strictSandbox(script = SCRIPT) {
   return {
     text: 'the settings file turns the sandbox on in strict mode without auto-allow, and makes the run refuse to start without it',
@@ -592,7 +595,7 @@ export function strictSandbox(script = SCRIPT) {
 // `--output-format stream-json`, the last result among its lines. Returns
 // `{ value }`, or `{ missing }`, `{ text }` (not JSON) or `{ noResult }`.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} path
  * @returns {{ value?: any, missing?: true, text?: true, noResult?: true }}
  */
@@ -630,7 +633,7 @@ function resultHint(saved, path, again) {
   return null;
 }
 
-/** @returns {import('./index.mjs').Item} */
+/** @returns {Item} */
 export function sliceRun(record = SLICE, script = SCRIPT) {
   const again = 'Then run the slice again.';
   return {
@@ -656,5 +659,5 @@ export function sliceRun(record = SLICE, script = SCRIPT) {
   };
 }
 
-/** @type {import('./index.mjs').Item[]} */
+/** @type {Item[]} */
 export const items = [boundedScript(), runLimits(), narrowRules(), strictSandbox(), sliceRun()];

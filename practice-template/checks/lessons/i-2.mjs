@@ -8,13 +8,15 @@ import { existsSync } from 'node:fs';
 import { isAbsolute, posix } from 'node:path';
 import { homedir } from 'node:os';
 import { frontmatter } from '../frontmatter.mjs';
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Organize project memory and see what loaded';
 
 const START = 'Start the session with `claude --settings .practice/i-2-hook.json`, the hook file from the lesson';
 
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} path
  */
 function committed(repo, path) {
@@ -25,7 +27,7 @@ function committed(repo, path) {
   }
 }
 
-/** @param {import('../repo.mjs').Repo} repo */
+/** @param {Repo} repo */
 function committedMemory(repo) {
   for (const path of ['CLAUDE.md', '.claude/CLAUDE.md']) {
     const text = committed(repo, path);
@@ -54,7 +56,7 @@ export function imports(text) {
 // Whether an import's file exists: a relative path resolves from the file
 // that holds the import.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} memoryPath
  * @param {string} target
  */
@@ -116,7 +118,7 @@ export function globMatcher(pattern) {
   return (/** @type {string} */ path) => regexes.some((r) => r.test(path));
 }
 
-/** @param {import('../repo.mjs').Repo} repo */
+/** @param {Repo} repo */
 function scopedRules(repo) {
   /** @type {string[]} */
   let names;
@@ -128,7 +130,7 @@ function scopedRules(repo) {
   return names.map((path) => ({ path, globs: patterns(frontmatter(committed(repo, path) ?? '')?.fields.paths) })).filter((r) => r.globs.length);
 }
 
-/** @type {import('./index.mjs').Item[]} */
+/** @type {Item[]} */
 export const items = [
   {
     text: 'a committed CLAUDE.md imports a file with `@path`, and the file exists',

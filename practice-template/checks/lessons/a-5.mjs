@@ -15,6 +15,9 @@
 // own events.
 import { claudeArgWords, claudeHistory, claudeWorkflowsAt, headBlob, uncommittedWorkflows } from '../actions.mjs';
 import { ruleList } from '../claude-args.mjs';
+/** @import { WorkflowFile, Step, Value } from '../actions.mjs' */
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 
 export const title = 'GitHub Actions';
 
@@ -70,8 +73,8 @@ function anyBash(entry) {
 
 // What item 1 reads: the pin, automation mode, the credential and the events.
 /**
- * @param {import('../actions.mjs').WorkflowFile} file
- * @param {import('../actions.mjs').Step} step
+ * @param {WorkflowFile} file
+ * @param {Step} step
  * @param {Options} o
  */
 function setupProblems(file, step, o) {
@@ -90,7 +93,7 @@ function setupProblems(file, step, o) {
   const given = CREDENTIALS.filter((k) => step.inputs[k]);
   if (!given.length) problems.push(`The step on line ${step.line} passes no credential. Add \`anthropic_api_key: \${{ secrets.ANTHROPIC_API_KEY }}\` under \`with:\`, or \`claude_code_oauth_token: \${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}\` for a subscription token, naming ${o.secret}.`);
   for (const k of given) {
-    const v = /** @type {import('../actions.mjs').Value} */ (step.inputs[k]);
+    const v = /** @type {Value} */ (step.inputs[k]);
     const text = (v.text ?? '').trim();
     if (!SECRET.test(text) && !KEY.test(text)) problems.push(`\`${k}\` on line ${v.line} isn't read from a secret. Write \`${k}: \${{ secrets.<NAME> }}\`, naming ${o.secret}, and keep the credential itself out of the file.`);
   }
@@ -99,7 +102,7 @@ function setupProblems(file, step, o) {
 }
 
 // The flags in `claude_args` that set the turn limit and the tools.
-/** @param {import('../actions.mjs').Value} args */
+/** @param {Value} args */
 function argProblems(args) {
   const { words, comment } = claudeArgWords(args.text);
   /** @type {string[]} */
@@ -167,8 +170,8 @@ function argProblems(args) {
 
 // What item 2 reads: the turn and tool limits, the time limit and the token.
 /**
- * @param {import('../actions.mjs').WorkflowFile} file
- * @param {import('../actions.mjs').Step} step
+ * @param {WorkflowFile} file
+ * @param {Step} step
  * @param {Options} o
  */
 function limitProblems(file, step, o) {
@@ -179,7 +182,7 @@ function limitProblems(file, step, o) {
   else problems.push(...argProblems(args));
 
   const range = `a number from 1 to ${TIMEOUT_MAX}`;
-  const timeouts = /** @type {import('../actions.mjs').Value[]} */ ([step.stepTimeout, step.jobTimeout].filter(Boolean));
+  const timeouts = /** @type {Value[]} */ ([step.stepTimeout, step.jobTimeout].filter(Boolean));
   if (!timeouts.length) problems.push(`The job \`${step.job}\` sets no \`timeout-minutes\`, so only GitHub's default limit stops a run that hangs. Add \`timeout-minutes\` with ${range} to the job.`);
   for (const t of timeouts) {
     const v = (t.text ?? '').trim();
@@ -209,9 +212,9 @@ function limitProblems(file, step, o) {
 }
 
 // Each repository's chosen workflow, by the events it may start on.
-/** @typedef {{ file: import('../actions.mjs').WorkflowFile, step: import('../actions.mjs').Step, setup: string[], limits: string[] }} Chosen */
+/** @typedef {{ file: WorkflowFile, step: Step, setup: string[], limits: string[] }} Chosen */
 
-/** @type {WeakMap<import('../repo.mjs').Repo, Map<string, Chosen | null>>} */
+/** @type {WeakMap<Repo, Map<string, Chosen | null>>} */
 const chosen = new WeakMap();
 
 // The workflow step the items evaluate: in the newest commit that holds a
@@ -220,7 +223,7 @@ const chosen = new WeakMap();
 // the hints' wording, as the items' options do. Returns
 // `{ file, step, setup, limits }`, or null.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string[]} triggers
  * @param {Partial<Options>} [options]
  * @returns {Chosen | null}
@@ -253,7 +256,7 @@ export function chosenWorkflow(repo, triggers, options = LESSON) {
 }
 
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} path
  */
 function changed(repo, path) {
@@ -266,8 +269,8 @@ function changed(repo, path) {
 }
 
 /**
- * @param {import('../repo.mjs').Repo} repo
- * @param {{ file: import('../actions.mjs').WorkflowFile }} chosen
+ * @param {Repo} repo
+ * @param {{ file: WorkflowFile }} chosen
  * @param {string[]} problems
  */
 function report(repo, { file }, problems) {
@@ -280,7 +283,7 @@ function report(repo, { file }, problems) {
 
 // Why no committed workflow step starts on one of `triggers`.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {Options} options
  */
 function missingHint(repo, { triggers, file, guide }) {
@@ -291,18 +294,18 @@ function missingHint(repo, { triggers, file, guide }) {
       ? `Your copy of ${code(loose.path)} runs \`anthropics/claude-code-action\`, but that change isn't committed. Commit it, and push.${byHand}`
       : `${code(loose.path)} isn't committed. Run \`git add ${loose.path}\`, commit it, and push.${byHand}`;
   }
-  /** @type {Map<string, import('../actions.mjs').WorkflowFile>} */
+  /** @type {Map<string, WorkflowFile>} */
   const seen = new Map();
   for (const { files } of claudeHistory(repo)) for (const f of files) if (!seen.has(f.path)) seen.set(f.path, f);
   const files = [...seen.values()];
   const prompted = files.find((f) => f.steps.some((s) => s.inputs.prompt?.text?.trim()));
   if (prompted) {
-    const events = /** @type {import('../actions.mjs').Step} */ (prompted.steps[0]).triggers;
+    const events = /** @type {Step} */ (prompted.steps[0]).triggers;
     return `${code(prompted.path)} runs Claude with a \`prompt\`, but ${events.length ? `starts on ${and(events.map(code))}` : 'has no `on:` events the check can read'}. Start it with ${onPhrase(triggers)}, then commit and push.${byHand}`;
   }
   // This one is long already: GitHub's rule about manual runs waits for the
   // hint about the second workflow's commit (ticket 198).
-  if (files.length) return `${code(/** @type {import('../actions.mjs').WorkflowFile} */ (files[0]).path)} has no \`prompt\`, so it waits for \`@claude\` (interactive mode). You need a second workflow, ${code(file)}, that starts with ${onPhrase(triggers)} and has a \`prompt\`. Write it as ${guide} describes, then commit and push it.`;
+  if (files.length) return `${code(/** @type {WorkflowFile} */ (files[0]).path)} has no \`prompt\`, so it waits for \`@claude\` (interactive mode). You need a second workflow, ${code(file)}, that starts with ${onPhrase(triggers)} and has a \`prompt\`. Write it as ${guide} describes, then commit and push it.`;
   return `There is no committed workflow that runs \`anthropics/claude-code-action\`. Write ${code(file)} as ${guide} describes, then commit and push it.${byHand}`;
 }
 
@@ -311,7 +314,7 @@ function missingHint(repo, { triggers, file, guide }) {
 // `guide`, where the page describes it; `secret` and `noToken`, as in LESSON.
 /**
  * @param {Partial<Options>} [options]
- * @returns {import('./index.mjs').Item}
+ * @returns {Item}
  */
 export function pinnedWorkflow(options = LESSON) {
   const o = { ...LESSON, ...options };
@@ -327,7 +330,7 @@ export function pinnedWorkflow(options = LESSON) {
 
 /**
  * @param {Partial<Options>} [options]
- * @returns {import('./index.mjs').Item}
+ * @returns {Item}
  */
 export function workflowLimits(options = LESSON) {
   const o = { ...LESSON, ...options };
@@ -345,7 +348,7 @@ export function workflowLimits(options = LESSON) {
 // workflow: what each finds wrong, in one report on the file it read.
 /**
  * @param {Partial<Options>} [options]
- * @returns {import('./index.mjs').Item}
+ * @returns {Item}
  */
 export function boundedWorkflow(options = LESSON) {
   const o = { ...LESSON, ...options };
@@ -361,7 +364,7 @@ export function boundedWorkflow(options = LESSON) {
 }
 
 // `owner/repo` of a github.com `origin`, or null.
-/** @param {import('../repo.mjs').Repo} repo */
+/** @param {Repo} repo */
 export function originRepo(repo) {
   try {
     const m = repo.git('remote', 'get-url', 'origin').match(GITHUB_REMOTE);
@@ -372,7 +375,7 @@ export function originRepo(repo) {
 }
 
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} sha
  */
 function isCommit(repo, sha) {
@@ -387,7 +390,7 @@ function isCommit(repo, sha) {
 // A saved run of the workflow: `record` holds `gh run list --json` output
 // (or one run from `gh run view --json`), and `file` is the workflow the
 // hints name.
-/** @returns {import('./index.mjs').Item} */
+/** @returns {Item} */
 export function dispatchedRun(record = RUNS, file = WORKFLOW) {
   const name = file.split('/').pop();
   const save = `\`gh run list --workflow ${name} --json ${RUN_FIELDS} > ${record}\``;
@@ -400,7 +403,7 @@ export function dispatchedRun(record = RUNS, file = WORKFLOW) {
   // 2, not finished; 3, not successful; 4, an unknown commit; 5, a commit
   // without the workflow; 6, passed.
   /**
-   * @param {import('../repo.mjs').Repo} repo
+   * @param {Repo} repo
    * @param {any} run One run from the saved JSON.
    * @param {string | null} origin
    * @returns {{ stage: number, hint?: string }}
@@ -462,5 +465,5 @@ export function dispatchedRun(record = RUNS, file = WORKFLOW) {
   };
 }
 
-/** @type {import('./index.mjs').Item[]} */
+/** @type {Item[]} */
 export const items = [pinnedWorkflow(), workflowLimits(), dispatchedRun()];

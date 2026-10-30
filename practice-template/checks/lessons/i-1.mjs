@@ -6,13 +6,15 @@
 // question, shows only in a session, so the lesson self-checks it.
 import { frontmatter } from '../frontmatter.mjs';
 import { isTestFile } from '../paths.mjs';
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Turn a repeated workflow into a skill';
 
 const SKILL = '.claude/skills/tdd/SKILL.md';
 const SAVE_COMMIT = '`git rev-parse HEAD > .practice/i-1-commit.txt`';
 
-/** @param {import('../repo.mjs').Repo} repo */
+/** @param {Repo} repo */
 function committedSkill(repo) {
   try {
     return repo.git('show', `HEAD:${SKILL}`);
@@ -21,13 +23,13 @@ function committedSkill(repo) {
   }
 }
 
-/** @param {import('../repo.mjs').Repo} repo */
+/** @param {Repo} repo */
 function missing(repo) {
   if (repo.exists(SKILL)) return `${SKILL} is not committed. Run \`git add ${SKILL}\` and commit it.`;
   return `There is no ${SKILL}. Save the partial skill from the lesson's Your turn there, finish it, and commit it.`;
 }
 
-/** @type {import('./index.mjs').Item[]} */
+/** @type {Item[]} */
 export const items = [
   {
     text: '`.claude/skills/tdd/SKILL.md` is committed, with no TODO left',

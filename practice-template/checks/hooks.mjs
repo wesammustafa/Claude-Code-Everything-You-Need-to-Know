@@ -6,6 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { chmodSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, posix } from 'node:path';
+/** @import { Repo } from './repo.mjs' */
 
 const editWrite = (/** @type {string} */ matcher) => matcher === '' || matcher === '*' || (/\bEdit\b/.test(matcher) && /\bWrite\b/.test(matcher));
 
@@ -38,7 +39,7 @@ export function editWriteScripts(settings) {
 
 // The committed mode of a file, such as '100755', or null when HEAD lacks it.
 /**
- * @param {import('./repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} path
  */
 export function committedMode(repo, path) {
@@ -53,7 +54,7 @@ export function committedMode(repo, path) {
 // Runs the committed copy of a hook script, as Claude Code would for a tool
 // call on `path`, and returns spawnSync's result, or null when HEAD lacks it.
 /**
- * @param {import('./repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} script
  * @param {string} path
  */

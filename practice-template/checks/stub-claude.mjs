@@ -17,6 +17,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { devNull, tmpdir } from 'node:os';
 import { delimiter, dirname, isAbsolute, join, posix, relative, sep } from 'node:path';
+/** @import { Repo } from './repo.mjs' */
 
 // The session id of every stand-in reply, fixed so a check can tell the
 // stand-in's reply from a real run's.
@@ -184,7 +185,7 @@ function calls(dir, roots) {
  */
 
 /**
- * @param {import('./repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} script
  * @param {StubOptions} [options]
  * @returns {Stubbed}
@@ -226,7 +227,7 @@ export function runStubbed(repo, script, { args = () => [], commit = {}, stage =
     write(dir, change);
 
     // Node's types leave out spawnSync's `detached`, which it honours.
-    const run = spawnSync('bash', [script, ...args(out)], /** @type {import('node:child_process').SpawnSyncOptionsWithStringEncoding} */ ({
+    const run = spawnSync('bash', [script, ...args(out)], /** @type {{ encoding: 'utf8' }} */ ({
       cwd: dir,
       env: scrubbed({ HOME: join(base, 'home'), CLAUDE_CONFIG_DIR: join(base, 'config'), PATH: `${join(base, 'bin')}${delimiter}${process.env.PATH ?? ''}` }),
       stdio: ['ignore', 'pipe', 'pipe'],

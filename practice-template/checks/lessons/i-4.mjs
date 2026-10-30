@@ -1,4 +1,6 @@
 // @ts-check
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 // Permissions, settings scopes and the sandbox (Intermediate, lesson 4). The
 // Learner commits team permission rules in the shared .claude/settings.json,
 // with an ask rule that keeps a checkpoint before a command such as a push,
@@ -23,7 +25,7 @@ function parse(text) {
 }
 
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} path
  */
 function committed(repo, path) {
@@ -48,7 +50,7 @@ function broad(rule) {
 const READ_ENV = /^Read\((\.\/|\/|\*\*\/)?\.env\)$/;
 const READ_ENV_ANY = /^Read\((\.\/|\/|\*\*\/)?\.env\.\*\)$/;
 
-/** @type {import('./index.mjs').Item[]} */
+/** @type {Item[]} */
 export const items = [
   {
     text: 'the committed `.claude/settings.json` denies reading `.env` files and allows a narrow test command',

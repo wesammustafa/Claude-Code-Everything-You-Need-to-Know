@@ -9,6 +9,8 @@
 // changes not tracked).
 import { spawnSync } from 'node:child_process';
 import { statusEntries, statusPaths } from '../paths.mjs';
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Keep a session on track';
 
@@ -25,7 +27,7 @@ const LINKCHECK_LIMIT = 30_000;
 
 // The commits after the copy's first one, newest first, that change a path.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} path
  */
 function laterCommits(repo, path) {
@@ -45,7 +47,7 @@ const withoutComments = (/** @type {string} */ text) => text.replace(/\/\*[\s\S]
 // Whether JavaScript exports `name`.
 const hasExport = (/** @type {string} */ text, /** @type {string} */ name) => new RegExp(`export\\s+(async\\s+)?function\\s+${name}\\b|export\\s+(const|let)\\s+${name}\\b|export\\s*\\{[^}]*\\b${name}\\b`).test(withoutComments(text));
 
-/** @type {import('./index.mjs').Item[]} */
+/** @type {Item[]} */
 export const items = [
   {
     text: 'a commit after your copy\'s first one changes `src/check-links.js`, which still exports a synchronous `brokenLinks`',

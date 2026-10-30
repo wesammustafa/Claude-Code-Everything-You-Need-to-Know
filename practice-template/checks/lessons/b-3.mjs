@@ -9,6 +9,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { isTestFile } from '../paths.mjs';
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Your first change, from request to commit';
 
@@ -20,7 +22,7 @@ const npmTest = (/** @type {string} */ dir) => spawnSync('npm', ['test', '--sile
 // A shell lookup or script failure is not evidence of a failing Node test.
 // Mutation checks require its TAP/spec failure summary as well as an exit.
 /**
- * @param {import('node:child_process').SpawnSyncReturns<string>} run
+ * @param {{ error?: Error, signal: string | null, status: number | null, stdout?: string, stderr?: string }} run spawnSync's result
  * @param {{ requireFailure?: boolean }} [options]
  */
 export function testRunError(run, { requireFailure = false } = {}) {
@@ -37,7 +39,7 @@ export function testRunError(run, { requireFailure = false } = {}) {
 
 // Lesson 3 runs the template's own link checker and plants its patch there, so
 // it can't check another repository.
-/** @param {import('../repo.mjs').Repo} repo */
+/** @param {Repo} repo */
 function notTemplate(repo) {
   const missing = ['src/cli.js', 'src/links.js'].filter((path) => !repo.exists(path));
   return missing.length ? `This folder has no ${missing.map((p) => `\`${p}\``).join(' or ')}. Lesson 3 runs the practice template's link checker and reviews a patch planted in it, so do this lesson in your template copy and run the check there.` : null;
@@ -49,7 +51,7 @@ function notTemplate(repo) {
 /** @typedef {{ error?: string, broken: Map<number, string> }} Broken */
 
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {Record<string, string>} files
  * @returns {Broken}
  */
@@ -77,7 +79,7 @@ function brokenIn(repo, files) {
 
 // Whether the last commit holds the patch's test: the Learner committed their
 // fix, so a flaw that is still there gets a more specific hint.
-/** @param {import('../repo.mjs').Repo} repo */
+/** @param {Repo} repo */
 function patchCommitted(repo) {
   try {
     repo.gitLocal('cat-file', '-e', 'HEAD:test/external.test.js');
@@ -95,7 +97,7 @@ export function isExternal(target) {
 }
 `;
 
-/** @type {import('./index.mjs').Item} */
+/** @type {Item} */
 export const testsPass = {
   text: 'the tests pass',
   check(repo) {
@@ -118,7 +120,7 @@ export const testsPass = {
   },
 };
 
-/** @type {import('./index.mjs').Item} */
+/** @type {Item} */
 export const nothingUncommitted = {
   text: 'nothing is left uncommitted',
   check(repo) {
@@ -128,7 +130,7 @@ export const nothingUncommitted = {
   },
 };
 
-/** @type {import('./index.mjs').Item[]} */
+/** @type {Item[]} */
 export const items = [
   {
     text: 'links with a title, in double or single quotes, are checked',

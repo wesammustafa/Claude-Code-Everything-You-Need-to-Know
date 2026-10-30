@@ -4,6 +4,8 @@
 // and commits the entry a /changelog run wrote. Picking the model and effort
 // for other tasks is judgement, self-checked here and at the capstone.
 import { frontmatter } from '../frontmatter.mjs';
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Pick the model and effort';
 
@@ -13,7 +15,7 @@ const LARGE = /^(opus|fable|best|opusplan|claude-opus-[\w.-]+|claude-fable-[\w.-
 const LEVELS = ['low', 'medium', 'high', 'xhigh', 'max'];
 
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} path
  */
 function committed(repo, path) {
@@ -24,7 +26,7 @@ function committed(repo, path) {
   }
 }
 
-/** @type {import('./index.mjs').Item[]} */
+/** @type {Item[]} */
 export const items = [
   {
     text: 'the committed changelog skill runs a smaller model at low or medium effort',

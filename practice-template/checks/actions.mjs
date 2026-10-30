@@ -9,6 +9,7 @@
 // never runs a workflow, `gh` or Claude Code.
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
+/** @import { Repo } from './repo.mjs' */
 
 export const WORKFLOWS = '.github/workflows';
 // GitHub reads workflow files only directly in .github/workflows/.
@@ -459,7 +460,7 @@ export function readWorkflow(text) {
 const z = (/** @type {string} */ text) => text.split('\0').filter(Boolean);
 
 /**
- * @param {import('./repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} commit
  * @returns {{ blob: string, path: string }[]}
  */
@@ -479,11 +480,11 @@ function listFiles(repo, commit) {
  * @typedef {{ blobs: Map<string, { text: string, triggers: string[], steps: Step[] }>, commits: Map<string, WorkflowFile[]>, history: { commit: string, files: WorkflowFile[] }[] | null }} Cache
  */
 
-/** @type {WeakMap<import('./repo.mjs').Repo, Cache>} */
+/** @type {WeakMap<Repo, Cache>} */
 const caches = new WeakMap();
 
 /**
- * @param {import('./repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @returns {Cache}
  */
 function cacheOf(repo) {
@@ -494,7 +495,7 @@ function cacheOf(repo) {
 // The workflow files committed at `commit` that run the action, each `{
 // commit, path, blob, text, steps }`, sorted by path.
 /**
- * @param {import('./repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} commit
  * @returns {WorkflowFile[]}
  */
@@ -525,7 +526,7 @@ export function claudeWorkflowsAt(repo, commit) {
 // deleted the workflows doesn't hide the ones before it. `--full-history`
 // walks both sides of a merge: by default, git follows only the parent whose
 // workflows the merge kept, which can hide the other side's.
-/** @param {import('./repo.mjs').Repo} repo */
+/** @param {Repo} repo */
 export function claudeHistory(repo) {
   const cache = cacheOf(repo);
   if (!cache.history) {
@@ -543,7 +544,7 @@ export function claudeHistory(repo) {
 
 // Workflow files in the working tree that run the action while HEAD's copy
 // doesn't (or HEAD has none), each `{ path, tracked }`.
-/** @param {import('./repo.mjs').Repo} repo */
+/** @param {Repo} repo */
 export function uncommittedWorkflows(repo) {
   /** @type {string[]} */
   let names = [];
@@ -572,7 +573,7 @@ export function uncommittedWorkflows(repo) {
 
 // The blob HEAD holds at `path`, or null.
 /**
- * @param {import('./repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} path
  */
 export function headBlob(repo, path) {

@@ -19,6 +19,9 @@ import { join, posix } from 'node:path';
 import { parseClaudeArgs, ruleList } from '../claude-args.mjs';
 import { committedMode, missingJq } from '../hooks.mjs';
 import { notRun, runStubbed, stderrTail, STUB_SESSION, TIME_LIMIT } from '../stub-claude.mjs';
+/** @import { Ran, Stubbed, Call as StubClaudeCall } from '../stub-claude.mjs' */
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Script Claude Code with `claude -p`';
 
@@ -89,15 +92,15 @@ function plan(name) {
 /**
  * A stand-in run with its calls read: callers pass it to notRun first, and
  * read the rest only when that finds nothing.
- * @typedef {import('../stub-claude.mjs').Ran & import('../stub-claude.mjs').Stubbed & { markers: Markers, print: Call[], stray: Call[] }} ScenarioRun
- * @typedef {import('../stub-claude.mjs').Call & { args: ReturnType<typeof parseClaudeArgs> }} Call
+ * @typedef {Ran & Stubbed & { markers: Markers, print: Call[], stray: Call[] }} ScenarioRun
+ * @typedef {StubClaudeCall & { args: ReturnType<typeof parseClaudeArgs> }} Call
  */
 
-/** @type {WeakMap<import('../repo.mjs').Repo, Map<string, ScenarioRun>>} */
+/** @type {WeakMap<Repo, Map<string, ScenarioRun>>} */
 const cache = new WeakMap();
 
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} script
  * @param {string} name
  * @returns {ScenarioRun}
@@ -120,7 +123,7 @@ function scenario(repo, script, name) {
 }
 
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} script
  */
 function pending(repo, script) {
@@ -148,7 +151,7 @@ function ended(run) {
 
 // The turn cap the script passes, or CAP_MAX when the check can't tell.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} script
  */
 function capOf(repo, script) {
@@ -255,7 +258,7 @@ export function callHints(argv) {
 /** @param {string} script */
 /**
  * @param {string} script
- * @returns {import('./index.mjs').Item}
+ * @returns {Item}
  */
 export function committedScript(script, guide = 'the lesson\'s Your turn') {
   return {
@@ -272,7 +275,7 @@ export function committedScript(script, guide = 'the lesson\'s Your turn') {
 
 /**
  * @param {string} script
- * @returns {import('./index.mjs').Item}
+ * @returns {Item}
  */
 export function scriptCall(script) {
   return {
@@ -377,7 +380,7 @@ function emptyProblems(run) {
 // lesson's path, which the capstone's script keeps.
 /**
  * @param {string} script
- * @returns {import('./index.mjs').Item}
+ * @returns {Item}
  */
 export function scriptBehavior(script, fallback = RESULT) {
   return {
@@ -406,7 +409,7 @@ export function scriptBehavior(script, fallback = RESULT) {
 /**
  * @param {string} result
  * @param {string} script
- * @returns {import('./index.mjs').Item}
+ * @returns {Item}
  */
 export function savedRun(result, script) {
   const run = `stage a change and run \`${script}${result === RESULT ? '' : ` ${result}`}\``;
@@ -437,5 +440,5 @@ export function savedRun(result, script) {
   };
 }
 
-/** @type {import('./index.mjs').Item[]} */
+/** @type {Item[]} */
 export const items = [committedScript(SCRIPT), scriptCall(SCRIPT), scriptBehavior(SCRIPT), savedRun(RESULT, SCRIPT)];

@@ -7,6 +7,8 @@
 // .claude/settings.json, installs it at project scope, and saves
 // `claude plugin list --json` so the check can see both installs.
 import { realpathSync } from 'node:fs';
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Install and manage plugins';
 
@@ -29,7 +31,7 @@ function here(projectPath, dir) {
 
 // The plugins the committed settings turn on, every marketplace's, or null
 // when there is no committed settings file that parses.
-/** @param {import('../repo.mjs').Repo} repo */
+/** @param {Repo} repo */
 function committedPlugins(repo) {
   try {
     const value = JSON.parse(repo.git('show', 'HEAD:.claude/settings.json'));
@@ -39,14 +41,14 @@ function committedPlugins(repo) {
   }
 }
 
-/** @param {import('../repo.mjs').Repo} repo */
+/** @param {Repo} repo */
 function projectPlugins(repo) {
   return committedPlugins(repo)?.filter((id) => ANTHROPIC.includes(/** @type {string} */ (id.split('@')[1]))) ?? null;
 }
 
 // The saved plugin list's installs, or a FAIL message.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @returns {any[] | string}
  */
 function savedList(repo) {
@@ -60,7 +62,7 @@ function savedList(repo) {
   }
 }
 
-/** @type {import('./index.mjs').Item[]} */
+/** @type {Item[]} */
 export const items = [
   {
     text: 'the committed `.claude/settings.json` enables a plugin from one of Anthropic\'s marketplaces',

@@ -14,6 +14,7 @@ import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { lessons } from './lessons/index.mjs';
 import { openRepo } from './repo.mjs';
+/** @import { Lesson } from './lessons/index.mjs' */
 
 /**
  * @param {string} message
@@ -46,7 +47,7 @@ if (!existsSync(dir)) usage(`no such folder: ${dir}`);
 
 const repo = openRepo(dir);
 // usage() has refused an unknown id.
-const chosen = /** @type {[string, import('./lessons/index.mjs').Lesson][]} */ (id === 'all' ? Object.entries(lessons) : [[id, lessons[id]]]);
+const chosen = /** @type {[string, Lesson][]} */ (id === 'all' ? Object.entries(lessons) : [[id, lessons[id]]]);
 const results = chosen.map(([lessonId, lesson]) => ({
   id: lessonId,
   title: lesson.title,

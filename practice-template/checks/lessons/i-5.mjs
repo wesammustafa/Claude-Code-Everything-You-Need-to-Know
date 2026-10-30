@@ -15,6 +15,8 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } 
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { committedMode, editWriteScripts, missingJq } from '../hooks.mjs';
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Enforce a rule with a hook';
 
@@ -30,7 +32,7 @@ const SETTINGS = '.claude/settings.json';
 const TEST_COMMANDS = ['npm', 'npx', 'pnpm', 'yarn', 'bun', 'node', 'deno', 'pytest', 'python', 'python3', 'tox', 'uv', 'poetry', 'go', 'cargo', 'make', 'mvn', 'gradle', 'bundle', 'rake', 'rspec', 'dotnet', 'mix'];
 
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @returns {{ missing?: true, value?: any, error?: string }}
  */
 function committedSettings(repo) {
@@ -48,7 +50,7 @@ function committedSettings(repo) {
 }
 
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} path
  */
 function committedText(repo, path) {
@@ -64,7 +66,7 @@ function committedText(repo, path) {
 // spawnSync's result and whether the gate ran a test command, or null when
 // HEAD lacks the gate.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {{ testsPass: boolean, retried: boolean, missingFile?: boolean }} options
  */
 function runGateScript(repo, { testsPass, retried, missingFile = false }) {
@@ -97,7 +99,7 @@ function runGateScript(repo, { testsPass, retried, missingFile = false }) {
   }
 }
 
-/** @type {import('./index.mjs').Item[]} */
+/** @type {Item[]} */
 export const items = [
   {
     text: '`.claude/hooks/protect-files.sh` and `.claude/hooks/test-gate.sh` are committed and executable',

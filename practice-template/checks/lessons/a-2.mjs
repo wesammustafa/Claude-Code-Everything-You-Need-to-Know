@@ -1,4 +1,5 @@
 // @ts-check
+/** @import { Item } from './index.mjs' */
 // Choose an orchestration pattern (Advanced, lesson 2). The Learner picks a
 // pattern for each of five backlog items by what it needs and what it costs,
 // writes the choices to a file, and runs job 1 as parallel subagents in a
@@ -142,7 +143,7 @@ export function startedAgents(text) {
   return { ids, count: ids.size + unnamed };
 }
 
-/** @type {import('./index.mjs').Item} */
+/** @type {Item} */
 export const fittingPatterns = {
   text: `\`${CHOICES}\` picks the cheapest pattern that fits each job`,
   local: true,
@@ -169,7 +170,7 @@ export const fittingPatterns = {
   },
 };
 
-/** @type {import('./index.mjs').Item} */
+/** @type {Item} */
 export const parallelSubagents = {
   text: `\`${LOG}\` shows at least two subagents other than \`${EARLIER}\` starting for job 1`,
   local: true,
@@ -188,5 +189,5 @@ export const parallelSubagents = {
   },
 };
 
-/** @type {import('./index.mjs').Item[]} */
+/** @type {Item[]} */
 export const items = [fittingPatterns, parallelSubagents];

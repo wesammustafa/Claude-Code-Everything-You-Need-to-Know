@@ -8,6 +8,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Connect a tool with MCP';
 
@@ -24,7 +25,7 @@ function server(value) {
 
 const off = (/** @type {string[]} */ args, /** @type {string} */ name) => args.includes(`--no-${name}`) || args.includes(`--${name}=false`);
 
-/** @type {import('./index.mjs').Item[]} */
+/** @type {Item[]} */
 export const items = [
   {
     text: 'the committed `.mcp.json` runs chrome-devtools-mcp at an exact version, with usage statistics, CrUX lookups and update checks off',

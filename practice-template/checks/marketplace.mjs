@@ -8,6 +8,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join, posix } from 'node:path';
+/** @import { Repo } from './repo.mjs' */
 
 // The Advanced checks never scan worktrees, dependencies, or the template's
 // own checks and capstone briefs.
@@ -79,7 +80,7 @@ export function parseJson(text, { bom = false } = {}) {
 const manifestJson = (/** @type {string} */ text) => parseJson(text, { bom: true });
 
 /**
- * @param {import('./repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} path
  */
 export function headText(repo, path) {
@@ -92,10 +93,10 @@ export function headText(repo, path) {
 
 // Every file committed at HEAD outside the folders the checks skip, read
 // once per repository.
-/** @type {WeakMap<import('./repo.mjs').Repo, string[]>} */
+/** @type {WeakMap<Repo, string[]>} */
 const listed = new WeakMap();
 /**
- * @param {import('./repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @returns {string[]}
  */
 export function committedFiles(repo) {
@@ -106,7 +107,7 @@ export function committedFiles(repo) {
 // The ignore rule that hides `path`, as git reports it with the Learner's own
 // configuration, global excludes file included, or null.
 /**
- * @param {import('./repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} path
  */
 function ignoreRule(repo, path) {
@@ -122,7 +123,7 @@ function ignoreRule(repo, path) {
 // How to commit `what`, a file or folder git doesn't track yet, naming the
 // rule that hides `path`, a file in it, if one does.
 /**
- * @param {import('./repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} path
  */
 export function commitHint(repo, path, what = path) {
@@ -134,7 +135,7 @@ export function commitHint(repo, path, what = path) {
 // The paths matching `pattern`, a glob under any folder, that are in the
 // working tree or the index but not committed at HEAD, ignored ones too.
 /**
- * @param {import('./repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} pattern
  */
 export function uncommittedFiles(repo, pattern) {
@@ -205,7 +206,7 @@ const componentCount = (/** @type {Components} */ c) => c.skills.length + c.agen
  */
 
 /**
- * @param {import('./repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {{ path: string, root: string }} marketplace
  * @param {unknown} entry
  * @param {number} index
@@ -249,7 +250,7 @@ function reviewEntry(repo, marketplace, entry, index, committed) {
 // best one's stage in `entry`. `entries` holds every reviewed entry, and
 // `plugins` those that pass.
 /**
- * @param {import('./repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} path
  * @param {Set<string>} committed
  * @returns {Marketplace}
@@ -274,13 +275,13 @@ function reviewMarketplace(repo, path, committed) {
 
 // The committed plugin folders: each holds a committed
 // .claude-plugin/plugin.json. The root is ''.
-export const pluginFolders = (/** @type {import('./repo.mjs').Repo} */ repo) => committedFiles(repo).filter((p) => PLUGIN.test(p)).map((p) => folder(posix.dirname(posix.dirname(p))));
+export const pluginFolders = (/** @type {Repo} */ repo) => committedFiles(repo).filter((p) => PLUGIN.test(p)).map((p) => folder(posix.dirname(posix.dirname(p))));
 
 // Every committed marketplace file, reviewed, read once per repository.
-/** @type {WeakMap<import('./repo.mjs').Repo, Marketplace[]>} */
+/** @type {WeakMap<Repo, Marketplace[]>} */
 const reviewed = new WeakMap();
 /**
- * @param {import('./repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @returns {Marketplace[]}
  */
 export function committedMarketplaces(repo) {
@@ -294,12 +295,12 @@ export function committedMarketplaces(repo) {
 
 // The marketplaces that pass: a usable name, an owner, and at least one entry
 // that lists a committed plugin by a relative path, with matching names.
-export const passingMarketplaces = (/** @type {import('./repo.mjs').Repo} */ repo) => committedMarketplaces(repo).filter((m) => m.plugins.length);
+export const passingMarketplaces = (/** @type {Repo} */ repo) => committedMarketplaces(repo).filter((m) => m.plugins.length);
 
 // Why no committed marketplace passes. `start` says how to make one when
 // there is none, as the page describes it.
 /**
- * @param {import('./repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @returns {string}
  */
 export function marketplaceHint(repo, start = 'Download the example marketplace into `team-marketplace/`, as the Worked example shows') {
@@ -322,7 +323,7 @@ export function marketplaceHint(repo, start = 'Download the example marketplace 
 
 // The committed .claude/settings.json: `{ value }`, `{ error }`, or null when
 // HEAD has none.
-/** @param {import('./repo.mjs').Repo} repo */
+/** @param {Repo} repo */
 export function committedSettings(repo) {
   const text = headText(repo, SETTINGS);
   return text === null ? null : parseJson(text);

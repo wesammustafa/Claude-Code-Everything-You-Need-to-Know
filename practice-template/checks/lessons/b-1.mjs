@@ -3,6 +3,7 @@
 // `claude --version` itself, and reads the onboarding note the Learner
 // corrects against the code in Your turn.
 import { spawnSync } from 'node:child_process';
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Install, sign in and look around';
 
@@ -12,7 +13,7 @@ export const VERSION_LIMIT = 30_000;
 const VERSION = /^\d+\.\d+\.\d+ \(Claude Code\)/m;
 const FIX_PATH = 'Open a new terminal. If it still fails, use lesson 1, Worked example step 2 to fix PATH, then retry.';
 
-/** @type {import('./index.mjs').Item} */
+/** @type {Item} */
 export const claudeVersion = {
   text: '`claude --version` prints a Claude Code version',
   // It runs on the Learner's machine: a GitHub runner has no Claude Code.
@@ -95,7 +96,7 @@ export function exitClaim(claim) {
   return right ? 'right' : null;
 }
 
-/** @type {import('./index.mjs').Item} */
+/** @type {Item} */
 export const noteCorrected = {
   text: 'the claim in `practice/b-1/onboarding.md` that the code contradicts is corrected',
   check(repo) {
@@ -112,5 +113,5 @@ export const noteCorrected = {
   },
 };
 
-/** @type {import('./index.mjs').Item[]} */
+/** @type {Item[]} */
 export const items = [claudeVersion, noteCorrected];

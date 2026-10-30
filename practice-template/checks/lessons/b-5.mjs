@@ -8,6 +8,8 @@
 // what CLAUDE.local.md says is the Self-check's.
 import { committedIgnore, ignoreHint } from '../ignore.mjs';
 import { isTestFile } from '../paths.mjs';
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Project memory with CLAUDE.md';
 
@@ -23,7 +25,7 @@ const isSource = (/** @type {string} */ f) => /^src\/.+\.[cm]?js$/i.test(f) && !
 const NPM_RUN = /npm run(?:-script)?(?:\s+--?[\w-]+(?:=\S+)?)*\s+([A-Za-z0-9:._][A-Za-z0-9:._-]*)/g;
 
 // The committed project CLAUDE.md: its path and text at HEAD.
-/** @param {import('../repo.mjs').Repo} repo */
+/** @param {Repo} repo */
 function committedMemory(repo) {
   for (const path of MEMORY_PATHS) {
     try {
@@ -35,7 +37,7 @@ function committedMemory(repo) {
 
 // The header rule in the committed CLAUDE.md: the line it names, and whether
 // it says it covers `src/`. A rule scoped to src/ wins over a broader one.
-/** @param {import('../repo.mjs').Repo} repo */
+/** @param {Repo} repo */
 function rule(repo) {
   const memory = committedMemory(repo);
   const found = (memory?.text.split(/\r?\n/) ?? [])
@@ -47,7 +49,7 @@ function rule(repo) {
 
 // The commit that first put the rule's line into the project CLAUDE.md.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {{ path: string }} memory
  * @param {string} line
  */
@@ -59,7 +61,7 @@ function ruleCommit(repo, memory, line) {
 // The commits after `since`, newest first, that add JavaScript files to src/,
 // each as `{ sha, sources }`.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} since
  */
 function addingSources(repo, since) {
@@ -70,9 +72,9 @@ function addingSources(repo, since) {
     .filter((c) => c.sources.length);
 }
 
-const firstLine = (/** @type {import('../repo.mjs').Repo} */ repo, /** @type {string} */ sha, /** @type {string} */ path) => /** @type {string} */ (repo.git('show', `${sha}:${path}`).replace(/^﻿/, '').split(/\r?\n/)[0]).trim();
+const firstLine = (/** @type {Repo} */ repo, /** @type {string} */ sha, /** @type {string} */ path) => /** @type {string} */ (repo.git('show', `${sha}:${path}`).replace(/^﻿/, '').split(/\r?\n/)[0]).trim();
 
-/** @param {import('../repo.mjs').Repo} repo */
+/** @param {Repo} repo */
 function scripts(repo) {
   let text;
   try {
@@ -96,7 +98,7 @@ const succeeds = (/** @type {() => unknown} */ fn) => {
   }
 };
 
-/** @type {import('./index.mjs').Item[]} */
+/** @type {Item[]} */
 export const items = [
   {
     text: 'a committed CLAUDE.md has a rule that every new JavaScript file in `src/` starts with a given line',

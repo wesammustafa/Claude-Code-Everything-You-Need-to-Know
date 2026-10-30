@@ -12,6 +12,9 @@
 // wrote. The Advanced capstone reuses the script item with its own options.
 import { posix } from 'node:path';
 import { findWorkflows, readWorkflow, STAGES, tokenize } from '../workflow-script.mjs';
+/** @import { Workflow } from '../workflow-script.mjs' */
+/** @import { Item } from './index.mjs' */
+/** @import { Repo } from '../repo.mjs' */
 
 export const title = 'Run and save a dynamic workflow';
 
@@ -30,7 +33,7 @@ function placed(path) {
   return `${path.slice(0, at)}${posix.basename(path).replace(/\.[^.]+$/, '')}.js`;
 }
 
-/** @param {{ path: string, result: import('../workflow-script.mjs').Workflow, changed: boolean }} script */
+/** @param {{ path: string, result: Workflow, changed: boolean }} script */
 function scriptHint({ path, result, changed }) {
   const p = code(path);
   const hint = /** @type {() => string} */ (/** @type {Record<string, () => string>} */ ({
@@ -78,7 +81,7 @@ const RANKS = [...STAGES, 'check'];
 /**
  * @param {string} text
  * @param {ScriptOptions} options
- * @returns {import('../workflow-script.mjs').Workflow}
+ * @returns {Workflow}
  */
 function readScript(text, options) {
   const result = readWorkflow(text, options);
@@ -92,7 +95,7 @@ function readScript(text, options) {
 // what the first finds.
 /**
  * @param {ScriptOptions} [options]
- * @returns {import('./index.mjs').Item}
+ * @returns {Item}
  */
 export function savedWorkflow(options = {}) {
   const needs = [options.needArgs && 'reads its input from `args`', options.needCheck ? 'calls `agent()` at least twice' : options.needAgentCall && 'starts subagents with `agent()`'].filter(Boolean);
@@ -103,7 +106,7 @@ export function savedWorkflow(options = {}) {
       const results = scripts.map((s) => ({ ...s, result: readScript(s.text, options) }));
       if (results.some((r) => r.result.ok)) return true;
       if (results.length) {
-        const rank = (/** @type {{ result: import('../workflow-script.mjs').Workflow }} */ r) => RANKS.indexOf(/** @type {string} */ (r.result.problem));
+        const rank = (/** @type {{ result: Workflow }} */ r) => RANKS.indexOf(/** @type {string} */ (r.result.problem));
         const other = uncommitted.length ? ` Also, ${uncommittedHint(/** @type {NonNullable<typeof uncommitted[0]>} */ (uncommitted[0]))}` : '';
         return `${scriptHint(results.reduce((best, r) => (rank(r) > rank(best) ? r : best)))}${other}`;
       }
@@ -119,7 +122,7 @@ export function savedWorkflow(options = {}) {
 
 // The pattern's first non-blank line, without the backticks or quotes a
 // Learner may have kept around it.
-/** @param {import('../repo.mjs').Repo} repo */
+/** @param {Repo} repo */
 function readPattern(repo) {
   const text = repo.read(PATTERN);
   if (text === null) return { missing: true };
@@ -132,7 +135,7 @@ function readPattern(repo) {
 // in the working tree's tracked files when `revs` is empty: true, false, or
 // git's own error for a pattern it can't read.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} pattern
  * @param {string} folder
  * @param {string[]} [revs]
@@ -149,7 +152,7 @@ function grep(repo, pattern, folder, revs = []) {
 }
 
 // The recent commits whose trees the check searches for the old form.
-/** @param {import('../repo.mjs').Repo} repo */
+/** @param {Repo} repo */
 function recentCommits(repo) {
   try {
     return repo.gitLocal('rev-list', '--max-count=60', 'HEAD').split('\n').filter(Boolean);
@@ -165,7 +168,7 @@ const COURSE = new Set(['learn', 'checks', 'capstone']);
 // that held a matching file ('.' for the repository's root), leaving out the
 // course's own folders.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} pattern
  * @param {string[]} revs
  */
@@ -187,7 +190,7 @@ function matchedFolders(repo, pattern, revs) {
   return [...folders].sort();
 }
 
-/** @type {import('./index.mjs').Item} */
+/** @type {Item} */
 export const migratedFolder = {
   text: `the \`git grep -E\` pattern in \`${PATTERN}\` matched in a folder at an earlier commit and matches nothing in that folder at \`HEAD\``,
   local: true,
@@ -210,5 +213,5 @@ export const migratedFolder = {
   },
 };
 
-/** @type {import('./index.mjs').Item[]} */
+/** @type {Item[]} */
 export const items = [savedWorkflow({ needArgs: true, needAgentCall: true, needCheck: true }), migratedFolder];

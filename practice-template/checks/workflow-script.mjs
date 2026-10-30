@@ -6,6 +6,7 @@
 // names the code uses are found with comments and strings left out.
 import { execFileSync } from 'node:child_process';
 import { Script } from 'node:vm';
+/** @import { Repo } from './repo.mjs' */
 
 // A saved workflow: a .js file directly in a .claude/workflows/ folder, at
 // the repository's root or in a package's own .claude/ folder.
@@ -29,7 +30,7 @@ const paths = (/** @type {() => string} */ run) => {
 // The ignore rule that hides `path`, as git reports it with the Learner's own
 // configuration, global excludes file included, or null.
 /**
- * @param {import('./repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} path
  */
 function ignoreRule(repo, path) {
@@ -43,7 +44,7 @@ function ignoreRule(repo, path) {
 }
 
 /**
- * @param {import('./repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} path
  */
 function changedSinceHead(repo, path) {
@@ -61,7 +62,7 @@ function changedSinceHead(repo, path) {
 // aren't a .js file directly in it; and `uncommitted`, scripts only in the
 // working tree or the index, each `{ path, rule }`, with the ignore rule
 // that hides it, if any.
-/** @param {import('./repo.mjs').Repo} repo */
+/** @param {Repo} repo */
 export function findWorkflows(repo) {
   const committed = paths(() => repo.git('ls-tree', '-r', '-z', '--name-only', 'HEAD'))
     .filter((p) => IN_WORKFLOWS.test(p) && !SKIPPED.test(p));

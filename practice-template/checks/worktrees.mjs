@@ -1,4 +1,5 @@
 // @ts-check
+/** @import { Repo } from './repo.mjs' */
 // Worktree helpers shared by Advanced lesson 1's check and the Advanced
 // capstone: the records of `git worktree list --porcelain`, from a listing
 // the Learner saved under .practice/ or from the repository now.
@@ -59,7 +60,7 @@ export function claudeWorktrees(records) {
 }
 
 // The worktrees git lists for the repository now.
-/** @param {import('./repo.mjs').Repo} repo */
+/** @param {Repo} repo */
 export function liveWorktrees(repo) {
   return parseWorktrees(repo.git('worktree', 'list', '--porcelain'));
 }

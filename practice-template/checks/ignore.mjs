@@ -6,6 +6,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { devNull, tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
+/** @import { Repo } from './repo.mjs' */
 
 /** @type {(cwd: string, args: string[], input?: string) => string} */
 const run = (cwd, args, input) => execFileSync('git', args, { cwd, input, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
@@ -38,7 +39,7 @@ function rule(cwd, probe) {
 const perDirectory = (/** @type {string} */ source) => /(^|\/)\.gitignore$/.test(source) && !source.startsWith('.git/') && !/^([a-zA-Z]:)?\//.test(source);
 
 /**
- * @param {import('./repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} source
  */
 function committedClean(repo, source) {
@@ -55,7 +56,7 @@ function committedClean(repo, source) {
 // in a scratch repository that holds only them: a rule in .git/info/exclude
 // or an uncommitted edit can't hide or stand in for a committed rule there.
 /**
- * @param {import('./repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} probe
  */
 function committedRule(repo, probe) {
@@ -93,7 +94,7 @@ function committedRule(repo, probe) {
  */
 
 /**
- * @param {import('./repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} probe
  * @returns {Ignore}
  */

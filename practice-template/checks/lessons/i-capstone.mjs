@@ -18,6 +18,8 @@ import { items as scopes } from './i-4.mjs';
 import { items as mcp } from './i-7.mjs';
 import { items as plugins } from './i-8.mjs';
 import { testsPass, nothingUncommitted } from './b-3.mjs';
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Intermediate capstone';
 
@@ -26,7 +28,7 @@ const READ_ONLY = new Set(['Read', 'Grep', 'Glob', 'LSP']);
 const list = (/** @type {unknown} */ value) => (Array.isArray(value) ? value : String(value ?? '').split(',')).map((t) => t.trim()).filter(Boolean);
 
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} dir
  * @param {string} suffix
  */
@@ -39,7 +41,7 @@ function committedFiles(repo, dir, suffix) {
 }
 
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} path
  */
 function committedFile(repo, path) {
@@ -55,7 +57,7 @@ const words = (/** @type {unknown} */ text) => String(text ?? '').split(/\s+/).f
 // The brief's skill runs the link checker: `npm run linkcheck` or src/cli.js.
 const LINKCHECK = /npm run linkcheck|src\/cli\.js/;
 
-/** @type {import('./index.mjs').Item} */
+/** @type {Item} */
 const skill = {
   text: 'a committed project skill that runs the link checker by name and can load on its own',
   check(repo) {
@@ -70,7 +72,7 @@ const skill = {
 
 // The names of the committed subagents that review changes with tools that
 // only read code.
-/** @param {import('../repo.mjs').Repo} repo */
+/** @param {Repo} repo */
 function reviewers(repo) {
   return committedFiles(repo, '.claude/agents', '.md').flatMap((path) => {
     const f = committedFile(repo, path)?.fields;
@@ -79,7 +81,7 @@ function reviewers(repo) {
   });
 }
 
-/** @type {import('./index.mjs').Item} */
+/** @type {Item} */
 const reviewer = {
   text: 'a committed reviewer subagent with only tools that read code',
   check(repo) {
@@ -89,7 +91,7 @@ const reviewer = {
 
 // The review the bug fix gets, logged by the capstone's copy of lesson 6's
 // SubagentStart hook.
-/** @type {import('./index.mjs').Item} */
+/** @type {Item} */
 const delegated = {
   text: '`.practice/i-capstone-agents.txt` shows Claude delegating to the committed reviewer',
   local: true,
@@ -101,7 +103,7 @@ const delegated = {
   },
 };
 
-/** @param {import('../repo.mjs').Repo} repo */
+/** @param {Repo} repo */
 function committedSettings(repo) {
   try {
     return JSON.parse(repo.git('show', 'HEAD:.claude/settings.json'));
@@ -115,7 +117,7 @@ function committedSettings(repo) {
 // any depth.
 const SAMPLES_DENY = /^Edit\((?:\.\/|\/|\*\*\/)?samples\/(?:\*\*)?\)$/;
 
-/** @type {import('./index.mjs').Item} */
+/** @type {Item} */
 const hook = {
   text: 'Claude\'s file-editing tools can\'t change `samples/` but can edit the rest: a committed `Edit` deny rule, or a fail-closed `PreToolUse` hook',
   check(repo) {
@@ -137,7 +139,7 @@ const hook = {
 };
 
 // The brief puts the sandbox in the team's committed settings.
-/** @type {import('./index.mjs').Item} */
+/** @type {Item} */
 const sandbox = {
   text: 'the committed `.claude/settings.json` turns the sandbox on, and `.claude/settings.local.json` stays out of git',
   check(repo) {
@@ -148,7 +150,7 @@ const sandbox = {
 
 // Run the committed CLI in a disposable local copy. A working-tree-only fix
 // must not satisfy the handoff that the teammate receives from git.
-/** @type {import('./index.mjs').Item} */
+/** @type {Item} */
 const bugFix = {
   text: 'the committed CLI reports malformed percent escapes as broken links and still resolves valid encoded paths',
   check(repo) {
@@ -197,12 +199,12 @@ const bugFix = {
 // shows the reused check's source, so the tests that read a check's code
 // (its ways to fail, and whether it starts a process) still read that check.
 /**
- * @param {import('./index.mjs').Item} item
+ * @param {Item} item
  * @param {...[string | RegExp, string]} swaps
- * @returns {import('./index.mjs').Item}
+ * @returns {Item}
  */
 function asCapstone(item, ...swaps) {
-  const check = (/** @type {import('../repo.mjs').Repo} */ repo) => {
+  const check = (/** @type {Repo} */ repo) => {
     const outcome = item.check(repo);
     return typeof outcome === 'string' ? swaps.reduce((text, [from, to]) => text.replace(from, to), outcome) : outcome;
   };
@@ -210,14 +212,14 @@ function asCapstone(item, ...swaps) {
   return { ...item, check };
 }
 
-const pinnedServer = asCapstone(/** @type {import('./index.mjs').Item} */ (mcp[0]),
+const pinnedServer = asCapstone(/** @type {Item} */ (mcp[0]),
   ['Save the partial file from the lesson\'s Your turn there.', 'Write the one the capstone asks for there, as in lesson 7.'],
   ['Add it under `mcpServers`, as in the lesson.', 'Add it under `mcpServers`, as in lesson 7.']);
-const setupPlugin = asCapstone(/** @type {import('./index.mjs').Item} */ (plugins[0]), ['Add the `enabledPlugins` entry from the lesson and commit it.', 'Add the `enabledPlugins` entry the capstone asks for and commit it, as in lesson 8.']);
-const teamRules = asCapstone(/** @type {import('./index.mjs').Item} */ (scopes[0]), ['Save the partial file from the lesson\'s Your turn there.', 'Write the team settings the capstone asks for there, as in lesson 4.']);
-const imports = asCapstone(/** @type {import('./index.mjs').Item} */ (memory[0]), ['Commit the one you organize in this lesson.', 'Commit the one the capstone asks for, as in lesson 2.']);
+const setupPlugin = asCapstone(/** @type {Item} */ (plugins[0]), ['Add the `enabledPlugins` entry from the lesson and commit it.', 'Add the `enabledPlugins` entry the capstone asks for and commit it, as in lesson 8.']);
+const teamRules = asCapstone(/** @type {Item} */ (scopes[0]), ['Save the partial file from the lesson\'s Your turn there.', 'Write the team settings the capstone asks for there, as in lesson 4.']);
+const imports = asCapstone(/** @type {Item} */ (memory[0]), ['Commit the one you organize in this lesson.', 'Commit the one the capstone asks for, as in lesson 2.']);
 
 // The items that start a process keep their places, 1, 9 and 11, which the
 // app's list of slow items names.
-/** @type {import('./index.mjs').Item[]} */
-export const items = [skill, hook, reviewer, pinnedServer, setupPlugin, teamRules, sandbox, imports, /** @type {import('./index.mjs').Item} */ (memory[1]), testsPass, nothingUncommitted, bugFix, delegated, /** @type {import('./index.mjs').Item} */ (scopes[2])];
+/** @type {Item[]} */
+export const items = [skill, hook, reviewer, pinnedServer, setupPlugin, teamRules, sandbox, imports, /** @type {Item} */ (memory[1]), testsPass, nothingUncommitted, bugFix, delegated, /** @type {Item} */ (scopes[2])];

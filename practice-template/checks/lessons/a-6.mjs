@@ -16,6 +16,9 @@ import {
   commitHint, committedFiles, committedMarketplaces, committedSettings, headText, marketplaceHint,
   parseJson, passingMarketplaces, pluginComponents, pluginFolders, registration, relativePath, uncommittedFiles,
 } from '../marketplace.mjs';
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
+/** @import { Marketplace, Entry } from '../marketplace.mjs' */
 
 export const title = 'Share your setup with a team';
 
@@ -45,7 +48,7 @@ const named = (/** @type {unknown} */ value) => (typeof value === 'string' && va
 // committed plugin.json, the passing ones first.
 // An entry at stage 3 or later has its plugin's name and folder.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @returns {{ name: string, dir: string }[]}
  */
 function listedPlugins(repo) {
@@ -56,7 +59,7 @@ function listedPlugins(repo) {
 }
 
 // The plugin a hint names: the first that passes, or the example's.
-const mainPlugin = (/** @type {import('../repo.mjs').Repo} */ repo) => listedPlugins(repo)[0] ?? EXAMPLE;
+const mainPlugin = (/** @type {Repo} */ repo) => listedPlugins(repo)[0] ?? EXAMPLE;
 
 // What the hints say to do when there is no marketplace or no settings yet,
 // as the lesson's page says it. The Advanced capstone passes its own.
@@ -68,19 +71,19 @@ const LESSON = {
   settings: 'as the Worked example shows',
 };
 
-/** @returns {import('./index.mjs').Item} */
+/** @returns {Item} */
 export function marketplaceItem(page = LESSON) {
   return {
     text: 'a committed team marketplace lists a plugin by a relative path, and the entry\'s name matches the `name` in the plugin\'s `plugin.json`',
-    check: (/** @type {import('../repo.mjs').Repo} */ repo) => (passingMarketplaces(repo).length ? true : marketplaceHint(repo, page.marketplace)),
+    check: (/** @type {Repo} */ repo) => (passingMarketplaces(repo).length ? true : marketplaceHint(repo, page.marketplace)),
   };
 }
 
 // Whether the working copy of the settings would pass where the committed
 // one doesn't: then the fix only needs committing.
 /**
- * @param {import('../repo.mjs').Repo} repo
- * @param {import('../marketplace.mjs').Marketplace[]} marketplaces
+ * @param {Repo} repo
+ * @param {Marketplace[]} marketplaces
  */
 function pendingSettings(repo, marketplaces) {
   // repo.read drops a byte-order mark, which the committed text keeps.
@@ -94,17 +97,17 @@ function pendingSettings(repo, marketplaces) {
 }
 
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {ReturnType<typeof committedSettings>} settings
- * @param {import('../marketplace.mjs').Marketplace[]} marketplaces
+ * @param {Marketplace[]} marketplaces
  * @param {Page} page
  */
 function settingsHint(repo, settings, marketplaces, page) {
   if (settings === null) {
     if (repo.exists(SETTINGS)) return commitHint(repo, SETTINGS);
     // The caller passes at least one passing marketplace, with a plugin.
-    const [m] = /** @type {[import('../marketplace.mjs').Marketplace]} */ (marketplaces);
-    return `There is no committed ${code(SETTINGS)}. Create it with ${code(m.name)} under \`extraKnownMarketplaces\`, at the path ${code(relativePath(m.root))}, and \`"enabledPlugins": { "${/** @type {import('../marketplace.mjs').Entry} */ (m.plugins[0]).name}@${m.name}": true }\`, ${page.settings}, and commit it.`;
+    const [m] = /** @type {[Marketplace]} */ (marketplaces);
+    return `There is no committed ${code(SETTINGS)}. Create it with ${code(m.name)} under \`extraKnownMarketplaces\`, at the path ${code(relativePath(m.root))}, and \`"enabledPlugins": { "${/** @type {Entry} */ (m.plugins[0]).name}@${m.name}": true }\`, ${page.settings}, and commit it.`;
   }
   if (settings.error) return `The committed ${code(SETTINGS)} isn't valid JSON: ${settings.error}`;
   if (!isObject(settings.value)) return `The committed ${code(SETTINGS)} isn't a JSON object.`;
@@ -113,7 +116,7 @@ function settingsHint(repo, settings, marketplaces, page) {
   return result.ok ? null : /** @type {string} */ (result.hint);
 }
 
-/** @returns {import('./index.mjs').Item} */
+/** @returns {Item} */
 export function settingsItem(page = LESSON) {
   return {
     text: 'the committed `.claude/settings.json` registers that marketplace by a relative path and turns the plugin on',
@@ -133,13 +136,13 @@ export const teamMarketplace = marketplaceItem();
 export const sharedSettings = settingsItem();
 
 // The frontmatter fields of a committed file.
-const fieldsOf = (/** @type {import('../repo.mjs').Repo} */ repo, /** @type {string} */ path) => frontmatter(headText(repo, path) ?? '')?.fields ?? {};
+const fieldsOf = (/** @type {Repo} */ repo, /** @type {string} */ path) => frontmatter(headText(repo, path) ?? '')?.fields ?? {};
 
 // The names a skill runs under. A project skill runs by its folder's name and
 // by its frontmatter `name`; a plugin skill takes its `name` in place of the
 // folder's, after the plugin's prefix.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} path
  * @param {boolean} inPlugin
  */
@@ -153,7 +156,7 @@ function skillNames(repo, path, inPlugin) {
 // The name a subagent loads under: its frontmatter `name`; a plugin's
 // subagent without one takes its file's name.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} path
  * @param {boolean} inPlugin
  */
@@ -194,7 +197,7 @@ const commandOf = (/** @type {Record<string, any>} */ h) => (h.type === 'command
 // What the committed .claude/ still holds: each skill and subagent with the
 // names it loads under, and the settings' command hooks.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string[]} files
  */
 function projectSetup(repo, files) {
@@ -209,7 +212,7 @@ function projectSetup(repo, files) {
 // Whether a plugin's hooks/hooks.json holds a hook moved out of .claude/:
 // `{ ok }` or `{ hint }`.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {{ name: string, dir: string }} plugin
  * @param {string} path
  * @param {ReturnType<typeof projectSetup>} project
@@ -241,7 +244,7 @@ function reviewHooks(repo, plugin, path, project, committed) {
   return { hint: problems[0] };
 }
 
-/** @type {import('./index.mjs').Item} */
+/** @type {Item} */
 export const movedComponent = {
   text: 'a component you moved is in the plugin and gone from `.claude/`',
   check(repo) {
@@ -289,7 +292,7 @@ export const movedComponent = {
 };
 
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string[]} args
  */
 function tracked(repo, ...args) {
@@ -300,7 +303,7 @@ function tracked(repo, ...args) {
   }
 }
 
-/** @type {import('./index.mjs').Item} */
+/** @type {Item} */
 export const personalFiles = {
   text: 'a committed `.gitignore` keeps `.claude/settings.local.json` and `CLAUDE.local.md` out, and git tracks neither',
   check(repo) {
@@ -346,7 +349,7 @@ function messages(report) {
 }
 
 // The saved report of `claude plugin validate <plugin folder> --strict --json`.
-/** @returns {import('./index.mjs').Item} */
+/** @returns {Item} */
 export function strictValidation(record = VALIDATE) {
   return {
     text: `${code(record)} records a strict validation of the plugin directory that passed`,
@@ -405,7 +408,7 @@ export function strictValidation(record = VALIDATE) {
 // passed a strict validation. One item, so the page names one structure
 // check; the capstone keeps the marketplace item on its own.
 const validation = strictValidation();
-/** @type {import('./index.mjs').Item} */
+/** @type {Item} */
 export const validatedMarketplace = {
   text: `a committed team marketplace lists a plugin by a relative path, and ${code(VALIDATE)} records a strict validation of that plugin that passed`,
   local: true,
@@ -415,5 +418,5 @@ export const validatedMarketplace = {
   },
 };
 
-/** @type {import('./index.mjs').Item[]} */
+/** @type {Item[]} */
 export const items = [validatedMarketplace, sharedSettings, movedComponent, personalFiles];

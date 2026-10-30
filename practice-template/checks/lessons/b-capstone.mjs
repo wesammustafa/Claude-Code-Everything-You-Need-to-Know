@@ -11,6 +11,8 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { NPM_TEST_LIMIT, testRunError, testsPass, nothingUncommitted } from './b-3.mjs';
 import { isTestFile, planPaths, statusPaths } from '../paths.mjs';
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Beginner capstone';
 
@@ -25,7 +27,7 @@ const ONLY_TESTS = `The commit changes only tests. Combine it with the fix befor
 /** @typedef {{ error?: string, sha: string, files: string[] }} Saved */
 
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @returns {Saved}
  */
 function savedCommit(repo) {
@@ -44,7 +46,7 @@ const git = (/** @type {string} */ cwd, /** @type {string[]} */ ...args) => spaw
 // tests, put back as it was in the commit before it. In a scratch clone, so
 // the Learner's working tree and branches stay as they are.
 /**
- * @param {import('../repo.mjs').Repo} repo
+ * @param {Repo} repo
  * @param {string} sha
  * @param {string[]} files
  * @returns {{ error?: string, passed?: boolean }}
@@ -68,7 +70,7 @@ function testsWithoutFix(repo, sha, files) {
   }
 }
 
-/** @type {import('./index.mjs').Item[]} */
+/** @type {Item[]} */
 export const items = [
   {
     text: '`.practice/capstone-before.txt`, saved while the plan was on screen, lists no changed files',
