@@ -359,8 +359,10 @@ test("a Codespace is credited for the install steps", () => {
   assert.equal(d.state.beat.status, "already");
 });
 
-// was learn-flow:237
-test("resume: the saved step opens; unknown steps and lessons are ignored", () => {
+// was learn-flow:237. Since ticket 213 a save started under other steps
+// starts its lesson again (saved-progress.test.mjs): this is a hand-edited
+// save under the same steps, whose unknown ids are still dropped.
+test("resume: the saved step opens; in a hand-edited save that matches, unknown steps and lessons are ignored", () => {
   const d = driver({
     saved: save({
       lessons: { "b-1": { step: "Y3", beat: 0, done: ["W1", "ZZ"] } },

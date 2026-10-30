@@ -2,26 +2,81 @@
 // git ignores `.practice/`, and every check that reads git status leaves it
 // out. It is the only file the app writes, and only once `.practice/` exists.
 import {
+  constants,
+  copyFileSync,
   existsSync,
+  linkSync,
   readFileSync,
   renameSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import { isAbsolute, join } from "node:path";
-import { FOLDER_KEYS, PATH_MAX, STEP_ID } from "./engine.mjs";
+import { FOLDER_KEYS, HELP_USED, PATH_MAX, STEP_ID } from "./engine.mjs";
 
 export const FORMAT = 1;
 export const storePath = (root) => join(root, ".practice", "learn.json");
 
+// The saved file, sanitized; null where there is none. A file the app
+// can't read (not JSON, not an object, another format, or no file at all
+// but a folder) is moved aside, never overwritten (ticket 213), and the
+// load gives a marker with no lessons, so the app starts fresh and says so
+// once: `{unreadable: "moved"}`, or `{unreadable: "kept"}` where the move
+// failed and the file stays where it is.
 export function loadState(root) {
+  const file = storePath(root);
+  let data;
   try {
-    const data = JSON.parse(readFileSync(storePath(root), "utf8"));
-    if (data?.format !== FORMAT) return null;
-    return sanitize(data);
-  } catch {
-    return null;
+    data = JSON.parse(readFileSync(file, "utf8"));
+  } catch (error) {
+    // No file, or a root `.practice` that is a file: no save yet.
+    if (error.code === "ENOENT" || error.code === "ENOTDIR") return null;
+    return { unreadable: moveAside(file) ? "moved" : "kept" };
   }
+  if (
+    typeof data !== "object" ||
+    data === null ||
+    Array.isArray(data) ||
+    data.format !== FORMAT
+  )
+    return { unreadable: moveAside(file) ? "moved" : "kept" };
+  return sanitize(data);
+}
+
+// Moves the file to the first free name of `learn.json.unreadable`,
+// `learn.json.unreadable-2` and on to `-99`, never over a file there: a
+// hard link fails where the name is taken (EEXIST), and so does the copy
+// made where links are not allowed. A `learn.json` that is a folder is
+// renamed after a look. True where the file left its place.
+function moveAside(file) {
+  let folder;
+  try {
+    folder = statSync(file).isDirectory();
+  } catch {
+    return false;
+  }
+  for (let n = 1; n <= 99; n++) {
+    const target = `${file}.unreadable${n === 1 ? "" : `-${n}`}`;
+    try {
+      if (folder) {
+        if (existsSync(target)) continue;
+        renameSync(file, target);
+        return true;
+      }
+      try {
+        linkSync(file, target);
+      } catch (error) {
+        if (!["EPERM", "ENOTSUP", "EXDEV"].includes(error.code)) throw error;
+        copyFileSync(file, target, constants.COPYFILE_EXCL);
+      }
+      rmSync(file);
+      return true;
+    } catch (error) {
+      if (error.code !== "EEXIST") return false;
+    }
+  }
+  return false;
 }
 
 // A work folder as the app saved it: an absolute path on one line.
@@ -34,6 +89,28 @@ const folder = (x) =>
     : null;
 
 const stepId = (x) => (typeof x === "string" && STEP_ID.test(x) ? x : null);
+
+// The two fields ticket 213 added, still format 1, each only where it has
+// something: the fingerprint the lesson was started under, and the help
+// each finished step used, { stepId: { used, at } }.
+const fingerprintOf = (x) =>
+  typeof x === "string" && /^[0-9a-f]{64}$/.test(x) ? { fingerprint: x } : {};
+function helpOf(x) {
+  const help = Object.fromEntries(
+    Object.entries(typeof x === "object" && x ? x : {})
+      .filter(
+        ([k, v]) =>
+          stepId(k) &&
+          typeof v === "object" &&
+          v &&
+          HELP_USED.includes(v.used) &&
+          Number.isFinite(v.at) &&
+          v.at >= 0,
+      )
+      .map(([k, v]) => [k, { used: v.used, at: v.at }]),
+  );
+  return Object.keys(help).length ? { help } : {};
+}
 
 // Keeps only what the app saves, so a hand-edited or newer file can't
 // smuggle anything in.
@@ -76,6 +153,8 @@ export function sanitize(data) {
           .map(([k, v]) => [k, v.slice(0, 120)]),
       ),
       bottomAt: stepId(p.bottomAt),
+      ...fingerprintOf(p.fingerprint),
+      ...helpOf(p.help),
     };
   }
   // The work folders the learner chose (ticket 86): one per later level and

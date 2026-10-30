@@ -144,10 +144,29 @@ function learnerView(s) {
       does,
       lesson,
     })),
-    // Each skill's Mastery comes with saved progress (ticket 213).
-    mastery: {},
+    mastery: masteryOf(s),
     windows: Boolean(s.facts.win32),
+    // Progress is saved only while root `.practice/` exists, and never over
+    // a save that could not be moved aside (ticket 213).
+    saving: Boolean(s.facts.practiceDir) && !s.facts.saveKept,
   };
+}
+
+// Each skill's Mastery (ticket 213): the help the latest finished step on
+// it used, by its saved time, and on a tie the later step in course order.
+// Only skills with a step finished since help was saved, and only steps the
+// lessons still have: a beat's own skill counts for nothing here.
+function masteryOf(s) {
+  const mastery = {};
+  for (const l of s.course) {
+    const help = s.progress[l.id].help ?? {};
+    for (const step of l.content?.steps ?? []) {
+      const h = help[step.id];
+      if (h && !(mastery[step.skill]?.at > h.at))
+        mastery[step.skill] = { used: h.used, at: h.at };
+    }
+  }
+  return mastery;
 }
 
 // ---- the active lesson -------------------------------------------------------
@@ -215,11 +234,13 @@ function overviewOf(s, head) {
   };
 }
 
-// The intro's notes, in introNotes' order: the work folder's problem, the
+// The intro's notes: that the lesson's steps changed since it was started
+// (ticket 213), then, in introNotes' order, the work folder's problem, the
 // page's line for the Learner's repository, on Windows the page's note,
 // the commands missing, and each prerequisite that failed.
 function notesOf(s, c) {
   const notes = [];
+  if (s.changed.includes(s.lesson)) notes.push({ kind: "changed" });
   const problem = asksFolder(s) ? null : folderProblem(s);
   if (problem) notes.push({ kind: "folder-problem", problem });
   const repo = repoNeed(s);
@@ -649,10 +670,14 @@ function completeOf(s, head) {
     ),
   ];
   const next = nextLessonOf(s);
+  const mastery = masteryOf(s);
   return {
     ...head,
     phase: "complete",
-    practised: skills.map((skill) => ({ skill, mastery: null })),
+    practised: skills.map((skill) => ({
+      skill,
+      mastery: mastery[skill] ?? null,
+    })),
     badge: c?.badge ?? null,
     firstTime: s.firstCompletion === s.lesson,
     checkSummary: (s.checks[s.lesson]?.items ?? [])

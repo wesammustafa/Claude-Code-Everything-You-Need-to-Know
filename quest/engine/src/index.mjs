@@ -8,6 +8,7 @@ export {
   ACTION_TYPES,
   EFFECT_TYPES,
   EVENT_TYPES,
+  HELP_USED,
   IDLE_MS,
   initialState,
   reduce,

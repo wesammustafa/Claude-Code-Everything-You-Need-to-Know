@@ -11,8 +11,9 @@ const turn = async () => {
 
 // A clock with timers. advance(ms) runs every timer that falls due, in time
 // order (ties by the order they were set), each at its own time, and lets
-// the event loop turn before and after each one. It reads `from` at first.
-export function fakeClock(from = 1_000_000) {
+// the event loop turn before and after each one. It reads `from` at first,
+// and its wall clock `epoch0` more.
+export function fakeClock(from = 1_000_000, epoch0 = 0) {
   let time = from;
   let seq = 0;
   const timers = new Map();
@@ -23,7 +24,7 @@ export function fakeClock(from = 1_000_000) {
   };
   return {
     now: () => time,
-    epoch: () => time,
+    epoch: () => epoch0 + time,
     // Time passing inside a call, such as a slow write: no timer runs.
     spend: (ms) => {
       time += ms;

@@ -97,10 +97,18 @@ export interface LearnerView {
   workFolders: { key: FolderKey; path: string }[];
   /** The skills card: each entry the Learner finished a step on. */
   card: { skill: string; show: string; does: string; lesson: LessonId }[];
-  /** Each skill's Mastery; empty until saved progress keeps it (213). */
+  /**
+   * Each skill's Mastery: only skills with a step finished since saved
+   * progress kept the help used, so a save from before has none.
+   */
   mastery: Record<string, Mastery>;
   /** The app runs on native Windows: commands are its variants. */
   windows: boolean;
+  /**
+   * Progress is saved: root `.practice/` exists, and no save there was
+   * left in place unread.
+   */
+  saving: boolean;
 }
 
 // ---- the active Lesson --------------------------------------------------------
@@ -173,7 +181,10 @@ export type OverviewNote =
     }
   /** The page's note for native Windows. */
   | { kind: "win-note"; text: string }
-  /** The Lesson's steps changed since it was started (213 emits it). */
+  /**
+   * The Lesson's steps changed since it was started, so it starts again
+   * here; until it does.
+   */
   | { kind: "changed" };
 
 export interface FolderQuestion {

@@ -2,7 +2,15 @@
 // atomic saves only once .practice/ exists, format 1, and what it keeps.
 import { test } from "vitest";
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import {
   repo,
@@ -15,6 +23,7 @@ import {
   saveState,
   storePath,
 } from "../src/store.mjs";
+import { realAdapters } from "../src/real.mjs";
 
 const MINE = "/home/sam/code/my-app";
 
@@ -48,10 +57,20 @@ test("saved state: round trip, nothing written before .practice/ exists, junk ig
         ["learn.json"],
         "no temp file left",
       );
+      // A file the app can't read is moved aside (ticket 213), each to a
+      // name of its own.
       writeFileSync(storePath(dir), "{nope");
-      assert.equal(loadState(dir), null);
+      assert.deepEqual(loadState(dir), { unreadable: "moved" });
       writeFileSync(storePath(dir), JSON.stringify({ format: 99 }));
-      assert.equal(loadState(dir), null, "a newer format starts fresh");
+      assert.deepEqual(
+        loadState(dir),
+        { unreadable: "moved" },
+        "a newer format starts fresh",
+      );
+      assert.deepEqual(readdirSync(join(dir, ".practice")).sort(), [
+        "learn.json.unreadable",
+        "learn.json.unreadable-2",
+      ]);
       const clean = sanitize({
         welcomed: "yes",
         lessons: {
@@ -60,6 +79,7 @@ test("saved state: round trip, nothing written before .practice/ exists, junk ig
         },
         extra: 1,
       });
+      assert.ok(!("extra" in clean), "an unknown top-level key is dropped");
       assert.deepEqual(Object.keys(clean.lessons), ["b-1"]);
       assert.equal(clean.welcomed, false);
       assert.equal(clean.lessons["b-1"].step, null);
@@ -240,6 +260,142 @@ test("saved state: FORMAT stays 1, and a learn.json today's app wrote loads with
         ...today,
         folders: { intermediate: MINE },
       });
+    },
+  );
+});
+
+test("saved state: a lesson's fingerprint and the help its steps used are kept, anything malformed drops", () => {
+  const print = "0123456789abcdef".repeat(4);
+  const one = (p) => sanitize({ lessons: { "b-1": p } }).lessons["b-1"];
+  assert.equal(one({ fingerprint: print }).fingerprint, print);
+  for (const bad of [print.toUpperCase(), print.slice(1), `${print}0`, 3, null])
+    assert.equal(
+      "fingerprint" in one({ fingerprint: bad }),
+      false,
+      String(bad),
+    );
+  const help = {
+    W1: { used: "own", at: 0 },
+    W2: { used: "hints", at: 1_700_000_000_000 },
+    C: { used: "commands", at: 5, extra: true },
+  };
+  assert.deepEqual(one({ help }).help, {
+    ...help,
+    C: { used: "commands", at: 5 },
+  });
+  const bad = one({
+    help: {
+      "../W1": { used: "own", at: 1 },
+      w1: { used: "own", at: 1 },
+      W2: { used: "guided", at: 1 },
+      W3: { used: "own", at: -1 },
+      W4: { used: "own", at: Number.NaN },
+      W5: { used: "own", at: "1" },
+      W6: "own",
+      W7: null,
+      W8: { used: "hints", at: 2 },
+    },
+  });
+  assert.deepEqual(bad.help, { W8: { used: "hints", at: 2 } });
+  assert.equal("help" in one({ help: { W1: null } }), false, "none: no key");
+  assert.equal("help" in one({ help: "own" }), false);
+  assert.equal("help" in one({}), false);
+});
+
+test("saved state: no file loads as null and moves nothing; an unreadable one is moved aside, never over an earlier one, and the next save writes a fresh file", () => {
+  withRepo(
+    () => repo(),
+    (dir) => {
+      const practice = join(dir, ".practice");
+      mkdirSync(practice);
+      assert.equal(loadState(dir), null);
+      assert.deepEqual(readdirSync(practice), []);
+      writeFileSync(join(practice, "learn.json.unreadable"), "earlier");
+      writeFileSync(storePath(dir), "[1, 2]");
+      assert.deepEqual(loadState(dir), { unreadable: "moved" });
+      assert.equal(
+        readFileSync(join(practice, "learn.json.unreadable"), "utf8"),
+        "earlier",
+        "the earlier file is kept byte for byte",
+      );
+      assert.equal(
+        readFileSync(join(practice, "learn.json.unreadable-2"), "utf8"),
+        "[1, 2]",
+      );
+      assert.equal(existsSync(storePath(dir)), false);
+      const fresh = sanitize({ welcomed: true });
+      assert.equal(saveState(dir, fresh), true);
+      assert.deepEqual(loadState(dir), fresh);
+      for (const text of ["null", '"x"', "3", '{"format":"1"}', ""]) {
+        writeFileSync(storePath(dir), text);
+        assert.deepEqual(loadState(dir), { unreadable: "moved" }, text);
+      }
+      assert.equal(
+        readdirSync(practice).filter((f) => f.startsWith("learn.json.")).length,
+        7,
+      );
+    },
+  );
+});
+
+test("saved state: a learn.json that is a folder is moved aside too", () => {
+  withRepo(
+    () => repo(),
+    (dir) => {
+      mkdirSync(join(dir, ".practice"));
+      mkdirSync(storePath(dir));
+      writeFileSync(join(storePath(dir), "inside"), "x");
+      assert.deepEqual(loadState(dir), { unreadable: "moved" });
+      assert.equal(
+        readFileSync(
+          join(dir, ".practice", "learn.json.unreadable", "inside"),
+          "utf8",
+        ),
+        "x",
+      );
+      assert.equal(saveState(dir, sanitize({})), true);
+    },
+  );
+});
+
+test.skipIf(process.platform === "win32" || process.getuid?.() === 0)(
+  "saved state: a file that can't be moved aside stays where it is, and the real store then saves nothing",
+  () => {
+    withRepo(
+      () => repo(),
+      (dir) => {
+        const practice = join(dir, ".practice");
+        mkdirSync(practice);
+        writeFileSync(storePath(dir), "{nope");
+        chmodSync(practice, 0o555);
+        try {
+          const store = realAdapters({ root: dir }).store;
+          assert.deepEqual(store.load(), { unreadable: "kept" });
+          assert.equal(store.save(sanitize({})), false);
+          assert.equal(readFileSync(storePath(dir), "utf8"), "{nope");
+          assert.deepEqual(readdirSync(practice), ["learn.json"]);
+        } finally {
+          chmodSync(practice, 0o755);
+        }
+      },
+    );
+  },
+);
+
+test("saved state: no .practice/, no save and no temp file; a .practice that is a file loads as no save", () => {
+  withRepo(
+    () => repo(),
+    (dir) => {
+      assert.equal(saveState(dir, sanitize({})), false);
+      writeFileSync(join(dir, ".practice"), "x");
+      assert.equal(loadState(dir), null);
+      assert.equal(readFileSync(join(dir, ".practice"), "utf8"), "x");
+      rmSync(join(dir, ".practice"));
+      assert.equal(existsSync(join(dir, ".practice")), false);
+      assert.deepEqual(
+        readdirSync(dir).filter((f) => f.endsWith(".tmp")),
+        [],
+      );
     },
   );
 });

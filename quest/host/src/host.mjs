@@ -45,11 +45,16 @@ export const EVENT_KEEP_MS = 15 * 60_000;
 export const HOST_ACTION_TYPES = [...ACTION_TYPES, "milestone.shown"];
 
 // The moments that stay pending until a tab shows them: a Lesson's first
-// completion, a Level complete and the course complete.
+// completion, a Level complete, the course complete, and the notice that
+// the saved progress could not be read (ticket 213).
+const isNotice = (e) =>
+  e.type === "notice" &&
+  (e.kind === "unreadable" || e.kind === "unreadable-kept");
 const isMilestone = (e) =>
   (e.type === "lesson.completed" && e.firstTime) ||
   e.type === "level.completed" ||
-  e.type === "course.completed";
+  e.type === "course.completed" ||
+  isNotice(e);
 // Where the Learner is, for an action based on an older place: the lesson,
 // its phase and the step on screen.
 const placeOf = (s) =>
@@ -133,7 +138,9 @@ export function createHost({
     const started = startedLesson(prev, state);
     const before = milestones.length;
     if (started !== null)
-      milestones = milestones.filter((m) => m.lesson === started);
+      milestones = milestones.filter(
+        (m) => isNotice(m.envelope) || m.lesson === started,
+      );
     const next = project(state);
     const json = JSON.stringify(next);
     if (events.length || milestones.length !== before || json !== viewJson)
@@ -189,7 +196,11 @@ export function createHost({
           continue;
         }
         const prev = state;
-        const r = engine.reduce(state, { now: clock.now(), ...item });
+        const r = engine.reduce(state, {
+          now: clock.now(),
+          epoch: clock.epoch(),
+          ...item,
+        });
         state = r.state;
         run(r.effects);
         if (!closed) watchWork();
@@ -402,6 +413,9 @@ export function createHost({
   // holds) never stops the lesson: the learner sees a note and goes on.
   let saveError = null;
   function save() {
+    // A save the store could not move aside is never written over, whatever
+    // the store does.
+    if (facts?.saveKept) return;
     lastSave = clock.now();
     try {
       store.save(toSave(state));
@@ -524,14 +538,29 @@ export function createHost({
         codespace: env.CODESPACES === "true",
         win32: platform === "win32",
         linux: platform === "linux",
+        // A save the store could not move aside is never written over.
+        saveKept: saved?.unreadable === "kept",
         ...given,
       };
-      state = engine.initialState({ course, saved, facts, now: clock.now() });
+      state = engine.initialState({
+        course,
+        saved,
+        facts,
+        now: clock.now(),
+        epoch: clock.epoch(),
+      });
       revision = 1;
       placeRevision = 1;
       place = placeOf(state);
       view = project(state);
       viewJson = JSON.stringify(view);
+      // A save the store could not read: the first snapshot says so, a
+      // pending milestone until a tab shows it.
+      if (saved?.unreadable)
+        input({
+          type: "notice",
+          kind: saved.unreadable === "moved" ? "unreadable" : "unreadable-kept",
+        });
       return snapshot();
     },
     // The watchers, the tick and the poll, then what --dir and the saved

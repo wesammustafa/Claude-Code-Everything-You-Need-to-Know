@@ -8,7 +8,7 @@
 // and nothing outside this package is imported but the Checks the course
 // is parsed with (no module that reads a file): what a screen shows is the
 // client's.
-import { GIT, isChoice, READS, SINCE_GIT } from "./content.mjs";
+import { fingerprint, GIT, isChoice, READS, SINCE_GIT } from "./content.mjs";
 import { evidenceOf, grewFrom, judge } from "./holds.mjs";
 import { EVENT_TYPES, momentsOf } from "./moments.mjs";
 import {
@@ -26,6 +26,10 @@ import { TYPED_MAX, WARMUPS } from "./rules.mjs";
 export { EVENT_TYPES, TYPED_MAX, WARMUPS };
 
 export const IDLE_MS = 120_000;
+// The help a finished step used (ticket 213), least first: on the Learner's
+// own, with hints, or with every command shown. Saved per step, and a
+// skill's Mastery.
+export const HELP_USED = ["own", "hints", "commands"];
 
 // The effects the engine asks for.
 export const EFFECT_TYPES = [
@@ -71,6 +75,9 @@ export const ENGINE_FIELDS = [
   "folderAnswered",
   "folderAsk",
   "firstCompletion",
+  "epoch",
+  "stepHelp",
+  "changed",
 ];
 
 const clone = (x) => structuredClone(x);
@@ -91,35 +98,82 @@ const blankProgress = () => ({
 });
 export const sameJson = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
-export function initialState({ course, saved = null, facts, now = 0 }) {
+// A lesson's fingerprints (ticket 213): its steps' as the course has them
+// now, and what a save with none was started under, the course file's
+// legacy fingerprint, the Terminal app's last version of the lesson. Where
+// the content is not the course file's own (a test's), the legacy is now's.
+const printsOf = (l) => {
+  const current = fingerprint(l.content);
+  return {
+    current,
+    legacy:
+      l.fingerprint === current && l.legacyFingerprint
+        ? l.legacyFingerprint
+        : current,
+  };
+};
+
+export function initialState({
+  course,
+  saved = null,
+  facts,
+  now = 0,
+  epoch = 0,
+}) {
   const progress = {};
+  // The lessons whose steps changed since the Learner started them, and of
+  // those the ones the Learner had a step open in.
+  const changed = [];
+  const placed = new Set();
   for (const l of course) {
     const p = saved?.lessons?.[l.id];
     progress[l.id] = { ...blankProgress(), ...(p ?? {}) };
-    if (l.content) {
-      // Unknown step ids from an older content file start that lesson's place over.
-      const pr = progress[l.id];
-      pr.warm = pr.warm.filter((id) =>
-        l.content.warmup.some((w) => w.id === id),
-      );
-      pr.recalled = pr.recalled.filter((id) =>
-        l.content.warmup.some((w) => w.id === id),
-      );
-      const steps = playOrder(l.content, pr);
-      const ids = new Set(steps.map((s) => s.id));
-      pr.done = pr.done.filter((id) => ids.has(id));
-      if (!ids.has(pr.moreHelpAt)) pr.moreHelpAt = null;
-      const step = steps.find((x) => x.id === pr.step);
-      if (!step) Object.assign(pr, { step: null, beat: 0 });
-      else if (!(pr.beat >= 0 && pr.beat < step.beats.length)) pr.beat = 0;
-      else if (!beatShown(pr, step.beats[pr.beat]))
-        pr.beat = shownBefore(pr, step, pr.beat);
+    if (!l.content) continue;
+    const pr = progress[l.id];
+    const { current, legacy } = printsOf(l);
+    // A lesson started under other steps starts again at its overview,
+    // keeping its Badge and the help its steps used. A finished one keeps
+    // the ticks of the steps it still has too, so its card entries and the
+    // help that fades after it stay; with only its ticks it says nothing,
+    // as nothing of its place is lost.
+    if ((pr.step || pr.done.length) && (pr.fingerprint ?? legacy) !== current) {
+      if (pr.step || !pr.complete) changed.push(l.id);
+      if (pr.step) placed.add(l.id);
+      progress[l.id] = {
+        ...blankProgress(),
+        complete: pr.complete,
+        done: pr.complete
+          ? pr.done.filter((id) => l.content.steps.some((x) => x.id === id))
+          : [],
+        ...(pr.help && { help: pr.help }),
+      };
+      continue;
     }
+    // The same steps: what the save holds is still put in order, as a
+    // hand-edited file may hold any ids. Warm-ups are not in the
+    // fingerprint.
+    pr.warm = pr.warm.filter((id) => l.content.warmup.some((w) => w.id === id));
+    pr.recalled = pr.recalled.filter((id) =>
+      l.content.warmup.some((w) => w.id === id),
+    );
+    const steps = playOrder(l.content, pr);
+    const ids = new Set(steps.map((s) => s.id));
+    pr.done = pr.done.filter((id) => ids.has(id));
+    if (!ids.has(pr.moreHelpAt)) pr.moreHelpAt = null;
+    const step = steps.find((x) => x.id === pr.step);
+    if (!step) Object.assign(pr, { step: null, beat: 0 });
+    else if (!(pr.beat >= 0 && pr.beat < step.beats.length)) pr.beat = 0;
+    else if (!beatShown(pr, step.beats[pr.beat]))
+      pr.beat = shownBefore(pr, step, pr.beat);
   }
+  // A lesson the Learner was in the middle of that changed opens at its
+  // overview, with its note.
   const open =
+    course.find((l) => placed.has(l.id) && !progress[l.id].complete) ??
     course.find(
       (l) => l.content && progress[l.id].step && !progress[l.id].complete,
-    ) ?? course.find((l) => l.content && !progress[l.id].complete);
+    ) ??
+    course.find((l) => l.content && !progress[l.id].complete);
   const folders = { ...(saved?.folders ?? {}) };
   // Every lesson in the app is done: open the map at the next lesson, or
   // where only lessons that run in a new copy with no folder saved are left,
@@ -190,6 +244,17 @@ export function initialState({ course, saved = null, facts, now = 0 }) {
     // The lesson whose end on screen is its first completion, for Lesson
     // complete's first time (ticket 212), in memory.
     firstCompletion: null,
+    // The wall clock, in epoch milliseconds, as the host stamps each input:
+    // when a finished step's help is saved (ticket 213).
+    epoch,
+    // The help each step used so far in this play of its lesson, in
+    // memory: { "<lesson> <step>": used }, kept through back, revisit and
+    // other lessons, cleared as the lesson starts. The tier and an exact
+    // command taken count when it finishes.
+    stepHelp: {},
+    // The lessons whose steps changed since the Learner started them, each
+    // overview's note until it starts again, in memory.
+    changed,
   };
 }
 
@@ -1043,9 +1108,41 @@ function startLesson(s, id, effects) {
   } else s.phase = "overview";
 }
 
+// The more of two helps used.
+const moreUsed = (a, b) =>
+  HELP_USED.indexOf(a) >= HELP_USED.indexOf(b) ? a : b;
+// The step on screen used at least `help` in this play.
+const helpKey = (s) => `${s.lesson} ${stepOf(s).id}`;
+function used(s, help) {
+  const key = helpKey(s);
+  s.stepHelp[key] = moreUsed(s.stepHelp[key] ?? "own", help);
+}
+// A new play of a lesson: its steps' help starts again.
+function forgetHelp(s, lesson) {
+  for (const key of Object.keys(s.stepHelp))
+    if (key.startsWith(`${lesson} `)) delete s.stepHelp[key];
+}
+// The help a lesson's own step used, saved as it finishes, a replay's over
+// the last (ticket 213): its tier (Guided shows every command, Hinted
+// hints), a hint opened and the exact command taken, here or before a quit.
+// A warm-up is from memory and saves none.
+function saveHelp(s) {
+  const step = stepOf(s);
+  const p = s.progress[s.lesson];
+  if (!contentOf(s).steps.includes(step)) return;
+  const tier = { guided: "commands", hinted: "hints" }[tierOf(s)] ?? "own";
+  const opened = s.stepHelp[helpKey(s)] ?? "own";
+  const bottom = p.bottomAt === step.id ? "commands" : "own";
+  p.help = {
+    ...(p.help ?? {}),
+    [step.id]: { used: moreUsed(moreUsed(tier, opened), bottom), at: s.epoch },
+  };
+}
+
 function finishStep(s, effects) {
   const step = stepOf(s);
   const p = s.progress[s.lesson];
+  saveHelp(s);
   if (!p.done.includes(step.id)) {
     p.done.push(step.id);
     s.session += 1;
@@ -1596,6 +1693,10 @@ const ACTIONS = {
     const p = s.progress[s.lesson];
     p.lessHelp = help === "less";
     startPlay(p);
+    // The steps it is played under, so a later change starts it again.
+    p.fingerprint = fingerprint(contentOf(s));
+    forgetHelp(s, s.lesson);
+    s.changed = s.changed.filter((id) => id !== s.lesson);
     s.answeredNow = s.answeredNow.filter((k) => !k.startsWith(`${s.lesson}.`));
     chooseWarmups(s);
     openStep(s, 0, effects);
@@ -1605,10 +1706,14 @@ const ACTIONS = {
   // replay never awards one again (spec, Rewards and Mastery).
   "lesson.restart"(s, { lesson }, effects) {
     if (!lessonOf(s, lesson)) return false;
+    const { complete, help } = s.progress[lesson];
     s.progress[lesson] = {
       ...blankProgress(),
-      complete: s.progress[lesson].complete,
+      complete,
+      ...(help && { help }),
     };
+    forgetHelp(s, lesson);
+    s.changed = s.changed.filter((id) => id !== lesson);
     s.lesson = lesson;
     s.phase = "overview";
     effects.push({ type: "save" });
@@ -1763,7 +1868,10 @@ const ACTIONS = {
     const rungs = rungsOf(s);
     if (st.rung + 1 === rungs.length - 1 && rungs.at(-1).kind === "bottom")
       st.confirm = true;
-    else st.rung += 1;
+    else {
+      st.rung += 1;
+      used(s, "hints");
+    }
   },
   // The y/n's answer: the exact command eases its skill.
   "hint.takeExact"(s, { take }, effects) {
@@ -1772,6 +1880,7 @@ const ACTIONS = {
     st.confirm = false;
     if (!take) return;
     st.rung = rungsOf(s).length - 1;
+    used(s, "commands");
     if (!s.eased.includes(stepOf(s).skill)) s.eased.push(stepOf(s).skill);
     s.progress[s.lesson].bottomAt = stepOf(s).id;
     effects.push({ type: "save" });
@@ -1998,6 +2107,9 @@ function apply(s, input, effects) {
       }
       break;
     case "facts":
+      // Root `.practice/` came: the place so far is saved at last.
+      if (ev.facts.practiceDir && !s.facts.practiceDir)
+        effects.push({ type: "save" });
       Object.assign(s.facts, ev.facts);
       break;
     case "commands":
@@ -2069,6 +2181,7 @@ export function reduce(prev, input) {
   s.course = prev.course;
   const effects = [];
   if (input.now !== undefined) s.now = input.now;
+  if (typeof input.epoch === "number") s.epoch = input.epoch;
   const handled = apply(s, input, effects);
   settle(prev, s, effects);
   // A started run ends as the status leaves "opening".

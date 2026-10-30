@@ -105,6 +105,12 @@ export function loadCourse(root, path = PATH) {
       items: lesson.items,
       slow: lesson.slow,
       content,
+      // The course file's fingerprints, which the engine compares a save
+      // with (ticket 213); a step file read on its own has none.
+      ...(useCompiled && {
+        fingerprint: lesson.fingerprint,
+        legacyFingerprint: lesson.legacyFingerprint,
+      }),
     };
   });
 }

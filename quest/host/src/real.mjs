@@ -40,6 +40,7 @@ export function realAdapters({
   runProbe: probeChild = runProbe,
 }) {
   const children = createChildren();
+  let keep = false;
   // What git says first: whether this folder is a repository, and a name to
   // greet.
   const ask =
@@ -73,8 +74,13 @@ export function realAdapters({
     },
     watch,
     store: {
-      load: () => loadState(root),
-      save: (data) => saveState(root, data),
+      // A save the app could not move aside is never written over.
+      load: () => {
+        const saved = loadState(root);
+        keep = saved?.unreadable === "kept";
+        return saved;
+      },
+      save: (data) => !keep && saveState(root, data),
     },
     commands: { has: (name) => onPath(name, env, platform) },
     stop: () => children.stop(),

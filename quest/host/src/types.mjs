@@ -77,6 +77,10 @@
 /**
  * The store, bound to the practice copy: save returns false, writing
  * nothing, while `.practice/` is missing, and throws where the write fails.
+ * load gives the saved file, null where there is none, or, for a file it
+ * could not read, `{ unreadable: "moved" }` once it moved the file aside,
+ * or `{ unreadable: "kept" }` where it could not, and then save writes
+ * nothing and returns false.
  * @typedef {object} Store
  * @property {() => object | null} load
  * @property {(data: object) => boolean} save

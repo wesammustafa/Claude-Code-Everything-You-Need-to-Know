@@ -11,6 +11,7 @@ import type {
   EventEnvelope,
   LessonCompletedEvent,
   LevelCompletedEvent,
+  NoticeEvent,
 } from "./events";
 import type { Snapshot } from "./snapshot";
 
@@ -44,11 +45,16 @@ export interface Heartbeat {
 }
 
 /**
- * A pending milestone: a Lesson's first completion, a Level complete or the
- * course complete, as the event that marked it. It stays in the snapshot
- * until a tab shows it and sends `milestone.shown` with its ID, and lapses
- * when the Learner starts another Lesson.
+ * A pending milestone: a Lesson's first completion, a Level complete, the
+ * course complete, or the notice that the saved progress could not be read
+ * (`unreadable`: it was moved aside; `unreadable-kept`: it could not be, and
+ * nothing is saved), as the event that marked it. It stays in the snapshot
+ * until a tab shows it and sends `milestone.shown` with its ID; a completion
+ * lapses when the Learner starts another Lesson, a notice does not.
  */
 export type Milestone = EventEnvelope<
-  LessonCompletedEvent | LevelCompletedEvent | CourseCompletedEvent
+  | LessonCompletedEvent
+  | LevelCompletedEvent
+  | CourseCompletedEvent
+  | NoticeEvent
 >;

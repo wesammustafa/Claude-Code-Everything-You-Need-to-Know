@@ -686,7 +686,12 @@ test("complete: b-1's Badge and first time, its check summary, the help used, an
   assert.equal(v.next.id, "b-2");
   assert.ok(v.staircase.length > 0);
   assert.ok(v.practised.length > 0);
-  assert.ok(v.practised.every((x) => x.mastery === null));
+  // Each skill practised has the help its latest step used (ticket 213).
+  assert.ok(
+    v.practised.every((x) =>
+      ["own", "hints", "commands"].includes(x.mastery?.used),
+    ),
+  );
   // Played again: no first time.
   d.open("b-1");
   playUntil(d, (s) => s.phase === "complete");

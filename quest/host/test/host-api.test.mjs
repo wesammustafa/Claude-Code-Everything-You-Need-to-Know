@@ -173,6 +173,7 @@ test("open: git's answers and the copy make the facts, and the client's facts go
     codespace: true,
     win32: true,
     linux: true,
+    saveKept: false,
     clipboard: true,
   });
   const none = fakeHost({ saved: AT_W3, tree: {} });
