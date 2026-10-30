@@ -1,10 +1,12 @@
 // The Check child, real (ticket 209, ported from learn-io): its reports, its
 // per-item limit, its environment and its slow items, and each host's own
-// registry of children.
+// registry of children. Ticket 211: the limit on the host's clock, its
+// process tree ended on an overrun and on close, and its output cap.
 import { test } from "vitest";
 import assert from "node:assert/strict";
 import { execFile, spawnSync } from "node:child_process";
-import { rmSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { STUB_RUNS } from "../../../practice-template/checks/lessons/a-4.mjs";
 import { NPM_TEST_LIMIT } from "../../../practice-template/checks/lessons/b-3.mjs";
@@ -16,15 +18,18 @@ import {
   write,
 } from "../../../practice-template/checks/test/helpers.mjs";
 import {
-  CHECK_BUFFER,
   childEnv,
   ITEM_LIMIT,
-  PROBE_BUFFER,
+  lineReader,
+  OUTPUT_CAP,
   runCheck,
+  runProbe,
 } from "../src/check-child.mjs";
 import { createChildren } from "../src/children.mjs";
+import { fakeClock } from "../src/fake.mjs";
 import { GIT_LIMIT } from "../src/git.mjs";
 import { root } from "../../engine/test/drive.mjs";
+import { alive, holding, pidsOf, sweep, until } from "./tree.mjs";
 
 const RUN_CHECK = fileURLToPath(
   new URL("../src/run-check.mjs", import.meta.url),
@@ -43,14 +48,13 @@ const child = (args, extraEnv = {}) => {
 };
 
 // spec: subprocess-limits
-test("today's limits: 150 s an item from the slowest items' own, 4 MB for a check, 1 MB for a probe, 30 s for git", () => {
+test("today's limits: 150 s an item from the slowest items' own, 1 MB of output for a check or a probe, 30 s for git", () => {
   assert.equal(ITEM_LIMIT, 150_000);
   assert.equal(
     ITEM_LIMIT,
     Math.max(NPM_TEST_LIMIT, STUB_RUNS * TIME_LIMIT) + 30_000,
   );
-  assert.equal(CHECK_BUFFER, 4 * 1024 * 1024);
-  assert.equal(PROBE_BUFFER, 1024 * 1024);
+  assert.equal(OUTPUT_CAP, 1 << 20);
   assert.equal(GIT_LIMIT, 30_000);
 });
 
@@ -162,22 +166,28 @@ test(
 
 // spec: subprocess-limits
 test(
-  "the check child's time limit runs from the start of each item, so slow items add up in one run without ending it",
+  "the check child's time limit runs on the host's clock from the start of each item, so slow items add up in one run without ending it",
   async () => {
-    // b-capstone's two slow items, each 2 s here, the tool then npm test, and
-    // together past the limit: each well under it.
+    // b-capstone's two slow items, the tool then npm test, each answered at
+    // once: as each starts, the clock moves to just short of the limit.
     const nap = (ms) =>
       `setTimeout(() => { console.error('docs missing'); process.exit(2); }, ${ms});\n`;
     const dir = repo({
-      "src/cli.js": nap(2_000),
-      "package.json": JSON.stringify({
-        scripts: { test: 'node -e "setTimeout(() => {}, 2000)"' },
-      }),
+      "src/cli.js": nap(0),
+      "package.json": JSON.stringify({ scripts: { test: 'node -e ""' } }),
     });
+    const limit = 10_000;
     try {
+      const clock = fakeClock(0);
+      const armed = [];
       const r = await runCheck(dir, "b-capstone", [3, 4], {
         slow: true,
-        limit: 4_000,
+        limit,
+        clock,
+        onRunning: () => {
+          armed.push(clock.pending().map((t) => t.ms));
+          void clock.advance(limit - 1);
+        },
       });
       assert.deepEqual(
         r.items?.map((i) => [i.index, i.pass]),
@@ -187,12 +197,126 @@ test(
         ],
         JSON.stringify(r),
       );
+      assert.deepEqual(armed, [[limit], [limit]], "one limit, from each item");
       // One item that runs past it still ends the run.
-      write(dir, { "src/cli.js": nap(6_000) });
+      write(dir, { "src/cli.js": nap(60_000) });
+      const late = fakeClock(0);
       assert.deepEqual(
-        await runCheck(dir, "b-capstone", [3], { slow: true, limit: 2_000 }),
+        await runCheck(dir, "b-capstone", [3], {
+          slow: true,
+          limit,
+          clock: late,
+          onRunning: () => void late.advance(limit),
+        }),
         { error: "it took too long" },
       );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  },
+  SLOW_TEST,
+);
+
+// spec: subprocess-limits
+test.skipIf(process.platform === "win32")(
+  "a Check child that sleeps past its limit is killed with its children",
+  async () => {
+    const dir = holding();
+    const clock = fakeClock(0);
+    const limit = 10_000;
+    let pids;
+    try {
+      const run = runCheck(dir, "b-capstone", [3], {
+        slow: true,
+        limit,
+        clock,
+      });
+      pids = await pidsOf(dir);
+      assert.ok(pids.every(alive), "the tool and its child run");
+      await clock.advance(limit);
+      assert.deepEqual(await run, { error: "it took too long" });
+      await until(() => !pids.some(alive), "the tool and its child end");
+    } finally {
+      sweep(pids);
+      rmSync(dir, { recursive: true, force: true });
+    }
+  },
+  SLOW_TEST,
+);
+
+// spec: subprocess-limits
+test.skipIf(process.platform === "win32")(
+  "closing kills the Check child's tree",
+  async () => {
+    const dir = holding();
+    const children = createChildren();
+    let pids;
+    try {
+      const run = runCheck(dir, "b-capstone", [3], { slow: true, children });
+      pids = await pidsOf(dir);
+      children.stop();
+      assert.ok((await run).error, "the run ends");
+      await until(() => !pids.some(alive), "the tool and its child end");
+      assert.equal(children.size(), 0);
+    } finally {
+      sweep(pids);
+      rmSync(dir, { recursive: true, force: true });
+    }
+  },
+  SLOW_TEST,
+);
+
+// spec: subprocess-limits
+test(
+  "a Check child that prints past the cap is ended, and the cap counts its reports with its result",
+  async () => {
+    const dir = repo();
+    try {
+      const children = createChildren();
+      assert.deepEqual(await runCheck(dir, "b-1", [1], { cap: 64, children }), {
+        error: "it printed too much",
+      });
+      await until(() => children.size() === 0, "the registry drains");
+      // The same run's whole output, as spawnSync sees it.
+      const { NODE_TEST_CONTEXT: _, ...env } = process.env;
+      const real = spawnSync(process.execPath, [RUN_CHECK, "b-1", dir, "1"], {
+        env: childEnv(env),
+      });
+      const total = real.stdout.length + real.stderr.length;
+      const fits = await runCheck(dir, "b-1", [1], { cap: total });
+      assert.ok(fits.items, `a cap of exactly ${total} bytes fits`);
+      assert.deepEqual(
+        await runCheck(dir, "b-1", [1], { cap: real.stdout.length }),
+        { error: "it printed too much" },
+        "its result fits alone, but not with its report",
+      );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  },
+  SLOW_TEST,
+);
+
+test("lines that come in chunks come through whole", () => {
+  const lines = [];
+  const read = lineReader((l) => lines.push(l));
+  read("short\nhal");
+  read("f\n");
+  read("unfinished");
+  assert.deepEqual(lines, ["short", "half"]);
+});
+
+// spec: subprocess-limits
+test(
+  "a probe that runs past its limit on the host's clock is ended",
+  async () => {
+    const dir = repo();
+    try {
+      const clock = fakeClock(0);
+      const run = runProbe(dir, "worktrees", [], { limit: 10, clock });
+      await clock.advance(10);
+      // The fake limit falls due before node has even started.
+      assert.deepEqual(await run, { error: "it took too long" });
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

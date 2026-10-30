@@ -3,12 +3,15 @@
 // 215's TypeScript conversion starts from them.
 
 /**
- * The host's one clock: monotonic milliseconds, and the intervals of the
- * tick and the poll. The host sets no other timer.
+ * The host's one clock: monotonic milliseconds, the intervals of the tick
+ * and the poll, and the Check child's per-item limit. The watcher's debounce
+ * and git's own time limit do not go through it.
  * @typedef {object} Clock
  * @property {() => number} now
  * @property {(fn: () => void, ms: number) => unknown} setInterval
  * @property {(id: unknown) => void} clearInterval
+ * @property {(fn: () => void, ms: number) => unknown} setTimeout
+ * @property {(id: unknown) => void} clearTimeout
  */
 
 /**

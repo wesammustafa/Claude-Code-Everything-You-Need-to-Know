@@ -18,7 +18,7 @@ import {
   watching,
   workFolder,
 } from "./engine.mjs";
-import { owing, singleFlight } from "./flight.mjs";
+import { oneAtATime, owing, singleFlight } from "./flight.mjs";
 import { folderPath } from "./folders.mjs";
 import { snapshot as toSave } from "./store.mjs";
 
@@ -88,21 +88,46 @@ export function createHost({
   const runStart = () =>
     queueMicrotask(() => !closed && input({ type: "run-start" }));
 
+  // One Check child at a time, whatever asked for it: a check, a probe, a
+  // stamp's probe or a prerequisite's. Only the call that starts the child
+  // waits in this lane, so nothing in it waits for another run in it. One
+  // whose turn comes after close starts nothing.
+  const lane = oneAtATime();
+  const inLane = (fn) => lane(() => (closed ? { error: "closed" } : fn()));
+
   // Each run is in `dir`, the lesson's work folder, and its result says so:
-  // the engine drops a result about a folder the lesson no longer uses.
-  const check = owing(async ({ slow, asked }, lesson, items, ev, dir) => {
+  // the engine drops a result about a folder the lesson no longer uses. An
+  // r while a run runs joins it when that run answers it: the same lesson,
+  // folder and evidence, every item r asks for, and r's slow items if it
+  // wants them. Its number is read as each input goes, so the run carries
+  // the latest r's.
+  const covers = ([lesson, items, ev, dir], flags, ask, { slow }) =>
+    ask[0] === lesson &&
+    ask[2] === ev &&
+    ask[3] === dir &&
+    (items == null ||
+      (ask[1] != null && ask[1].every((i) => items.includes(i)))) &&
+    (flags.slow || !slow);
+  const check = owing(checkOnce, { covers });
+  async function checkOnce(flags, lesson, items, ev, dir) {
+    const { slow } = flags;
     // The evidence file's state before and after the run: if it changed while
     // the check ran, the result may be about the old file, so ask again.
     const before = ev ? files.stamp(dir, ev) : null;
-    // The child starts now, not when the run was asked for: a run asked for
-    // during another waits in line.
-    runStart();
     // Each item the child starts, for the checking label to count, with the
     // items this run was asked for.
     const onRunning = (n, m) =>
-      !closed && input({ type: "running", lesson, items, n, m, asked });
-    const r = await checks.run(dir, lesson, items, { slow, onRunning });
+      !closed &&
+      input({ type: "running", lesson, items, n, m, asked: flags.asked });
+    // The child starts when its turn in the lane comes, not when the run was
+    // asked for.
+    const r = await inLane(() => {
+      runStart();
+      return checks.run(dir, lesson, items, { slow, onRunning });
+    });
     if (closed) return;
+    // From here an r waits for another run: this one has answered.
+    const asked = flags.report();
     if (r.error)
       return input({
         type: "check-error",
@@ -126,7 +151,7 @@ export function createHost({
       asked,
       dir,
     });
-  });
+  }
   // `listed`: git lists each untracked file, for a beat on part of the tree.
   // `head`: and where HEAD is, for a head-moved beat (ticket 105).
   const gitRun = owing(async ({ asked }, dir, listed, head) => {
@@ -149,8 +174,10 @@ export function createHost({
   });
   // A git probe (ticket 105), in the check child.
   const probe = owing(async ({ asked }, dir, name, args) => {
-    runStart();
-    const r = await probes.run(dir, name, args);
+    const r = await inLane(() => {
+      runStart();
+      return probes.run(dir, name, args);
+    });
     if (closed) return;
     input(
       r.error
@@ -172,7 +199,9 @@ export function createHost({
   // what git status lists; null where it can't be known just now.
   async function stampNow(e) {
     if (e.probe) {
-      const r = await probes.run(e.dir, e.probe.name, e.probe.args);
+      const r = await inLane(() =>
+        probes.run(e.dir, e.probe.name, e.probe.args),
+      );
       return r.error ? null : r.state;
     }
     if (e.git) {
@@ -208,19 +237,22 @@ export function createHost({
   // through the check child, a file read as it is now, with no process. One
   // ask at a time; a later ask waits in line and takes the place of one
   // already waiting (singleFlight), and each answer carries its ask's number.
+  // Each child waits its turn in the lane.
   const prereqs = singleFlight(async (e) => {
     for (const [at, req] of e.requires.entries()) {
       const found = await (req.path
         ? { read: files.bytes(e.dir, req.path) }
         : req.probe
-          ? probes.run(e.dir, req.probe, req.args).then((r) => ({
+          ? inLane(() => probes.run(e.dir, req.probe, req.args)).then((r) => ({
               pass: r.error ? null : r.pass,
               hint: r.hint ?? "",
             }))
-          : checks.run(e.dir, req.lesson, [req.item]).then((r) => {
-              const item = r.items?.find((it) => it.index === req.item);
-              return { pass: item ? item.pass : null };
-            }));
+          : inLane(() => checks.run(e.dir, req.lesson, [req.item])).then(
+              (r) => {
+                const item = r.items?.find((it) => it.index === req.item);
+                return { pass: item ? item.pass : null };
+              },
+            ));
       if (closed) return;
       input({
         type: "prereq",

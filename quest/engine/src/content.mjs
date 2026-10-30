@@ -1053,9 +1053,10 @@ function parseVerify(beat, file, { PROBES, probeError }) {
     own(lines[2]);
     return { kind: lines[1], path: lines[2], regex: lines[3], ...extra };
   }
-  // `probe <name> [args]` (ticket 105): a git probe, checks/probes.mjs, run
-  // in the check child. branch-ahead is always fresh: it passes once the
-  // branch moved since its step opened (or the step `since` names).
+  // `probe <name> [args]` (ticket 105): a git probe, which the host's
+  // quest/host/src/probes.mjs runs in the check child. branch-ahead is
+  // always fresh: it passes once the branch moved since its step opened (or
+  // the step `since` names).
   const probe = base.match(/^probe (\S+)((?: \S+)*)$/);
   if (probe) {
     const args = probe[2].split(" ").filter(Boolean);

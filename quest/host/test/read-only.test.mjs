@@ -1,7 +1,14 @@
 // The widened read-only guard (ticket 209) on the engine and the host: the
 // sources it reads, three planted breaks it must catch, the ways around it
 // it must close, and the layering between the engine and the host.
-import { readdirSync, readFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "vitest";
@@ -56,6 +63,8 @@ test("the engine and the host make no network call, start only the Check child a
     "quest/host/src/git.mjs",
     "quest/host/src/store.mjs",
     "quest/host/src/run-check.mjs",
+    "quest/host/src/probes.mjs",
+    "quest/engine/src/probes.mjs",
     "quest/engine/src/engine.mjs",
     "quest/engine/src/course.mjs",
     "quest/engine/src/holds.mjs",
@@ -96,7 +105,51 @@ test("a planted network call, a planted process and a planted write each fail th
   );
 });
 
-test("the guard closes the ways around it, and lets a wrapped git call and a RegExp's exec pass", () => {
+// The three planted breaks, each in the real text of the files that run
+// effects: every one is found.
+const PLANTS = {
+  network: 'fetch("https://example.com");\n',
+  process: 'import { spawn } from "node:child_process";\nspawn("curl", []);\n',
+  write:
+    'import { writeFile } from "node:fs/promises";\nawait writeFile("a", "b");\n',
+};
+const PLANTED_IN = [
+  "quest/host/src/host.mjs",
+  "quest/engine/src/engine.mjs",
+  "quest/host/src/check-child.mjs",
+  "quest/host/src/probes.mjs",
+  "quest/engine/src/probes.mjs",
+];
+
+// spec: never-runs-claude
+test("a network call, a process and a write planted in each real file that runs effects fail the guard", () => {
+  for (const path of PLANTED_IN) {
+    const text = readFileSync(at(path), "utf8");
+    assert.deepEqual(readOnlyFindings([{ path, text }]), [], path);
+    for (const [kind, plant] of Object.entries(PLANTS)) {
+      const found = readOnlyFindings([{ path, text: `${text}\n${plant}` }]);
+      assert.ok(
+        found.some((f) => f.startsWith(`${path}:`)),
+        `${kind} planted in ${path} is not found`,
+      );
+    }
+  }
+  // And through what the guard reads: one plant in one real entry.
+  const sources = scope();
+  const i = sources.findIndex((s) => s.path === "quest/host/src/probes.mjs");
+  sources[i] = { ...sources[i], text: `${sources[i].text}\n${PLANTS.network}` };
+  assert.ok(
+    readOnlyFindings(sources).some((f) =>
+      f.startsWith("quest/host/src/probes.mjs:"),
+    ),
+  );
+});
+
+// The Check child's entry, as check-child.mjs names it.
+const RUN_CHECK =
+  'const RUN_CHECK = join(\n  dirname(fileURLToPath(import.meta.url)),\n  "run-check.mjs",\n);\n';
+
+test("the guard closes the ways around it, and lets a wrapped git call, a RegExp's exec, the Check child's spawn and its group kill pass", () => {
   const flagged = [
     'import { execFile } from "node:child_process";\nexecFile("curl", []);\n',
     'import { execFile } from "node:child_process";\nexecFile(process.execPath, ["-e", c, RUN_CHECK]);\n',
@@ -130,6 +183,19 @@ test("the guard closes the ways around it, and lets a wrapped git call and a Reg
     'const r = createRequire(import.meta.url);\nr("node:https").get(u);\n',
     "const h = require(name);\n",
     'import { readFileSync } from "node:fs";\nreadFileSync(p, { flag: "w" });\n',
+    'import { spawn } from "node:child_process";\nspawn(process.execPath, ["-e", x]);\n',
+    'import { spawn } from "node:child_process";\nconst s = spawn;\ns(RUN_CHECK);\n',
+    'import { spawn as s } from "node:child_process";\ns(process.execPath, [RUN_CHECK]);\n',
+    'import { execFile } from "node:child_process";\nexecFile("taskkill", ["/pid", p, "/T", "/F"]);\n',
+    "process.kill(1234);\n",
+    'process.kill(-process.pid, "SIGKILL");\n',
+    'const o = { pid: 1 };\nprocess.kill(-o.pid, "SIGKILL");\n',
+    'const { kill } = process;\nkill(-1, "SIGKILL");\n',
+    "const p = process;\np.kill(-1);\n",
+    'process["kill"](-1);\n',
+    'Reflect.get(process, "kill")(-1);\n',
+    'import { spawn } from "node:child_process";\nconst RUN_CHECK = "/tmp/x.mjs";\nspawn(process.execPath, [RUN_CHECK]);\n',
+    `import { spawn } from "node:child_process";\n${RUN_CHECK}RUN_CHECK = "/tmp/x.mjs";\nspawn(process.execPath, [RUN_CHECK]);\n`,
   ];
   for (const text of flagged)
     assert.notDeepEqual(planted(text), [], `not flagged:\n${text}`);
@@ -139,9 +205,14 @@ test("the guard closes the ways around it, and lets a wrapped git call and a Reg
     'import {\n  existsSync,\n  readFileSync,\n} from "node:fs";\n',
     'import { execFile } from "node:child_process";\nexecFile("git", ["config", "user.name"], opts);\n',
     '/** @param {import("./types.mjs").Host} host */\nconst page = await import("./page.mjs");\n',
+    `import { execFile, spawn } from "node:child_process";\n${RUN_CHECK}spawn(process.execPath, [RUN_CHECK, a], { detached: true });\n`,
   ];
   for (const text of passes)
     assert.deepEqual(planted(text), [], `flagged:\n${text}`);
+  // The group kill passes in the Check child's runner alone.
+  const kill = 'process.kill(-child.pid, "SIGKILL");\n';
+  assert.deepEqual(planted(kill, "quest/host/src/check-child.mjs"), []);
+  assert.notDeepEqual(planted(kill), []);
 });
 
 test("the import walk follows imports wrapped over lines", () => {
@@ -153,6 +224,25 @@ test("the import walk follows imports wrapped over lines", () => {
     "./c.mjs",
     "./d.mjs",
   ]);
+});
+
+test("the layering walk sees a module that reaches the host", () => {
+  const dir = mkdtempSync(join(tmpdir(), "layering-"));
+  try {
+    const file = join(dir, "reaches.mjs");
+    // The walk follows relative specifiers alone.
+    const to = relative(dir, at("quest/host/src/children.mjs"));
+    writeFileSync(
+      file,
+      `import { createChildren } from ${JSON.stringify(to.split("\\").join("/"))};\n`,
+    );
+    assert.ok(
+      [...reached(file)].some((f) => rel(f).startsWith("quest/host/")),
+      [...reached(file)].join("\n"),
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test("the engine reaches no host module, and no module reaches the Terminal app's old practice-template/learn/", () => {

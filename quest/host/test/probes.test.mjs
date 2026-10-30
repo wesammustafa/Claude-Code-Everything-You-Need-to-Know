@@ -1,15 +1,14 @@
 // The git probes (ticket 105), ported from learn-probes (ticket 209): the
-// Checks' probes themselves, and the host's probe effect running one in
+// probes themselves, moved from the Checks to the host in ticket 211 with
+// their table in the engine, and the host's probe effect running one in
 // the Check child through the real adapters.
 import { test as vitest } from "vitest";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import {
-  probeError,
-  runProbe,
-} from "../../../practice-template/checks/probes.mjs";
+import { PROBES, probeError } from "../../engine/src/probes.mjs";
+import { PROBES as HOST_PROBES, probeRepo, RUNS } from "../src/probes.mjs";
 import { openRepo } from "../../../practice-template/checks/repo.mjs";
 import {
   commit,
@@ -18,6 +17,14 @@ import {
   write,
 } from "../../../practice-template/checks/test/helpers.mjs";
 import { realAdapters } from "../src/real.mjs";
+
+vitest(
+  "the host runs every probe in the engine's table, and its registry is that table",
+  () => {
+    assert.deepEqual(Object.keys(RUNS).sort(), Object.keys(PROBES).sort());
+    assert.equal(HOST_PROBES, PROBES);
+  },
+);
 
 // Each makes git repositories: more time than Vitest's default.
 const test = (name, fn) => vitest(name, fn, 60_000);
@@ -28,7 +35,7 @@ const git = (dir, ...args) =>
     cwd: dir,
     encoding: "utf8",
   }).trim();
-const probe = (dir, name, ...args) => runProbe(openRepo(dir), name, args);
+const probe = (dir, name, ...args) => probeRepo(openRepo(dir), name, args);
 const started = () => {
   const dir = repo({
     "README.md": "hi\n",
@@ -320,9 +327,9 @@ test("probes: the app runs one in its check child, which never fetches; a bad pr
   }
   // Every git call a probe makes is a local read.
   const src = readFileSync(
-    new URL("../../../practice-template/checks/probes.mjs", import.meta.url),
+    new URL("../src/probes.mjs", import.meta.url),
     "utf8",
   );
   assert.doesNotMatch(src, /repo\.git\(/);
-  assert.doesNotMatch(src, /'(fetch|pull|ls-remote|remote)'/);
+  assert.doesNotMatch(src, /["'](fetch|pull|ls-remote|remote)["']/);
 });

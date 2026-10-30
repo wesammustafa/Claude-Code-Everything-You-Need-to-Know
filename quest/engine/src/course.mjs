@@ -12,10 +12,7 @@ import {
   workLevels,
 } from "./content.mjs";
 import { lessons as checks } from "../../../practice-template/checks/lessons/index.mjs";
-import {
-  PROBES,
-  probeError,
-} from "../../../practice-template/checks/probes.mjs";
+import { PROBES, probeError } from "./probes.mjs";
 
 const manifest = JSON.parse(
   readFileSync(

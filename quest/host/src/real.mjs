@@ -21,6 +21,8 @@ export const realClock = {
   now: perf,
   setInterval: (fn, ms) => setInterval(fn, ms),
   clearInterval: (id) => clearInterval(id),
+  setTimeout: (fn, ms) => setTimeout(fn, ms),
+  clearTimeout: (id) => clearTimeout(id),
 };
 
 /** @param {import("./types.mjs").RealOptions} options @returns {import("./types.mjs").Adapters} */
@@ -48,10 +50,11 @@ export function realAdapters({
     clock,
     checks: {
       run: (dir, lesson, items, opts) =>
-        checkChild(dir, lesson, items, { ...opts, children }),
+        checkChild(dir, lesson, items, { ...opts, children, clock }),
     },
     probes: {
-      run: (dir, name, args) => probeChild(dir, name, args, { children }),
+      run: (dir, name, args) =>
+        probeChild(dir, name, args, { children, clock }),
     },
     git: {
       ask,

@@ -1,9 +1,10 @@
 // The read-only guard (spec, Never runs Claude Code for the Learner),
 // widened from learn-io's to the engine and the host (ticket 209): no
-// network, no process but the Check child and read-only git, and no file
-// write outside the store. Pure: it reads source text it is handed, comments
-// included, so a planted call is found wherever it sits. Each finding is a
-// string naming the file and what it does.
+// network, no process but the Check child and read-only git, no signal but
+// to a Check child's group, and no file write outside the store. Pure: it
+// reads source text it is handed, comments included, so a planted call is
+// found wherever it sits. Each finding is a string naming the file and what
+// it does.
 import { readFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 
@@ -22,27 +23,48 @@ const NET_CALLS = [
   /new\s+Worker\s*\(/,
 ];
 
-// Every way to start a process but execFile, as a member call too: a module
-// object's name need not be written out. Only a RegExp's `.exec(` passes.
+// Every way to start a process but execFile and the Check child's spawn, as
+// a member call too: a module object's name need not be written out. Only a
+// RegExp's `.exec(` passes. It reads the text with the allowed calls blanked.
 const OTHER_PROCESS =
   /(?<![\w$])(spawn|spawnSync|execSync|execFileSync|fork)\s*\(|(?<![.\w$])(exec)\s*\(|\.\s*(execFile)\s*\(/;
 // Ways to load a module the specifier patterns can't read: a computed
 // import() or require(), a require made by hand, or a built-in by name.
 const LOADERS =
   /\b(?:import|require)\s*\(\s*(?!(["'])[^"'`]*\1\s*[,)])|\b(createRequire|getBuiltinModule|process\s*\.\s*(?:binding|dlopen))\b/;
-// child_process comes in one way only: execFile by name, unaliased.
+// child_process comes in one way only: execFile, spawn or both by name,
+// unaliased.
 const CHILD_PROCESS = /child_process/g;
 const CHILD_IMPORT =
-  /import\s*\{\s*execFile\s*,?\s*\}\s*from\s*["']node:child_process["']/g;
-// execFile by name, anywhere but a property: a call, or a value handed on.
+  /import\s*\{\s*(execFile|spawn|execFile\s*,\s*spawn)\s*,?\s*\}\s*from\s*["']node:child_process["']/g;
+// execFile and spawn by name, anywhere but a property: a call, or a value
+// handed on.
 const EXEC_FILE = /(?<![.\w$])execFile\b/g;
-// The calls it may make: the Check child, with its entry first, and git's
-// read-only commands.
+const SPAWN = /(?<![.\w$])spawn\b/g;
+// The calls they may make: the Check child, with its entry first, and git's
+// read-only commands; spawn only the Check child.
 const ALLOWED_CALLS = [
   /(?<![.\w$])execFile\s*\(\s*process\.execPath\s*,\s*\[\s*RUN_CHECK\b/g,
   /(?<![.\w$])execFile\s*\(\s*["']git["']\s*,\s*\[\s*["'](?:status|rev-parse|check-ignore)["']/g,
   /(?<![.\w$])execFile\s*\(\s*["']git["']\s*,\s*\[\s*["']config["']\s*,\s*["']user\.name["']\s*,?\s*\]/g,
 ];
+const ALLOWED_SPAWN =
+  /(?<![.\w$])spawn\s*\(\s*process\.execPath\s*,\s*\[\s*RUN_CHECK\b/g;
+// A file that runs RUN_CHECK names it once, as run-check.mjs beside itself,
+// and gives the name no other value.
+const RUN_CHECK_IN = /\[\s*RUN_CHECK\b/g;
+const RUN_CHECK_DEF =
+  /\bconst\s+RUN_CHECK\s*=\s*join\(\s*dirname\(\s*fileURLToPath\(\s*import\.meta\.url\s*\)\s*\)\s*,\s*["']run-check\.mjs["']\s*,?\s*\)/g;
+const RUN_CHECK_BOUND = /\bRUN_CHECK\s*=(?!=)|\bas\s+RUN_CHECK\b/g;
+// A signal goes only to the Check child's own process group, which its
+// spawn makes: `process.kill(-child.pid, ...)`, in check-child.mjs alone.
+// `process` is read by its members only, so no kill hides behind a name, a
+// computed member or an argument.
+const KILL = /\bprocess\s*(?:\?\.|\.)\s*kill\b/g;
+const GROUP_KILL = /\bprocess\.kill\(\s*-\s*child\.pid\s*,/g;
+const KILLS_HERE = "quest/host/src/check-child.mjs";
+const PROCESS_HANDED =
+  /(?<![=!<>])=\s*process\b(?!\s*(?:\?\.|\.))|\bprocess\s*(?:\?\.\s*)?\[|[(,]\s*process\s*[,)]/;
 
 // What the fs modules may give outside the store: reads, by name, unaliased.
 const FS_READS = new Set([
@@ -88,15 +110,33 @@ export function readOnlyFindings(
     for (const re of NET_CALLS)
       if (re.test(text)) say(`uses the network (${re.source})`);
 
-    const other = OTHER_PROCESS.exec(text);
+    const blanked = [...ALLOWED_CALLS, ALLOWED_SPAWN].reduce(
+      (t, re) => t.replace(re, ""),
+      text,
+    );
+    const other = OTHER_PROCESS.exec(blanked);
     if (other) say(`starts a process with ${other[1] ?? other[2] ?? other[3]}`);
     if (LOADERS.test(text)) say("loads a module by a name it computes");
-    const imports = count(CHILD_IMPORT, text);
-    if (count(CHILD_PROCESS, text) !== imports)
-      say("reaches child_process another way than a named execFile import");
+    const imports = [...text.matchAll(CHILD_IMPORT)].map((m) => m[1]);
+    if (count(CHILD_PROCESS, text) !== imports.length)
+      say("reaches child_process another way than a named import");
+    const named = (name) => imports.filter((i) => i.includes(name)).length;
     const allowed = ALLOWED_CALLS.reduce((n, re) => n + count(re, text), 0);
-    if (count(EXEC_FILE, text) !== imports + allowed)
+    if (count(EXEC_FILE, text) !== named("execFile") + allowed)
       say("runs execFile with another program or command");
+    if (count(SPAWN, text) !== named("spawn") + count(ALLOWED_SPAWN, text))
+      say("runs spawn with another program");
+    if (
+      count(RUN_CHECK_IN, text) &&
+      (count(RUN_CHECK_DEF, text) !== 1 || count(RUN_CHECK_BOUND, text) !== 1)
+    )
+      say("runs a RUN_CHECK that is not run-check.mjs");
+    if (
+      count(KILL, text) !== (path === KILLS_HERE ? count(GROUP_KILL, text) : 0)
+    )
+      say("signals a process that is not a child's group");
+    if (PROCESS_HANDED.test(text))
+      say("hands process on, where what it calls can't be read");
 
     if (path !== store) {
       const clauses = [...text.matchAll(FS_IMPORT)].map((m) => m[1].trim());

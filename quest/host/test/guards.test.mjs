@@ -1,6 +1,7 @@
 // The stale-result guards the host keeps (ticket 209): a check runs again
 // when its evidence changed while it ran (guard 8), and runs wait in line
-// with what r asked for kept (guard 9).
+// with what r asked for kept (guard 9), one Check child at a time, and an
+// r the running check answers joins it (ticket 211).
 import { test } from "vitest";
 import assert from "node:assert/strict";
 import {
@@ -41,6 +42,34 @@ test("a check whose evidence changed while it ran runs again, and only the secon
   assert.equal(only.stamp, adapters.files.stamp(ROOT, VERSION));
   assert.notEqual(only.stamp, "");
   assert.equal(only.items[0].pass, true);
+});
+
+// spec: guards.8-rerun
+test("r's check whose evidence changed while it ran runs again, and that run carries r's number", async () => {
+  const { host, adapters, heard } = fakeHost({ saved: AT_W3 });
+  await host.open();
+  host.dispatch({ type: "lesson.open", lesson: "b-1" });
+  await turn();
+  adapters.checks.calls[0].resolve(w3(false));
+  await turn();
+  host.dispatch({ type: "check.run" });
+  await turn();
+  assert.equal(adapters.checks.calls.length, 2, "r's run");
+  adapters.files.write(`${ROOT}/${VERSION}`, "2.1.285 (Claude Code)\n");
+  adapters.checks.calls[1].resolve(w3(false));
+  await turn();
+  assert.equal(
+    adapters.checks.calls.length,
+    3,
+    "the ask again does not join the run that asked it",
+  );
+  adapters.checks.calls[2].resolve(w3(true));
+  await turn();
+  assert.deepEqual(
+    results(heard).map((x) => x.asked),
+    [0, 1],
+    "r's number comes back",
+  );
 });
 
 // spec: guards.8-rerun
@@ -140,4 +169,79 @@ test("prerequisite asks wait in line, and the latest takes the place of one wait
     ],
     "the latest ask took the place of the one waiting",
   );
+});
+
+// spec: guards.9-single-flight
+test("r pressed again while r's run runs joins it", async () => {
+  const { host, adapters, heard } = fakeHost({ saved: AT_W3 });
+  await host.open();
+  host.dispatch({ type: "lesson.open", lesson: "b-1" });
+  await turn();
+  adapters.checks.calls[0].resolve(w3(false));
+  await turn();
+  host.dispatch({ type: "check.run" });
+  await turn();
+  assert.equal(adapters.checks.calls.length, 2, "r's run");
+  host.dispatch({ type: "check.run" });
+  await turn();
+  assert.equal(adapters.checks.calls.length, 2, "the second r joined it");
+  adapters.checks.calls[1].resolve(w3(false));
+  await turn();
+  assert.equal(adapters.checks.calls.length, 2, "and nothing waited in line");
+  assert.deepEqual(
+    results(heard).map((x) => x.asked),
+    [0, 2],
+    "the run carries the second r's number",
+  );
+});
+
+// spec: guards.9-single-flight
+test("a probe, a stamp probe and a prerequisite check wait while a check child runs", async () => {
+  const dir = ROOT;
+  const { engine } = scripted({
+    effects: {
+      "waitQuestion.answer": [
+        { type: "probe", name: "worktrees", args: [], asked: 1, dir },
+        {
+          type: "stamp",
+          key: "x",
+          probe: { name: "branch", args: ["main"] },
+          dir,
+        },
+        {
+          type: "prereqs",
+          lesson: "b-1",
+          dir,
+          requires: [{ lesson: "b-1", item: 1 }],
+          asked: 1,
+        },
+      ],
+    },
+  });
+  const { host, adapters } = fakeHost({ saved: AT_W3, engine });
+  await host.open();
+  host.dispatch({ type: "lesson.open", lesson: "b-1" });
+  await turn();
+  host.dispatch({ type: "waitQuestion.answer", asked: 1 });
+  await turn();
+  assert.equal(adapters.probes.calls.length, 0, "no probe beside the check");
+  assert.equal(adapters.checks.calls.length, 1, "no second check child");
+  adapters.checks.calls[0].resolve(w3(false));
+  await turn();
+  // Then each in turn, in the order asked.
+  assert.deepEqual(
+    adapters.probes.calls.map((c) => c.name),
+    ["worktrees"],
+  );
+  adapters.probes.calls[0].resolve({ pass: true, state: "a" });
+  await turn();
+  assert.deepEqual(
+    adapters.probes.calls.map((c) => c.name),
+    ["worktrees", "branch"],
+  );
+  assert.equal(adapters.checks.calls.length, 1);
+  adapters.probes.calls[1].resolve({ pass: true, state: "b" });
+  await turn();
+  assert.equal(adapters.checks.calls.length, 2, "the prerequisite's check");
+  assert.deepEqual(adapters.checks.calls[1].items, [1]);
 });

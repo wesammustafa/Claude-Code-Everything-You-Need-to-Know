@@ -6,10 +6,7 @@ import {
   generateCheckIndex,
 } from "../../engine/src/content.mjs";
 import { lessons } from "../../../practice-template/checks/lessons/index.mjs";
-import {
-  PROBES,
-  probeError,
-} from "../../../practice-template/checks/probes.mjs";
+import { PROBES, probeError } from "../../host/src/probes.mjs";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const manifest = JSON.parse(

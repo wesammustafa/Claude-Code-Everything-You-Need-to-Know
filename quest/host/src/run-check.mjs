@@ -7,7 +7,7 @@
 //
 //   node quest/host/src/run-check.mjs <lesson> <dir> [index ...]
 //
-// With --probe, it runs one git probe (checks/probes.mjs, ticket 105) in
+// With --probe, it runs one git probe (probes.mjs, ticket 105) in
 // the folder instead, and prints {"probe", "pass", "hint", "evidence",
 // "state"}:
 //
@@ -15,7 +15,7 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { lessons } from "../../../practice-template/checks/lessons/index.mjs";
-import { runProbe } from "../../../practice-template/checks/probes.mjs";
+import { probeRepo } from "./probes.mjs";
 import { openRepo } from "../../../practice-template/checks/repo.mjs";
 
 const fail = (error) => {
@@ -27,7 +27,7 @@ if (process.argv[2] === "--probe") {
   if (!dir || !existsSync(resolve(dir))) fail(`no such folder: ${dir}`);
   let out;
   try {
-    out = runProbe(openRepo(resolve(dir)), name, args);
+    out = probeRepo(openRepo(resolve(dir)), name, args);
   } catch (error) {
     fail(`The probe could not run: ${error.message.split("\n")[0]}`);
   }
@@ -58,7 +58,9 @@ function checkItems(lesson, dir, ...indexes) {
     try {
       outcome = item.check(repo);
     } catch (error) {
-      outcome = `The check could not run: ${error.message}`;
+      // Cut, as a failed command's message can carry all it printed: the
+      // host ends a child that prints more than 1 MB.
+      outcome = `The check could not run: ${error.message.slice(0, 4000)}`;
     }
     return {
       index,
