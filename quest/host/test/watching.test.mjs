@@ -16,7 +16,7 @@ import {
   reduce,
   workFolder,
 } from "../src/engine.ts";
-import { fakeClock } from "../src/fake.mjs";
+import { fakeClock } from "../src/fake.ts";
 import {
   AT_W3,
   fakeHost,

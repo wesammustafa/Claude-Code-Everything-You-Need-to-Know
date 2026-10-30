@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { repo } from "../../../practice-template/checks/test/helpers.mjs";
-import { fakeClock } from "../src/fake.mjs";
+import { fakeClock } from "../src/fake.ts";
 import { watchDirs } from "../src/watch.ts";
 
 // spec: watching

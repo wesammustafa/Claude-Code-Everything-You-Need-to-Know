@@ -5,7 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.mjs",
-    "./fake": "./src/fake.mjs"
+    "./fake": "./src/fake.ts"
   },
   "dependencies": {
     "@quest/contract": "0.0.0",

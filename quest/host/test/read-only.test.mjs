@@ -27,7 +27,7 @@ const CHECKS = at("practice-template/checks") + "/";
 const ENGINE = at("quest/engine/src/engine.ts");
 const HOST_ROOTS = [
   at("quest/host/src/index.mjs"),
-  at("quest/host/src/fake.mjs"),
+  at("quest/host/src/fake.ts"),
 ];
 
 // The engine's sources are TypeScript since ticket 214.

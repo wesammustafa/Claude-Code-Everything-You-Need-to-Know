@@ -12,7 +12,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { fakeAdapters, fakeClock } from "../src/fake.mjs";
+import { fakeAdapters, fakeClock } from "../src/fake.ts";
 import { realAdapters } from "../src/real.mjs";
 import { sanitize } from "../src/store.mjs";
 

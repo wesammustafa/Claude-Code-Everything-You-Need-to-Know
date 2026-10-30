@@ -5,7 +5,7 @@
 // reduces nested.
 import { initialState, reduce } from "../src/engine.ts";
 import { createHost } from "../src/host.mjs";
-import { fakeAdapters, fakeClock } from "../src/fake.mjs";
+import { fakeAdapters, fakeClock } from "../src/fake.ts";
 import { b1Only, FACTS } from "../../engine/test/drive.mjs";
 
 export const ROOT = FACTS.root;

@@ -26,7 +26,7 @@ import {
   runProbe,
 } from "../src/check-child.mjs";
 import { createChildren } from "../src/children.ts";
-import { fakeClock } from "../src/fake.mjs";
+import { fakeClock } from "../src/fake.ts";
 import { GIT_LIMIT } from "../src/git.mjs";
 import { root } from "../../engine/test/drive.mjs";
 import { alive, holding, pidsOf, sweep, until } from "./tree.mjs";
