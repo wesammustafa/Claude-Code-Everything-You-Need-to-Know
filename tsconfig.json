@@ -1,6 +1,7 @@
 {
   "files": [],
   "references": [
+    { "path": "tsconfig.checks.json" },
     { "path": "quest/contract" },
     { "path": "quest/engine" },
     { "path": "quest/client" },
