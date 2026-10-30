@@ -12,7 +12,7 @@ const WEB = new Set(['WebFetch', 'WebSearch']);
 
 function committedFields(repo) {
   try {
-    return frontmatter(repo.git('show', `HEAD:${AGENT}`))?.fields ?? {};
+    return frontmatter(repo.git('show', `HEAD:./${AGENT}`))?.fields ?? {};
   } catch {
     return null;
   }

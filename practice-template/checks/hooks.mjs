@@ -45,7 +45,7 @@ export function committedMode(repo, path) {
 export function runCommitted(repo, script, path, tool = 'Edit') {
   let text;
   try {
-    text = repo.git('show', `HEAD:${script}`);
+    text = repo.git('show', `HEAD:./${script}`);
   } catch {
     return null;
   }

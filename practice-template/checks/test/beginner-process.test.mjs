@@ -3,7 +3,10 @@
 // files and execute their normal local git history/clone operations.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { readdirSync, readFileSync } from 'node:fs';
+import { openRepo } from '../repo.mjs';
+import { commit, repo, withRepo, write } from './helpers.mjs';
 import { fileURLToPath } from 'node:url';
 
 const helper = new URL('./helpers.mjs', import.meta.url).href;
@@ -117,3 +120,100 @@ for (const lesson of ['b-3', 'b-capstone']) {
     assert.equal(calls, lesson === 'b-3' ? 2 : 1);
   });
 }
+
+// A copy's git root sits above project/, where the checks run: git names
+// paths from the root there, and `HEAD:path` reads from it too.
+const runGit = (dir, ...args) => execFileSync('git', args, { cwd: dir, encoding: 'utf8' });
+const lessonItems = Object.fromEntries(await Promise.all(['b-2', 'b-3', 'b-4', 'b-5', 'b-capstone']
+  .map(async (lesson) => [lesson, (await import(lessonModule(lesson))).items])));
+const outcomes = (lesson, dir, which) => {
+  const repo = openRepo(dir);
+  return which.map((i) => lessonItems[lesson][i].check(repo));
+};
+const pkg = JSON.stringify({ name: 'claude-code-practice', type: 'module', scripts: { test: 'node --test test/', linkcheck: 'node src/cli.js' } });
+
+test('nested: b-2 reads its snapshots from project/', () => {
+  withRepo(() => repo({ 'package.json': pkg, 'src/config.js': 'export const a = 1;\n' }, { nested: true }), (dir) => {
+    commit(dir, 'Start');
+    write(dir, { '.practice/b-2-before.txt': runGit(dir, 'status', '--porcelain'), '.practice/b-2-plan.txt': 'src/config.js\n' });
+    write(dir, { 'src/config.js': 'export const a = 2;\n' });
+    write(dir, { '.practice/b-2-after.txt': runGit(dir, 'status', '--porcelain') });
+    assert.deepEqual(outcomes('b-2', dir, [0, 1]), [true, true]);
+  });
+});
+
+test('nested: b-3 reads the last commit and the tree from project/', () => {
+  withRepo(() => repo({ 'package.json': pkg, 'src/a.js': 'export const a = 1;\n' }, { nested: true }), (dir) => {
+    commit(dir, 'Start');
+    write(dir, { 'src/a.js': 'export const a = 2;\n', 'test/a.test.js': 'import "../src/a.js";\n' });
+    commit(dir, 'Fix');
+    assert.deepEqual(outcomes('b-3', dir, [3, 5]), [true, true]);
+    write(dir, { 'src/a.js': 'export const a = 3;\n' });
+    assert.match(outcomes('b-3', dir, [5])[0], /uncommitted: src\/a\.js\./);
+  });
+});
+
+test('nested: b-4 reads the refactor and the rewind snapshots from project/', () => {
+  const files = {
+    'package.json': pkg,
+    'src/links.js': 'export function findLinks() { return []; }\n',
+    'src/check-links.js': 'export async function brokenLinks() { return []; }\n',
+    'src/cli.js': 'console.log("All relative links resolve.");\n',
+  };
+  withRepo(() => repo(files, { nested: true }), (dir) => {
+    commit(dir, 'Start');
+    write(dir, { 'src/check-links.js': 'export function brokenLinks() { return []; }\n' });
+    commit(dir, 'Refactor');
+    write(dir, { 'src/links.js': 'export function extractLinks() { return []; }\n', 'src/check-links.js': '// edited\nexport function brokenLinks() { return []; }\n' });
+    write(dir, { '.practice/b-4-before-rewind.txt': runGit(dir, 'status', '--porcelain') });
+    runGit(dir, 'checkout', '--', 'src/check-links.js');
+    write(dir, { '.practice/b-4-after-rewind.txt': runGit(dir, 'status', '--porcelain') });
+    runGit(dir, 'checkout', '--', 'src/links.js');
+    assert.deepEqual(outcomes('b-4', dir, [0, 1, 2, 3]), [true, true, true, true]);
+  });
+});
+
+test('nested: b-5 reads CLAUDE.md, the ignore rule and the history from project/', () => {
+  withRepo(() => repo({ 'package.json': pkg, 'src/a.js': 'export const a = 1;\n' }, { nested: true }), (dir) => {
+    commit(dir, 'Start');
+    write(dir, {
+      'CLAUDE.md': '## Conventions\n- Every new JavaScript file in `src/` starts with the line `// SPDX-License-Identifier: MIT`.\n- CLI errors start with `linkcheck:`.\n- Run `npm run linkcheck -- docs`.\n',
+      '.gitignore': 'CLAUDE.local.md\n',
+      'CLAUDE.local.md': '- linkcheck-docs\n',
+    });
+    commit(dir, 'Memory', ['CLAUDE.md', '.gitignore']);
+    write(dir, { 'src/stats.js': '// SPDX-License-Identifier: MIT\nexport const n = 1;\n' });
+    commit(dir, 'Stats', ['src/stats.js']);
+    assert.deepEqual(outcomes('b-5', dir, [0, 1, 2, 3]), [true, true, true, true]);
+  });
+});
+
+test('nested: b-capstone runs the tests without the fix from the clone\'s project/', () => {
+  const files = { 'package.json': pkg, 'src/fix.js': 'export const fixed = false;\n', 'CLAUDE.md': 'Run `npm test`.\n' };
+  withRepo(() => repo(files, { nested: true }), (dir) => {
+    commit(dir, 'Start');
+    write(dir, { '.practice/capstone-before.txt': runGit(dir, 'status', '--porcelain'), '.practice/capstone-plan.txt': 'src/fix.js\ntest/fix.test.js\n' });
+    write(dir, { 'src/fix.js': 'export const fixed = true;\n', 'test/fix.test.js': 'import assert from "node:assert/strict";\nimport { fixed } from "../src/fix.js";\nassert.equal(fixed, true);\n' });
+    const sha = commit(dir, 'Fix');
+    write(dir, { '.practice/capstone-commit.txt': `${sha}\n` });
+    // NODE_TEST_CONTEXT would make the check's own `npm test` skip its tests.
+    const saved = process.env.NODE_TEST_CONTEXT;
+    delete process.env.NODE_TEST_CONTEXT;
+    try {
+      assert.deepEqual(outcomes('b-capstone', dir, [0, 1, 2, 5, 6]), [true, true, true, true, true]);
+    } finally {
+      if (saved !== undefined) process.env.NODE_TEST_CONTEXT = saved;
+    }
+  });
+});
+
+test('every HEAD: read in the checks is cwd-relative', () => {
+  const root = new URL('../', import.meta.url);
+  const files = [...readdirSync(root).filter((f) => f.endsWith('.mjs')).map((f) => new URL(f, root)),
+    ...readdirSync(new URL('lessons/', root)).filter((f) => f.endsWith('.mjs')).map((f) => new URL(`lessons/${f}`, root))];
+  const bare = files.flatMap((url) => readFileSync(url, 'utf8').split('\n')
+    .map((line, i) => [line, i + 1])
+    .filter(([line]) => /HEAD:(?:\$\{|[A-Za-z])/.test(line))
+    .map(([, n]) => `${fileURLToPath(url)}:${n}`));
+  assert.deepEqual(bare, [], 'write HEAD:./<path>: in a copy the git root is above project/');
+});

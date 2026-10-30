@@ -19,7 +19,7 @@ function parse(text) {
 
 function committed(repo, path) {
   try {
-    return repo.git('show', `HEAD:${path}`);
+    return repo.git('show', `HEAD:./${path}`);
   } catch {
     return null;
   }

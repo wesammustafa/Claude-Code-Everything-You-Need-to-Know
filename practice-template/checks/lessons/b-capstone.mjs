@@ -24,7 +24,7 @@ function savedCommit(repo) {
   const sha = lines(repo.read('.practice/capstone-commit.txt'))[0];
   if (!sha) return { error: `After you commit the fix, run ${SAVE_COMMIT}.` };
   try {
-    return { sha, files: repo.git('show', '--name-only', '--format=', sha).split('\n').filter(Boolean) };
+    return { sha, files: repo.git('show', '--name-only', '--format=', sha).split('\n').filter(Boolean).map(repo.local) };
   } catch {
     return { error: `\`.practice/capstone-commit.txt\` names ${sha}, which is not a commit in this repository.` };
   }
@@ -38,15 +38,17 @@ const git = (cwd, ...args) => spawnSync('git', ['-c', 'advice.detachedHead=false
 function testsWithoutFix(repo, sha, files) {
   const dir = mkdtempSync(join(tmpdir(), 'capstone-before-fix-'));
   try {
-    if (git(tmpdir(), 'clone', '--quiet', '--shared', '--no-checkout', repo.dir, dir).status !== 0) return { error: 'The check could not copy this repository to run the tests without the fix.' };
+    if (git(tmpdir(), 'clone', '--quiet', '--shared', '--no-checkout', repo.top, dir).status !== 0) return { error: 'The check could not copy this repository to run the tests without the fix.' };
     if (git(dir, 'checkout', '--quiet', sha).status !== 0) return { error: `The check could not check out ${sha} to run the tests without the fix.` };
-    if (git(dir, 'rev-parse', '--verify', '--quiet', `${sha}^`).status !== 0) return { error: `${sha} is the first commit in this repository, so there is no code from before the fix to test.` };
+    // The checked folder's place in the clone, as project/ is in a copy.
+    const work = join(dir, repo.prefix);
+    if (git(work, 'rev-parse', '--verify', '--quiet', `${sha}^`).status !== 0) return { error: `${sha} is the first commit in this repository, so there is no code from before the fix to test.` };
     for (const file of files.filter((f) => !isTestFile(f))) {
-      const before = git(dir, 'cat-file', '-e', `${sha}^:${file}`).status === 0;
-      if (before) git(dir, 'checkout', '--quiet', `${sha}^`, '--', file);
-      else rmSync(join(dir, file), { force: true });
+      const before = git(work, 'cat-file', '-e', `${sha}^:./${file}`).status === 0;
+      if (before) git(work, 'checkout', '--quiet', `${sha}^`, '--', file);
+      else rmSync(join(work, file), { force: true });
     }
-    const run = spawnSync('npm', ['test', '--silent'], { cwd: dir, encoding: 'utf8', shell: process.platform === 'win32', timeout: NPM_TEST_LIMIT });
+    const run = spawnSync('npm', ['test', '--silent'], { cwd: work, encoding: 'utf8', shell: process.platform === 'win32', timeout: NPM_TEST_LIMIT });
     const error = testRunError(run, { requireFailure: true });
     return error ? { error } : { passed: run.status === 0 };
   } finally {
@@ -61,7 +63,7 @@ export const items = [
     check(repo) {
       const before = repo.read('.practice/capstone-before.txt');
       if (before === null) return 'While the plan is on screen, run `git status --porcelain > .practice/capstone-before.txt`.';
-      const changed = statusPaths(before);
+      const changed = statusPaths(before, repo.prefix);
       return changed.length ? `Files had changed before you approved the plan: ${changed.join(', ')}. Commit or stash them, then snapshot again in plan mode.` : true;
     },
   },
@@ -114,7 +116,7 @@ export const items = [
     check(repo) {
       for (const path of ['CLAUDE.md', '.claude/CLAUDE.md']) {
         try {
-          return repo.git('show', `HEAD:${path}`).includes('npm test') ? true : 'The committed CLAUDE.md doesn\'t mention `npm test`. Add the test command and commit it.';
+          return repo.git('show', `HEAD:./${path}`).includes('npm test') ? true : 'The committed CLAUDE.md doesn\'t mention `npm test`. Add the test command and commit it.';
         } catch { /* not committed at this path */ }
       }
       return 'There is no committed CLAUDE.md. Run `/init` in a session, check the file, and commit it.';

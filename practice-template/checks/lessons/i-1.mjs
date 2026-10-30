@@ -13,7 +13,7 @@ const SAVE_COMMIT = '`git rev-parse HEAD > .practice/i-1-commit.txt`';
 
 function committedSkill(repo) {
   try {
-    return repo.git('show', `HEAD:${SKILL}`);
+    return repo.git('show', `HEAD:./${SKILL}`);
   } catch {
     return null;
   }

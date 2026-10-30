@@ -14,7 +14,6 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import { accTitle, renderPage, treeContext } from "../src/pages.mjs";
 import {
   FORBIDDEN,
   assembleTemplate,
@@ -29,36 +28,20 @@ import {
   type Manifest,
 } from "../src/template.mjs";
 import { removeTemp, repoRoot, tempDir } from "./pages-fixture";
+import {
+  REF,
+  fixtureInputs,
+  fixtureLearn,
+  lessonPages,
+  stubNotices,
+} from "./template-fixture";
 
 afterAll(removeTemp);
 
 const manifest = JSON.parse(
   readFileSync(join(repoRoot, "course/manifest.json"), "utf8"),
 ) as Manifest;
-const REF = "v0000.00";
 const RELEASE = `https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/tree/${REF}/`;
-
-/** The pages index entries of the Lessons, titled the way the page build titles them. */
-function lessonPages(ref: string) {
-  const ctx = treeContext(repoRoot, ref);
-  const noDiagram = (_n: number, source: string) => ({
-    light: "x.light.svg",
-    dark: "x.dark.svg",
-    alt: accTitle(source),
-  });
-  return {
-    ref,
-    pages: manifest.lessons.map((l) => ({
-      path: l.page,
-      title: renderPage(
-        l.page,
-        readFileSync(join(repoRoot, l.page), "utf8"),
-        ctx,
-        noDiagram,
-      ).title,
-    })),
-  };
-}
 const pagesIndex = lessonPages(REF);
 
 /** Every file under `dir` as a sorted path to base64 map. */
@@ -288,33 +271,8 @@ describe("the tree checks", () => {
   });
 });
 
-/** A built learn/ folder stand-in: a node:-only app.mjs and the files assembly needs. */
-function fixtureLearn(): string {
-  const dir = tempDir("quest-learn-");
-  mkdirSync(join(dir, "app/pages"), { recursive: true });
-  writeFileSync(join(dir, "app.mjs"), 'import "node:http";\n');
-  writeFileSync(join(dir, "run-check.mjs"), 'import "../checks/run.mjs";\n');
-  writeFileSync(join(dir, "course.json"), '{"from":"engine"}\n');
-  writeFileSync(join(dir, "app/index.html"), "<!doctype html>");
-  writeFileSync(join(dir, "app/pages/index.json"), "{}\n");
-  return dir;
-}
-
-function fixtureInputs(learnDir = fixtureLearn()) {
-  const dir = tempDir("quest-release-");
-  const pagesIndexFile = join(dir, "index.json");
-  writeFileSync(pagesIndexFile, `${JSON.stringify(pagesIndex)}\n`);
-  const releaseCourse = join(dir, "course.json");
-  writeFileSync(releaseCourse, '{"from":"release"}\n');
-  return { learnDir, pagesIndexFile, releaseCourse };
-}
-
-const stubNotices = (_root: string, outFile: string) => {
-  writeFileSync(outFile, "notices\n");
-};
-
 describe("assembleTemplate", () => {
-  const inputs = fixtureInputs();
+  const inputs = fixtureInputs(pagesIndex);
   let a = "";
   let b = "";
   beforeAll(async () => {

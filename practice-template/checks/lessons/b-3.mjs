@@ -7,7 +7,7 @@ import { cpSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
-import { isTestFile } from '../paths.mjs';
+import { isTestFile, statusPaths } from '../paths.mjs';
 
 export const title = 'Your first change, from request to commit';
 
@@ -64,7 +64,7 @@ function brokenIn(repo, files) {
 // fix, so a flaw that is still there gets a more specific hint.
 function patchCommitted(repo) {
   try {
-    repo.gitLocal('cat-file', '-e', 'HEAD:test/external.test.js');
+    repo.gitLocal('cat-file', '-e', 'HEAD:./test/external.test.js');
     return true;
   } catch {
     return false;
@@ -103,9 +103,9 @@ export const testsPass = {
 export const nothingUncommitted = {
   text: 'nothing is left uncommitted',
   check(repo) {
-    const status = repo.git('status', '--porcelain').split('\n').filter((l) => l && !l.slice(3).startsWith('.practice/'));
+    const status = statusPaths(repo.git('status', '--porcelain'), repo.prefix);
     // Plain `git stash` leaves new, untracked files behind.
-    return status.length ? `These changes are uncommitted: ${status.map((l) => l.slice(3)).join(', ')}. Commit them, or set them aside with \`git stash push --include-untracked\`.` : true;
+    return status.length ? `These changes are uncommitted: ${status.join(', ')}. Commit them, or set them aside with \`git stash push --include-untracked\`.` : true;
   },
 };
 
@@ -176,7 +176,7 @@ export const items = [
         return 'There is no commit of yours yet. Once the fix and its test are in, ask Claude to commit them together.';
       }
       // A merge's combined diff can omit files changed by only one parent.
-      const files = repo.git('diff', '--name-only', 'HEAD^', 'HEAD').split('\n').filter(Boolean);
+      const files = repo.git('diff', '--name-only', 'HEAD^', 'HEAD').split('\n').filter(Boolean).map(repo.local);
       const tests = files.filter(isTestFile);
       if (!tests.length) return `Your last commit changes no test file (${files.join(', ') || 'no files'}): none is in a test/ folder or named like links.test.js. Add one, then \`git commit --amend\`.`;
       if (tests.length === files.length) return `Your last commit changes only tests (${files.join(', ')}). If the code change is in the commit before it, ask Claude to combine the two commits into one.`;

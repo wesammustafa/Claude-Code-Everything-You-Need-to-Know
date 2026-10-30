@@ -373,7 +373,10 @@ export async function assembleTemplate({
 }
 
 async function main() {
-  const outDir = process.argv[2];
+  // npm runs workspace scripts in quest/release; INIT_CWD is where it was typed.
+  const outDir =
+    process.argv[2] &&
+    resolve(process.env.INIT_CWD ?? process.cwd(), process.argv[2]);
   if (!outDir) {
     console.error("Usage: npm run template -w @quest/release -- <out-dir>");
     process.exit(1);

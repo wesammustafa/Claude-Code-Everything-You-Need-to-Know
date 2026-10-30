@@ -431,7 +431,7 @@ export function uncommittedWorkflows(repo) {
     if (text === null || !readWorkflow(text).steps.length) continue;
     let committed = null;
     try {
-      committed = repo.git('show', `HEAD:${path}`);
+      committed = repo.git('show', `HEAD:./${path}`);
     } catch {
       // Not in HEAD.
     }
@@ -443,7 +443,7 @@ export function uncommittedWorkflows(repo) {
 // The blob HEAD holds at `path`, or null.
 export function headBlob(repo, path) {
   try {
-    return repo.git('rev-parse', '--verify', '--quiet', `HEAD:${path}`) || null;
+    return repo.git('rev-parse', '--verify', '--quiet', `HEAD:./${path}`) || null;
   } catch {
     return null;
   }

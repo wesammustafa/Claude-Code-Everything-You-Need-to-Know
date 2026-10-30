@@ -19,7 +19,9 @@
     "pip:build": "node quest/client/pip/build.ts",
     "pip:turn": "node quest/client/pip/turn.ts",
     "dev": "npm run course:compile && node quest/server/dev.ts",
-    "verify": "npm run guide:selftest && npm run guide && npm run typecheck && npm run lint && npm run test:quest && npm run test:checks && npm run test:starter"
+    "verify": "npm run guide:selftest && npm run guide && npm run typecheck && npm run lint && npm run test:quest && npm run test:checks && npm run test:starter",
+    "template": "npm run template --workspace @quest/release --",
+    "replay": "npm run replay --workspace @quest/release --"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

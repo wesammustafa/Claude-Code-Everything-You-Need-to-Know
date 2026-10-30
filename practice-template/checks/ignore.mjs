@@ -29,9 +29,11 @@ function rule(cwd, probe) {
 const perDirectory = (source) => /(^|\/)\.gitignore$/.test(source) && !source.startsWith('.git/') && !/^([a-zA-Z]:)?\//.test(source);
 
 function committedClean(repo, source) {
+  // git names the source from the root, which may sit above repo.dir.
+  const local = repo.local(source);
   try {
-    repo.git('cat-file', '-e', `HEAD:${source}`);
-    repo.git('diff', '--quiet', 'HEAD', '--', source);
+    repo.git('cat-file', '-e', `HEAD:./${local}`);
+    repo.git('diff', '--quiet', 'HEAD', '--', local);
     return true;
   } catch {
     return false;
@@ -58,7 +60,7 @@ function committedRule(repo, probe) {
     writeFileSync(join(dir, '.git', 'info', 'exclude'), '');
     for (const path of listed) {
       mkdirSync(dirname(join(dir, path)), { recursive: true });
-      writeFileSync(join(dir, path), execFileSync('git', ['show', `HEAD:${path}`], { cwd: repo.dir, stdio: ['ignore', 'pipe', 'pipe'] }));
+      writeFileSync(join(dir, path), execFileSync('git', ['show', `HEAD:./${path}`], { cwd: repo.dir, stdio: ['ignore', 'pipe', 'pipe'] }));
     }
     return rule(dir, probe);
   } finally {

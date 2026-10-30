@@ -26,7 +26,7 @@ function here(projectPath, dir) {
 // when there is no committed settings file that parses.
 function committedPlugins(repo) {
   try {
-    const value = JSON.parse(repo.git('show', 'HEAD:.claude/settings.json'));
+    const value = JSON.parse(repo.git('show', 'HEAD:./.claude/settings.json'));
     return Object.entries(value?.enabledPlugins ?? {}).filter(([, on]) => on === true).map(([id]) => id);
   } catch {
     return null;
