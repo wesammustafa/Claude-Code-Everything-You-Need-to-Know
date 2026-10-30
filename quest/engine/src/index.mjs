@@ -33,7 +33,7 @@ export {
 
 // The verification helpers the host's adapters share: a file's stamp and
 // whether it only grew, and git status's listing and stamp.
-export { grewFrom, stampFor } from "./holds.mjs";
+export { grewFrom, stampFor } from "./holds.ts";
 export { isStaged, listing, statusStamp } from "./status.mjs";
 
 // The selectors project(state) builds the snapshot from (project.mjs).

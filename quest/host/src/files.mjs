@@ -26,7 +26,7 @@ export function matchOf(dir, path) {
 }
 
 // A file's bytes as they are now, for the reducer to read what it holds
-// (holds.mjs); null when it isn't there or can't be read just now.
+// (holds.ts); null when it isn't there or can't be read just now.
 export function bytesOf(dir, path) {
   try {
     return readFileSync(join(dir, matchOf(dir, path) ?? path));

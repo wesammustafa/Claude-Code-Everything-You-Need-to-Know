@@ -62,32 +62,26 @@ export interface When {
   line: number;
 }
 
-// What a beat's verify line asks (parseVerify). Every kind's fields are
-// optional on the others, as they are absent there.
+// What a beat's verify line asks (parseVerify). The fields the engine
+// reads off any kind are optional on every kind, as they are absent there.
 interface VerifyFields {
-  all?: true;
-  items?: number[];
-  path?: string;
-  key?: string | null;
-  value?: string | null;
-  regex?: string;
-  name?: string;
-  args?: string[];
   paths?: string[];
   fresh?: true;
   since?: string | null;
 }
+// One member a kind, so a test of the kind narrows to it.
+type Each<K extends string, F> = K extends unknown ? { kind: K } & F : never;
 export type Verify = VerifyFields &
   (
-    | { kind: "answer" | "self" | "none" | "git-staged" | "git-clean" }
-    | { kind: "check"; all: true }
-    | { kind: "check"; items: number[] }
+    | Each<"answer" | "self" | "none" | "git-staged" | "git-clean", unknown>
+    | { kind: "check"; all: true; items?: undefined }
+    | { kind: "check"; items: number[]; all?: undefined }
     | { kind: "file"; path: string }
     | { kind: "json"; path: string; key: string | null; value: string | null }
-    | { kind: "match" | "no-match"; path: string; regex: string }
+    | Each<"match" | "no-match", { path: string; regex: string }>
     | { kind: "probe"; name: string; args: string[] }
-    | { kind: "head-moved" | "git-unchanged"; since: string | null }
-    | { kind: "git-changed" | "git-only"; path: string }
+    | Each<"head-moved" | "git-unchanged", { since: string | null }>
+    | Each<"git-changed" | "git-only", { path: string }>
   );
 export type VerifyKind = Verify["kind"];
 // A beat that reads its file, and one git status answers.

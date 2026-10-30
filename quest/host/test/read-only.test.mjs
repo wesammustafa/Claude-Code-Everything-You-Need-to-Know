@@ -68,7 +68,7 @@ test("the engine and the host make no network call, start only the Check child a
     "quest/engine/src/probes.ts",
     "quest/engine/src/engine.mjs",
     "quest/engine/src/course.ts",
-    "quest/engine/src/holds.mjs",
+    "quest/engine/src/holds.ts",
     "quest/engine/src/status.mjs",
   ])
     assert.ok(paths.includes(must), `the guard reads ${must}`);

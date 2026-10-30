@@ -346,7 +346,7 @@ test("the engine and its snapshot reach nothing outside quest/engine/src and no 
   }
   assert.ok(
     files.has(join(SRC, "text.ts")),
-    "holds.mjs reads text through text.ts",
+    "holds.ts reads text through text.ts",
   );
   for (const file of [...files].filter((f) => inside(f, SRC)))
     assert.doesNotMatch(

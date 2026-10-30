@@ -9,7 +9,7 @@
 // is parsed with (no module that reads a file): what a screen shows is the
 // client's.
 import { fingerprint, GIT, isChoice, READS, SINCE_GIT } from "./content.ts";
-import { evidenceOf, grewFrom, judge } from "./holds.mjs";
+import { evidenceOf, grewFrom, judge } from "./holds.ts";
 import { EVENT_TYPES, momentsOf } from "./moments.mjs";
 import {
   cleanListed,
@@ -1422,7 +1422,7 @@ function onCheck(s, ev, effects, rRuns) {
   decide(s, ev, effects, failing && { item: failing.text, hint: failing.hint });
 }
 
-// Where a fresh beat's file `ev.read` starts being new (holds.mjs grewFrom):
+// Where a fresh beat's file `ev.read` starts being new (holds.ts grewFrom):
 // past what it held at its stamp (saved, so a restart reads it too) when it
 // only grew, else 0. With no stamp yet, this read is the one decide stamps,
 // so the first answer is judged as every later one is.
@@ -1434,7 +1434,7 @@ export function readFrom(s, ev) {
   );
 }
 
-// A file the beat reads itself, by what it holds now (holds.mjs): `read`
+// A file the beat reads itself, by what it holds now (holds.ts): `read`
 // is its bytes, null when it isn't there. A fresh match on a file that only
 // grew reads what was added; a rewritten one is read whole.
 function onFile(s, ev, effects, rRuns) {
