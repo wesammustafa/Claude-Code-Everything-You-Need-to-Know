@@ -1850,8 +1850,9 @@ const pathOf = (to: unknown) =>
   typeof to.path === "string"
     ? to.path.trim()
     : "";
-const textOf = (text: unknown) =>
-  typeof text === "string" ? text : text == null ? "" : JSON.stringify(text);
+// String() keeps the JavaScript engine's coercion of a malformed answer.
+// eslint-disable-next-line @typescript-eslint/no-base-to-string
+const textOf = (text: unknown) => String(text ?? "");
 const steppingDown = (s: EngineState) => s.phase === "step-down";
 // What a folder answer can be for: a level with a work folder, or a lesson
 // that runs in a new copy.
