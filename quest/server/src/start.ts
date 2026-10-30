@@ -4,6 +4,7 @@ import type { Server } from "node:http";
 import { parseArgs } from "node:util";
 import type { Adapters, Host, HostOptions, RealOptions } from "@quest/host";
 import { createApp } from "./app.ts";
+import { createStreams } from "./events.ts";
 import { codespaceUrl, localUrl, stopLine, type Env } from "./launch.ts";
 import { BASE_PORT, PORT_TRIES, listen, type TryListen } from "./listen.ts";
 import type { Statics } from "./statics.ts";
@@ -108,6 +109,7 @@ export async function start({
   // it is bound.
   const opened = Promise.withResolvers<undefined>();
   const bound: { port?: number } = {};
+  const streams = createStreams();
   const app = createApp({
     health: () => ({ ok: true, instance: host.instance }),
     statics,
@@ -116,6 +118,7 @@ export async function start({
     host,
     ready: opened.promise,
     root,
+    streams,
     log: (line) => stderr.write(`${line}\n`),
   });
   const up = await listen({
@@ -140,6 +143,8 @@ export async function start({
     shutdown.done = true;
     host.close();
     server.close();
+    // Each stream ends itself first; closeAllConnections is the backstop.
+    streams.closeAll();
     server.closeAllConnections();
     stdout.write(`${stopLine({ copy: root })}\n`);
     exit(0);

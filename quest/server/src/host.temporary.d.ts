@@ -6,11 +6,36 @@
 
 declare module "@quest/host" {
   import type {
+    EventEnvelope,
     InstanceId,
     QuestActionType,
     Revision,
     Snapshot,
   } from "@quest/contract";
+
+  /** The host's one clock: its timers drive the stream's coalescing and heartbeat. */
+  export interface Clock {
+    now(): number;
+    epoch(): number;
+    setInterval(fn: () => void, ms: number): unknown;
+    clearInterval(id: unknown): void;
+    setTimeout(fn: () => void, ms: number): unknown;
+    clearTimeout(id: unknown): void;
+  }
+
+  /**
+   * What a listener hears after each change. The host's `input` is left out
+   * on purpose: it is host-only and must never reach a frame.
+   */
+  export interface Heard {
+    revision: Revision;
+    snapshot: Snapshot;
+    events: EventEnvelope[];
+  }
+
+  /** The event buffer's bounds: 256 events and 15 minutes. */
+  export const EVENT_LIMIT: number;
+  export const EVENT_KEEP_MS: number;
 
   /** The real adapters: opaque here, except the store the server loads once. */
   export interface Adapters {
@@ -60,6 +85,11 @@ declare module "@quest/host" {
     revision(): Revision;
     /** The clock's epoch milliseconds, for the heartbeat. */
     serverTime(): number;
+    /** The envelopes after `id`, oldest first; null when this instance no longer holds it. */
+    eventsAfter(id: string): EventEnvelope[] | null;
+    /** Calls `fn` after each change; returns the unsubscribe. */
+    subscribe(fn: (heard: Heard) => void): () => void;
+    clock: Clock;
   }
 
   /** The engine's action types plus `milestone.shown`. */
@@ -70,13 +100,20 @@ declare module "@quest/host" {
 }
 
 declare module "@quest/host/fake" {
-  import type { Adapters } from "@quest/host";
+  import type { Adapters, Clock } from "@quest/host";
 
-  export function fakeClock(from?: number, epoch0?: number): object;
+  /** A clock whose timers run only when a test advances it. */
+  export interface FakeClock extends Clock {
+    advance(ms: number): Promise<void>;
+    /** The timers waiting, as { ms, every } from now. */
+    pending(): { ms: number; every: number | null }[];
+  }
+
+  export function fakeClock(from?: number, epoch0?: number): FakeClock;
   /** In-memory adapters for a test: `root` is the copy, `tree` its files ({abs: text, or null for a folder}). */
   export function fakeAdapters(options?: {
     root?: string;
-    clock?: object;
+    clock?: Clock;
     tree?: Record<string, string | null>;
     saved?: object | null;
   }): Adapters;

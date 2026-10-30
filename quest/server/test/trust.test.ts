@@ -1,7 +1,7 @@
 // The raw-HTTP security suite's trust cases (spec, Server security): the
 // Host and X-Forwarded-Host rules on every route, the POST rules, GETs that
 // change nothing and no CORS header anywhere. ROUTES (./routes.ts) is
-// re-exported here; ticket 218 appends /api/events to it.
+// re-exported here; it holds /api/events, whose stream each test cancels.
 import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { createApp } from "../src/app.ts";
@@ -10,7 +10,7 @@ import { loadStatics } from "../src/statics.ts";
 import { mediaType, trustedHost } from "../src/trust.ts";
 import { HOST, actionKit, at, trusted, type ActionKit } from "./action-kit.ts";
 import { TABLE, removeTrees, staticTree } from "./fixture.ts";
-import { raw, request, serve } from "./raw.ts";
+import { raw, rawHead, request, serve } from "./raw.ts";
 import { ROUTES } from "./routes.ts";
 
 export { ROUTES };
@@ -65,12 +65,16 @@ describe("the Host", () => {
   test.each(ROUTES)(
     "%s %s is answered with a trusted Host",
     async (...route) => {
-      expect((await send(route)).status).not.toBe(403);
+      const response = await send(route);
+      expect(response.status).not.toBe(403);
+      await response.body?.cancel();
     },
   );
 
   test.each(ROUTES)("%s %s refuses a rebound Host", async (...route) => {
-    expectRefused(await send(route, { Host: "evil.example:4800" }));
+    const response = await send(route, { Host: "evil.example:4800" });
+    expectRefused(response);
+    await response.body?.cancel();
     expect(kit.logged).toEqual([]);
   });
 
@@ -131,6 +135,38 @@ describe("the Host over a socket", () => {
     expect(reply?.body).not.toContain('"ok"');
   });
 
+  test("the stream answers a trusted Host", async () => {
+    const reply = await rawHead(
+      port,
+      request("GET", "/api/events", { Host: HOST }),
+    );
+    expect(reply?.status).toBe(200);
+    expect(reply?.headers.get("content-type")).toContain("text/event-stream");
+  });
+
+  test("the stream refuses a rebound Host", async () => {
+    const reply = await raw(
+      port,
+      request("GET", "/api/events", { Host: "evil.example:4800" }),
+    );
+    expect(reply?.status).toBe(403);
+    expect(reply?.headers.get("content-type")).not.toContain(
+      "text/event-stream",
+    );
+  });
+
+  test("the stream refuses a duplicated Host", async () => {
+    const reply = await rawHead(
+      port,
+      "GET /api/events HTTP/1.1\r\nHost: 127.0.0.1:4800\r\nHost: evil.example\r\nConnection: close\r\n\r\n",
+    );
+    expect(reply?.status).toBeGreaterThanOrEqual(400);
+    expect(reply?.status).toBeLessThan(500);
+    expect(reply?.headers.get("content-type") ?? "").not.toContain(
+      "text/event-stream",
+    );
+  });
+
   test("an absolute-form request naming another host is refused", async () => {
     const reply = await raw(
       port,
@@ -170,9 +206,13 @@ describe("X-Forwarded-Host", () => {
 
   test.each(ROUTES)("%s %s refuses a wrong one", async (...route) => {
     const app = await inCodespace();
-    expectRefused(
-      await send(route, { "X-Forwarded-Host": "evil.example" }, app),
+    const response = await send(
+      route,
+      { "X-Forwarded-Host": "evil.example" },
+      app,
     );
+    expectRefused(response);
+    await response.body?.cancel();
   });
 
   test("a spoofed one, another codespace's port, is refused", async () => {
@@ -359,7 +399,7 @@ describe("a GET", () => {
     const snapshot = JSON.stringify(kit.host.snapshot());
     const seen = kit.dispatched.length;
     for (const [method, path] of ROUTES.filter(([m]) => m !== "POST"))
-      await send([method, path]);
+      await (await send([method, path])).body?.cancel();
     for (const method of ["GET", "HEAD"])
       await kit.app.request("/api/actions", {
         method,

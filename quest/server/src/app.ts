@@ -5,6 +5,7 @@ import { HTTPException } from "hono/http-exception";
 import type { HealthResponse } from "@quest/contract";
 import type { Host } from "@quest/host";
 import { actionRoute, type CheckFolder } from "./actions.ts";
+import { createStreams, eventsRoute, type Streams } from "./events.ts";
 import { checkFolder as checkPath, homeOf } from "./folders.ts";
 import { API_CACHE, SECURITY_HEADERS } from "./headers.ts";
 import type { Env } from "./launch.ts";
@@ -28,7 +29,7 @@ export interface AppOptions {
   env?: Env;
   /** The bound port, undefined until the server listens. */
   port?: () => number | undefined;
-  /** The lesson host: without one, POST /api/actions is a 404. */
+  /** The lesson host: without one, POST /api/actions and GET /api/events are 404s. */
   host?: Host;
   /** Settles when the host's open() settles: actions wait for it. */
   ready?: Promise<unknown>;
@@ -36,6 +37,8 @@ export interface AppOptions {
   root?: string;
   checkFolder?: CheckFolder;
   queue?: Queue;
+  /** The open event streams: start() closes them all on shutdown. */
+  streams?: Streams;
 }
 
 export function createApp({
@@ -49,6 +52,7 @@ export function createApp({
   root = process.cwd(),
   checkFolder = (path) => checkPath(path, { home: homeOf(env), root }),
   queue = createQueue(),
+  streams = createStreams(),
 }: AppOptions): Hono {
   const app = new Hono();
 
@@ -69,7 +73,7 @@ export function createApp({
 
   if (host) actionRoute(app, { host, ready, queue, checkFolder });
 
-  // Ticket 218: GET /api/events.
+  if (host) eventsRoute(app, { host, ready, streams });
 
   app.all("/api/*", (c) => {
     c.header("Cache-Control", API_CACHE);

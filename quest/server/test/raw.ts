@@ -36,6 +36,31 @@ export function raw(
   });
 }
 
+/** Sends `text` and reads the reply's head alone, then drops the socket: for a stream. */
+export function rawHead(port: number, text: string): Promise<Reply | null> {
+  return new Promise((resolve, reject) => {
+    let got = "";
+    const socket = connect(port, "127.0.0.1", () => {
+      socket.write(text);
+    });
+    const done = () => {
+      socket.destroy();
+      resolve(parse(got));
+    };
+    socket.setEncoding("utf8");
+    socket.on("data", (chunk: string) => {
+      got += chunk;
+      if (got.includes("\r\n\r\n")) done();
+    });
+    socket.on("end", done);
+    socket.on("close", done);
+    socket.on("error", (error: NodeJS.ErrnoException) => {
+      if (error.code === "ECONNRESET") done();
+      else reject(error);
+    });
+  });
+}
+
 function parse(text: string): Reply | null {
   if (!text) return null;
   const at = text.indexOf("\r\n\r\n");

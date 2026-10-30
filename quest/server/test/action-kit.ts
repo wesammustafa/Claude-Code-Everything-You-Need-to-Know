@@ -3,10 +3,11 @@
 // headers for a same-origin POST. Nothing here binds a port.
 import { fileURLToPath } from "node:url";
 import { createHost, type Host } from "@quest/host";
-import { fakeAdapters } from "@quest/host/fake";
+import { fakeAdapters, fakeClock, type FakeClock } from "@quest/host/fake";
 import { loadCourse } from "@quest/engine/course";
 import type { Hono } from "hono";
 import { createApp, type AppOptions } from "../src/app.ts";
+import { createStreams, type Streams } from "../src/events.ts";
 
 export const INSTANCE = "i-217";
 export const HOST = "127.0.0.1:4800";
@@ -14,15 +15,21 @@ const TEMPLATE = fileURLToPath(
   new URL("../../../practice-template", import.meta.url),
 );
 
-export function questHost(): Host {
+/** The host over fake adapters; `clock` drives its timers and the stream's. */
+export function questHost({
+  clock = fakeClock(),
+  saved = null,
+}: { clock?: FakeClock; saved?: object | null } = {}): Host {
   const adapters = fakeAdapters({
     root: "/copy",
+    clock,
     tree: { "/copy/.practice": null },
+    saved,
   });
   return createHost({
     root: "/copy",
     course: loadCourse(TEMPLATE),
-    saved: null,
+    saved,
     env: { HOME: "/home/sam" },
     platform: "linux",
     adapters,
@@ -51,6 +58,9 @@ export function trusted(
 export interface ActionKit {
   app: Hono;
   host: Host;
+  /** The host's clock, when the kit made the host. */
+  clock: FakeClock;
+  streams: Streams;
   logged: string[];
   dispatched: unknown[];
   /** POSTs `body` (JSON unless a string) to /api/actions. */
@@ -62,10 +72,20 @@ export interface ActionKit {
 
 /** The app over an opened host (unless `open` is false), dispatch recorded. */
 export async function actionKit(
-  options: Partial<AppOptions> & { open?: boolean } = {},
+  options: Partial<AppOptions> & {
+    open?: boolean;
+    clock?: FakeClock;
+    saved?: object | null;
+  } = {},
 ): Promise<ActionKit> {
-  const { open = true, ...rest } = options;
-  const host = rest.host ?? questHost();
+  const {
+    open = true,
+    clock = fakeClock(),
+    saved = null,
+    streams = createStreams(),
+    ...rest
+  } = options;
+  const host = rest.host ?? questHost({ clock, saved });
   const dispatched: unknown[] = [];
   const dispatch = host.dispatch.bind(host);
   host.dispatch = (action, opts) => {
@@ -84,10 +104,13 @@ export async function actionKit(
     checkFolder: () => Promise.resolve({ refused: "missing" }),
     ...rest,
     host,
+    streams,
   });
   return {
     app,
     host,
+    clock,
+    streams,
     logged,
     dispatched,
     post: (body, headers = {}) =>

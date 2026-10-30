@@ -1,10 +1,11 @@
 // The limits (spec, Server security): a 16 KB action body, the queue of one
 // running and 20 waiting, 64 connections, Node's header size and the
-// header and request timeouts. Raw sockets on port 0.
+// header and request timeouts, and 8 event streams. Raw sockets on port 0.
 import type { Server } from "node:http";
 import { connect, type Socket } from "node:net";
 import { afterEach, describe, expect, test } from "vitest";
 import { BODY_LIMIT } from "../src/actions.ts";
+import { MAX_STREAMS } from "../src/events.ts";
 import { MAX_CONNECTIONS, SERVER_LIMITS } from "../src/listen.ts";
 import { createQueue } from "../src/queue.ts";
 import { HOST, actionKit, at, questHost, trusted } from "./action-kit.ts";
@@ -227,5 +228,47 @@ describe("connections and timeouts", () => {
       }),
     );
     expect(reply?.status).toBe(431);
+  });
+});
+
+describe("event streams", () => {
+  // A stream held open on its own socket: settles once the head has come,
+  // and `ended` settles when the server ends the response (its last chunk:
+  // the stream keeps the connection alive) or the socket.
+  function stream(port: number) {
+    const ended = Promise.withResolvers<undefined>();
+    return new Promise<{
+      socket: Socket;
+      head: string;
+      ended: Promise<undefined>;
+    }>((resolve) => {
+      let got = "";
+      const socket = connect(port, "127.0.0.1", () => {
+        socket.write(request("GET", "/api/events", { Host: HOST }));
+      });
+      sockets.push(socket);
+      socket.setEncoding("utf8");
+      socket.on("data", (chunk: string) => {
+        got += chunk;
+        if (got.endsWith("\r\n0\r\n\r\n")) ended.resolve(undefined);
+        if (got.includes("\r\n\r\n"))
+          resolve({ socket, head: got, ended: ended.promise });
+      });
+      socket.on("end", () => {
+        ended.resolve(undefined);
+      });
+      socket.on("close", () => {
+        ended.resolve(undefined);
+      });
+    });
+  }
+
+  test("a ninth stream closes the oldest", async () => {
+    const { port, streams } = await served();
+    const open = [];
+    for (let i = 0; i <= MAX_STREAMS; i++) open.push(await stream(port));
+    for (const { head } of open) expect(head).toContain("text/event-stream");
+    await open[0]?.ended;
+    expect(streams.size()).toBe(MAX_STREAMS);
   });
 });

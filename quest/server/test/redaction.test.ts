@@ -6,7 +6,7 @@ import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 import { BODY_LIMIT } from "../src/actions.ts";
 import { HOST, INSTANCE, actionKit, questHost, trusted } from "./action-kit.ts";
-import { raw, request, serve } from "./raw.ts";
+import { raw, rawHead, request, serve } from "./raw.ts";
 import { ROUTES } from "./routes.ts";
 
 const SENTINELS = {
@@ -88,7 +88,10 @@ describe("redaction", () => {
   test.each(CASES)(
     "%s writes no header value, cookie or token",
     async (_, method, path, headers, body) => {
-      const reply = await raw(
+      // The stream never ends: its head alone, then the socket is dropped,
+      // which also runs node-server's abort path.
+      const send = path === "/api/events" ? rawHead : raw;
+      const reply = await send(
         port,
         request(method, path, { ...headers, ...SENTINELS }, body),
       );

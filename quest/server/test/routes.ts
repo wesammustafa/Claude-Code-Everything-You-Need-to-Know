@@ -1,5 +1,6 @@
-// Every route, as [method, path]: each must pass the trust checks. Ticket
-// 218 appends ["GET", "/api/events"].
+// Every route, as [method, path]: each must pass the trust checks. The
+// events route answers with a stream that never ends: a test reads its head
+// and cancels or drops it.
 export const ROUTES: readonly (readonly [string, string])[] = [
   ["GET", "/api/health"],
   ["GET", "/"],
@@ -8,4 +9,5 @@ export const ROUTES: readonly (readonly [string, string])[] = [
   ["GET", "/api/nothing"],
   ["GET", "/missing"],
   ["POST", "/api/actions"],
+  ["GET", "/api/events"],
 ];

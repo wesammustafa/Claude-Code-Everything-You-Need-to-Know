@@ -3,6 +3,7 @@
 // test binds the real ports 4747 to 4756.
 import { EventEmitter } from "node:events";
 import type { Host, HostOptions } from "@quest/host";
+import { fakeClock } from "@quest/host/fake";
 import { tryListen } from "../src/listen.ts";
 import { start, type StartOptions, type Started } from "../src/start.ts";
 
@@ -53,6 +54,9 @@ export async function startWith(
     snapshot: () => null,
     revision: () => 0,
     serverTime: () => 0,
+    eventsAfter: () => null,
+    subscribe: () => () => undefined,
+    clock: fakeClock(),
   };
   kit.started = await start({
     root: "/copy",
