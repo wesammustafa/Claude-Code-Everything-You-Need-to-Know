@@ -63,6 +63,21 @@ describe("course manifest", () => {
     expect(actual[0].title).toBe(lessons["b-1"].title);
   });
 
+  // A save from before ticket 213 is matched by the legacy fingerprint, so
+  // courseFrom must carry both fingerprints of every Lesson.
+  test("courseFrom keeps each Lesson's fingerprints", async () => {
+    const compiled = compileCourse(manifestValue, stepFiles, pages, checks);
+    const { courseFrom } = await import("../src/course.ts");
+    const course = courseFrom(compiled);
+    expect(course).toHaveLength(23);
+    for (const entry of course) {
+      const lesson = compiled.lessons.find((l) => l.id === entry.id);
+      expect(entry.fingerprint).toBe(lesson.fingerprint);
+      expect(entry.legacyFingerprint).toBe(lesson.legacyFingerprint);
+      expect(entry.legacyFingerprint).toMatch(/^[0-9a-f]{64}$/);
+    }
+  });
+
   test("rejects a malformed manifest with its file and line", () => {
     expect(() =>
       parseManifest({ levels: [], lessons: [{}] }, "course/manifest.json"),
