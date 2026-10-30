@@ -1,5 +1,7 @@
+import { m } from "motion/react";
 import type { ReactNode } from "react";
 import { cx } from "../lib/cx";
+import { saysEntrance, useMotionTokens } from "../lib/motion";
 import { Pip } from "../pip/Pip";
 
 /**
@@ -37,8 +39,16 @@ export interface SaysProps {
  * region. Pip holds his place at the top of the row: a bubble shorter than
  * him sits centred on him, and one that grows (the help offer opening) grows
  * downward, its tail still at his middle, so neither he nor the tail moves.
+ *
+ * The hand-off to Pip: his Reaction first, then the bubble's border (a CSS
+ * transition, starting as the new tone commits), then the words, which wait
+ * --says-delay and rise in through Motion. The order holds because the
+ * caller sends the event to Pip's stage before it applies the change of
+ * tone, so the director has started the Reaction by the time React commits
+ * the tone; the bubble never waits on the rig.
  */
 export function Says({ tone = "idle", pip, textKey, children }: SaysProps) {
+  const entrance = saysEntrance(useMotionTokens());
   return (
     <div className="flex items-start gap-3.5" data-tone={tone}>
       {pip ?? <Pip size="beside" />}
@@ -57,9 +67,16 @@ export function Says({ tone = "idle", pip, textKey, children }: SaysProps) {
             TONES[tone],
           )}
         >
-          <div key={textKey} className="relative grid animate-says">
+          <m.div
+            key={textKey}
+            data-says-words=""
+            className="relative grid"
+            initial={entrance.initial}
+            animate={entrance.animate}
+            transition={entrance.transition}
+          >
             {children}
-          </div>
+          </m.div>
         </div>
       </div>
     </div>

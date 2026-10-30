@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { ButtonLink } from "../components/Button";
 import { Icon } from "../components/Icon";
 import { InlineText } from "../components/InlineText";
+import { ProgressBar } from "../components/ProgressBar";
 import { LEVELS, LESSONS, lessonLabel, levelOf } from "../course/placeholder";
 import { cx } from "../lib/cx";
 import { useBelow } from "../lib/media";
@@ -100,10 +101,14 @@ export function Journey() {
               <b className="text-lg">{l.name}</b>
               <span className="ml-auto text-sm text-muted">{`0 of ${String(l.lessons.length)}`}</span>
             </span>
-            <span
-              aria-hidden="true"
-              className="h-1.5 overflow-hidden rounded-full bg-surface-2 shadow-track"
-            />
+            {/* The words above already say how far: the tab's name stays theirs. */}
+            <span aria-hidden="true" className="grid">
+              <ProgressBar
+                value={0}
+                max={l.lessons.length}
+                label={`${l.name} progress`}
+              />
+            </span>
           </button>
         ))}
       </div>

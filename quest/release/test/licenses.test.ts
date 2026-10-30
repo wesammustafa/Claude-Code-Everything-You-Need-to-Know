@@ -462,6 +462,7 @@ describe("Claude Code Quest's bundled packages", () => {
         "@fontsource-variable/inter",
         "@fontsource-variable/jetbrains-mono",
         "tailwindcss",
+        "motion",
         "rolldown",
       ]),
     );

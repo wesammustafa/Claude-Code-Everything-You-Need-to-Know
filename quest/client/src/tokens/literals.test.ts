@@ -1,8 +1,21 @@
 import { expect, test } from "vitest";
+import { literalMoves } from "../../test/token-classes";
 
 // Components take colour, size, duration and easing from tokens.css only.
 const sources = import.meta.glob<string>(
   ["../**/*.{ts,tsx}", "!../**/*.test.{ts,tsx}", "!./tokens.ts"],
+  {
+    query: "?raw",
+    import: "default",
+    eager: true,
+  },
+);
+
+// The app's stylesheets other than the token file. The Pip Playground's
+// playground.css is development-only tooling with its own board, and Pip's
+// contract page (pip/contract-page) is a test page outside src: neither ships.
+const stylesheets = import.meta.glob<string>(
+  ["../**/*.css", "!../styles/tokens.css", "!../playground/playground.css"],
   {
     query: "?raw",
     import: "default",
@@ -15,33 +28,67 @@ const LITERALS: readonly [string, RegExp][] = [
   ["a colour function", /\b(rgba?|hsla?|oklch|oklab|lab|lch|hwb|color-mix)\(/],
   ["a length, time or angle", /\b\d+(\.\d+)?(px|rem|em|ms|s|deg|vh|vw|dvh)\b/],
   ["an easing curve", /cubic-bezier\(/],
+  // Tailwind still builds a bare-number timing utility (duration-200 is
+  // 200ms) with the theme cleared, so it carries no unit for the pattern above.
+  ["a bare-number timing utility", /\b(duration|delay)-\[?\d/],
 ];
 
-test("the client's source writes no colour, size or duration literal", () => {
-  const files = Object.keys(sources);
-  expect(files.length).toBeGreaterThan(10);
-  const found = Object.entries(sources).flatMap(([file, text]) =>
-    LITERALS.filter(([, pattern]) => pattern.test(text)).map(
-      ([what]) => `${file}: ${what}`,
-    ),
+// Motion for React takes seconds and curves as bare numbers, so a duration
+// or easing written into a transition carries no unit for the patterns
+// above. A component reads them from the tokens (src/lib/motion.ts). Out of
+// scope: behaviour timers named *_MS (how long Copied shows, when Pip may
+// glance), which are not motion, and SVG geometry, which is unitless.
+const MOTION_LITERALS: readonly [string, RegExp][] = [
+  [
+    "a motion number",
+    /\b(duration|delay|stiffness|damping|bounce|mass|visualDuration|staggerChildren|delayChildren)\s*:\s*-?\d/,
+  ],
+  ["an easing array", /\bease\s*:\s*\[/],
+];
+
+const found = (
+  files: Record<string, string>,
+  patterns: readonly [string, RegExp][],
+) =>
+  Object.entries(files).flatMap(([file, text]) =>
+    patterns
+      .filter(([, pattern]) => pattern.test(text))
+      .map(([what]) => `${file}: ${what}`),
   );
-  expect(found).toEqual([]);
+
+test("the client's source writes no colour, size or duration literal", () => {
+  expect(Object.keys(sources).length).toBeGreaterThan(10);
+  expect(found(sources, [...LITERALS, ...MOTION_LITERALS])).toEqual([]);
 });
 
-// A hover or press that moves a control takes its travel from a motion token
-// (--press-y, --press-scale, --hover-scale, --nudge), which reduced motion
-// sets to none. A literal such as hover:scale-106 would still move.
-function literalMoves(text: string): string[] {
-  return text.split(/[\s"'`]+/).filter((utility) => {
-    const variants = utility.split(":");
-    const base = variants.pop() ?? "";
-    if (!variants.some((v) => /(^|-)(hover|active)$/.test(v))) return false;
-    const value = /^-?(?:scale|rotate|skew|translate)(?:-[xyz])?-(.+)$/.exec(
-      base,
-    )?.[1];
-    return value !== undefined && value !== "0" && !value.startsWith("(--");
-  });
-}
+test("the app's stylesheets take every colour, size and duration from the token file", () => {
+  expect(Object.keys(stylesheets)).toEqual(["../styles/app.css"]);
+  expect(found(stylesheets, LITERALS)).toEqual([]);
+});
+
+test("a transition's numbers count as literals", () => {
+  const caught = (text: string) =>
+    MOTION_LITERALS.some(([, pattern]) => pattern.test(text));
+  expect(caught("transition={{ duration: 0.2 }}")).toBe(true);
+  expect(caught("{ type: 'spring', bounce: 0.3 }")).toBe(true);
+  expect(caught("ease: [0.2, 0.8, 0.2, 1]")).toBe(true);
+  expect(caught("{ duration: t.base, delay: t.saysDelay, ease: t.out }")).toBe(
+    false,
+  );
+});
+
+test("a timing utility's bare number counts as a literal", () => {
+  const caught = (text: string) =>
+    LITERALS.some(([, pattern]) => pattern.test(text));
+  expect(caught("transition duration-200 ease-out")).toBe(true);
+  expect(caught("hover:delay-80")).toBe(true);
+  expect(caught("duration-[250]")).toBe(true);
+  expect(
+    caught(
+      "duration-(--duration-fast) [animation-delay:calc(var(--i)*var(--stagger))]",
+    ),
+  ).toBe(false);
+});
 
 test("hover and press move a control only by a motion token", () => {
   expect(
@@ -52,8 +99,8 @@ test("hover and press move a control only by a motion token", () => {
       "group-hover:translate-x-(--nudge) hover:-translate-y-(--nudge) enabled:active:scale-(--press-scale) group-disabled:translate-x-1 hover:translate-x-0",
     ),
   ).toEqual([]);
-  const found = Object.entries(sources).flatMap(([file, text]) =>
+  const moves = Object.entries(sources).flatMap(([file, text]) =>
     literalMoves(text).map((utility) => `${file}: ${utility}`),
   );
-  expect(found).toEqual([]);
+  expect(moves).toEqual([]);
 });

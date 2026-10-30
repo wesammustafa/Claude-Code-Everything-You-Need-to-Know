@@ -18,6 +18,8 @@ function words(text: string): string[] {
 export interface CommandProps {
   /** The command exactly as the Learner types it. */
   text: string;
+  /** What Copy puts on the clipboard, where it differs from the text shown. */
+  copy?: string;
   /** Sit at the command's own width, inline with text, rather than fill the line. */
   fit?: boolean;
   className?: string;
@@ -28,7 +30,12 @@ export interface CommandProps {
  * is unavailable, Copy selects the command so the keyboard can copy it.
  * Either way Pip, if the screen has one, looks at the command for a moment.
  */
-export function Command({ text, fit = false, className }: CommandProps) {
+export function Command({
+  text,
+  copy: copied,
+  fit = false,
+  className,
+}: CommandProps) {
   const [state, setState] = useState<CopyState>("idle");
   // Counts every Copy, so each one restarts the confirmation and is announced again.
   const [copies, setCopies] = useState(0);
@@ -66,7 +73,7 @@ export function Command({ text, fit = false, className }: CommandProps) {
     try {
       // The Clipboard API is missing outside a secure context.
       if (!("clipboard" in navigator)) throw new Error("no clipboard");
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(copied ?? text);
       confirm("copied");
     } catch {
       selectCommand();

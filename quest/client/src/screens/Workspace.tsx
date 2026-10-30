@@ -4,9 +4,9 @@ import { CheckLines } from "../components/CheckLines";
 import { Command } from "../components/Command";
 import { HelpOffer } from "../components/HelpOffer";
 import { Hints } from "../components/Hints";
-import { Icon } from "../components/Icon";
 import { Says } from "../components/Says";
 import { StepDots } from "../components/StepDots";
+import { Where } from "../components/Where";
 import {
   useHelpShowing,
   usePipInput,
@@ -102,11 +102,11 @@ export function Workspace() {
             </PageTitle>
           </header>
           <div className="grid justify-items-start gap-3.5">
-            <span className="inline-flex items-center gap-1.5 text-sm">
-              <Icon name="terminal" size="sm" className="text-accent-text" />
-              <b>Your terminal</b>
-              <span className="text-muted">in your Practice copy</span>
-            </span>
+            <Where
+              kind="terminal"
+              label="Your terminal"
+              note="in your Practice copy"
+            />
             <p className="text-lg font-semibold tracking-tight">
               The step's goal shows here, with the command to type.
             </p>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button, ButtonLink } from "../components/Button";
-import { Icon } from "../components/Icon";
+import { Disclosure } from "../components/Disclosure";
 import { InlineText } from "../components/InlineText";
 import { Panel } from "../components/Panel";
 import { Says } from "../components/Says";
@@ -41,19 +41,9 @@ export function LessonOverview() {
         </PageTitle>
       </header>
 
-      <details className="group/details rounded-lg border border-line bg-surface p-5 shadow-sm">
-        <summary className="flex cursor-pointer list-none items-center gap-2 rounded-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus [&::-webkit-details-marker]:hidden">
-          <span>What the check looks for</span>
-          <Icon
-            name="chevron"
-            size="sm"
-            className="ml-auto text-muted transition-[rotate] duration-(--duration-turn) ease-out group-open/details:rotate-90"
-          />
-        </summary>
-        <p className="mt-3 animate-fade text-sm text-muted">
-          The Check's lines for this Lesson show here.
-        </p>
-      </details>
+      <Disclosure summary="What the check looks for" variant="card">
+        <p>The Check's lines for this Lesson show here.</p>
+      </Disclosure>
 
       <div className="flex flex-wrap items-center gap-2.5">
         <ButtonLink

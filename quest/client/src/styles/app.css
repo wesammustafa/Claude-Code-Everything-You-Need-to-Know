@@ -27,7 +27,7 @@
   }
 
   body {
-    min-height: 100dvh;
+    min-height: var(--page-min-height);
     background-color: var(--color-bg);
     color: var(--color-text);
     font-family: var(--font-sans);
@@ -61,20 +61,20 @@
   a {
     color: var(--color-accent-text);
     text-decoration-line: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 3px;
+    text-decoration-thickness: var(--underline);
+    text-underline-offset: var(--underline-offset);
   }
 
   a:hover {
-    text-decoration-thickness: 2px;
+    text-decoration-thickness: var(--underline-hover);
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-focus);
-    outline-offset: 2px;
+    outline: var(--focus-ring) solid var(--color-focus);
+    outline-offset: var(--focus-offset);
   }
 
   ::selection {
-    background-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
+    background-color: var(--selection);
   }
 }

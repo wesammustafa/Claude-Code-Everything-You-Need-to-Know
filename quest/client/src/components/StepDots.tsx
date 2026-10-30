@@ -5,14 +5,31 @@ export interface StepDotsProps {
   steps: readonly string[];
   /** The index of the current step; steps before it are done. */
   at: number;
+  /**
+   * Each step's state, where it is not simply the order: a step done after
+   * a later one, or skipped. Overrides the states `at` gives.
+   */
+  states?: readonly StepState[];
 }
 
+export type StepState = "done" | "current" | "todo";
+
 /** The Lesson's steps as dots: done in green, the current one longer in coral. */
-export function StepDots({ steps, at }: StepDotsProps) {
+export function StepDots({ steps, at, states }: StepDotsProps) {
   return (
     <ol aria-label="Steps" className="flex flex-wrap justify-center gap-1.25">
       {steps.map((title, i) => {
-        const state = i < at ? "done" : i === at ? "now" : "todo";
+        const given = states?.[i];
+        const state =
+          given === undefined
+            ? i < at
+              ? "done"
+              : i === at
+                ? "now"
+                : "todo"
+            : given === "current"
+              ? "now"
+              : given;
         return (
           <li
             key={`${String(i)}-${title}`}
