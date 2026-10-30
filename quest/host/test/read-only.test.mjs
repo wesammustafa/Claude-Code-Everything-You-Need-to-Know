@@ -62,7 +62,7 @@ test("the engine and the host make no network call, start only the Check child a
     "quest/host/src/host.mjs",
     "quest/host/src/check-child.mjs",
     "quest/host/src/git.mjs",
-    "quest/host/src/store.mjs",
+    "quest/host/src/store.ts",
     "quest/host/src/run-check.mjs",
     "quest/host/src/probes.mjs",
     "quest/engine/src/probes.ts",
@@ -104,7 +104,7 @@ test("a planted network call, a planted process and a planted write each fail th
     'import { writeFile } from "node:fs/promises";\nawait writeFile("a", "b");\n';
   assert.notDeepEqual(planted(write), []);
   assert.deepEqual(
-    planted(write, "quest/host/src/store.mjs"),
+    planted(write, "quest/host/src/store.ts"),
     [],
     "the store may write",
   );

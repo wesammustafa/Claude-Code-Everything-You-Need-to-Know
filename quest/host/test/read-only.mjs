@@ -117,7 +117,7 @@ export function valuesOnly(text) {
 // root, with forward slashes). `store` is the one file that may write.
 export function readOnlyFindings(
   files,
-  { store = "quest/host/src/store.mjs" } = {},
+  { store = "quest/host/src/store.ts" } = {},
 ) {
   const found = [];
   for (const { path, text: source } of files) {

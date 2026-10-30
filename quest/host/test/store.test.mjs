@@ -22,7 +22,7 @@ import {
   sanitize,
   saveState,
   storePath,
-} from "../src/store.mjs";
+} from "../src/store.ts";
 import { realAdapters } from "../src/real.mjs";
 
 const MINE = "/home/sam/code/my-app";

@@ -28,7 +28,7 @@ import {
 } from "./engine.ts";
 import { oneAtATime, owing, singleFlight } from "./flight.ts";
 import { folderPath } from "./folders.mjs";
-import { snapshot as toSave } from "./store.mjs";
+import { snapshot as toSave } from "./store.ts";
 
 export const TICK_MS = 1_000;
 export const POLL_MS = 500;

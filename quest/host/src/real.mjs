@@ -8,7 +8,7 @@ import { bytesOf, matchOf, stampOf } from "./files.ts";
 import { probeFolder } from "./folders.mjs";
 import { gitFirstName, gitReady, gitStatus } from "./git.mjs";
 import { onPath } from "./path-lookup.ts";
-import { loadState, saveState } from "./store.mjs";
+import { loadState, saveState } from "./store.ts";
 import { watchDirs } from "./watch.ts";
 
 // The app's one clock: monotonic, and on a 1/1024 ms grid so sums and
