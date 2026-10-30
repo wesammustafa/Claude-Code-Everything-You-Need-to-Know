@@ -5,7 +5,7 @@
 import type { ChildProcessByStdio } from "node:child_process";
 import { spawn } from "node:child_process";
 import type { Readable } from "node:stream";
-import { dirname, join } from "node:path";
+import { dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { STUB_RUNS } from "../../../practice-template/checks/lessons/a-4.mjs";
 import { NPM_TEST_LIMIT } from "../../../practice-template/checks/lessons/b-3.mjs";
@@ -25,9 +25,10 @@ import type {
 type Timers = Pick<Clock, "setTimeout" | "clearTimeout">;
 type Child = ChildProcessByStdio<null, Readable, Readable>;
 
+// run-check.ts beside this file, or run-check.mjs beside the bundle.
 const RUN_CHECK = join(
   dirname(fileURLToPath(import.meta.url)),
-  "run-check.mjs",
+  "run-check" + extname(fileURLToPath(import.meta.url)),
 );
 // The most a run may print, its stdout and stderr together: a check's JSON
 // line and its reports, or a probe's line. Every ladder scenario's real
@@ -91,7 +92,7 @@ export function lineReader(
   };
 }
 
-// Starts run-check.mjs with `args`. Its stderr goes to onLine a line at a
+// Starts run-check with `args`. Its stderr goes to onLine a line at a
 // time, with `restart` to start the limit again. It is ended with its group
 // when an item runs `limit` ms (overran) or it prints more than `cap` bytes
 // (capped), and its group is ended again once it exits, so nothing it

@@ -63,7 +63,7 @@ test("the engine and the host make no network call, start only the Check child a
     "quest/host/src/check-child.ts",
     "quest/host/src/git.ts",
     "quest/host/src/store.ts",
-    "quest/host/src/run-check.mjs",
+    "quest/host/src/run-check.ts",
     "quest/host/src/probes.ts",
     "quest/engine/src/probes.ts",
     "quest/engine/src/engine.ts",
@@ -160,7 +160,7 @@ test("a network call, a process and a write planted in each real file that runs 
 
 // The Check child's entry, as check-child.ts names it.
 const RUN_CHECK =
-  'const RUN_CHECK = join(\n  dirname(fileURLToPath(import.meta.url)),\n  "run-check.mjs",\n);\n';
+  'const RUN_CHECK = join(\n  dirname(fileURLToPath(import.meta.url)),\n  "run-check" + extname(fileURLToPath(import.meta.url)),\n);\n';
 
 test("the guard closes the ways around it, and lets a wrapped git call, a RegExp's exec, the Check child's spawn and its group kill pass", () => {
   const flagged = [

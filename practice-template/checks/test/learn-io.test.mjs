@@ -18,7 +18,7 @@ import { check, exportHead } from './helpers.mjs';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 // Every lesson on the course, in its order.
 const EVERY = PATH.map((p) => p.id);
-const RUN_CHECK = join(root, '../quest/host/src/run-check.mjs');
+const RUN_CHECK = join(root, '../quest/host/src/run-check.ts');
 const child = (args, extraEnv = {}) => {
   const { NODE_TEST_CONTEXT, ...env } = process.env;
   const r = spawnSync(process.execPath, [RUN_CHECK, ...args], { encoding: 'utf8', env: { ...env, ...extraEnv } });

@@ -32,7 +32,7 @@ import { root } from "../../engine/test/drive.mjs";
 import { alive, holding, pidsOf, sweep, until } from "./tree.mjs";
 
 const RUN_CHECK = fileURLToPath(
-  new URL("../src/run-check.mjs", import.meta.url),
+  new URL("../src/run-check.ts", import.meta.url),
 );
 const SLOW_TEST = 60_000;
 const child = (args, extraEnv = {}) => {

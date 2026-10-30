@@ -1,7 +1,7 @@
 // Git probes (ticket 105; moved from the Checks in ticket 211): what an
 // Advanced step leaves in git where no check item applies, such as
 // worktrees, branches, merges and pushes. The lesson host runs them in its
-// Check child (run-check.mjs --probe), in the work folder. The table of
+// Check child (run-check.ts --probe), in the work folder. The table of
 // probes and their arguments is the engine's (quest/engine/src/probes.ts),
 // which parses the beats that name them; this file holds how each runs.
 //

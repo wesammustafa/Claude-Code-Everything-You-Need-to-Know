@@ -43,7 +43,7 @@ export function runCheckBuild({
     plugins: [templateChecksExternal()],
     ssr: { noExternal: true, target: "node" },
     build: {
-      ssr: join(repoRoot, "quest/host/src/run-check.mjs"),
+      ssr: join(repoRoot, "quest/host/src/run-check.ts"),
       target: "node22",
       outDir,
       emptyOutDir: false,

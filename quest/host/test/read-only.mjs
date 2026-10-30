@@ -50,11 +50,11 @@ const ALLOWED_CALLS = [
 ];
 const ALLOWED_SPAWN =
   /(?<![.\w$])spawn\s*\(\s*process\.execPath\s*,\s*\[\s*RUN_CHECK\b/g;
-// A file that runs RUN_CHECK names it once, as run-check.mjs beside itself,
+// A file that runs RUN_CHECK names it once, as run-check beside itself with its own extension,
 // and gives the name no other value.
 const RUN_CHECK_IN = /\[\s*RUN_CHECK\b/g;
 const RUN_CHECK_DEF =
-  /\bconst\s+RUN_CHECK\s*=\s*join\(\s*dirname\(\s*fileURLToPath\(\s*import\.meta\.url\s*\)\s*\)\s*,\s*["']run-check\.mjs["']\s*,?\s*\)/g;
+  /\bconst\s+RUN_CHECK\s*=\s*join\(\s*dirname\(\s*fileURLToPath\(\s*import\.meta\.url\s*\)\s*\)\s*,\s*["']run-check["']\s*\+\s*extname\(\s*fileURLToPath\(\s*import\.meta\.url\s*\)\s*\)\s*,?\s*\)/g;
 const RUN_CHECK_BOUND = /\bRUN_CHECK\s*=(?!=)|\bas\s+RUN_CHECK\b/g;
 // A signal goes only to the Check child's own process group, which its
 // spawn makes: `process.kill(-child.pid, ...)`, in check-child.ts alone.
@@ -147,7 +147,7 @@ export function readOnlyFindings(
       count(RUN_CHECK_IN, text) &&
       (count(RUN_CHECK_DEF, text) !== 1 || count(RUN_CHECK_BOUND, text) !== 1)
     )
-      say("runs a RUN_CHECK that is not run-check.mjs");
+      say("runs a RUN_CHECK that is not run-check");
     if (
       count(KILL, text) !== (path === KILLS_HERE ? count(GROUP_KILL, text) : 0)
     )
