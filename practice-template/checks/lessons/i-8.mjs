@@ -1,3 +1,4 @@
+// @ts-check
 // Install and manage plugins (Intermediate, lesson 8). The Learner installs a
 // language server, then trials its code intelligence plugin at local scope
 // (the code intelligence page's order: the binary, the plugin, then a check
@@ -6,6 +7,8 @@
 // .claude/settings.json, installs it at project scope, and saves
 // `claude plugin list --json` so the check can see both installs.
 import { realpathSync } from 'node:fs';
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Install and manage plugins';
 
@@ -14,6 +17,10 @@ const SAVE = '`claude plugin list --json > .practice/i-8-plugins.json`';
 
 // Whether an install's projectPath is this repository: true or false when the
 // path exists on this machine, null when it doesn't (a list saved elsewhere).
+/**
+ * @param {string} projectPath
+ * @param {string} dir
+ */
 function here(projectPath, dir) {
   try {
     return realpathSync(projectPath) === realpathSync(dir);
@@ -24,6 +31,7 @@ function here(projectPath, dir) {
 
 // The plugins the committed settings turn on, every marketplace's, or null
 // when there is no committed settings file that parses.
+/** @param {Repo} repo */
 function committedPlugins(repo) {
   try {
     const value = JSON.parse(repo.git('show', 'HEAD:.claude/settings.json'));
@@ -33,11 +41,16 @@ function committedPlugins(repo) {
   }
 }
 
+/** @param {Repo} repo */
 function projectPlugins(repo) {
-  return committedPlugins(repo)?.filter((id) => ANTHROPIC.includes(id.split('@')[1])) ?? null;
+  return committedPlugins(repo)?.filter((id) => ANTHROPIC.includes(/** @type {string} */ (id.split('@')[1]))) ?? null;
 }
 
 // The saved plugin list's installs, or a FAIL message.
+/**
+ * @param {Repo} repo
+ * @returns {any[] | string}
+ */
 function savedList(repo) {
   const text = repo.read('.practice/i-8-plugins.json');
   if (text === null) return `In the repository, run ${SAVE}.`;
@@ -49,6 +62,7 @@ function savedList(repo) {
   }
 }
 
+/** @type {Item[]} */
 export const items = [
   {
     text: 'the committed `.claude/settings.json` enables a plugin from one of Anthropic\'s marketplaces',

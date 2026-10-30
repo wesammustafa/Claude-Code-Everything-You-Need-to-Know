@@ -3,9 +3,9 @@
 // engine, the real one wrapped so a test can add effects to an input of a
 // real type and see each input it reduced, in order, with how deeply
 // reduces nested.
-import { initialState, reduce } from "../src/engine.mjs";
-import { createHost } from "../src/host.mjs";
-import { fakeAdapters, fakeClock } from "../src/fake.mjs";
+import { initialState, reduce } from "../src/engine.ts";
+import { createHost } from "../src/host.ts";
+import { fakeAdapters, fakeClock } from "../src/fake.ts";
 import { b1Only, FACTS } from "../../engine/test/drive.mjs";
 
 export const ROOT = FACTS.root;

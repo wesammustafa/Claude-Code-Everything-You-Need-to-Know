@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 // Checks your work on a lesson's exercise.
 //
 //   npm run check -- <lesson-id> [--dir <path>]   one lesson, here or in another repo
@@ -13,7 +14,12 @@ import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { lessons } from './lessons/index.mjs';
 import { openRepo } from './repo.mjs';
+/** @import { Lesson } from './lessons/index.mjs' */
 
+/**
+ * @param {string} message
+ * @returns {never}
+ */
 function usage(message) {
   console.error(`${message}\nusage: npm run check -- <${Object.keys(lessons).join('|')}|all> [--dir <path>]`);
   process.exit(2);
@@ -26,7 +32,7 @@ try {
     options: { dir: { type: 'string', default: '.' }, summary: { type: 'boolean' }, assert: { type: 'string' } },
   });
 } catch (error) {
-  usage(error.message);
+  usage(/** @type {Error} */ (error).message);
 }
 const { values, positionals } = parsed;
 const [id, extra] = positionals;
@@ -40,7 +46,8 @@ const dir = resolve(values.dir);
 if (!existsSync(dir)) usage(`no such folder: ${dir}`);
 
 const repo = openRepo(dir);
-const chosen = id === 'all' ? Object.entries(lessons) : [[id, lessons[id]]];
+// usage() has refused an unknown id.
+const chosen = /** @type {[string, Lesson][]} */ (id === 'all' ? Object.entries(lessons) : [[id, lessons[id]]]);
 const results = chosen.map(([lessonId, lesson]) => ({
   id: lessonId,
   title: lesson.title,
@@ -49,7 +56,7 @@ const results = chosen.map(([lessonId, lesson]) => ({
     try {
       outcome = item.check(repo);
     } catch (error) {
-      outcome = `The check could not run: ${error.message}`;
+      outcome = `The check could not run: ${/** @type {Error} */ (error).message}`;
     }
     return { text: item.text, local: Boolean(item.local), pass: outcome === true, hint: outcome === true ? '' : outcome };
   }),

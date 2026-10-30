@@ -12,6 +12,18 @@ export {
   POLL_MS,
   SAVE_QUIET_MS,
   TICK_MS,
-} from "./host.mjs";
-export { folderPath } from "./folders.mjs";
-export { perf, realAdapters, realClock } from "./real.mjs";
+} from "./host.ts";
+export { folderPath } from "./folders.ts";
+export { perf, realAdapters, realClock } from "./real.ts";
+export type {
+  Adapters,
+  Clock,
+  Dispatched,
+  FolderLook,
+  Heard,
+  Host,
+  HostHeard,
+  HostOptions,
+  RealOptions,
+  StoreLoad,
+} from "./types.ts";

@@ -113,7 +113,7 @@ export {
   WORK_LEVELS,
 } from "../src/course.ts";
 // The store's format lives with the host since ticket 209.
-export { FORMAT, sanitize, snapshot } from "../../host/src/store.mjs";
+export { FORMAT, sanitize, snapshot } from "../../host/src/store.ts";
 export { judge, stampFor } from "../src/holds.ts";
 export { statusStamp } from "../src/status.ts";
 export { mix, ruleTiers, TIERS } from "../src/tiers.ts";

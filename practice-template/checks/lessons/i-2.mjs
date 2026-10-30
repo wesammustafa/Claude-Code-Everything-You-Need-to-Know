@@ -1,3 +1,4 @@
+// @ts-check
 // Organize project memory and see what loaded (Intermediate, lesson 2). The
 // Learner imports a file into CLAUDE.md with @path, scopes a rule in
 // .claude/rules/ to the files it applies to, and saves the log an
@@ -7,11 +8,17 @@ import { existsSync } from 'node:fs';
 import { isAbsolute, posix } from 'node:path';
 import { homedir } from 'node:os';
 import { frontmatter } from '../frontmatter.mjs';
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Organize project memory and see what loaded';
 
 const START = 'Start the session with `claude --settings .practice/i-2-hook.json`, the hook file from the lesson';
 
+/**
+ * @param {Repo} repo
+ * @param {string} path
+ */
 function committed(repo, path) {
   try {
     return repo.git('show', `HEAD:${path}`);
@@ -20,6 +27,7 @@ function committed(repo, path) {
   }
 }
 
+/** @param {Repo} repo */
 function committedMemory(repo) {
   for (const path of ['CLAUDE.md', '.claude/CLAUDE.md']) {
     const text = committed(repo, path);
@@ -30,6 +38,7 @@ function committedMemory(repo) {
 
 // @path imports outside fenced code and code spans. An @ after a non-space,
 // as in an email address, doesn't start one.
+/** @param {string} text */
 export function imports(text) {
   let fence = false;
   const found = [];
@@ -39,13 +48,18 @@ export function imports(text) {
       continue;
     }
     if (fence) continue;
-    for (const m of line.replace(/`[^`]*`/g, '').matchAll(/(?:^|\s)@((?:\\ |\S)+)/g)) found.push(m[1].replace(/\\ /g, ' '));
+    for (const m of line.replace(/`[^`]*`/g, '').matchAll(/(?:^|\s)@((?:\\ |\S)+)/g)) found.push(/** @type {string} */ (m[1]).replace(/\\ /g, ' '));
   }
   return found;
 }
 
 // Whether an import's file exists: a relative path resolves from the file
 // that holds the import.
+/**
+ * @param {Repo} repo
+ * @param {string} memoryPath
+ * @param {string} target
+ */
 function importExists(repo, memoryPath, target) {
   if (target.startsWith('~/')) return existsSync(posix.join(homedir(), target.slice(2)));
   if (isAbsolute(target)) return existsSync(target);
@@ -54,8 +68,13 @@ function importExists(repo, memoryPath, target) {
 
 // A rule's `paths` value: a YAML list, or a string of comma-separated
 // patterns (commas inside {braces} belong to the pattern).
+/**
+ * @param {unknown} value
+ * @returns {string[]}
+ */
 function patterns(value) {
   if (Array.isArray(value)) return value.filter(Boolean);
+  /** @type {string[]} */
   const out = [];
   let depth = 0;
   let current = '';
@@ -71,14 +90,19 @@ function patterns(value) {
   return out.filter(Boolean).map((p) => p.replace(/^(['"])(.*)\1$/, '$2'));
 }
 
+/**
+ * @param {string} pattern
+ * @returns {string[]}
+ */
 function expandBraces(pattern) {
   const m = pattern.match(/^(.*?)\{([^{}]*)\}(.*)$/);
   if (!m) return [pattern];
-  return m[2].split(',').flatMap((alt) => expandBraces(`${m[1]}${alt}${m[3]}`));
+  return /** @type {string} */ (m[2]).split(',').flatMap((alt) => expandBraces(`${m[1]}${alt}${m[3]}`));
 }
 
 // Glob to RegExp, relative to the project root: ** spans folders, * and ?
 // stay within one.
+/** @param {string} pattern */
 export function globMatcher(pattern) {
   const regexes = expandBraces(pattern.replace(/^\.\//, '')).map((p) => {
     let re = '';
@@ -87,14 +111,16 @@ export function globMatcher(pattern) {
       else if (p.startsWith('**', i)) { re += '.*'; i += 1; }
       else if (p[i] === '*') re += '[^/]*';
       else if (p[i] === '?') re += '[^/]';
-      else re += p[i].replace(/[.+^${}()|[\]\\]/g, '\\$&');
+      else re += /** @type {string} */ (p[i]).replace(/[.+^${}()|[\]\\]/g, '\\$&');
     }
     return new RegExp(`^${re}$`);
   });
-  return (path) => regexes.some((r) => r.test(path));
+  return (/** @type {string} */ path) => regexes.some((r) => r.test(path));
 }
 
+/** @param {Repo} repo */
 function scopedRules(repo) {
+  /** @type {string[]} */
   let names;
   try {
     names = repo.git('ls-tree', '-r', '--name-only', 'HEAD', '--', '.claude/rules').split('\n').filter((f) => f.endsWith('.md'));
@@ -104,6 +130,7 @@ function scopedRules(repo) {
   return names.map((path) => ({ path, globs: patterns(frontmatter(committed(repo, path) ?? '')?.fields.paths) })).filter((r) => r.globs.length);
 }
 
+/** @type {Item[]} */
 export const items = [
   {
     text: 'a committed CLAUDE.md imports a file with `@path`, and the file exists',
@@ -136,8 +163,8 @@ export const items = [
       if (log === null) return `There is no load log. ${START}, then ask Claude to read a file that your scoped rule covers.`;
       const lines = log.split(/\r?\n/).map((l) => l.split('\t')).filter((p) => p.length >= 2);
       const rules = scopedRules(repo).map((r) => r.path);
-      if (!lines.some(([reason]) => reason === 'include')) return `The log has no \`include\` line, so no imported file loaded. Check the import's path, then ${START[0].toLowerCase()}${START.slice(1)}.`;
-      const loaded = lines.filter(([reason, path]) => reason === 'path_glob_match' && rules.some((r) => path.replace(/\\/g, '/').endsWith(`/${r}`)));
+      if (!lines.some(([reason]) => reason === 'include')) return `The log has no \`include\` line, so no imported file loaded. Check the import's path, then ${/** @type {string} */ (START[0]).toLowerCase()}${START.slice(1)}.`;
+      const loaded = lines.filter(([reason, path]) => reason === 'path_glob_match' && rules.some((r) => /** @type {string} */ (path).replace(/\\/g, '/').endsWith(`/${r}`)));
       if (loaded.length) return true;
       return 'The log shows no scoped rule loading. In a session started with the hook, ask Claude to read a file the rule covers, and check that its pattern, read from the project root, matches that file.';
     },

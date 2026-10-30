@@ -4,8 +4,8 @@
 // failed-save notice. All of it is in memory: a new host starts over.
 import { test } from "vitest";
 import assert from "node:assert/strict";
-import { initialState, reduce } from "../src/engine.mjs";
-import { EVENT_KEEP_MS, EVENT_LIMIT, POLL_CHECK_MS } from "../src/host.mjs";
+import { initialState, reduce } from "../src/engine.ts";
+import { EVENT_KEEP_MS, EVENT_LIMIT, POLL_CHECK_MS } from "../src/host.ts";
 import {
   course,
   DEMO_I1,

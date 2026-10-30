@@ -5,10 +5,14 @@
 import { accessSync, constants, statSync } from "node:fs";
 import { join } from "node:path";
 
-export function onPath(name, env = process.env, platform = process.platform) {
+export function onPath(
+  name: string,
+  env: Record<string, string | undefined> = process.env,
+  platform: string = process.platform,
+): boolean {
   const win = platform === "win32";
   // Windows names it Path as often as PATH.
-  const get = (key) =>
+  const get = (key: string) =>
     env[Object.keys(env).find((k) => k.toUpperCase() === key) ?? key];
   const dirs = (get("PATH") ?? "")
     .split(win ? ";" : ":")

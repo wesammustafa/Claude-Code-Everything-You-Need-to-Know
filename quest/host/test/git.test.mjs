@@ -14,8 +14,8 @@ import {
   repo,
   write,
 } from "../../../practice-template/checks/test/helpers.mjs";
-import { probeFolder } from "../src/folders.mjs";
-import { gitFirstName, gitReady, gitStatus, NOT_A_REPO } from "../src/git.mjs";
+import { probeFolder } from "../src/folders.ts";
+import { gitFirstName, gitReady, gitStatus, NOT_A_REPO } from "../src/git.ts";
 
 // Each makes git repositories: more time than Vitest's default.
 const test = (name, fn) => vitest(name, fn, 60_000);

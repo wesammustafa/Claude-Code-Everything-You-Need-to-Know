@@ -26,8 +26,8 @@ const at = (path) => join(ROOT, path);
 const CHECKS = at("practice-template/checks") + "/";
 const ENGINE = at("quest/engine/src/engine.ts");
 const HOST_ROOTS = [
-  at("quest/host/src/index.mjs"),
-  at("quest/host/src/fake.mjs"),
+  at("quest/host/src/index.ts"),
+  at("quest/host/src/fake.ts"),
 ];
 
 // The engine's sources are TypeScript since ticket 214.
@@ -59,12 +59,12 @@ test("the engine and the host make no network call, start only the Check child a
   const paths = sources.map((s) => s.path);
   // The scope can't shrink unseen: the files that run each kind of effect.
   for (const must of [
-    "quest/host/src/host.mjs",
-    "quest/host/src/check-child.mjs",
-    "quest/host/src/git.mjs",
-    "quest/host/src/store.mjs",
-    "quest/host/src/run-check.mjs",
-    "quest/host/src/probes.mjs",
+    "quest/host/src/host.ts",
+    "quest/host/src/check-child.ts",
+    "quest/host/src/git.ts",
+    "quest/host/src/store.ts",
+    "quest/host/src/run-check.ts",
+    "quest/host/src/probes.ts",
     "quest/engine/src/probes.ts",
     "quest/engine/src/engine.ts",
     "quest/engine/src/course.ts",
@@ -72,6 +72,12 @@ test("the engine and the host make no network call, start only the Check child a
     "quest/engine/src/status.ts",
   ])
     assert.ok(paths.includes(must), `the guard reads ${must}`);
+  // Every host source, whatever its extension, is read.
+  for (const file of readdirSync(at("quest/host/src")))
+    assert.ok(
+      paths.includes(`quest/host/src/${file}`),
+      `the guard reads quest/host/src/${file}`,
+    );
   // Every engine source, whatever its extension, is read.
   for (const file of readdirSync(at("quest/engine/src")))
     assert.ok(
@@ -98,16 +104,16 @@ test("a planted network call, a planted process and a planted write each fail th
     'import { writeFile } from "node:fs/promises";\nawait writeFile("a", "b");\n';
   assert.notDeepEqual(planted(write), []);
   assert.deepEqual(
-    planted(write, "quest/host/src/store.mjs"),
+    planted(write, "quest/host/src/store.ts"),
     [],
     "the store may write",
   );
-  const host = readFileSync(at("quest/host/src/host.mjs"), "utf8");
+  const host = readFileSync(at("quest/host/src/host.ts"), "utf8");
   const found = readOnlyFindings([
-    { path: "quest/host/src/host.mjs", text: `${host}\nfetch(url);\n` },
+    { path: "quest/host/src/host.ts", text: `${host}\nfetch(url);\n` },
   ]);
   assert.ok(
-    found.some((f) => f.startsWith("quest/host/src/host.mjs:")),
+    found.some((f) => f.startsWith("quest/host/src/host.ts:")),
     found.join("\n"),
   );
 });
@@ -121,10 +127,10 @@ const PLANTS = {
     'import { writeFile } from "node:fs/promises";\nawait writeFile("a", "b");\n',
 };
 const PLANTED_IN = [
-  "quest/host/src/host.mjs",
+  "quest/host/src/host.ts",
   "quest/engine/src/engine.ts",
-  "quest/host/src/check-child.mjs",
-  "quest/host/src/probes.mjs",
+  "quest/host/src/check-child.ts",
+  "quest/host/src/probes.ts",
   "quest/engine/src/probes.ts",
 ];
 
@@ -143,18 +149,18 @@ test("a network call, a process and a write planted in each real file that runs 
   }
   // And through what the guard reads: one plant in one real entry.
   const sources = scope();
-  const i = sources.findIndex((s) => s.path === "quest/host/src/probes.mjs");
+  const i = sources.findIndex((s) => s.path === "quest/host/src/probes.ts");
   sources[i] = { ...sources[i], text: `${sources[i].text}\n${PLANTS.network}` };
   assert.ok(
     readOnlyFindings(sources).some((f) =>
-      f.startsWith("quest/host/src/probes.mjs:"),
+      f.startsWith("quest/host/src/probes.ts:"),
     ),
   );
 });
 
-// The Check child's entry, as check-child.mjs names it.
+// The Check child's entry, as check-child.ts names it.
 const RUN_CHECK =
-  'const RUN_CHECK = join(\n  dirname(fileURLToPath(import.meta.url)),\n  "run-check.mjs",\n);\n';
+  'const RUN_CHECK = join(\n  dirname(fileURLToPath(import.meta.url)),\n  "run-check" + extname(fileURLToPath(import.meta.url)),\n);\n';
 
 test("the guard closes the ways around it, and lets a wrapped git call, a RegExp's exec, the Check child's spawn and its group kill pass", () => {
   const flagged = [
@@ -170,6 +176,8 @@ test("the guard closes the ways around it, and lets a wrapped git call, a RegExp
     'import { execFile } from "node:child_process";\nconst run = execFile;\n',
     'const h = await import("node:http2");\n',
     'import { request } from "node:https";\n',
+    'import { type ChildProcess, spawn } from "node:child_process";\nspawn("curl", []);\n',
+    'import type { Stats } from "node:fs";\nimport { writeFileSync } from "node:fs";\n',
     'import "node:net";\n',
     'import { writeFileSync as w } from "node:fs";\nw("a", "b");\n',
     'import * as fs from "node:fs";\n',
@@ -212,13 +220,16 @@ test("the guard closes the ways around it, and lets a wrapped git call, a RegExp
     'import {\n  existsSync,\n  readFileSync,\n} from "node:fs";\n',
     'import { execFile } from "node:child_process";\nexecFile("git", ["config", "user.name"], opts);\n',
     '/** @param {import("./types.mjs").Host} host */\nconst page = await import("./page.mjs");\n',
+    'import type { ChildProcess } from "node:child_process";\nimport type { Stats } from "node:fs";\n',
+    'import { execFile, type ChildProcess } from "node:child_process";\nexecFile("git", ["status"]);\n',
+    'import { readFileSync, type Stats } from "node:fs";\n',
     `import { execFile, spawn } from "node:child_process";\n${RUN_CHECK}spawn(process.execPath, [RUN_CHECK, a], { detached: true });\n`,
   ];
   for (const text of passes)
     assert.deepEqual(planted(text), [], `flagged:\n${text}`);
   // The group kill passes in the Check child's runner alone.
   const kill = 'process.kill(-child.pid, "SIGKILL");\n';
-  assert.deepEqual(planted(kill, "quest/host/src/check-child.mjs"), []);
+  assert.deepEqual(planted(kill, "quest/host/src/check-child.ts"), []);
   assert.notDeepEqual(planted(kill), []);
 });
 
@@ -238,7 +249,7 @@ test("the layering walk sees a module that reaches the host", () => {
   try {
     const file = join(dir, "reaches.mjs");
     // The walk follows relative specifiers alone.
-    const to = relative(dir, at("quest/host/src/children.mjs"));
+    const to = relative(dir, at("quest/host/src/children.ts"));
     writeFileSync(
       file,
       `import { createChildren } from ${JSON.stringify(to.split("\\").join("/"))};\n`,

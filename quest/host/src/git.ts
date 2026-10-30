@@ -1,17 +1,20 @@
 // Read-only git: status, where HEAD is, whether a folder is a repository,
 // and a name to greet. Every git child is tracked in a host's registry
-// (children.mjs), so closing the host stops it.
+// (children.ts), so closing the host stops it.
 import { execFile } from "node:child_process";
 import { statusEntries } from "../../../practice-template/checks/paths.mjs";
-import { childEnv } from "./check-child.mjs";
-import { shared } from "./children.mjs";
-import { isStaged, listing } from "./engine.mjs";
+import { childEnv } from "./check-child.ts";
+import { shared, type Children } from "./children.ts";
+import { isStaged, listing } from "./engine.ts";
+import type { GitStatus } from "./types.ts";
+
+type StatusResult = GitStatus | { error: string };
 
 // How long one git command may take.
 export const GIT_LIMIT = 30_000;
 export const NOT_A_REPO = "this folder is not a git repository";
 
-const gitOptions = (dir) => ({
+const gitOptions = (dir: string) => ({
   cwd: dir,
   env: childEnv(),
   windowsHide: true,
@@ -24,13 +27,21 @@ const gitOptions = (dir) => ({
 // named from there, where `dir` is a folder inside a repository. With
 // `head`, also the commit HEAD is at (ticket 105), null before the first.
 export function gitStatus(
-  dir,
-  { files = false, head = false, children = shared } = {},
-) {
+  dir: string,
+  {
+    files = false,
+    head = false,
+    children = shared,
+  }: {
+    files?: boolean | undefined;
+    head?: boolean | undefined;
+    children?: Children;
+  } = {},
+): Promise<StatusResult> {
   const opts = gitOptions(dir);
   const { track } = children;
   if (head) {
-    return new Promise((resolve) => {
+    return new Promise<StatusResult>((resolve) => {
       track(
         execFile(
           "git",
@@ -38,20 +49,29 @@ export function gitStatus(
           opts,
           (error, stdout) => {
             const at = error ? null : stdout.trim() || null;
-            gitStatus(dir, { files, children }).then((r) =>
-              resolve(r.error ? r : { ...r, head: at }),
-            );
+            void gitStatus(dir, { files, children }).then((r) => {
+              resolve(
+                (r as { error?: string }).error
+                  ? r
+                  : { ...(r as GitStatus), head: at },
+              );
+            });
           },
         ),
       );
     });
   }
-  return new Promise((resolve) => {
-    const failed = (error) => resolve({ error: error.message.split("\n")[0] });
+  return new Promise<StatusResult>((resolve) => {
+    const failed = (error: Error) => {
+      resolve({ error: error.message.split("\n")[0] ?? "" });
+    };
     if (!files) {
       track(
         execFile("git", ["status", "--porcelain"], opts, (error, stdout) => {
-          if (error) return failed(error);
+          if (error) {
+            failed(error);
+            return;
+          }
           const entries = statusEntries(stdout);
           resolve({
             paths: entries.map((e) => e.path),
@@ -63,7 +83,10 @@ export function gitStatus(
     }
     track(
       execFile("git", ["rev-parse", "--show-prefix"], opts, (error, prefix) => {
-        if (error) return failed(error);
+        if (error) {
+          failed(error);
+          return;
+        }
         track(
           execFile(
             "git",
@@ -81,7 +104,10 @@ export function gitStatus(
 }
 
 // Whether `dir` is in a git working tree: null where it is, else why not.
-export function gitReady(dir, { children = shared } = {}) {
+export function gitReady(
+  dir: string,
+  { children = shared }: { children?: Children } = {},
+): Promise<string | null> {
   return new Promise((resolve) => {
     children.track(
       execFile(
@@ -105,7 +131,10 @@ export function gitReady(dir, { children = shared } = {}) {
 }
 
 // The first word of git's user.name, to say hello. Read, never stored.
-export function gitFirstName(dir, { children = shared } = {}) {
+export function gitFirstName(
+  dir: string,
+  { children = shared }: { children?: Children } = {},
+): Promise<string> {
   return new Promise((resolve) => {
     children.track(
       execFile(

@@ -5,31 +5,36 @@
 // Before each item it writes {"running": n} to stderr, n counting from 1
 // through the items it runs, so the screen can say how far it has got.
 //
-//   node quest/host/src/run-check.mjs <lesson> <dir> [index ...]
+//   node quest/host/src/run-check.ts <lesson> <dir> [index ...]
 //
-// With --probe, it runs one git probe (probes.mjs, ticket 105) in
+// The bundle builds it to learn/run-check.mjs.
+//
+// With --probe, it runs one git probe (probes.ts, ticket 105) in
 // the folder instead, and prints {"probe", "pass", "hint", "evidence",
 // "state"}:
 //
-//   node quest/host/src/run-check.mjs --probe <name> <dir> [arg ...]
+//   node quest/host/src/run-check.ts --probe <name> <dir> [arg ...]
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { lessons } from "../../../practice-template/checks/lessons/index.mjs";
-import { probeRepo } from "./probes.mjs";
+import { probeRepo, type Probed } from "./probes.ts";
 import { openRepo } from "../../../practice-template/checks/repo.mjs";
 
-const fail = (error) => {
+const fail = (error: string): never => {
   console.log(JSON.stringify({ error }));
   process.exit(2);
 };
 if (process.argv[2] === "--probe") {
   const [, name, dir, ...args] = process.argv.slice(2);
-  if (!dir || !existsSync(resolve(dir))) fail(`no such folder: ${dir}`);
-  let out;
+  if (!dir || !existsSync(resolve(dir)))
+    fail(`no such folder: ${dir ?? "undefined"}`);
+  let out: Probed;
   try {
-    out = probeRepo(openRepo(resolve(dir)), name, args);
+    out = probeRepo(openRepo(resolve(dir ?? "")), name ?? "", args);
   } catch (error) {
-    fail(`The probe could not run: ${error.message.split("\n")[0]}`);
+    out = fail(
+      `The probe could not run: ${(error as Error).message.split("\n")[0] ?? ""}`,
+    );
   }
   console.log(
     JSON.stringify({
@@ -40,21 +45,29 @@ if (process.argv[2] === "--probe") {
       state: out.state,
     }),
   );
-} else checkItems(...process.argv.slice(2));
+} else {
+  const [lesson = "", dir, ...indexes] = process.argv.slice(2);
+  checkItems(lesson, dir, indexes);
+}
 
-function checkItems(lesson, dir, ...indexes) {
-  if (!lessons[lesson]) fail(`no check for "${lesson}"`);
-  if (!dir || !existsSync(resolve(dir))) fail(`no such folder: ${dir}`);
-  const { items } = lessons[lesson];
+function checkItems(
+  lesson: string,
+  dir: string | undefined,
+  indexes: string[],
+) {
+  const found = lessons[lesson] ?? fail(`no check for "${lesson}"`);
+  if (!dir || !existsSync(resolve(dir)))
+    return fail(`no such folder: ${dir ?? "undefined"}`);
+  const { items } = found;
   const wanted = indexes.length ? indexes.map(Number) : items.map((_, i) => i);
   if (wanted.some((i) => !Number.isInteger(i) || !items[i]))
     fail(`no item ${indexes.join(" ")} in ${lesson}`);
 
   const repo = openRepo(resolve(dir));
   const results = wanted.map((index, k) => {
-    const item = items[index];
+    const item = items[index] as (typeof items)[number];
     process.stderr.write(`${JSON.stringify({ running: k + 1 })}\n`);
-    let outcome;
+    let outcome: true | string;
     try {
       outcome = item.check(repo);
     } catch {

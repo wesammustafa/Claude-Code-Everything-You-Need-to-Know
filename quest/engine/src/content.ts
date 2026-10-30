@@ -1455,7 +1455,7 @@ function parseVerify(
     };
   }
   // `probe <name> [args]` (ticket 105): a git probe, which the host's
-  // quest/host/src/probes.mjs runs in the check child. branch-ahead is
+  // quest/host/src/probes.ts runs in the check child. branch-ahead is
   // always fresh: it passes once the branch moved since its step opened (or
   // the step `since` names).
   const probe = base.match(/^probe (\S+)((?: \S+)*)$/);
@@ -1681,6 +1681,25 @@ export function compileCourse(
   );
 }
 
+// The generated index's head: its types, for the Checks' typecheck.
+const CHECK_INDEX_HEAD = `// @ts-check
+// Every lesson and capstone with a check, in course order.
+
+/**
+ * What a check returns: true when the item passes, or the hint to show.
+ * @typedef {true | string} Result
+ */
+
+/**
+ * One item of a lesson's check: \`local\` when it reads the Learner's
+ * machine (the installed CLI or files under .practice/).
+ * @typedef {{ text: string, local?: boolean, check: (repo: Repo) => Result }} Item
+ */
+
+/** @typedef {{ title: string, items: readonly Item[] }} Lesson */
+
+`;
+
 export function generateCheckIndex(value: unknown) {
   const manifest = parseManifest(value);
   const path = coursePath(manifest);
@@ -1692,5 +1711,10 @@ export function generateCheckIndex(value: unknown) {
   const lessons = path
     .map((entry) => `'${entry.id}': ${alias(entry.id)}`)
     .join(", ");
-  return `// Every lesson and capstone with a check, in course order.\n${imports}\n\nexport const lessons = { ${lessons} };\n`;
+  return `${CHECK_INDEX_HEAD}${imports}
+/** @import { Repo } from '../repo.mjs' */
+
+/** @type {Record<string, Lesson | undefined>} */
+export const lessons = { ${lessons} };
+`;
 }

@@ -1,3 +1,5 @@
+// @ts-check
+/** @import { Repo } from './repo.mjs' */
 // Worktree helpers shared by Advanced lesson 1's check and the Advanced
 // capstone: the records of `git worktree list --porcelain`, from a listing
 // the Learner saved under .practice/ or from the repository now.
@@ -12,8 +14,18 @@ export const CLAUDE_WORKTREES = '/.claude/worktrees/';
 // when the record has none, as for a bare repository. Paths keep their spaces
 // and use forward slashes. Lines may end in CRLF; read the file with
 // `repo.read`, which also decodes UTF-16 from Windows PowerShell.
+/**
+ * @typedef {{ path: string, head: string | null, branch: string | null, bare: boolean, detached: boolean, locked: boolean | string, prunable: boolean | string }} Worktree
+ */
+
+/**
+ * @param {string | null | undefined} text
+ * @returns {Worktree[]}
+ */
 export function parseWorktrees(text) {
+  /** @type {Worktree[]} */
   const records = [];
+  /** @type {Worktree | null} */
   let current = null;
   for (const line of (text ?? '').split(/\r?\n/)) {
     if (!line.trim()) {
@@ -30,11 +42,11 @@ export function parseWorktrees(text) {
       current.head = /^[0-9a-f]{40}([0-9a-f]{24})?$/i.test(value) && !/^0+$/.test(value) ? value.toLowerCase() : null;
     } else if (key === 'branch') {
       current.branch = value.replace(/^refs\/heads\//, '');
-    } else if (['bare', 'detached'].includes(key)) {
-      current[key] = true;
-    } else if (['locked', 'prunable'].includes(key)) {
+    } else if (/** @type {(string | undefined)[]} */ (['bare', 'detached']).includes(key)) {
+      current[/** @type {'bare' | 'detached'} */ (key)] = true;
+    } else if (/** @type {(string | undefined)[]} */ (['locked', 'prunable']).includes(key)) {
       // Each may carry a reason after a space, kept as git printed it.
-      current[key] = value || true;
+      current[/** @type {'locked' | 'prunable'} */ (key)] = value || true;
     }
   }
   return records;
@@ -42,11 +54,13 @@ export function parseWorktrees(text) {
 
 // The linked worktrees Claude Code made: every record after the main one,
 // except a bare repository, whose path is under `.claude/worktrees/`.
+/** @param {Worktree[]} records */
 export function claudeWorktrees(records) {
   return records.slice(1).filter((r) => !r.bare && r.path.includes(CLAUDE_WORKTREES));
 }
 
 // The worktrees git lists for the repository now.
+/** @param {Pick<Repo, 'git'>} repo */
 export function liveWorktrees(repo) {
   return parseWorktrees(repo.git('worktree', 'list', '--porcelain'));
 }

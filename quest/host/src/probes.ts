@@ -1,7 +1,7 @@
 // Git probes (ticket 105; moved from the Checks in ticket 211): what an
 // Advanced step leaves in git where no check item applies, such as
 // worktrees, branches, merges and pushes. The lesson host runs them in its
-// Check child (run-check.mjs --probe), in the work folder. The table of
+// Check child (run-check.ts --probe), in the work folder. The table of
 // probes and their arguments is the engine's (quest/engine/src/probes.ts),
 // which parses the beats that name them; this file holds how each runs.
 //
@@ -17,38 +17,51 @@ import {
   CLAUDE_WORKTREES,
 } from "../../../practice-template/checks/worktrees.mjs";
 import { PROBES, probeError } from "../../engine/src/probes.ts";
+import type { Repo } from "../../../practice-template/checks/repo.mjs";
+
+// What a probe answers.
+export interface Probed {
+  pass: boolean;
+  hint?: string;
+  evidence?: string;
+  state: string;
+}
 
 // The host's registry: the engine's table, the same object.
 export { PROBES, probeError };
 
-const digest = (text) =>
+const digest = (text: string) =>
   createHash("sha1").update(text).digest("hex").slice(0, 16);
 // git's answer, or null where it exits non-zero (no such ref, no upstream).
-const ask = (repo, ...args) => {
+const ask = (repo: Repo, ...args: string[]): string | null => {
   try {
     return repo.gitLocal(...args);
   } catch {
     return null;
   }
 };
-const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
-const some = (names) =>
+const plural = (n: number, word: string) =>
+  `${String(n)} ${word}${n === 1 ? "" : "s"}`;
+const some = (names: string[]) =>
   names.slice(0, 3).join(", ") +
-  (names.length > 3 ? ` and ${names.length - 3} more` : "");
+  (names.length > 3 ? ` and ${String(names.length - 3)} more` : "");
 // The worktrees git lists now that are still there: a prunable one's folder is gone.
-const live = (repo) =>
-  liveWorktrees({ git: (...args) => repo.gitLocal(...args) }).filter(
+const live = (repo: Repo) =>
+  liveWorktrees({ git: (...args: string[]) => repo.gitLocal(...args) }).filter(
     (r) => !r.prunable,
   );
-const nameOf = (path) => path.replace(/\/+$/, "").split("/").pop();
-const branchSha = (repo, branch) =>
+const nameOf = (path: string) =>
+  path.replace(/\/+$/, "").split("/").pop() ?? "";
+const branchSha = (repo: Repo, branch: string) =>
   ask(repo, "rev-parse", "--verify", "-q", `refs/heads/${branch}^{commit}`);
 
 // `worktrees <n>`: at least n live worktrees under .claude/worktrees/.
-function worktrees(repo, [n]) {
+function worktrees(repo: Repo, [n = ""]: string[]): Probed {
   const found = claudeWorktrees(live(repo));
   const names = found.map((r) => nameOf(r.path));
-  const state = digest(found.map((r) => `${r.path} ${r.head}`).join("\n"));
+  const state = digest(
+    found.map((r) => `${r.path} ${String(r.head)}`).join("\n"),
+  );
   if (found.length >= Number(n))
     return {
       pass: true,
@@ -63,7 +76,7 @@ function worktrees(repo, [n]) {
 
 // `branch-ahead <branch>`: the branch is there; always fresh, so it passes
 // once the branch moved since the step opened.
-function branchAhead(repo, [branch]) {
+function branchAhead(repo: Repo, [branch = ""]: string[]): Probed {
   const sha = branchSha(repo, branch);
   if (!sha) return { pass: false, hint: `No branch ${branch} yet.`, state: "" };
   const subject = ask(repo, "log", "-1", "--format=%s", sha) ?? "";
@@ -75,7 +88,7 @@ function branchAhead(repo, [branch]) {
 }
 
 // `merged <branch>...`: each branch is an ancestor of HEAD.
-function merged(repo, branches) {
+function merged(repo: Repo, branches: string[]): Probed {
   const head = ask(repo, "rev-parse", "--verify", "-q", "HEAD^{commit}") ?? "";
   const missing = branches.filter((b) => !branchSha(repo, b));
   if (missing.length)
@@ -103,7 +116,7 @@ function merged(repo, branches) {
 }
 
 // `gone <path>`: no live worktree at that path, named from the work folder.
-function gone(repo, [path]) {
+function gone(repo: Repo, [path = ""]: string[]): Probed {
   const want = `/${path.replace(/\/+$/, "")}`;
   const at = live(repo)
     .slice(1)
@@ -119,7 +132,7 @@ function gone(repo, [path]) {
 }
 
 // `pushed`: HEAD has an upstream and nothing to push.
-function pushed(repo) {
+function pushed(repo: Repo): Probed {
   const branch = ask(repo, "symbolic-ref", "--short", "-q", "HEAD");
   const head = ask(repo, "rev-parse", "--verify", "-q", "HEAD^{commit}") ?? "";
   if (!branch)
@@ -159,7 +172,7 @@ function pushed(repo) {
 // `removed <path>...`: none of the paths is in HEAD, and HEAD is pushed
 // (r27 pattern U), so a beat that deletes files passes on their removal's
 // push, not on any push. Its state is the push's.
-function removed(repo, paths) {
+function removed(repo: Repo, paths: string[]): Probed {
   const head = ask(repo, "rev-parse", "--verify", "-q", "HEAD^{commit}") ?? "";
   const left = paths.filter(
     (p) => ask(repo, "cat-file", "-e", `HEAD:${p}`) !== null,
@@ -181,13 +194,15 @@ function removed(repo, paths) {
 }
 
 // `todos <n>`: TODO or FIXME in tracked files of at least n top-level folders.
-function todos(repo, [n]) {
+function todos(repo: Repo, [n = ""]: string[]): Probed {
   const files = (ask(repo, "grep", "-l", "-I", "-E", "TODO|FIXME") ?? "")
     .split("\n")
     .filter(Boolean);
   const folders = [
     ...new Set(
-      files.filter((f) => f.includes("/")).map((f) => `${f.split("/")[0]}/`),
+      files
+        .filter((f) => f.includes("/"))
+        .map((f) => `${f.split("/")[0] ?? ""}/`),
     ),
   ].sort();
   const state = digest(folders.join("\n"));
@@ -204,7 +219,9 @@ function todos(repo, [n]) {
 }
 
 // How each probe in PROBES runs, by name.
-export const RUNS = {
+export const RUNS: Readonly<
+  Record<string, (repo: Repo, args: string[]) => Probed>
+> = {
   worktrees,
   "branch-ahead": branchAhead,
   merged,
@@ -215,8 +232,9 @@ export const RUNS = {
 };
 
 // Runs a probe on `repo` (checks/repo.mjs openRepo).
-export function probeRepo(repo, name, args) {
+export function probeRepo(repo: Repo, name: string, args: string[]): Probed {
   const error = probeError(name, args);
   if (error) throw new Error(error);
-  return RUNS[name](repo, args);
+  // As the JavaScript had it: an unknown name throws a TypeError.
+  return (RUNS[name] as (typeof RUNS)[string])(repo, args);
 }

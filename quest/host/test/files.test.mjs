@@ -4,12 +4,12 @@ import { test } from "vitest";
 import assert from "node:assert/strict";
 import { utimesSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { grewFrom } from "../src/engine.mjs";
+import { grewFrom } from "../src/engine.ts";
 import {
   repo,
   withRepo,
 } from "../../../practice-template/checks/test/helpers.mjs";
-import { bytesOf, matchOf, stampOf } from "../src/files.mjs";
+import { bytesOf, matchOf, stampOf } from "../src/files.ts";
 
 test("a stamp stampOf takes on disk reads back in grewFrom: the bytes a file held, when it only grew since", () => {
   withRepo(

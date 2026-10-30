@@ -1,3 +1,4 @@
+// @ts-check
 // Team marketplace helpers shared by Advanced lesson 6's check and the
 // Advanced capstone: the marketplaces a repository commits, read as Claude
 // Code reads `.claude-plugin/marketplace.json`; the plugins their entries list
@@ -7,6 +8,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join, posix } from 'node:path';
+/** @import { Repo } from './repo.mjs' */
 
 // The Advanced checks never scan worktrees, dependencies, or the template's
 // own checks and capstone briefs.
@@ -35,12 +37,18 @@ const RESERVED = new Set([
   'npm', 'pip', 'uv', 'cargo', 'github', 'gh',
 ]);
 
-const code = (text) => `\`${text}\``;
-const shell = (path) => (/\s/.test(path) ? `"${path}"` : path);
-const isObject = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-const own = (object, key) => isObject(object) && Object.prototype.hasOwnProperty.call(object, key);
+const code = (/** @type {unknown} */ text) => `\`${text}\``;
+const shell = (/** @type {string} */ path) => (/\s/.test(path) ? `"${path}"` : path);
+/**
+ * A JSON object, of any shape: the files read here are the Learner's.
+ * @typedef {Record<string, any>} Json
+ */
 
-const paths = (run) => {
+/** @type {(value: unknown) => value is Json} */
+const isObject = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+const own = (/** @type {unknown} */ object, /** @type {string} */ key) => isObject(object) && Object.prototype.hasOwnProperty.call(object, key);
+
+const paths = (/** @type {() => string} */ run) => {
   try {
     return run().split('\0').filter(Boolean);
   } catch {
@@ -52,6 +60,11 @@ const paths = (run) => {
 // `claude plugin validate` at v2.1.285 reads a marketplace.json or plugin.json
 // that starts with a UTF-8 byte-order mark, so `bom: true` skips one; it
 // rejects one in hooks/hooks.json, so elsewhere the error names the mark.
+/**
+ * @param {string} text
+ * @param {{ bom?: boolean }} [options]
+ * @returns {{ value: any, error?: undefined } | { error: string, value?: undefined }}
+ */
 export function parseJson(text, { bom = false } = {}) {
   let body = text;
   if (body.startsWith('\uFEFF')) {
@@ -61,11 +74,15 @@ export function parseJson(text, { bom = false } = {}) {
   try {
     return { value: JSON.parse(body) };
   } catch (error) {
-    return { error: error.message };
+    return { error: /** @type {Error} */ (error).message };
   }
 }
-const manifestJson = (text) => parseJson(text, { bom: true });
+const manifestJson = (/** @type {string} */ text) => parseJson(text, { bom: true });
 
+/**
+ * @param {Repo} repo
+ * @param {string} path
+ */
 export function headText(repo, path) {
   try {
     return repo.git('show', `HEAD:${path}`);
@@ -76,14 +93,23 @@ export function headText(repo, path) {
 
 // Every file committed at HEAD outside the folders the checks skip, read
 // once per repository.
+/** @type {WeakMap<Repo, string[]>} */
 const listed = new WeakMap();
+/**
+ * @param {Repo} repo
+ * @returns {string[]}
+ */
 export function committedFiles(repo) {
   if (!listed.has(repo)) listed.set(repo, paths(() => repo.git('ls-tree', '-r', '-z', '--name-only', 'HEAD')).filter((p) => !SKIPPED.test(p)));
-  return listed.get(repo);
+  return /** @type {string[]} */ (listed.get(repo));
 }
 
 // The ignore rule that hides `path`, as git reports it with the Learner's own
 // configuration, global excludes file included, or null.
+/**
+ * @param {Repo} repo
+ * @param {string} path
+ */
 function ignoreRule(repo, path) {
   try {
     const out = execFileSync('git', ['check-ignore', '--stdin', '-z', '-v', '--no-index'], { cwd: repo.dir, input: `${path}\0`, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
@@ -96,6 +122,10 @@ function ignoreRule(repo, path) {
 
 // How to commit `what`, a file or folder git doesn't track yet, naming the
 // rule that hides `path`, a file in it, if one does.
+/**
+ * @param {Repo} repo
+ * @param {string} path
+ */
 export function commitHint(repo, path, what = path) {
   const rule = ignoreRule(repo, path);
   if (!rule) return `${code(what)} isn't committed. Run \`git add ${shell(what)}\` and commit it.`;
@@ -104,6 +134,10 @@ export function commitHint(repo, path, what = path) {
 
 // The paths matching `pattern`, a glob under any folder, that are in the
 // working tree or the index but not committed at HEAD, ignored ones too.
+/**
+ * @param {Repo} repo
+ * @param {string} pattern
+ */
 export function uncommittedFiles(repo, pattern) {
   const spec = `:(glob)**/${pattern}`;
   const ignored = paths(() => repo.git('ls-files', '-z', '--others', '--ignored', '--exclude-standard', '--', spec));
@@ -113,6 +147,7 @@ export function uncommittedFiles(repo, pattern) {
 }
 
 // What is wrong with a marketplace name, as a clause, or null.
+/** @param {unknown} name */
 export function nameProblem(name) {
   if (typeof name !== 'string' || !name.trim()) return 'has no `name`';
   if (!NAME.test(name) || name.includes('..')) return `names the marketplace ${code(name)}, but a marketplace name takes only letters, digits, \`.\`, \`_\` and \`-\`, starts with a letter or digit, and has no \`..\``;
@@ -127,17 +162,25 @@ export function nameProblem(name) {
 
 // A folder path relative to the repository, without `./` or a trailing
 // slash; the root is ''.
-const folder = (path) => {
+const folder = (/** @type {string} */ path) => {
   const p = posix.normalize(path).replace(/\/+$/, '');
   return p === '.' ? '' : p.replace(/^\.\//, '');
 };
-const inside = (dir, rest) => (dir ? `${dir}/${rest}` : rest);
+const inside = (/** @type {string} */ dir, /** @type {string} */ rest) => (dir ? `${dir}/${rest}` : rest);
 // How a settings file writes a folder: `./team-marketplace`, or `.` for the root.
-export const relativePath = (dir) => (dir ? `./${dir}` : '.');
+export const relativePath = (/** @type {string} */ dir) => (dir ? `./${dir}` : '.');
 
 // The components a plugin at `dir` commits: skills in skills/<name>/SKILL.md,
 // subagents in agents/, in subfolders too, and hooks in hooks/hooks.json.
 // Each is `{ path, rel }`, `rel` being the path inside the plugin.
+/** @typedef {{ path: string, rel: string }} Component */
+/** @typedef {{ skills: Component[], agents: Component[], hooks: Component[] }} Components */
+
+/**
+ * @param {string[]} files
+ * @param {string} dir
+ * @returns {Components}
+ */
 export function pluginComponents(files, dir) {
   const prefix = dir ? `${dir}/` : '';
   const within = files.filter((p) => p.startsWith(prefix)).map((path) => ({ path, rel: path.slice(prefix.length) }));
@@ -148,12 +191,28 @@ export function pluginComponents(files, dir) {
   };
 }
 
-const componentCount = (c) => c.skills.length + c.agents.length + c.hooks.length;
+const componentCount = (/** @type {Components} */ c) => c.skills.length + c.agents.length + c.hooks.length;
 
 // How far one entry of a marketplace gets: 0, no usable name; 1, not listed
 // by a relative path; 2, no committed plugin there; 3, its plugin.json has no
 // name; 4, the names differ; 5, no components; 6, passes. Returns
 // `{ stage, hint }`, plus `name`, `dir` and `manifest` once a plugin is found.
+/**
+ * @typedef {{ stage: number, hint?: string, name?: string, dir?: string, manifest?: string, ok?: true, components?: Components }} Entry
+ */
+
+/**
+ * @typedef {{ path: string, root: string, entries: Entry[], plugins: Entry[], stage: number, hint?: string | undefined, name?: any, entry?: number }} Marketplace
+ */
+
+/**
+ * @param {Repo} repo
+ * @param {{ path: string, root: string }} marketplace
+ * @param {unknown} entry
+ * @param {number} index
+ * @param {Set<string>} committed
+ * @returns {Entry}
+ */
 function reviewEntry(repo, marketplace, entry, index, committed) {
   const label = isObject(entry) && typeof entry.name === 'string' && entry.name ? code(entry.name) : `number ${index + 1}`;
   const where = `The entry ${label} in ${code(marketplace.path)}`;
@@ -190,8 +249,15 @@ function reviewEntry(repo, marketplace, entry, index, committed) {
 // it can't use; 2, no owner name; 3, no plugin entries; 4, entries read, the
 // best one's stage in `entry`. `entries` holds every reviewed entry, and
 // `plugins` those that pass.
+/**
+ * @param {Repo} repo
+ * @param {string} path
+ * @param {Set<string>} committed
+ * @returns {Marketplace}
+ */
 function reviewMarketplace(repo, path, committed) {
   const root = folder(posix.dirname(posix.dirname(path)));
+  /** @type {{ path: string, root: string, entries: Entry[], plugins: Entry[] }} */
   const base = { path, root, entries: [], plugins: [] };
   const parsed = manifestJson(headText(repo, path) ?? '');
   if (parsed.error) return { ...base, stage: 0, hint: `The committed ${code(path)} isn't valid JSON: ${parsed.error}` };
@@ -202,37 +268,47 @@ function reviewMarketplace(repo, path, committed) {
   const marketplace = { ...base, name: value.name };
   if (!isObject(value.owner) || typeof value.owner.name !== 'string' || !value.owner.name.trim()) return { ...marketplace, stage: 2, hint: `${code(path)} needs an \`owner\` with a \`name\`, such as \`"owner": { "name": "Your team" }\`.` };
   if (!Array.isArray(value.plugins) || !value.plugins.length) return { ...marketplace, stage: 3, hint: `${code(path)} lists no plugins. Add an entry to \`plugins\`, such as \`{ "name": "team-kit", "source": "./plugins/team-kit" }\`.` };
-  const entries = value.plugins.map((entry, i) => reviewEntry(repo, marketplace, entry, i, committed));
+  const entries = value.plugins.map((/** @type {unknown} */ entry, /** @type {number} */ i) => reviewEntry(repo, marketplace, entry, i, committed));
   const best = entries.reduce((a, b) => (b.stage > a.stage ? b : a));
   return { ...marketplace, stage: 4, entry: best.stage, hint: best.hint, entries, plugins: entries.filter((e) => e.ok) };
 }
 
 // The committed plugin folders: each holds a committed
 // .claude-plugin/plugin.json. The root is ''.
-export const pluginFolders = (repo) => committedFiles(repo).filter((p) => PLUGIN.test(p)).map((p) => folder(posix.dirname(posix.dirname(p))));
+export const pluginFolders = (/** @type {Repo} */ repo) => committedFiles(repo).filter((p) => PLUGIN.test(p)).map((p) => folder(posix.dirname(posix.dirname(p))));
 
 // Every committed marketplace file, reviewed, read once per repository.
+/** @type {WeakMap<Repo, Marketplace[]>} */
 const reviewed = new WeakMap();
+/**
+ * @param {Repo} repo
+ * @returns {Marketplace[]}
+ */
 export function committedMarketplaces(repo) {
   if (!reviewed.has(repo)) {
     const files = committedFiles(repo);
     const committed = new Set(files);
     reviewed.set(repo, files.filter((p) => MARKETPLACE.test(p)).map((path) => reviewMarketplace(repo, path, committed)));
   }
-  return reviewed.get(repo);
+  return /** @type {Marketplace[]} */ (reviewed.get(repo));
 }
 
 // The marketplaces that pass: a usable name, an owner, and at least one entry
 // that lists a committed plugin by a relative path, with matching names.
-export const passingMarketplaces = (repo) => committedMarketplaces(repo).filter((m) => m.plugins.length);
+export const passingMarketplaces = (/** @type {Repo} */ repo) => committedMarketplaces(repo).filter((m) => m.plugins.length);
 
 // Why no committed marketplace passes. `start` says how to make one when
 // there is none, as the page describes it.
+/**
+ * @param {Repo} repo
+ * @returns {string}
+ */
 export function marketplaceHint(repo, start = 'Download the example marketplace into `team-marketplace/`, as the Worked example shows') {
   const all = committedMarketplaces(repo);
   if (all.length) {
-    const rank = (m) => m.stage * 10 + (m.entry ?? 0);
-    return all.reduce((a, b) => (rank(b) > rank(a) ? b : a)).hint;
+    const rank = (/** @type {Marketplace} */ m) => m.stage * 10 + (m.entry ?? 0);
+    // None passes, so the best one has a hint.
+    return /** @type {string} */ (all.reduce((a, b) => (rank(b) > rank(a) ? b : a)).hint);
   }
   const [loose] = uncommittedFiles(repo, '.claude-plugin/marketplace.json');
   if (loose) return commitHint(repo, loose, folder(posix.dirname(posix.dirname(loose))) || loose);
@@ -247,15 +323,22 @@ export function marketplaceHint(repo, start = 'Download the example marketplace 
 
 // The committed .claude/settings.json: `{ value }`, `{ error }`, or null when
 // HEAD has none.
+/** @param {Repo} repo */
 export function committedSettings(repo) {
   const text = headText(repo, SETTINGS);
   return text === null ? null : parseJson(text);
 }
 
-const BLOCK = (name, dir) => `\`"extraKnownMarketplaces": { "${name}": { "source": { "source": "directory", "path": "${relativePath(dir)}" } } }\``;
+const BLOCK = (/** @type {string} */ name, /** @type {string} */ dir) => `\`"extraKnownMarketplaces": { "${name}": { "source": { "source": "directory", "path": "${relativePath(dir)}" } } }\``;
 
 // Where a settings source points, as a folder relative to the repository, or
 // a problem with it, as `{ dir }` or `{ hint }`.
+/**
+ * @param {unknown} source
+ * @param {string} key
+ * @param {Marketplace} marketplace
+ * @returns {{ dir: string, hint?: undefined } | { hint: string, dir?: undefined }}
+ */
 function sourceFolder(source, key, marketplace) {
   const want = relativePath(marketplace.root);
   const label = `\`${key}.${marketplace.name}\``;
@@ -276,6 +359,11 @@ function sourceFolder(source, key, marketplace) {
 // How far settings get for one marketplace: 0, no marketplace registered;
 // 1, not under its name; 2, a source that doesn't point at it; 3, its plugin
 // isn't turned on; 4, passes. Returns `{ stage, hint }`.
+/**
+ * @param {Json} settings
+ * @param {Marketplace} marketplace
+ * @returns {{ stage: number, hint?: string }}
+ */
 function reviewRegistration(settings, marketplace) {
   const { name, root } = marketplace;
   const canonical = own(settings, 'extraKnownMarketplaces');
@@ -309,6 +397,11 @@ function reviewRegistration(settings, marketplace) {
 
 // Whether settings register one of `marketplaces` by a relative path and turn
 // one of its plugins on: `{ ok: true }` or `{ ok: false, stage, hint }`.
+/**
+ * @param {unknown} settings
+ * @param {Marketplace[]} marketplaces
+ * @returns {{ ok: boolean, stage?: number, hint?: string | null }}
+ */
 export function registration(settings, marketplaces) {
   if (!marketplaces.length) return { ok: false, stage: -1, hint: null };
   const results = marketplaces.map((m) => reviewRegistration(isObject(settings) ? settings : {}, m));

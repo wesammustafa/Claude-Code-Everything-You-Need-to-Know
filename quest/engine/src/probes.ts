@@ -6,7 +6,7 @@
 //
 // Pure, with no imports: the engine parses beats with it and the compile
 // step checks them, and the lesson host runs each probe
-// (quest/host/src/probes.mjs) in its Check child.
+// (quest/host/src/probes.ts) in its Check child.
 
 // What an argument must be: a pattern, or a test of its own.
 interface ArgTest {

@@ -2,10 +2,12 @@
 // (guards.9-single-flight).
 
 // One run at a time; a request during a run schedules exactly one more.
-export function singleFlight(fn) {
-  let running = null;
-  let again = null;
-  const go = (...args) => {
+export function singleFlight<A extends unknown[], R>(
+  fn: (...args: A) => R | Promise<R>,
+): (...args: A) => Promise<R> {
+  let running: Promise<R> | null = null;
+  let again: A | null = null;
+  const go = (...args: A): Promise<R> => {
     if (running) {
       again = args;
       return running;
@@ -15,7 +17,7 @@ export function singleFlight(fn) {
       if (again) {
         const next = again;
         again = null;
-        go(...next);
+        void go(...next);
       }
     });
     return running;
@@ -38,16 +40,55 @@ export function singleFlight(fn) {
 // starts, and an ask after that waits in line: the run has answered, even
 // before it ends. A poll never joins: what changed since the run started
 // may need another.
-export function owing(fn, { covers } = {}) {
-  const none = { slow: false, asked: 0, lesson: undefined };
+// What a run of `owing` is given: what was owed when it started, and how to
+// take its number when it reports.
+export interface Flags {
+  slow: boolean;
+  asked: number;
+  lesson: unknown;
+  report: () => number;
+}
+
+interface Owed {
+  slow: boolean;
+  asked: number;
+  lesson: unknown;
+}
+
+// The run under way: its arguments, its flags, and its promise.
+interface Run<A extends unknown[], R> {
+  args: A;
+  flags: Flags;
+  promise: Promise<R>;
+}
+
+export interface Ask {
+  slow?: boolean | undefined;
+  asked?: number | undefined;
+}
+
+export function owing<A extends unknown[], R>(
+  fn: (flags: Flags, ...args: A) => R | Promise<R>,
+  {
+    covers,
+  }: {
+    covers?: (
+      args: A,
+      flags: Flags,
+      ask: A,
+      opts: { slow: boolean },
+    ) => boolean;
+  } = {},
+): (ask?: Ask, ...args: A) => Promise<R> {
+  const none: Owed = { slow: false, asked: 0, lesson: undefined };
   let owed = none;
   // The run under way, from its start until it reports or ends: waiting in
   // the lane (oneAtATime) counts.
-  let current = null;
-  const go = singleFlight((...args) => {
-    const flags = { ...owed };
+  let current: Run<A, R> | null = null;
+  const go = singleFlight((...args: A) => {
+    const flags = { ...owed } as Flags;
     owed = none;
-    const run = { args, flags };
+    const run = { args, flags } as Run<A, R>;
     flags.report = () => {
       if (current === run) current = null;
       return flags.asked;
@@ -58,10 +99,11 @@ export function owing(fn, { covers } = {}) {
     });
     return run.promise;
   });
-  return ({ slow, asked } = {}, ...args) => {
+  return ({ slow, asked }: Ask = {}, ...args: A) => {
     if (
       covers &&
       current &&
+      asked !== undefined &&
       asked > 0 &&
       covers(current.args, current.flags, args, { slow: Boolean(slow) })
     ) {
@@ -82,19 +124,21 @@ export function owing(fn, { covers } = {}) {
 // a Check child: each `fn` starts when the one before it has ended, however
 // it ended, and at once when none is running or waiting, so an idle lane
 // starts a child as soon as it is asked for.
-export function oneAtATime() {
+export function oneAtATime(): <R>(fn: () => R | Promise<R>) => Promise<R> {
   // The last run's end, until it has ended with nothing after it.
-  let last = null;
-  return (fn) => {
-    const run = last
+  let last: Promise<void> | null = null;
+  return <R>(fn: () => R | Promise<R>): Promise<R> => {
+    const run: Promise<R> = last
       ? last.then(() => fn())
-      : new Promise((resolve) => resolve(fn()));
+      : new Promise<R>((resolve) => {
+          resolve(fn());
+        });
     const ended = run.then(
       () => {},
       () => {},
     );
     last = ended;
-    ended.then(() => {
+    void ended.then(() => {
       if (last === ended) last = null;
     });
     return run;

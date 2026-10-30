@@ -25,8 +25,8 @@ import {
   write,
 } from "../../../practice-template/checks/test/helpers.mjs";
 import { b1Only, finishedBefore } from "../../engine/test/drive.mjs";
-import { createHost, realAdapters } from "../src/index.mjs";
-import { storePath } from "../src/store.mjs";
+import { createHost, realAdapters } from "../src/index.ts";
+import { storePath } from "../src/store.ts";
 import { reducerCheck, reducerRepo } from "./repo.mjs";
 import { AT_W3, scripted, tap } from "./scripted.mjs";
 import { alive, holding, pidsOf, sweep } from "./tree.mjs";

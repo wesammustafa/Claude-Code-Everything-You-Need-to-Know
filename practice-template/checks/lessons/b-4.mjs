@@ -1,3 +1,4 @@
+// @ts-check
 // Keep a session on track (Beginner, lesson 4). The check reads the refactor
 // commit and the working tree itself. Only the moments around the rewind are
 // saved by the Learner: git's status after the rename attempt, and just
@@ -8,6 +9,8 @@
 // changes not tracked).
 import { spawnSync } from 'node:child_process';
 import { statusEntries, statusPaths } from '../paths.mjs';
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Keep a session on track';
 
@@ -18,11 +21,15 @@ const SAVE_BEFORE = '`git status --porcelain > .practice/b-4-before-rewind.txt`'
 const SAVE_AFTER = '`git status --porcelain > .practice/b-4-after-rewind.txt`';
 // Your turn's files: the script changes src/links.js, and Claude updates its
 // callers, src/check-links.js and test/links.test.js.
-const inScope = (path) => path.startsWith('src/') || path.startsWith('test/');
+const inScope = (/** @type {string} */ path) => path.startsWith('src/') || path.startsWith('test/');
 // The longest the link check may run, in milliseconds.
 const LINKCHECK_LIMIT = 30_000;
 
 // The commits after the copy's first one, newest first, that change a path.
+/**
+ * @param {Repo} repo
+ * @param {string} path
+ */
 function laterCommits(repo, path) {
   let shas;
   try {
@@ -36,10 +43,11 @@ function laterCommits(repo, path) {
 
 // JavaScript without its comments, so a note such as "async was tried and
 // dropped" doesn't read as asynchronous code.
-const withoutComments = (text) => text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:\\])\/\/.*$/gm, '$1');
+const withoutComments = (/** @type {string} */ text) => text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:\\])\/\/.*$/gm, '$1');
 // Whether JavaScript exports `name`.
-const hasExport = (text, name) => new RegExp(`export\\s+(async\\s+)?function\\s+${name}\\b|export\\s+(const|let)\\s+${name}\\b|export\\s*\\{[^}]*\\b${name}\\b`).test(withoutComments(text));
+const hasExport = (/** @type {string} */ text, /** @type {string} */ name) => new RegExp(`export\\s+(async\\s+)?function\\s+${name}\\b|export\\s+(const|let)\\s+${name}\\b|export\\s*\\{[^}]*\\b${name}\\b`).test(withoutComments(text));
 
+/** @type {Item[]} */
 export const items = [
   {
     text: 'a commit after your copy\'s first one changes `src/check-links.js`, which still exports a synchronous `brokenLinks`',
@@ -98,7 +106,7 @@ export const items = [
       // The rename is dropped in Your turn: another tool imports findLinks by name.
       if (!hasExport(repo.gitLocal('show', `HEAD:./${LINKS}`), 'findLinks')) return 'Your last commit\'s `src/links.js` no longer exports `findLinks`. Undo the dropped rename with `git revert <sha>`; find that commit with `git log`.';
       const run = spawnSync(process.execPath, [CLI, 'samples'], { cwd: repo.dir, encoding: 'utf8', timeout: LINKCHECK_LIMIT });
-      if ([0, 1].includes(run.status) && /\d+ broken link\(s\)|All relative links resolve\./.test(run.stdout)) return true;
+      if (/** @type {(number | null)[]} */ ([0, 1]).includes(run.status) && /\d+ broken link\(s\)|All relative links resolve\./.test(run.stdout)) return true;
       return '`npm run linkcheck -- samples` stops with an error. Run it, read the error, and ask Claude to fix the code you committed.';
     },
   },

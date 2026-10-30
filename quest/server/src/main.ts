@@ -1,9 +1,11 @@
 // The bundle's entry, learn/app.mjs in a Practice copy: `npm run learn`.
 import { spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHost, realAdapters } from "@quest/host";
-import { loadCourse } from "@quest/engine/course";
+import type { CompiledCourse } from "@quest/engine/content";
+import { courseFrom } from "@quest/engine/course";
 import table from "virtual:quest-statics";
 import { openBrowser } from "./launch.ts";
 import { BASE_PORT, PORT_TRIES } from "./listen.ts";
@@ -62,6 +64,12 @@ if (base !== null && statics) {
     },
     createHost,
     realAdapters,
-    loadCourse,
+    // The compiled course ships beside app.mjs; the copy has no step files.
+    loadCourse: () =>
+      courseFrom(
+        JSON.parse(
+          readFileSync(new URL("./course.json", import.meta.url), "utf8"),
+        ) as CompiledCourse,
+      ),
   });
 }

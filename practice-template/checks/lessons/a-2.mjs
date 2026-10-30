@@ -1,3 +1,5 @@
+// @ts-check
+/** @import { Item } from './index.mjs' */
 // Choose an orchestration pattern (Advanced, lesson 2). The Learner picks a
 // pattern for each of five backlog items by what it needs and what it costs,
 // writes the choices to a file, and runs job 1 as parallel subagents in a
@@ -19,6 +21,7 @@ const FORMAT = '`<job number>: <pattern> because <reason>`';
 const NAMES = '`main conversation`, `subagents`, `workflow`, `/batch` or `agent team`';
 
 // What the text after a job number may start with, once an article goes.
+/** @type {[string, RegExp][]} */
 const PATTERNS = [
   ['subagents', /^(?:parallel\s+)?sub[\s-]?agents?\b/i],
   ['workflow', /^(?:dynamic\s+)?workflows?\b/i],
@@ -26,6 +29,7 @@ const PATTERNS = [
   ['main conversation', /^(?:main\s+(?:conversation|session)|(?:single|one)\s+(?:conversation|session))\b/i],
   ['agent team', /^agent[\s-]+teams?\b/i],
 ];
+/** @type {Record<string, string>} */
 const LABEL = { 'main conversation': 'the main conversation', subagents: 'subagents', workflow: 'a workflow', batch: '`/batch`', 'agent team': 'an agent team' };
 
 // The lesson's chart: its questions in order, and the answers that lead to
@@ -37,6 +41,7 @@ const QUESTIONS = [
   'Does it need cross-checked findings or a rerun?',
   'Is it one large change that splits into independent units?',
 ];
+/** @type {Record<string, boolean[]>} */
 const PATH = {
   'main conversation': [true],
   'agent team': [false, true],
@@ -47,6 +52,7 @@ const PATH = {
 
 // The five jobs in the lesson's Your turn, and the answer to each question on
 // the way to the pattern that fits.
+/** @type {Record<number, { pattern: string, why: string[] }>} */
 const JOBS = {
   1: { pattern: 'subagents', why: [
     'No: reading the three largest files in your conversation would crowd it, and you only need the suspects.',
@@ -80,14 +86,16 @@ const NUMBERS = Object.keys(JOBS).map(Number);
 const SEPARATOR = '[:.)|\\-\\u2013\\u2014]';
 const JOB_LINE = new RegExp(`^(?:job\\s*#?\\s*([1-5])(?!\\d)\\s*${SEPARATOR}*|#?([1-5])(?!\\d)\\s*${SEPARATOR}+)\\s*(.*)$`, 'i');
 
-const and = (list) => (list.length > 1 ? `${list.slice(0, -1).join(', ')} and ${list.at(-1)}` : list[0]);
+const and = (/** @type {unknown[]} */ list) => (list.length > 1 ? `${list.slice(0, -1).join(', ')} and ${list.at(-1)}` : list[0]);
 
 // The choice lines in the file, by job number. `1: subagents because ...`,
 // `Job 1 - Subagents`, `- **2:** dynamic workflow`, `3. main session`,
 // `4) agent teams` and a table row `| 4 | agent team | ... |` all count. A
 // line's pattern is null when its text starts with none of the four, and
 // `start` keeps that text's first words for the hint.
+/** @param {string} text */
 export function readChoices(text) {
+  /** @type {Map<number, { pattern: string | null, start: string }[]>} */
   const jobs = new Map(NUMBERS.map((n) => [n, []]));
   for (const raw of text.split(/\r?\n/)) {
     const line = raw.replace(/[*_`]/g, '')
@@ -96,17 +104,21 @@ export function readChoices(text) {
       .trim();
     const match = line.match(JOB_LINE);
     if (!match) continue;
-    const rest = match[3].replace(/^["'([\s]+/, '').replace(/^(?:an?|the)\s+/i, '');
+    const rest = /** @type {string} */ (match[3]).replace(/^["'([\s]+/, '').replace(/^(?:an?|the)\s+/i, '');
     const found = PATTERNS.find(([, pattern]) => pattern.test(rest));
     const start = rest.replace(/\s+because\b.*$/i, '').split(/\s+/).filter(Boolean).slice(0, 4).join(' ');
-    jobs.get(Number(match[1] ?? match[2])).push({ pattern: found ? found[0] : null, start });
+    /** @type {{ pattern: string | null, start: string }[]} */ (jobs.get(Number(match[1] ?? match[2]))).push({ pattern: found ? found[0] : null, start });
   }
   return jobs;
 }
 
+/**
+ * @param {number} n
+ * @param {string} chosen
+ */
 function wrongPick(n, chosen) {
-  const { pattern, why } = JOBS[n];
-  const at = PATH[chosen].findIndex((answer, i) => answer !== PATH[pattern][i]);
+  const { pattern, why } = /** @type {{ pattern: string, why: string[] }} */ (JOBS[n]);
+  const at = /** @type {boolean[]} */ (PATH[chosen]).findIndex((answer, i) => answer !== /** @type {boolean[]} */ (PATH[pattern])[i]);
   return `Job ${n} doesn't call for ${LABEL[chosen]}. ${QUESTIONS[at]} ${why[at]} It calls for ${LABEL[pattern]}.`;
 }
 
@@ -115,6 +127,7 @@ function wrongPick(n, chosen) {
 // came from that lesson, so job 1's starts are the other lines. A hook that
 // also logs an id, `agent_id<TAB>agent_type`, counts each id once, as a
 // resumed subagent logs its id again.
+/** @param {string} text */
 export function startedAgents(text) {
   const ids = new Map();
   let unnamed = 0;
@@ -130,6 +143,7 @@ export function startedAgents(text) {
   return { ids, count: ids.size + unnamed };
 }
 
+/** @type {Item} */
 export const fittingPatterns = {
   text: `\`${CHOICES}\` picks the cheapest pattern that fits each job`,
   local: true,
@@ -142,20 +156,21 @@ export const fittingPatterns = {
     const problems = missing.length ? [`\`${CHOICES}\` has no line for job${missing.length > 1 ? 's' : ''} ${and(missing)}. Add one per job in the form ${FORMAT}.`] : [];
     for (const [n, lines] of jobs) {
       if (!lines.length) continue;
-      const picked = [...new Set(lines.map((l) => l.pattern).filter(Boolean))];
+      const picked = /** @type {string[]} */ ([...new Set(lines.map((l) => l.pattern).filter(Boolean))]);
       if (!picked.length) {
-        const { start } = lines[0];
+        const { start } = /** @type {{ start: string }} */ (lines[0]);
         problems.push(start ? `Job ${n}'s line starts with "${start}", which isn't one of the patterns. Right after the job number, write ${NAMES}.` : `Job ${n}'s line names no pattern. Right after the job number, write ${NAMES}.`);
       } else if (picked.length > 1) {
         problems.push(`Job ${n} has lines that pick different patterns: ${and(picked.map((p) => LABEL[p]))}. Keep one line per job.`);
-      } else if (picked[0] !== JOBS[n].pattern) {
-        problems.push(wrongPick(n, picked[0]));
+      } else if (picked[0] !== /** @type {{ pattern: string }} */ (JOBS[n]).pattern) {
+        problems.push(wrongPick(n, /** @type {string} */ (picked[0])));
       }
     }
     return problems.length ? problems.join(' ') : true;
   },
 };
 
+/** @type {Item} */
 export const parallelSubagents = {
   text: `\`${LOG}\` shows at least two subagents other than \`${EARLIER}\` starting for job 1`,
   local: true,
@@ -174,4 +189,5 @@ export const parallelSubagents = {
   },
 };
 
+/** @type {Item[]} */
 export const items = [fittingPatterns, parallelSubagents];

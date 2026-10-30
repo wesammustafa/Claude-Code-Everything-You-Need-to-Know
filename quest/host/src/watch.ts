@@ -4,18 +4,38 @@
 // Events only speed things up; the host's poll is the truth where events
 // don't arrive (WSL on /mnt/c, network folders). `timers` is the debounce's
 // clock: the real one unless a test hands its own.
-import { existsSync, readdirSync, watch } from "node:fs";
+import { existsSync, readdirSync, watch, type FSWatcher } from "node:fs";
 import { join } from "node:path";
 
-const REAL_TIMERS = { setTimeout, clearTimeout };
+// The debounce's clock: the real timers, or a test's.
+export interface Timers {
+  setTimeout(fn: () => void, ms: number): unknown;
+  clearTimeout(id: unknown): void;
+}
+
+const REAL_TIMERS: Timers = {
+  setTimeout: (fn, ms) => setTimeout(fn, ms),
+  clearTimeout: (id) => {
+    clearTimeout(id as ReturnType<typeof setTimeout> | undefined);
+  },
+};
+
+export interface Watcher {
+  dirs(): string[];
+  close(): void;
+  arm(): void;
+}
 
 export function watchDirs(
-  root,
-  onChange,
-  { debounceMs = 150, timers = REAL_TIMERS } = {},
-) {
-  const watchers = new Map();
-  let timer = null;
+  root: string,
+  onChange: () => void,
+  {
+    debounceMs = 150,
+    timers = REAL_TIMERS,
+  }: { debounceMs?: number; timers?: Timers } = {},
+): Watcher {
+  const watchers = new Map<string, FSWatcher>();
+  let timer: unknown = null;
   const fire = () => {
     timers.clearTimeout(timer);
     timer = timers.setTimeout(() => {

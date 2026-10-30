@@ -1,3 +1,4 @@
+// @ts-check
 // Script Claude Code with `claude -p` (Advanced, lesson 4). The Learner
 // commits scripts/review-staged.sh, which pipes the staged diff into one
 // `claude -p` call that asks for JSON, runs in dontAsk mode, pre-approves
@@ -18,6 +19,9 @@ import { join, posix } from 'node:path';
 import { parseClaudeArgs, ruleList } from '../claude-args.mjs';
 import { committedMode, missingJq } from '../hooks.mjs';
 import { notRun, runStubbed, stderrTail, STUB_SESSION, TIME_LIMIT } from '../stub-claude.mjs';
+/** @import { Ran, Stubbed, Call as StubClaudeCall } from '../stub-claude.mjs' */
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Script Claude Code with `claude -p`';
 
@@ -30,9 +34,9 @@ const OUT = 'review.json';
 const READ_ONLY = /^(Read|Grep|Glob)(\(.*\))?$/s;
 const TOOL_NAME = /^(?:[A-Z]\w*|mcp__\S+|\*)(\(.*\))?$/s;
 
-const and = (list) => (list.length > 1 ? `${list.slice(0, -1).join(', ')} and ${list.at(-1)}` : list[0]);
-const code = (text) => `\`${text}\``;
-const quoted = (text) => (text.length > 120 ? `${text.slice(0, 120)}...` : text).replace(/\s+/g, ' ').trim();
+const and = (/** @type {unknown[]} */ list) => (list.length > 1 ? `${list.slice(0, -1).join(', ')} and ${list.at(-1)}` : list[0]);
+const code = (/** @type {string} */ text) => `\`${text}\``;
+const quoted = (/** @type {string} */ text) => (text.length > 120 ? `${text.slice(0, 120)}...` : text).replace(/\s+/g, ' ').trim();
 
 // What the scratch repository holds, and what the stand-in answers, in each
 // run: a review of a staged change; the same without an argument, in a
@@ -42,6 +46,12 @@ const quoted = (text) => (text.length > 120 ? `${text.slice(0, 120)}...` : text)
 // and nothing staged. The two failures test the script's two exit rules
 // apart. Every run but the last has a staged change, and every run a change
 // that isn't staged.
+/**
+ * @typedef {{ review: string, staged: string, unstaged: string }} Markers
+ * @typedef {{ stage: boolean, practice?: boolean, args: (out: string) => string[], reply: (m: Markers) => object | null, stderr?: string, exit?: number }} Scenario
+ */
+
+/** @type {Record<string, Scenario>} */
 const SCENARIOS = {
   review: { stage: true, args: (out) => [join(out, OUT)], reply: (m) => ({ subtype: 'success', is_error: false, result: m.review, num_turns: 1 }) },
   noArgument: { stage: true, practice: false, args: () => [], reply: (m) => ({ subtype: 'success', is_error: false, result: m.review, num_turns: 1 }) },
@@ -57,11 +67,12 @@ export const STUB_RUNS = Object.keys(SCENARIOS).length;
 const README = '# Scratch repository for the practice check\n';
 const SOURCE = 'export const answer = 42;\n';
 
+/** @param {string} name */
 function plan(name) {
   const id = randomBytes(6).toString('hex');
   // No marker holds another, so each shows on its own.
   const m = { staged: `change-in-the-index-${id}`, unstaged: `change-not-added-${id}`, review: `STUB-REVIEW-${id}` };
-  const s = SCENARIOS[name];
+  const s = /** @type {Scenario} */ (SCENARIOS[name]);
   return {
     markers: m,
     options: {
@@ -78,15 +89,29 @@ function plan(name) {
 }
 
 // Each repository's runs, by script and scenario, so the items share them.
+/**
+ * A stand-in run with its calls read: callers pass it to notRun first, and
+ * read the rest only when that finds nothing.
+ * @typedef {Ran & Stubbed & { markers: Markers, print: Call[], stray: Call[] }} ScenarioRun
+ * @typedef {StubClaudeCall & { args: ReturnType<typeof parseClaudeArgs> }} Call
+ */
+
+/** @type {WeakMap<Repo, Map<string, ScenarioRun>>} */
 const cache = new WeakMap();
 
+/**
+ * @param {Repo} repo
+ * @param {string} script
+ * @param {string} name
+ * @returns {ScenarioRun}
+ */
 function scenario(repo, script, name) {
   if (!cache.has(repo)) cache.set(repo, new Map());
-  const runs = cache.get(repo);
+  const runs = /** @type {Map<string, ScenarioRun>} */ (cache.get(repo));
   const key = `${script}\n${name}`;
   if (!runs.has(key)) {
     const { markers, options } = plan(name);
-    const run = runStubbed(repo, script, options);
+    const run = /** @type {ScenarioRun} */ (runStubbed(repo, script, options));
     const parsed = (run.calls ?? []).map((c) => ({ ...c, args: parseClaudeArgs(c.argv) }));
     run.markers = markers;
     run.print = parsed.filter((c) => c.args.print);
@@ -94,9 +119,13 @@ function scenario(repo, script, name) {
     run.stray = parsed.filter((c) => !c.args.print && !c.args.flags.version && !c.args.flags.help);
     runs.set(key, run);
   }
-  return runs.get(key);
+  return /** @type {ScenarioRun} */ (runs.get(key));
 }
 
+/**
+ * @param {Repo} repo
+ * @param {string} script
+ */
 function pending(repo, script) {
   try {
     repo.git('diff', '--quiet', 'HEAD', '--', script);
@@ -107,11 +136,12 @@ function pending(repo, script) {
 }
 
 // A run's exit code, or the signal that ended it.
-const exitOf = (run) => run.status ?? run.signal;
+const exitOf = (/** @type {ScenarioRun} */ run) => run.status ?? run.signal;
 
 const timedOut = `was still running after ${TIME_LIMIT / 1000} seconds, so the check stopped it`;
 
 // How a run ended, for a hint.
+/** @param {ScenarioRun} run */
 function ended(run) {
   if (run.timedOut) return `It ${timedOut}.`;
   if (missingJq(run)) return JQ;
@@ -120,29 +150,35 @@ function ended(run) {
 }
 
 // The turn cap the script passes, or CAP_MAX when the check can't tell.
+/**
+ * @param {Repo} repo
+ * @param {string} script
+ */
 function capOf(repo, script) {
   const value = scenario(repo, script, 'review').print?.[0]?.args.flags.maxTurns;
   return /^\d+$/.test(value ?? '') && Number(value) >= 1 ? Number(value) : CAP_MAX;
 }
 
-const squash = (flag) => flag.split('=')[0].replace(/^-+/, '').replace(/[-_]/g, '').toLowerCase();
+const squash = (/** @type {string} */ flag) => /** @type {string} */ (flag.split('=')[0]).replace(/^-+/, '').replace(/[-_]/g, '').toLowerCase();
 
 // What's wrong with the arguments of one `claude -p` call, as sentences;
 // none when nothing is.
+/** @param {string[]} argv */
 export function callHints(argv) {
   const args = parseClaudeArgs(argv);
+  /** @type {string[]} */
   const problems = [];
   // An option Claude Code doesn't know, written like one the call needs.
-  const spelling = (flag) => {
+  const spelling = (/** @type {string} */ flag) => {
     const typo = args.unknown.find((u) => squash(u) === squash(flag));
-    return typo ? ` Claude Code doesn't know ${code(typo.split('=')[0])}, so it stops with an error before the run starts: write ${code(flag)}.` : '';
+    return typo ? ` Claude Code doesn't know ${code(/** @type {string} */ (typo.split('=')[0]))}, so it stops with an error before the run starts: write ${code(flag)}.` : '';
   };
   const example = 'as in `claude -p "<prompt>" --output-format json ...`';
   if (!args.promptFirst) {
     problems.push(args.next === undefined
       ? `Nothing follows \`-p\`. Write the prompt right after it, ${example}.`
       : `${code(args.next)} comes right after \`-p\`. Write the prompt right after \`-p\`, ${example}.`);
-  } else if (!args.prompt.trim()) {
+  } else if (!/** @type {string} */ (args.prompt).trim()) {
     problems.push('The prompt after `-p` is empty. Write what Claude should do with the diff there.');
   }
 
@@ -160,15 +196,15 @@ export function callHints(argv) {
   // A value with a word that can't be a tool name, such as a prompt written
   // after the list, is reported by that word alone.
   const values = allowedTools ?? [];
-  const words = values.flatMap((v) => ruleList([v]).filter((e) => !TOOL_NAME.test(e)));
-  const entries = ruleList(values.filter((v) => ruleList([v]).every((e) => TOOL_NAME.test(e))));
+  const words = values.flatMap((/** @type {unknown} */ v) => ruleList([v]).filter((e) => !TOOL_NAME.test(e)));
+  const entries = ruleList(values.filter((/** @type {unknown} */ v) => ruleList([v]).every((e) => TOOL_NAME.test(e))));
   const others = [...new Set(entries.filter((e) => !READ_ONLY.test(e)))];
   if (allowedTools === undefined) problems.push(`It pre-approves no tools: add \`--allowedTools "Read,Grep,Glob"\`.${spelling('--allowedTools')}`);
   else if (!ruleList(values).length) problems.push('`--allowedTools` lists no tool: write `--allowedTools "Read,Grep,Glob"`.');
   if (words.length) {
-    const [word] = words;
+    const [word] = /** @type {[string]} */ (words);
     problems.push(/^(read|grep|glob)$/i.test(word)
-      ? `Write ${code(word[0].toUpperCase() + word.slice(1).toLowerCase())} as Claude Code spells the tool, not ${code(word)}.`
+      ? `Write ${code(/** @type {string} */ (word[0]).toUpperCase() + word.slice(1).toLowerCase())} as Claude Code spells the tool, not ${code(word)}.`
       : `${code(word)} isn't a read-only tool: list only \`Read\`, \`Grep\` and \`Glob\` after \`--allowedTools\`, and write the prompt right after \`-p\`.`);
   }
   if (others.length) {
@@ -219,6 +255,11 @@ export function callHints(argv) {
 }
 
 // `guide` is where the page describes the script.
+/** @param {string} script */
+/**
+ * @param {string} script
+ * @returns {Item}
+ */
 export function committedScript(script, guide = 'the lesson\'s Your turn') {
   return {
     text: `${code(script)} is committed and executable`,
@@ -232,6 +273,10 @@ export function committedScript(script, guide = 'the lesson\'s Your turn') {
   };
 }
 
+/**
+ * @param {string} script
+ * @returns {Item}
+ */
 export function scriptCall(script) {
   return {
     text: `its \`claude -p\` call asks for JSON in \`dontAsk\` mode, allows only \`Read\`, \`Grep\` and \`Glob\`, with no hook or MCP server, caps turns at ${CAP_MAX} or fewer, and has the prompt right after \`-p\``,
@@ -251,7 +296,7 @@ export function scriptCall(script) {
   };
 }
 
-const isStubJson = (text) => {
+const isStubJson = (/** @type {string} */ text) => {
   try {
     return JSON.parse(text)?.session_id === STUB_SESSION;
   } catch {
@@ -262,13 +307,18 @@ const isStubJson = (text) => {
 // The review of a staged change, in a run that finished: one call, the staged
 // diff on its stdin and nothing else, exit 0, the review printed and the JSON
 // saved where the first argument says.
+/**
+ * @param {ScenarioRun} run
+ * @param {string} fallback
+ */
 function reviewProblems(run, fallback) {
   const m = run.markers;
   if (!run.print.length) return [`With a staged change, the script never ran \`claude -p\`. ${ended(run)}`];
+  /** @type {string[]} */
   const problems = [];
   if (run.print.length > 1) problems.push(`With one staged change, it ran \`claude -p\` ${run.print.length} times. Run it once, with the whole staged diff on stdin.`);
   if (run.stray.length) problems.push('It also ran `claude` without `-p`, which starts an interactive session. Run only the `claude -p` call.');
-  const [call] = run.print;
+  const [call] = /** @type {[Call]} */ (run.print);
   if (!call.stdin.includes(m.staged)) {
     problems.push(call.argv.some((a) => a.includes(m.staged))
       ? 'It puts the diff in the prompt. Pipe it in instead: `git diff --cached | claude -p "<prompt>" ...`.'
@@ -285,6 +335,10 @@ function reviewProblems(run, fallback) {
   return problems;
 }
 
+/**
+ * @param {ScenarioRun} run
+ * @param {string} fallback
+ */
 function defaultProblems(run, fallback) {
   if (run.timedOut) return [`Run without an argument, it ${timedOut}.`];
   const saved = run.saved[fallback];
@@ -297,7 +351,12 @@ function defaultProblems(run, fallback) {
   return isStubJson(saved) ? [] : [`Run without an argument, it saved something other than the JSON \`claude -p\` printed to ${code(fallback)}.`];
 }
 
+/**
+ * @param {ScenarioRun} failed
+ * @param {ScenarioRun} isError
+ */
 function failureProblems(failed, isError) {
+  /** @type {string[]} */
   const problems = [];
   if (failed.timedOut) problems.push(`When \`claude -p\` exits non-zero, it ${timedOut}. Exit non-zero too, without waiting or trying again.`);
   else if (failed.status === 0) problems.push('When `claude -p` exits non-zero and prints no JSON, as it does for a flag it can\'t read, it exited 0. Exit non-zero whenever `claude -p` does.');
@@ -306,8 +365,10 @@ function failureProblems(failed, isError) {
   return problems;
 }
 
+/** @param {ScenarioRun} run */
 function emptyProblems(run) {
   if (run.timedOut) return [`With nothing staged, it ${timedOut}.`];
+  /** @type {string[]} */
   const problems = [];
   if (run.print.length) problems.push('With nothing staged, it still ran `claude -p`. Test for a staged change first, as `git diff --cached --quiet` does, and stop before calling Claude.');
   if (run.status === 0) problems.push('With nothing staged, it exited 0. Exit non-zero, so whatever runs it can tell that no review ran.');
@@ -317,6 +378,10 @@ function emptyProblems(run) {
 
 // `fallback` is where the script saves the JSON without an argument: the
 // lesson's path, which the capstone's script keeps.
+/**
+ * @param {string} script
+ * @returns {Item}
+ */
 export function scriptBehavior(script, fallback = RESULT) {
   return {
     text: 'it pipes the staged diff in, saves the JSON where its argument says, prints the result, exits non-zero when the run fails, and doesn\'t call Claude when nothing is staged',
@@ -327,7 +392,7 @@ export function scriptBehavior(script, fallback = RESULT) {
       if (missingJq(review)) return JQ;
       // A script that hangs on a staged change would hang in every run.
       if (review.timedOut) return `With a staged change, ${code(script)} ${timedOut}.${pending(repo, script)}`;
-      const [noArgument, failed, isError, nothingStaged] = ['noArgument', 'failed', 'isError', 'nothingStaged'].map((n) => scenario(repo, script, n));
+      const [noArgument, failed, isError, nothingStaged] = /** @type {[ScenarioRun, ScenarioRun, ScenarioRun, ScenarioRun]} */ (['noArgument', 'failed', 'isError', 'nothingStaged'].map((n) => scenario(repo, script, n)));
       if ([noArgument, failed, isError, nothingStaged].some(missingJq)) return JQ;
       const problems = [...reviewProblems(review, fallback), ...defaultProblems(noArgument, fallback), ...failureProblems(failed, isError), ...emptyProblems(nothingStaged)];
       if (!problems.length) return true;
@@ -341,6 +406,11 @@ export function scriptBehavior(script, fallback = RESULT) {
 // the cap counts only the turns that use tools, and `num_turns` counts the
 // final answer too (How the agent loop works). The lesson's dry-run confirms
 // the bound.
+/**
+ * @param {string} result
+ * @param {string} script
+ * @returns {Item}
+ */
 export function savedRun(result, script) {
   const run = `stage a change and run \`${script}${result === RESULT ? '' : ` ${result}`}\``;
   const again = `Then ${run} again.`;
@@ -370,4 +440,5 @@ export function savedRun(result, script) {
   };
 }
 
+/** @type {Item[]} */
 export const items = [committedScript(SCRIPT), scriptCall(SCRIPT), scriptBehavior(SCRIPT), savedRun(RESULT, SCRIPT)];

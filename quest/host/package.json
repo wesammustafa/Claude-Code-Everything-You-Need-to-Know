@@ -4,7 +4,11 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.mjs",
-    "./fake": "./src/fake.mjs"
+    ".": "./src/index.ts",
+    "./fake": "./src/fake.ts"
+  },
+  "dependencies": {
+    "@quest/contract": "0.0.0",
+    "@quest/engine": "0.0.0"
   }
 }

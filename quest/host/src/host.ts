@@ -25,10 +25,63 @@ import {
   stepOf,
   watching,
   workFolder,
-} from "./engine.mjs";
-import { oneAtATime, owing, singleFlight } from "./flight.mjs";
-import { folderPath } from "./folders.mjs";
-import { snapshot as toSave } from "./store.mjs";
+} from "./engine.ts";
+import { oneAtATime, owing, singleFlight } from "./flight.ts";
+import { folderPath } from "./folders.ts";
+import { snapshot as toSave } from "./store.ts";
+import type {
+  EventEnvelope,
+  MilestoneShownAction,
+  QuestActionType,
+  QuestEvent,
+  Snapshot,
+} from "@quest/contract";
+import type {
+  CourseEntry,
+  Effect,
+  EngineInput,
+  EngineSnapshot,
+  EngineState,
+  Facts,
+  HostInput,
+  SavedProgress,
+} from "@quest/engine";
+import type { Flags } from "./flight.ts";
+import type {
+  Dispatched,
+  FolderLook,
+  Host,
+  HostHeard,
+  HostOptions,
+} from "./types.ts";
+
+// What the host takes: an engine input, or a tab's milestone.shown.
+type Item = EngineInput | MilestoneShownAction;
+// A pending milestone, with the lesson it came in.
+interface Pending {
+  envelope: EventEnvelope;
+  lesson: string;
+}
+// A run's place, as owing() tells two asks apart.
+type CheckArgs = [
+  lesson: string,
+  items: number[] | null,
+  ev: string | null,
+  dir: string,
+];
+// The engine names a folder on every run effect.
+const dirOf = (dir: string | null) => dir as string;
+// A failed run, read as the JavaScript read it: an empty error counts as
+// an answer.
+const failed = (r: object): r is { error: string } =>
+  "error" in r && Boolean(r.error);
+// The host input of one type.
+type InputOf<K extends HostInput["type"]> = Extract<HostInput, { type: K }>;
+// A folder look as the engine reads it, after the fields `more` gives.
+const probed = (
+  found: FolderLook,
+  more: { key?: string; asked?: number } = {},
+): Item => ({ type: "probed", ...more, ...found }) as InputOf<"probed">;
 
 export const TICK_MS = 1_000;
 export const POLL_MS = 500;
@@ -42,31 +95,33 @@ export const EVENT_LIMIT = 256;
 export const EVENT_KEEP_MS = 15 * 60_000;
 // The actions a client sends: the engine's, and milestone.shown, which the
 // host takes itself.
-export const HOST_ACTION_TYPES = [...ACTION_TYPES, "milestone.shown"];
+export const HOST_ACTION_TYPES: readonly QuestActionType[] = [
+  ...ACTION_TYPES,
+  "milestone.shown",
+];
 
 // The moments that stay pending until a tab shows them: a Lesson's first
 // completion, a Level complete, the course complete, and the notice that
 // the saved progress could not be read (ticket 213).
-const isNotice = (e) =>
+const isNotice = (e: QuestEvent) =>
   e.type === "notice" &&
   (e.kind === "unreadable" || e.kind === "unreadable-kept");
-const isMilestone = (e) =>
+const isMilestone = (e: QuestEvent) =>
   (e.type === "lesson.completed" && e.firstTime) ||
   e.type === "level.completed" ||
   e.type === "course.completed" ||
   isNotice(e);
 // Where the Learner is, for an action based on an older place: the lesson,
 // its phase and the step on screen.
-const placeOf = (s) =>
+const placeOf = (s: EngineState) =>
   JSON.stringify([
     s.lesson,
     s.phase,
     (s.phase === "playing" && s.beat) || s.phase === "step-down"
-      ? stepOf(s).id
+      ? (stepOf(s) as { id: string }).id
       : null,
   ]);
 
-/** @param {import("./types.mjs").HostOptions} options @returns {import("./types.mjs").Host} */
 export function createHost({
   root,
   course,
@@ -80,23 +135,29 @@ export function createHost({
   ahead = null,
   // This process's instance: an event ID splits at its last ".".
   instance = randomUUID(),
-}) {
+}: HostOptions): Host {
   if (typeof instance !== "string" || !instance || instance.includes("."))
     throw new TypeError(`not an instance ID: ${instance}`);
   const { clock, checks, probes, git, folders, files, store, commands } =
     adapters;
   const home = env.HOME || env.USERPROFILE || homedir();
+  // A save the store could not read: moved aside, or kept where it is.
+  const unreadable =
+    saved && "unreadable" in saved ? saved.unreadable : undefined;
 
-  let state = null;
-  let facts = null;
+  let state = null as EngineState | null;
+  let facts: Facts | null = null;
   let closed = false;
   let started = false;
   let lastSave = -Infinity;
-  const intervals = [];
-  let watcher = null;
+  const intervals: unknown[] = [];
+  let watcher: { close(): void } | null = null;
   // The lesson's work folder and its watcher, where it is not the copy.
-  let work = { dir: root, watcher: null };
-  const listeners = new Set();
+  let work: { dir: string; watcher: { close(): void } | null } = {
+    dir: root,
+    watcher: null,
+  };
+  const listeners = new Set<(heard: HostHeard) => void>();
 
   // What live delivery reads (ticket 212), in memory only: the revision,
   // which grows with each change; the last event's sequence number; the
@@ -107,26 +168,33 @@ export function createHost({
   let revision = 0;
   let seq = 0;
   let placeRevision = 0;
-  let place = null;
-  const ring = [];
-  let milestones = [];
-  let view = null;
-  let viewJson = null;
+  let place: string | null = null;
+  const ring: { at: number; envelope: EventEnvelope }[] = [];
+  let milestones: Pending[] = [];
+  let view: EngineSnapshot | null = null;
+  let viewJson: string | null = null;
 
-  const snapshot = () =>
-    view && {
+  const snapshot = (): Snapshot | null =>
+    view &&
+    ({
       ...view,
       instance,
       revision,
       milestones: milestones.map((m) => m.envelope),
-    };
+    } as Snapshot);
   // The events older than 15 minutes, and any past the last 256, go.
   function evict() {
     const oldest = clock.now() - EVENT_KEEP_MS;
-    while (ring.length > EVENT_LIMIT || ring[0]?.at < oldest) ring.shift();
+    while (ring.length > EVENT_LIMIT || (ring[0]?.at ?? Infinity) < oldest)
+      ring.shift();
   }
-  const notify = (events, item) => {
-    const heard = { revision, snapshot: snapshot(), events, input: item };
+  const notify = (events: EventEnvelope[], item: Item) => {
+    const heard = {
+      revision,
+      snapshot: snapshot() as Snapshot,
+      events,
+      input: item,
+    };
     for (const l of [...listeners]) l(heard);
   };
 
@@ -134,7 +202,12 @@ export function createHost({
   // every other lesson; the revision grows where anything a tab sees
   // changed; and each event goes out in its envelope, kept for a reconnect,
   // a milestone pending too.
-  function publish(prev, item, events) {
+  function publish(
+    prev: EngineState,
+    state: EngineState,
+    item: Item,
+    events: QuestEvent[],
+  ) {
     const started = startedLesson(prev, state);
     const before = milestones.length;
     if (started !== null)
@@ -155,7 +228,7 @@ export function createHost({
     const serverTime = clock.epoch();
     const at = clock.now();
     const envelopes = events.map((e) => ({
-      id: `${instance}.${++seq}`,
+      id: `${instance}.${String(++seq)}`,
       revision,
       serverTime,
       ...e,
@@ -170,7 +243,7 @@ export function createHost({
   }
 
   // A tab showed a pending milestone: it goes, once. Never reduced.
-  function shown(item) {
+  function shown(item: MilestoneShownAction) {
     const before = milestones.length;
     milestones = milestones.filter((m) => m.envelope.id !== item.id);
     if (milestones.length === before) return;
@@ -180,22 +253,23 @@ export function createHost({
 
   // One input at a time, in the order they came: an input sent while one
   // is reduced (a listener's, or an adapter that answers at once) waits.
-  const queue = [];
+  const queue: Item[] = [];
   let busy = false;
-  function input(ev) {
+  function input(ev: Item) {
     // Nothing is reduced before open() has the first state, or after close.
     if (closed || !state) return;
     queue.push(ev);
     if (busy) return;
     busy = true;
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- an input's effects may close the host
       while (queue.length && !closed) {
-        const item = queue.shift();
+        const item = queue.shift() as Item;
         if (item.type === "milestone.shown") {
           shown(item);
           continue;
         }
-        const prev = state;
+        const prev: EngineState = state;
         const r = engine.reduce(state, {
           now: clock.now(),
           epoch: clock.epoch(),
@@ -203,8 +277,10 @@ export function createHost({
         });
         state = r.state;
         run(r.effects);
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- run() may close the host
         if (!closed) watchWork();
-        if (!closed) publish(prev, item, r.events ?? []);
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- a wrapped engine may leave events out
+        if (!closed) publish(prev, state, item, r.events ?? []);
       }
     } finally {
       busy = false;
@@ -215,15 +291,26 @@ export function createHost({
   // number it carries then and its folder, for the engine to tell the run
   // the card says "Checking" for. Like every input an effect causes, it
   // waits for the input that asked for the run to finish.
-  const runStart = (run) =>
-    queueMicrotask(() => !closed && input({ type: "run-start", ...run }));
+  const runStart = (run: {
+    run: "check" | "git" | "probe";
+    asked: number;
+    dir: string;
+    lesson?: string;
+    items?: number[] | null;
+    name?: string;
+  }) => {
+    queueMicrotask(() => {
+      if (!closed) input({ type: "run-start", ...run });
+    });
+  };
 
   // One Check child at a time, whatever asked for it: a check, a probe, a
   // stamp's probe or a prerequisite's. Only the call that starts the child
   // waits in this lane, so nothing in it waits for another run in it. One
   // whose turn comes after close starts nothing.
   const lane = oneAtATime();
-  const inLane = (fn) => lane(() => (closed ? { error: "closed" } : fn()));
+  const inLane = <R>(fn: () => Promise<R>) =>
+    lane<R | { error: "closed" }>(() => (closed ? { error: "closed" } : fn()));
 
   // Each run is in `dir`, the lesson's work folder, and its result says so:
   // the engine drops a result about a folder the lesson no longer uses. An
@@ -231,7 +318,12 @@ export function createHost({
   // folder and evidence, every item r asks for, and r's slow items if it
   // wants them. Its number is read as each input goes, so the run carries
   // the latest r's.
-  const covers = ([lesson, items, ev, dir], flags, ask, { slow }) =>
+  const covers = (
+    [lesson, items, ev, dir]: CheckArgs,
+    flags: Flags,
+    ask: CheckArgs,
+    { slow }: { slow: boolean },
+  ) =>
     ask[0] === lesson &&
     ask[2] === ev &&
     ask[3] === dir &&
@@ -239,37 +331,49 @@ export function createHost({
       (ask[1] != null && ask[1].every((i) => items.includes(i)))) &&
     (flags.slow || !slow);
   const check = owing(checkOnce, { covers });
-  async function checkOnce(flags, lesson, items, ev, dir) {
+  async function checkOnce(
+    flags: Flags,
+    lesson: string,
+    items: number[] | null,
+    ev: string | null,
+    dir: string,
+  ): Promise<void> {
     const { slow } = flags;
     // The evidence file's state before and after the run: if it changed while
     // the check ran, the result may be about the old file, so ask again.
     const before = ev ? files.stamp(dir, ev) : null;
     // Each item the child starts, for the checking label to count, with the
     // items this run was asked for.
-    const onRunning = (n, m) =>
-      !closed &&
-      input({ type: "running", lesson, items, n, m, asked: flags.asked });
+    const onRunning = (n: number, m: number) => {
+      if (!closed)
+        input({ type: "running", lesson, items, n, m, asked: flags.asked });
+    };
     // The child starts when its turn in the lane comes, not when the run was
     // asked for.
     const r = await inLane(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- as the JavaScript had it
       runStart({ run: "check", lesson, items, asked: flags.asked ?? 0, dir });
       return checks.run(dir, lesson, items, { slow, onRunning });
     });
     if (closed) return;
     // From here an r waits for another run: this one has answered.
     const asked = flags.report();
-    if (r.error)
-      return input({
+    if (failed(r)) {
+      input({
         type: "check-error",
         lesson,
         message: r.error,
         asked,
         dir,
       });
-    if (ev && files.stamp(dir, ev) !== before)
-      return queueMicrotask(
-        () => !closed && check({ slow, asked }, lesson, items, ev, dir),
-      );
+      return;
+    }
+    if (ev && files.stamp(dir, ev) !== before) {
+      queueMicrotask(() => {
+        if (!closed) void check({ slow, asked }, lesson, items, ev, dir);
+      });
+      return;
+    }
     input({
       type: "check",
       lesson,
@@ -284,71 +388,81 @@ export function createHost({
   }
   // `listed`: git lists each untracked file, for a beat on part of the tree.
   // `head`: and where HEAD is, for a head-moved beat (ticket 105).
-  const gitRun = owing(async ({ asked }, dir, listed, head) => {
-    runStart({ run: "git", asked: asked ?? 0, dir });
-    const r = await git.status(dir, { files: listed, head });
-    if (closed) return;
-    input(
-      r.error
-        ? { type: "git-error", message: r.error, asked, dir }
-        : {
-            type: "git",
-            paths: r.paths,
-            staged: r.staged,
-            files: Boolean(listed),
-            ...(head ? { head: r.head } : {}),
-            asked,
-            dir,
-          },
-    );
-  });
+  const gitRun = owing(
+    async (
+      { asked }: Flags,
+      dir: string,
+      listed: boolean | undefined,
+      head: boolean | undefined,
+    ) => {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- as the JavaScript had it
+      runStart({ run: "git", asked: asked ?? 0, dir });
+      const r = await git.status(dir, { files: listed, head });
+      if (closed) return;
+      input(
+        failed(r)
+          ? { type: "git-error", message: r.error, asked, dir }
+          : {
+              type: "git",
+              paths: r.paths,
+              staged: r.staged,
+              files: Boolean(listed),
+              ...(head ? { head: r.head } : {}),
+              asked,
+              dir,
+            },
+      );
+    },
+  );
   // A git probe (ticket 105), in the check child.
-  const probe = owing(async ({ asked }, dir, name, args) => {
-    const r = await inLane(() => {
-      runStart({ run: "probe", name, asked: asked ?? 0, dir });
-      return probes.run(dir, name, args);
-    });
-    if (closed) return;
-    input(
-      r.error
-        ? { type: "probe-error", message: r.error, asked, dir }
-        : {
-            type: "probe",
-            name,
-            args,
-            pass: r.pass,
-            hint: r.hint,
-            evidence: r.evidence,
-            state: r.state,
-            asked,
-            dir,
-          },
-    );
-  });
+  const probe = owing(
+    async ({ asked }: Flags, dir: string, name: string, args: string[]) => {
+      const r = await inLane(() => {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- as the JavaScript had it
+        runStart({ run: "probe", name, asked: asked ?? 0, dir });
+        return probes.run(dir, name, args);
+      });
+      if (closed) return;
+      input(
+        failed(r)
+          ? { type: "probe-error", message: r.error, asked, dir }
+          : ({
+              type: "probe",
+              name,
+              args,
+              pass: r.pass,
+              hint: r.hint,
+              evidence: r.evidence,
+              state: r.state,
+              asked,
+              dir,
+            } as InputOf<"probe">),
+      );
+    },
+  );
   // The state a stamp effect asks for: a file's, a probe's, where HEAD is or
   // what git status lists; null where it can't be known just now.
-  async function stampNow(e) {
-    if (e.probe) {
-      const r = await inLane(() =>
-        probes.run(e.dir, e.probe.name, e.probe.args),
-      );
-      return r.error ? null : r.state;
+  async function stampNow(e: Extract<Effect, { type: "stamp" }>) {
+    const { probe: p } = e;
+    if (p) {
+      const r = await inLane(() => probes.run(dirOf(e.dir), p.name, p.args));
+      return failed(r) ? null : r.state;
     }
     if (e.git) {
-      const r = await git.status(e.dir, { head: e.git === "head" });
-      return r.error
+      const r = await git.status(dirOf(e.dir), { head: e.git === "head" });
+      return failed(r)
         ? null
         : e.git === "head"
           ? (r.head ?? "")
           : statusStamp(r.paths);
     }
-    return files.stamp(e.dir, e.path);
+    return files.stamp(dirOf(e.dir), e.path as string);
   }
 
   // A file's bytes and its state, read now in the lesson's folder: local and
   // quick, with no process. The engine decides what they mean. A glob reads
   // the file it matches now, and says which (`found`).
-  const file = (path, asked, dir) =>
+  const file = (path: string, asked: number | undefined, dir: string) => {
     queueMicrotask(() => {
       if (closed) return;
       const found = files.match(dir, path);
@@ -356,122 +470,139 @@ export function createHost({
         type: "file",
         path,
         found,
-        read: found && files.bytes(dir, found),
+        read: (found && files.bytes(dir, found)) as Buffer | null,
         stamp: found ? files.stamp(dir, found) : "",
         asked: asked ?? 0,
         dir,
       });
     });
+  };
 
   // A lesson's prerequisites, in its work folder, in turn: a check item
   // through the check child, a file read as it is now, with no process. One
   // ask at a time; a later ask waits in line and takes the place of one
   // already waiting (singleFlight), and each answer carries its ask's number.
   // Each child waits its turn in the lane.
-  const prereqs = singleFlight(async (e) => {
-    for (const [at, req] of e.requires.entries()) {
-      const found = await (req.path
-        ? { read: files.bytes(e.dir, req.path) }
-        : req.probe
-          ? inLane(() => probes.run(e.dir, req.probe, req.args)).then((r) => ({
-              pass: r.error ? null : r.pass,
-              hint: r.hint ?? "",
-            }))
-          : inLane(() =>
-              // A slow item runs as r runs it: a run without it would come
-              // back a placeholder.
-              (SLOW[req.lesson] ?? []).includes(req.item)
-                ? checks.run(e.dir, req.lesson, [req.item], { slow: true })
-                : checks.run(e.dir, req.lesson, [req.item]),
-            ).then((r) => {
-              const item = r.items?.find((it) => it.index === req.item);
-              return { pass: item ? item.pass : null };
-            }));
-      if (closed) return;
-      input({
-        type: "prereq",
-        lesson: e.lesson,
-        dir: e.dir,
-        at,
-        asked: e.asked,
-        ...found,
-      });
-    }
-  });
+  const prereqs = singleFlight(
+    async (e: Extract<Effect, { type: "prereqs" }>) => {
+      for (const [at, req] of e.requires.entries()) {
+        const { probe: name } = req;
+        const found: {
+          read?: Buffer | null;
+          pass?: boolean | null;
+          hint?: string;
+        } = await (req.path
+          ? { read: files.bytes(e.dir, req.path) }
+          : name
+            ? inLane(() => probes.run(e.dir, name, req.args ?? [])).then(
+                (r) => ({
+                  pass: failed(r) ? null : r.pass,
+                  hint: ("hint" in r ? r.hint : undefined) ?? "",
+                }),
+              )
+            : inLane(() =>
+                // A slow item runs as r runs it: a run without it would come
+                // back a placeholder.
+                (SLOW[req.lesson] ?? []).includes(req.item as number)
+                  ? checks.run(e.dir, req.lesson, [req.item as number], {
+                      slow: true,
+                    })
+                  : checks.run(e.dir, req.lesson, [req.item as number]),
+              ).then((r) => {
+                const item =
+                  "items" in r
+                    ? r.items.find((it) => it.index === req.item)
+                    : undefined;
+                return { pass: item ? item.pass : null };
+              }));
+        if (closed) return;
+        input({
+          type: "prereq",
+          lesson: e.lesson,
+          dir: e.dir,
+          at,
+          asked: e.asked,
+          ...found,
+        } as InputOf<"prereq">);
+      }
+    },
+  );
 
   // The path prompt's ask: what is at that path, for the engine to take or
   // turn down.
-  async function lookAt(e) {
+  async function lookAt(e: Extract<Effect, { type: "folder" }>) {
     const found = await folders.look(
-      folderPath(e.text, root, home, facts.win32),
+      folderPath(e.text, root, home, (facts as Facts).win32 as boolean),
     );
-    if (!closed)
-      input({ type: "probed", key: e.key, asked: e.asked, ...found });
+    if (!closed) input(probed(found, { key: e.key, asked: e.asked }));
   }
 
   // A failed save (a read-only folder, a full disk, a file another program
   // holds) never stops the lesson: the learner sees a note and goes on.
-  let saveError = null;
+  let saveError: string | undefined | null = null;
   function save() {
     // A save the store could not move aside is never written over, whatever
     // the store does.
     if (facts?.saveKept) return;
     lastSave = clock.now();
     try {
-      store.save(toSave(state));
+      store.save(toSave(state as EngineState));
       saveError = null;
-    } catch (error) {
+    } catch (caught) {
+      const error = caught as NodeJS.ErrnoException;
       if (saveError === error.code) return;
       saveError = error.code;
-      queueMicrotask(
-        () =>
-          !closed &&
+      queueMicrotask(() => {
+        if (!closed)
           input({
             type: "notice",
             kind: "save",
             message: error.code ?? error.message,
-          }),
-      );
+          });
+      });
     }
   }
 
-  function run(effects) {
+  function run(effects: Effect[]) {
     for (const e of effects) {
-      if (e.type === "check") check(e, e.lesson, e.items, e.evidence, e.dir);
-      else if (e.type === "file") file(e.path, e.asked, e.dir);
+      if (e.type === "check")
+        void check(e, e.lesson, e.items, e.evidence, dirOf(e.dir));
+      else if (e.type === "file") file(e.path, e.asked, dirOf(e.dir));
       else if (e.type === "stamp")
-        stampNow(e).then(
-          (stamp) =>
-            !closed && input({ type: "stamp", key: e.key, stamp, dir: e.dir }),
-        );
-      else if (e.type === "git") gitRun(e, e.dir, e.files, e.head);
-      else if (e.type === "probe") probe(e, e.dir, e.name, e.args);
-      else if (e.type === "folder") lookAt(e);
-      else if (e.type === "prereqs") prereqs(e);
+        void stampNow(e).then((stamp) => {
+          if (!closed) input({ type: "stamp", key: e.key, stamp, dir: e.dir });
+        });
+      else if (e.type === "git") void gitRun(e, dirOf(e.dir), e.files, e.head);
+      else if (e.type === "probe") void probe(e, dirOf(e.dir), e.name, e.args);
+      else if (e.type === "folder") void lookAt(e);
+      else if (e.type === "prereqs") void prereqs(e);
       else if (e.type === "commands")
-        queueMicrotask(
-          () =>
-            !closed &&
+        queueMicrotask(() => {
+          if (!closed)
             input({
               type: "commands",
               found: Object.fromEntries(
                 e.names.map((n) => [n, commands.has(n)]),
               ),
-            }),
-        );
+            });
+        });
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- an engine a test wraps may add any effect
       else if (e.type === "save") save();
-      else throw new Error(`unknown effect: ${e.type}`);
+      else throw new Error(`unknown effect: ${(e as { type: string }).type}`);
     }
   }
 
   // Ask again for whatever the Learner waits on.
   function poke() {
-    const w = watching(state);
-    if (w?.check)
-      check({}, w.check.lesson, w.check.items, evidence(state), w.dir);
-    if (w?.file) file(w.file, 0, w.dir);
-    if (w?.git) gitRun({}, w.dir, w.files, w.head);
-    if (w?.probe) probe({}, w.dir, w.probe.name, w.probe.args);
+    const s = state as EngineState;
+    const w = watching(s);
+    if (!w) return;
+    const dir = dirOf(w.dir);
+    if (w.check)
+      void check({}, w.check.lesson, w.check.items, evidence(s), dir);
+    if (w.file) file(w.file, 0, dir);
+    if (w.git) void gitRun({}, dir, w.files, w.head);
+    if (w.probe) void probe({}, dir, w.probe.name, w.probe.args);
   }
 
   // The copy is always watched: its .practice/ decides whether progress
@@ -482,7 +613,7 @@ export function createHost({
   const changed = () => {
     if (closed || clock.now() - lastSave < SAVE_QUIET_MS) return;
     const practiceDir = files.exists(join(root, ".practice"));
-    if (practiceDir !== state.facts.practiceDir)
+    if (practiceDir !== (state as EngineState).facts.practiceDir)
       input({ type: "facts", facts: { practiceDir } });
     // Only a change the watcher saw counts as the Learner working (D1).
     input({ type: "activity" });
@@ -495,8 +626,9 @@ export function createHost({
   let probing = false;
   let lastProbe = -Infinity;
   function reprobe() {
-    const dir = folderOf(state);
-    const found = dir && dir !== root ? state.probes[dir] : null;
+    const s = state as EngineState;
+    const dir = folderOf(s);
+    const found = dir && dir !== root ? s.probes[dir] : null;
     if (
       closed ||
       probing ||
@@ -506,14 +638,14 @@ export function createHost({
       return;
     probing = true;
     lastProbe = clock.now();
-    folders.look(dir).then((f) => {
+    void folders.look(dir as string).then((f) => {
       probing = false;
-      if (!closed) input({ type: "probed", ...f });
+      if (!closed) input(probed(f));
     });
   }
   function watchWork() {
     if (closed || !started) return;
-    const dir = workFolder(state) ?? root;
+    const dir = workFolder(state as EngineState) ?? root;
     if (dir === work.dir) return;
     work.watcher?.close();
     work = { dir, watcher: dir === root ? null : adapters.watch(dir, changed) };
@@ -530,7 +662,7 @@ export function createHost({
     async open() {
       const [gitError, name] = await git.ask(root);
       if (closed) return null;
-      facts = {
+      const known = {
         root,
         name,
         gitError,
@@ -539,27 +671,29 @@ export function createHost({
         win32: platform === "win32",
         linux: platform === "linux",
         // A save the store could not move aside is never written over.
-        saveKept: saved?.unreadable === "kept",
+        saveKept: unreadable === "kept",
         ...given,
       };
-      state = engine.initialState({
-        course,
-        saved,
+      facts = known;
+      const first = engine.initialState({
+        course: course as CourseEntry[],
+        saved: saved as SavedProgress | null,
         facts,
         now: clock.now(),
         epoch: clock.epoch(),
       });
+      state = first;
       revision = 1;
       placeRevision = 1;
-      place = placeOf(state);
-      view = project(state);
+      place = placeOf(first);
+      view = project(first);
       viewJson = JSON.stringify(view);
       // A save the store could not read: the first snapshot says so, a
       // pending milestone until a tab shows it.
-      if (saved?.unreadable)
+      if (unreadable)
         input({
           type: "notice",
-          kind: saved.unreadable === "moved" ? "unreadable" : "unreadable-kept",
+          kind: unreadable === "moved" ? "unreadable" : "unreadable-kept",
         });
       return snapshot();
     },
@@ -571,12 +705,16 @@ export function createHost({
       started = true;
       watcher = adapters.watch(root, changed);
       watchWork();
-      intervals.push(clock.setInterval(() => input({ type: "tick" }), TICK_MS));
+      intervals.push(
+        clock.setInterval(() => {
+          input({ type: "tick" });
+        }, TICK_MS),
+      );
       let lastPoll = -Infinity;
       intervals.push(
         clock.setInterval(() => {
           if (clock.now() - lastProbe >= POLL_CHECK_MS) reprobe();
-          const w = watching(state);
+          const w = watching(state as EngineState);
           if (
             !w ||
             clock.now() - lastPoll < (w.git ? POLL_GIT_MS : POLL_CHECK_MS)
@@ -589,19 +727,20 @@ export function createHost({
       if (ahead) save();
       for (const dir of new Set(Object.values(state.folders))) {
         if (dir === root) continue;
-        if (dir === ahead?.path) input({ type: "probed", ...ahead });
+        if (ahead && dir === ahead.path) input(probed(ahead));
         else
-          folders
-            .look(dir)
-            .then((found) => !closed && input({ type: "probed", ...found }));
+          void folders.look(dir).then((found) => {
+            if (!closed) input(probed(found));
+          });
       }
     },
     // The first look: the current lesson's check, for "welcome back" and the
     // map, and what its overview asks about.
     firstLook() {
       if (closed || !state) return;
-      if (opensWithCheck(state) && folderOf(state))
-        check({}, state.lesson, null, null, folderOf(state));
+      const dir = folderOf(state);
+      if (opensWithCheck(state) && dir)
+        void check({}, state.lesson, null, null, dir);
       run(introAsks(state));
     },
     // An action, with the instance and revision the tab showed when it sent
@@ -610,13 +749,16 @@ export function createHost({
     // this instance has not reached yet is one), applies nothing and comes
     // back `stale`; a milestone shown is never stale. The revision and
     // snapshot after it come back.
-    dispatch(action, { revision: seen, instance: from } = {}) {
+    dispatch(action, { revision: seen, instance: from } = {}): Dispatched {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- a client may send anything
       const type = action?.type;
-      if (!HOST_ACTION_TYPES.includes(type))
+      if (!(HOST_ACTION_TYPES as readonly string[]).includes(type))
         throw new TypeError(`not an action: ${type}`);
       // The host's clock stamps every input: a client's own time is not one,
       // nor is its revision.
-      const { now, revision: _, ...a } = action;
+      const a: Record<string, unknown> = { ...action };
+      delete a.now;
+      delete a.revision;
       if (
         state &&
         type !== "milestone.shown" &&
@@ -625,7 +767,7 @@ export function createHost({
             (seen < placeRevision || seen > revision)))
       )
         return { stale: true, revision, snapshot: snapshot() };
-      input(a);
+      input(a as unknown as Item);
       return { revision, snapshot: snapshot() };
     },
     snapshot,
@@ -643,7 +785,9 @@ export function createHost({
     },
     subscribe(fn) {
       listeners.add(fn);
-      return () => listeners.delete(fn);
+      return () => {
+        listeners.delete(fn);
+      };
     },
     close() {
       if (closed) return;

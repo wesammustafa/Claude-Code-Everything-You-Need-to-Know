@@ -1,3 +1,4 @@
+// @ts-check
 // The Beginner capstone: fix the bug in capstone/beginner-bug.md from plan to
 // commit. It checks the parts of the Beginner Exit statements B2, B3 and B5
 // that a script can see in files and git: the plan came before any edit, the
@@ -10,31 +11,46 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { NPM_TEST_LIMIT, testRunError, testsPass, nothingUncommitted } from './b-3.mjs';
 import { isTestFile, planPaths, statusPaths } from '../paths.mjs';
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Beginner capstone';
 
-const lines = (text) => (text ?? '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+const lines = (/** @type {string | null} */ text) => (text ?? '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
 const SAVE_COMMIT = '`git rev-parse HEAD > .practice/capstone-commit.txt`';
 const AMEND = `\`git commit --amend\` and run ${SAVE_COMMIT} again`;
 // A test committed after its fix: the saved commit holds no fix to test.
 const ONLY_TESTS = `The commit changes only tests. Combine it with the fix before it, if you haven't pushed, or amend with \`git commit --amend\` to include the fix. Then run ${SAVE_COMMIT} again.`;
 
 // The commit the Learner saved and the files it changes, or what to fix.
+// Callers return `error` before they read the rest.
+/** @typedef {{ error?: string, sha: string, files: string[] }} Saved */
+
+/**
+ * @param {Repo} repo
+ * @returns {Saved}
+ */
 function savedCommit(repo) {
   const sha = lines(repo.read('.practice/capstone-commit.txt'))[0];
-  if (!sha) return { error: `After you commit the fix, run ${SAVE_COMMIT}.` };
+  if (!sha) return /** @type {Saved} */ ({ error: `After you commit the fix, run ${SAVE_COMMIT}.` });
   try {
     return { sha, files: repo.git('show', '--name-only', '--format=', sha).split('\n').filter(Boolean) };
   } catch {
-    return { error: `\`.practice/capstone-commit.txt\` names ${sha}, which is not a commit in this repository.` };
+    return /** @type {Saved} */ ({ error: `\`.practice/capstone-commit.txt\` names ${sha}, which is not a commit in this repository.` });
   }
 }
 
-const git = (cwd, ...args) => spawnSync('git', ['-c', 'advice.detachedHead=false', ...args], { cwd, encoding: 'utf8' });
+const git = (/** @type {string} */ cwd, /** @type {string[]} */ ...args) => spawnSync('git', ['-c', 'advice.detachedHead=false', ...args], { cwd, encoding: 'utf8' });
 
 // Runs `npm test` on the saved commit with every file it changes, except its
 // tests, put back as it was in the commit before it. In a scratch clone, so
 // the Learner's working tree and branches stay as they are.
+/**
+ * @param {Repo} repo
+ * @param {string} sha
+ * @param {string[]} files
+ * @returns {{ error?: string, passed?: boolean }}
+ */
 function testsWithoutFix(repo, sha, files) {
   const dir = mkdtempSync(join(tmpdir(), 'capstone-before-fix-'));
   try {
@@ -54,6 +70,7 @@ function testsWithoutFix(repo, sha, files) {
   }
 }
 
+/** @type {Item[]} */
 export const items = [
   {
     text: '`.practice/capstone-before.txt`, saved while the plan was on screen, lists no changed files',

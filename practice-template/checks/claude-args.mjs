@@ -1,3 +1,4 @@
+// @ts-check
 // One `claude` command line, read the way Claude Code v2.1.285 reads it
 // (with the commander library): `--flag value` and `--flag=value`; short
 // flags that combine, as in `-cp`; a flag whose value is optional takes the
@@ -97,21 +98,25 @@ const SPEC = [
   '-w, --worktree [name]',
 ];
 
-const camel = (flag) => flag.replace(/^-+/, '').replace(/-(\w)/g, (_, c) => c.toUpperCase());
+const camel = (/** @type {string} */ flag) => flag.replace(/^-+/, '').replace(/-(\w)/g, (_, /** @type {string} */ c) => c.toUpperCase());
 
 // Each flag, short and long, to `{ name, kind }`: kind is 'flag', 'value',
 // 'optional' or 'list'; name is the first long flag in camelCase, as in
 // `allowedTools` for both `--allowedTools` and `--allowed-tools`.
+/** @typedef {{ name: string, kind: 'flag' | 'value' | 'optional' | 'list' }} Option */
+
+/** @type {Map<string, Option>} */
 const OPTIONS = new Map();
 for (const line of SPEC) {
-  const [, flags, open, list] = line.match(/^(.*?)(?: ([<[])[^>\]]*?(\.\.\.)?[>\]])?$/);
-  const names = flags.split(', ');
+  const [, flags, open, list] = /** @type {RegExpMatchArray} */ (line.match(/^(.*?)(?: ([<[])[^>\]]*?(\.\.\.)?[>\]])?$/));
+  const names = /** @type {string} */ (flags).split(', ');
+  /** @type {Option['kind']} */
   const kind = !open ? 'flag' : open === '[' ? 'optional' : list ? 'list' : 'value';
-  const option = { name: camel(names.find((n) => n.startsWith('--'))), kind };
+  const option = { name: camel(/** @type {string} */ (names.find((n) => n.startsWith('--')))), kind };
   for (const n of names) OPTIONS.set(n, option);
 }
 
-const optionLike = (arg) => arg.length > 1 && arg[0] === '-';
+const optionLike = (/** @type {string} */ arg) => arg.length > 1 && arg[0] === '-';
 
 // Reads one argv (without `claude` itself). Returns `{ print, promptFirst,
 // next, prompt, operands, flags, unknown }`: `print` when `-p` or `--print`
@@ -121,26 +126,50 @@ const optionLike = (arg) => arg.length > 1 && arg[0] === '-';
 // value left out), a string for a value (null when it's missing; the last
 // one wins) and an array for a list (repeats add up); `unknown`, options
 // Claude Code doesn't know, which make it stop with an error before the run.
+/**
+ * @typedef {{ text: string, at: number, rest?: boolean }} ArgItem
+ */
+
+/** @typedef {{ at?: number, next: string | undefined }} Print */
+
+/**
+ * Flags by name: true, a string or null, or a list, by the flag's kind, so
+ * a caller reads each as the flag it knows.
+ * @typedef {Record<string, any>} Flags
+ */
+
+/**
+ * @param {string[]} argv
+ * @returns {{ print: boolean, promptFirst: boolean, next: string | undefined, prompt: string | undefined, operands: string[], flags: Flags, unknown: string[] }}
+ */
 export function parseClaudeArgs(argv) {
+  /** @type {Flags} */
   const flags = {};
+  /** @type {ArgItem[]} */
   const operands = [];
+  /** @type {string[]} */
   const unknown = [];
   // `rest` marks what is left of a token after a combined short flag.
+  /** @type {ArgItem[]} */
   const queue = argv.map((text, at) => ({ text, at }));
+  /** @type {Option | null} */
   let list = null;
+  /** @type {Print | null} */
   let print = null;
+  /** @type {(option: Option, value: true | string | null) => void} */
   const set = (option, value) => {
-    if (option.kind === 'list') flags[option.name] = [...(flags[option.name] ?? []), value];
+    if (option.kind === 'list') flags[option.name] = [.../** @type {(string | null)[]} */ (flags[option.name] ?? []), /** @type {string | null} */ (value)];
     else flags[option.name] = value;
   };
   // Where the prompt must be when -p ends its token, or what follows it in
   // the same token, as in `-pc`.
+  /** @type {(item: ArgItem, rest?: string) => void} */
   const printed = (item, rest) => {
     if (print) return;
     print = rest ? { next: `-${rest}` } : { at: item.at + 1, next: argv[item.at + 1] };
   };
   while (queue.length) {
-    const item = queue.shift();
+    const item = /** @type {ArgItem} */ (queue.shift());
     const arg = item.text;
     if (arg === '--' && !item.rest) {
       operands.push(...queue);
@@ -157,9 +186,9 @@ export function parseClaudeArgs(argv) {
         set(option, true);
         if (option.name === 'print') printed(item);
       } else if (option.kind === 'optional') {
-        set(option, queue.length && !optionLike(queue[0].text) ? queue.shift().text : true);
+        set(option, queue.length && !optionLike(/** @type {ArgItem} */ (queue[0]).text) ? /** @type {ArgItem} */ (queue.shift()).text : true);
       } else {
-        set(option, queue.length ? queue.shift().text : null);
+        set(option, queue.length ? /** @type {ArgItem} */ (queue.shift()).text : null);
         if (option.kind === 'list') list = option;
       }
       continue;
@@ -176,18 +205,19 @@ export function parseClaudeArgs(argv) {
       continue;
     }
     const assigned = arg.match(/^(--[^=]+)=([\s\S]*)$/);
-    const long = assigned && OPTIONS.get(assigned[1]);
+    const long = assigned && OPTIONS.get(/** @type {string} */ (assigned[1]));
     if (long && long.kind !== 'flag') {
-      set(long, assigned[2]);
+      set(long, /** @type {string} */ (assigned[2]));
       continue;
     }
     if (optionLike(arg)) unknown.push(arg);
     else operands.push(item);
   }
+  // printed() sets print, out of the compiler's sight.
   return {
     print: Boolean(print),
-    promptFirst: Boolean(print?.at !== undefined && operands[0]?.at === print.at),
-    next: print?.next,
+    promptFirst: Boolean(/** @type {Print | null} */ (print)?.at !== undefined && operands[0]?.at === /** @type {Print} */ (print).at),
+    next: /** @type {Print | null} */ (print)?.next,
     prompt: operands[0]?.text,
     operands: operands.map((o) => o.text),
     flags,
@@ -198,7 +228,9 @@ export function parseClaudeArgs(argv) {
 // The entries of a tool list, such as `--allowedTools` values: split on
 // commas and spaces, except inside parentheses, so `Bash(git diff *)` stays
 // one entry.
+/** @param {Iterable<unknown> | null | undefined} values */
 export function ruleList(values) {
+  /** @type {string[]} */
   const entries = [];
   for (const value of values ?? []) {
     let depth = 0;
@@ -227,7 +259,12 @@ export function ruleList(values) {
 // inside `$(...)` and backticks count too, and a here-document's text is
 // skipped. A command that runs Claude Code by its path, such as
 // `~/.local/bin/claude`, counts as a `claude` command.
+/**
+ * @param {string | null | undefined} text
+ * @returns {string[][]}
+ */
 export function scriptCalls(text) {
+  /** @type {string[][]} */
   const calls = [];
   scan(String(text ?? '').replace(/\r\n?/g, '\n'), new Map(), calls);
   return calls;
@@ -241,6 +278,12 @@ const NAME = /^[A-Za-z_]\w*/;
 
 // The index just past the `close` that matches the `open` at `start`,
 // skipping quoted text; the end of `src` when there is none.
+/**
+ * @param {string} src
+ * @param {number} start
+ * @param {string} open
+ * @param {string} close
+ */
 function matching(src, start, open, close) {
   let depth = 0;
   for (let i = start; i < src.length; i += 1) {
@@ -255,10 +298,18 @@ function matching(src, start, open, close) {
   return src.length;
 }
 
+/**
+ * @param {string} src
+ * @param {Map<string, string>} vars
+ * @param {string[][]} calls
+ */
 function scan(src, vars, calls) {
+  /** @type {string[]} */
   let words = [];
+  /** @type {string | null} */
   let word = null;
   let target = false;
+  /** @type {string[]} */
   let heredocs = [];
   const end = () => {
     if (word !== null) {
@@ -267,7 +318,7 @@ function scan(src, vars, calls) {
     }
     word = null;
   };
-  const add = (value, quoted) => {
+  const add = (/** @type {string} */ value, /** @type {boolean} */ quoted) => {
     if (quoted || !/\s/.test(value)) {
       word = (word ?? '') + value;
       return;
@@ -281,27 +332,28 @@ function scan(src, vars, calls) {
   const finish = () => {
     end();
     let k = 0;
+    /** @type {RegExpMatchArray[]} */
     const assigned = [];
     while (k < words.length) {
-      if (LEADING.has(words[k])) k += 1;
-      else if (DECLARE.has(words[k])) {
+      if (LEADING.has(/** @type {string} */ (words[k]))) k += 1;
+      else if (DECLARE.has(/** @type {string} */ (words[k]))) {
         k += 1;
-        while (k < words.length && words[k].startsWith('-')) k += 1;
-      } else if (ASSIGNMENT.test(words[k])) {
-        assigned.push(words[k].match(ASSIGNMENT));
+        while (k < words.length && /** @type {string} */ (words[k]).startsWith('-')) k += 1;
+      } else if (ASSIGNMENT.test(/** @type {string} */ (words[k]))) {
+        assigned.push(/** @type {RegExpMatchArray} */ (/** @type {string} */ (words[k]).match(ASSIGNMENT)));
         k += 1;
       } else break;
     }
-    if (k === words.length) for (const [, name, value] of assigned) vars.set(name, value);
+    if (k === words.length) for (const [, name, value] of assigned) vars.set(/** @type {string} */ (name), /** @type {string} */ (value));
     if (words[k] === 'env') {
       k += 1;
-      while (k < words.length && (words[k].startsWith('-') || ASSIGNMENT.test(words[k]))) k += 1;
+      while (k < words.length && (/** @type {string} */ (words[k]).startsWith('-') || ASSIGNMENT.test(/** @type {string} */ (words[k])))) k += 1;
     }
-    if (k < words.length && /(^|\/)claude$/.test(words[k])) calls.push(words.slice(k + 1));
+    if (k < words.length && /(^|\/)claude$/.test(/** @type {string} */ (words[k]))) calls.push(words.slice(k + 1));
     words = [];
   };
   // Reads a `$` expansion at `i` and returns the index after it.
-  const expand = (i, quoted) => {
+  const expand = (/** @type {number} */ i, /** @type {boolean} */ quoted) => {
     const next = src[i + 1];
     if (next === '(') {
       const stop = matching(src, i + 1, '(', ')');
@@ -316,14 +368,14 @@ function scan(src, vars, calls) {
       const stop = matching(src, i + 1, '{', '}');
       const inner = src.slice(i + 2, stop - 1);
       const m = inner.match(/^([A-Za-z_]\w*)(?:(:?[-=])([\s\S]*))?$/);
-      if (m && vars.has(m[1])) add(vars.get(m[1]), quoted);
-      else if (m && m[2]) add(m[3], quoted);
+      if (m && vars.has(/** @type {string} */ (m[1]))) add(/** @type {string} */ (vars.get(/** @type {string} */ (m[1]))), quoted);
+      else if (m && m[2]) add(/** @type {string} */ (m[3]), quoted);
       else add(src.slice(i, stop), true);
       return stop;
     }
     const name = src.slice(i + 1).match(NAME)?.[0];
     if (name) {
-      add(vars.has(name) ? vars.get(name) : `$${name}`, vars.has(name) ? quoted : true);
+      add(vars.has(name) ? /** @type {string} */ (vars.get(name)) : `$${name}`, vars.has(name) ? quoted : true);
       return i + 1 + name.length;
     }
     if (next && /[\d@*#?$!-]/.test(next)) {
@@ -334,7 +386,7 @@ function scan(src, vars, calls) {
     return i + 1;
   };
   // Reads a backtick command at `i` and returns the index after it.
-  const backtick = (i) => {
+  const backtick = (/** @type {number} */ i) => {
     const close = src.indexOf('`', i + 1);
     const stop = close === -1 ? src.length : close + 1;
     scan(src.slice(i + 1, close === -1 ? src.length : close), new Map(vars), calls);
@@ -344,7 +396,7 @@ function scan(src, vars, calls) {
 
   let i = 0;
   while (i < src.length) {
-    const c = src[i];
+    const c = /** @type {string} */ (src[i]);
     if (c === '\\') {
       if (src[i + 1] !== '\n') add(src[i + 1] ?? '', true);
       i += 2;
@@ -357,12 +409,12 @@ function scan(src, vars, calls) {
       i += 1;
       while (i < src.length && src[i] !== '"') {
         if (src[i] === '\\' && /["\\$`\n]/.test(src[i + 1] ?? '')) {
-          if (src[i + 1] !== '\n') add(src[i + 1], true);
+          if (src[i + 1] !== '\n') add(/** @type {string} */ (src[i + 1]), true);
           i += 2;
         } else if (src[i] === '$') i = expand(i, true);
         else if (src[i] === '`') i = backtick(i);
         else {
-          add(src[i], true);
+          add(/** @type {string} */ (src[i]), true);
           i += 1;
         }
       }
@@ -380,7 +432,7 @@ function scan(src, vars, calls) {
       if (c === '<' && src[i + 1] === '<' && src[i + 2] !== '<') {
         const m = src.slice(i).match(/^<<-?\s*(['"]?)([^\s'";|&<>()]+)\1/);
         if (m) {
-          heredocs.push(m[2]);
+          heredocs.push(/** @type {string} */ (m[2]));
           i += m[0].length;
           continue;
         }

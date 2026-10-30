@@ -3,21 +3,51 @@
 // memory. Each records what the host asked, and a test answers when it
 // says, or at once where it gives an answer.
 import { posix } from "node:path";
-import { globName, isGlob, stampFor } from "./engine.mjs";
+import { globName, isGlob, stampFor } from "./engine.ts";
+import type {
+  Adapters,
+  CheckOptions,
+  CheckResult,
+  Clock,
+  FolderLook,
+  GitStatus,
+  ProbeResult,
+  StoreLoad,
+} from "./types.ts";
 
 const turn = async () => {
-  for (let i = 0; i < 3; i++) await new Promise((r) => setImmediate(r));
+  for (let i = 0; i < 3; i++)
+    await new Promise((r) => {
+      setImmediate(r);
+    });
 };
 
 // A clock with timers. advance(ms) runs every timer that falls due, in time
 // order (ties by the order they were set), each at its own time, and lets
 // the event loop turn before and after each one. It reads `from` at first,
 // and its wall clock `epoch0` more.
-export function fakeClock(from = 1_000_000, epoch0 = 0) {
+/** A clock whose timers run only when a test advances it. */
+export interface FakeClock extends Clock {
+  setTimeout(fn: () => void, ms?: number): number;
+  setInterval(fn: () => void, ms: number): number;
+  /** Time passing inside a call, such as a slow write: no timer runs. */
+  spend(ms: number): void;
+  advance(ms: number): Promise<void>;
+  /** The timers waiting, as { ms, every } from now. */
+  pending(): { ms: number; every: number | null }[];
+}
+
+interface Timer {
+  fn: () => void;
+  due: number;
+  every: number | null;
+}
+
+export function fakeClock(from = 1_000_000, epoch0 = 0): FakeClock {
   let time = from;
   let seq = 0;
-  const timers = new Map();
-  const add = (fn, ms, every) => {
+  const timers = new Map<unknown, Timer>();
+  const add = (fn: () => void, ms: number, every: number | null) => {
     seq += 1;
     timers.set(seq, { fn, due: time + Math.max(0, ms), every });
     return seq;
@@ -31,8 +61,12 @@ export function fakeClock(from = 1_000_000, epoch0 = 0) {
     },
     setTimeout: (fn, ms = 0) => add(fn, ms, null),
     setInterval: (fn, ms) => add(fn, ms, ms),
-    clearTimeout: (id) => timers.delete(id),
-    clearInterval: (id) => timers.delete(id),
+    clearTimeout: (id) => {
+      timers.delete(id);
+    },
+    clearInterval: (id) => {
+      timers.delete(id);
+    },
     // The timers waiting, as { ms, every } from now.
     pending: () =>
       [...timers.values()].map((x) => ({ ms: x.due - time, every: x.every })),
@@ -42,7 +76,10 @@ export function fakeClock(from = 1_000_000, epoch0 = 0) {
         await turn();
         const next = [...timers.entries()]
           .filter(([, x]) => x.due <= end)
-          .sort((a, b) => a[1].due - b[1].due || a[0] - b[0])[0];
+          .sort(
+            (a, b) =>
+              a[1].due - b[1].due || (a[0] as number) - (b[0] as number),
+          )[0];
         if (!next) break;
         const [id, x] = next;
         time = x.due;
@@ -58,15 +95,26 @@ export function fakeClock(from = 1_000_000, epoch0 = 0) {
 
 // Runs the host asks for, held until the test resolves them, or answered at
 // once by `answer(call)` where it returns a result.
-function heldRuns(answer, shape) {
-  const calls = [];
+export type Held<C, R> = C & { done?: true; resolve: (result: R) => void };
+
+export interface HeldRuns<A extends unknown[], C, R> {
+  calls: Held<C, R>[];
+  held: () => Held<C, R>[];
+  run: (...args: A) => Promise<R>;
+}
+
+function heldRuns<A extends unknown[], C extends object, R>(
+  answer: ((call: Held<C, R>) => R | undefined) | undefined,
+  shape: (...args: A) => C,
+): HeldRuns<A, C, R> {
+  const calls: Held<C, R>[] = [];
   return {
     calls,
     held: () => calls.filter((c) => !c.done),
     run(...args) {
-      const call = shape(...args);
+      const call = shape(...args) as Held<C, R>;
       calls.push(call);
-      return new Promise((resolve) => {
+      return new Promise<R>((resolve) => {
         call.resolve = (result) => {
           call.done = true;
           resolve(result);
@@ -80,11 +128,26 @@ function heldRuns(answer, shape) {
 
 // An in-memory tree: absolute paths to { bytes, mtimeMs }, or to a folder.
 // A read of a path `fail` names throws its code.
-function fakeFiles(tree = {}) {
-  const entries = new Map();
-  const failing = new Map();
+type Entry =
+  { folder: true } | { folder?: undefined; bytes: Buffer; mtimeMs: number };
+
+export interface FakeFiles {
+  write(abs: string, text: string, mtimeMs?: number): void;
+  folder(abs: string): void;
+  remove(abs: string): void;
+  fail(abs: string, code?: string | null): void;
+  exists(abs: string): boolean;
+  isFolder(abs: string): boolean;
+  match(dir: string, path: string): string | null;
+  bytes(dir: string, path: string): Buffer | null;
+  stamp(dir: string, path: string): string | null;
+}
+
+function fakeFiles(tree: Record<string, string | null> = {}): FakeFiles {
+  const entries = new Map<string, Entry>();
+  const failing = new Map<string, string>();
   let clock = 1_000;
-  const files = {
+  const files: FakeFiles = {
     write(abs, text, mtimeMs = (clock += 1)) {
       for (
         let d = posix.dirname(abs);
@@ -113,7 +176,7 @@ function fakeFiles(tree = {}) {
       const name = globName(posix.basename(path));
       const at = posix.join(dir, folder);
       if (!entries.get(at)?.folder) return null;
-      let best = null;
+      let best: { at: number; name: string } | null = null;
       for (const [k, e] of entries) {
         const base = posix.basename(k);
         if (e.folder || posix.dirname(k) !== at || !name.test(base)) continue;
@@ -157,38 +220,121 @@ function fakeFiles(tree = {}) {
  * `folders` maps a path to its look (missing by default); `commands` names
  * what is on the PATH; `saved` is what the store loads.
  */
+export interface CheckCall {
+  dir: string;
+  lesson: string;
+  items: number[] | null;
+  slow: boolean;
+  onRunning: (n: number, m: number) => void;
+}
+
+export interface ProbeCall {
+  dir: string;
+  name: string;
+  args: string[];
+}
+
+export interface GitCall {
+  dir: string;
+  opts: { files?: boolean | undefined; head?: boolean | undefined };
+}
+
+type GitAsk = [string | null, string];
+type GitResult = GitStatus | { error: string };
+
+export interface FakeOptions {
+  root?: string;
+  clock?: Clock;
+  tree?: Record<string, string | null>;
+  checks?: (call: Held<CheckCall, CheckResult>) => CheckResult | undefined;
+  probes?: (call: Held<ProbeCall, ProbeResult>) => ProbeResult | undefined;
+  git?: {
+    ask?: GitAsk | ((dir: string) => Promise<GitAsk>);
+    status?: (
+      dir: string,
+      opts: GitCall["opts"],
+    ) => Promise<GitResult> | GitResult | undefined;
+  };
+  folders?: Record<string, FolderLook>;
+  commands?: string[];
+  saved?: StoreLoad;
+}
+
+interface Arm {
+  dir: string;
+  onChange: () => void;
+  closed: boolean;
+}
+
+/** The fake adapters, with what each recorded and how a test answers. */
+export interface FakeAdapters extends Adapters {
+  files: FakeFiles;
+  checks: HeldRuns<
+    [string, string, number[] | null, CheckOptions?],
+    CheckCall,
+    CheckResult
+  >;
+  probes: HeldRuns<[string, string, string[]], ProbeCall, ProbeResult>;
+  git: Adapters["git"] & {
+    asked: string[];
+    calls: Held<GitCall, GitResult>[];
+    held(): Held<GitCall, GitResult>[];
+  };
+  folders: Adapters["folders"] & { looked: string[] };
+  armed(): string[];
+  arms: Arm[];
+  fire(dir: string): void;
+  store: Adapters["store"] & {
+    saves: object[];
+    fail(code: string | null): void;
+  };
+  commands: Adapters["commands"] & { names: Set<string> };
+  stopped: number;
+}
+
 export function fakeAdapters({
   root = "/copy",
   clock = fakeClock(),
   tree = {},
   checks: checkAnswer,
   probes: probeAnswer,
-  git: { ask = [null, "Sam"], status } = {},
+  git: { ask = [null, "Sam"] as GitAsk, status } = {},
   folders: looks = {},
   commands: names = [],
   saved = null,
-} = {}) {
+}: FakeOptions = {}): FakeAdapters {
   const files = fakeFiles(tree);
-  const checks = heldRuns(checkAnswer, (dir, lesson, items, opts = {}) => ({
-    dir,
-    lesson,
-    items,
-    slow: opts.slow ?? false,
-    onRunning: opts.onRunning ?? (() => {}),
-  }));
-  const probes = heldRuns(probeAnswer, (dir, name, args) => ({
-    dir,
-    name,
-    args,
-  }));
-  const gitCalls = heldRuns(
-    status && ((call) => status(call.dir, call.opts)),
+  const checks = heldRuns(
+    checkAnswer,
+    (
+      dir: string,
+      lesson: string,
+      items: number[] | null,
+      opts: CheckOptions = {},
+    ): CheckCall => ({
+      dir,
+      lesson,
+      items,
+      slow: opts.slow ?? false,
+      onRunning: opts.onRunning ?? (() => {}),
+    }),
+  );
+  const probes = heldRuns(
+    probeAnswer,
+    (dir: string, name: string, args: string[]): ProbeCall => ({
+      dir,
+      name,
+      args,
+    }),
+  );
+  const gitCalls = heldRuns<[string, GitCall["opts"]?], GitCall, GitResult>(
+    status && ((call) => status(call.dir, call.opts) as GitResult | undefined),
     (dir, opts = {}) => ({ dir, opts }),
   );
-  const asked = [];
-  const arms = [];
-  let failing = null;
-  const adapters = {
+  const asked: string[] = [];
+  const arms: Arm[] = [];
+  let failing: { code: string } | null = null;
+  const adapters: FakeAdapters = {
     clock,
     files,
     checks,
@@ -219,7 +365,7 @@ export function fakeAdapters({
       },
     },
     watch(dir, onChange) {
-      const arm = { dir, onChange, closed: false };
+      const arm: Arm = { dir, onChange, closed: false };
       arms.push(arm);
       return {
         close() {
