@@ -45,7 +45,7 @@ import {
 // and holds.mjs pick them), and the text measures E2 and E14 test.
 import { at, atStep, b1Done, missing, reopen } from "./flow-places.mjs";
 import { C } from "../src/copy.mjs";
-import { inline, width, wrapRuns } from "../src/text.mjs";
+import { inline, width, wrapRuns } from "../src/text.ts";
 
 // ---- ways out when a check keeps failing for an earlier reason (ticket 192) --
 const AFTER = ".practice/b-2-after.txt";

@@ -6,7 +6,7 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { frontmatter } from "./frontmatter.mjs";
-import { inline } from "./text.mjs";
+import { inline } from "./text.ts";
 
 // `### <id> | <part> step N of M | <title>`, or `### C | Check | <title>`
 // and `### R<n> | Warm-up | <title>`. A page whose Your turn is parts, not

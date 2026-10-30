@@ -30,9 +30,10 @@ const HOST_ROOTS = [
   at("quest/host/src/fake.mjs"),
 ];
 
-const mjsIn = (dir) =>
+// The engine's sources are TypeScript since ticket 214.
+const sourcesIn = (dir) =>
   readdirSync(at(dir), { recursive: true })
-    .filter((f) => f.endsWith(".mjs"))
+    .filter((f) => /\.(mjs|ts)$/.test(f))
     .map((f) => join(at(dir), f));
 const walk = (roots) => {
   const out = new Set();
@@ -44,8 +45,8 @@ const walk = (roots) => {
 // module they reach short of the Checks.
 function scope() {
   const files = new Set([
-    ...mjsIn("quest/host/src"),
-    ...mjsIn("quest/engine/src"),
+    ...sourcesIn("quest/host/src"),
+    ...sourcesIn("quest/engine/src"),
     ...walk([...HOST_ROOTS, ENGINE]),
   ]);
   return asSources(ROOT, files);
@@ -71,6 +72,12 @@ test("the engine and the host make no network call, start only the Check child a
     "quest/engine/src/status.mjs",
   ])
     assert.ok(paths.includes(must), `the guard reads ${must}`);
+  // Every engine source, whatever its extension, is read.
+  for (const file of readdirSync(at("quest/engine/src")))
+    assert.ok(
+      paths.includes(`quest/engine/src/${file}`),
+      `the guard reads quest/engine/src/${file}`,
+    );
   assert.ok(!paths.some((p) => p.startsWith("practice-template/checks/")));
   assert.deepEqual(readOnlyFindings(sources), []);
 });

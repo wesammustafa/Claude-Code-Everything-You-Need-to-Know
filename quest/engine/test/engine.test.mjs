@@ -325,9 +325,10 @@ const inside = (file, dir) => !relative(dir, file).startsWith("..");
 
 test("the import walk sees every way a module reaches another", () => {
   const text =
-    "import { a } from './a.mjs';\nimport * as b from \"../b.mjs\";\nexport { c } from './c.mjs';\nexport * from './d.mjs';\nimport './e.mjs';\nconst f = await import('./f.mjs');\nexport const g = 1;\n";
+    "import { a } from './a.mjs';\nimport { t } from './a.ts';\nimport * as b from \"../b.mjs\";\nexport { c } from './c.mjs';\nexport * from './d.mjs';\nimport './e.mjs';\nconst f = await import('./f.mjs');\nexport const g = 1;\n";
   assert.deepEqual(relativeOf(text), [
     "./a.mjs",
+    "./a.ts",
     "../b.mjs",
     "./c.mjs",
     "./d.mjs",
@@ -344,8 +345,8 @@ test("the engine and its snapshot reach nothing outside quest/engine/src and no 
     assert.ok(!READS_FILES.includes(file), `engine.mjs reaches ${file}`);
   }
   assert.ok(
-    files.has(join(SRC, "text.mjs")),
-    "holds.mjs reads text through text.mjs",
+    files.has(join(SRC, "text.ts")),
+    "holds.mjs reads text through text.ts",
   );
   for (const file of [...files].filter((f) => inside(f, SRC)))
     assert.doesNotMatch(

@@ -2,6 +2,7 @@
   "files": [],
   "references": [
     { "path": "quest/contract" },
+    { "path": "quest/engine" },
     { "path": "quest/client" },
     { "path": "quest/release" }
   ]
