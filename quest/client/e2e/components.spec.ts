@@ -106,6 +106,104 @@ test.describe("in a contrast theme (forced colours)", () => {
       expect(await style(page, "[role=progressbar]", "outline-style")).toBe(
         "solid",
       );
+
+      // Every unearned Badge, each size and a capstone's inner ring
+      // included, keeps its dash in the contrast theme; earned ones stay drawn.
+      const badges = await page
+        .locator("[data-sheet] [data-badges] svg[aria-label]")
+        .evaluateAll((svgs) =>
+          svgs.map((svg) => {
+            const box = svg.getBoundingClientRect();
+            const rings = [...svg.querySelectorAll("[stroke-dasharray]")];
+            return {
+              name: svg.getAttribute("aria-label") ?? "",
+              drawn:
+                box.width > 0 &&
+                getComputedStyle(svg).color !== "rgba(0, 0, 0, 0)",
+              rings: rings.length,
+              dashed: rings.every(
+                (ring) => getComputedStyle(ring).strokeDasharray !== "none",
+              ),
+            };
+          }),
+        );
+      expect(badges).toHaveLength(4 * 23 + 3);
+      for (const badge of badges) {
+        expect(badge.drawn, badge.name).toBe(true);
+        const unearned = badge.name.endsWith(", not yet");
+        expect(badge.rings > 0, badge.name).toBe(unearned);
+        expect(badge.dashed, badge.name).toBe(true);
+      }
+    });
+  }
+});
+
+test.describe("the Badges", () => {
+  for (const scheme of ["dark", "light"] as const) {
+    test(`reach 3:1 on the page and say "Not yet" until earned, ${scheme}`, async ({
+      page,
+    }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await openSheet(page);
+      const rows = await page
+        .locator(
+          "[data-sheet] [data-badges] figure, [data-sheet] [data-badges] > svg",
+        )
+        .evaluateAll((badges) => {
+          const rgb = (value: string) => {
+            const parts = /rgba?\(([^)]+)\)/.exec(value)?.[1]?.split(/[ ,/]+/);
+            if (parts === undefined) throw new Error(`not rgb: ${value}`);
+            return parts.slice(0, 3).map(Number);
+          };
+          const luminance = (value: string) => {
+            const [r = 0, g = 0, b = 0] = rgb(value).map((c) => {
+              const v = c / 255;
+              return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+            });
+            return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+          };
+          const page = luminance(
+            getComputedStyle(document.body).backgroundColor,
+          );
+          return badges.map((badge) => {
+            const svg =
+              badge.tagName === "svg" ? badge : badge.querySelector("svg");
+            if (svg === null) throw new Error("a figure with no svg");
+            const mark = luminance(getComputedStyle(svg).color);
+            const caption = badge.querySelector("figcaption");
+            return {
+              name: svg.getAttribute("aria-label") ?? "",
+              ratio:
+                (Math.max(mark, page) + 0.05) / (Math.min(mark, page) + 0.05),
+              caption: caption === null ? null : caption.innerText,
+              captionRatio: [...(caption?.querySelectorAll("*") ?? [])].map(
+                (line) => {
+                  const text = luminance(getComputedStyle(line).color);
+                  return (
+                    (Math.max(text, page) + 0.05) /
+                    (Math.min(text, page) + 0.05)
+                  );
+                },
+              ),
+              visible:
+                caption === null ||
+                (caption.getBoundingClientRect().height > 0 &&
+                  getComputedStyle(caption).visibility === "visible"),
+            };
+          });
+        });
+      expect(rows).toHaveLength(4 * 23 + 3);
+      for (const row of rows) {
+        expect(row.ratio, row.name).toBeGreaterThanOrEqual(3);
+        expect(row.visible, row.name).toBe(true);
+        // Captions are small text, so they need 4.5:1.
+        for (const ratio of row.captionRatio)
+          expect(ratio, row.name).toBeGreaterThanOrEqual(4.5);
+        if (row.caption !== null)
+          expect(row.caption.includes("Not yet"), row.name).toBe(
+            row.name.endsWith(", not yet"),
+          );
+      }
     });
   }
 });

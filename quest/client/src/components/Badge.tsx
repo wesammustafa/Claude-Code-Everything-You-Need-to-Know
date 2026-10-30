@@ -14,23 +14,44 @@ const SHAPES: Record<BadgeShape, ReactNode> = {
   ),
 };
 
-// A capstone is a quarter larger, with an inner ring.
+// A capstone is a quarter larger, with an inner ring. xs sits in a list row
+// (Progress), xl is the Lesson complete reveal.
 const SIZES = {
+  xs: { plain: "size-7", capstone: "size-9" },
   sm: { plain: "size-12", capstone: "size-15" },
   lg: { plain: "size-16", capstone: "size-20" },
+  xl: { plain: "size-22", capstone: "size-28" },
 } as const;
+
+export type BadgeSize = keyof typeof SIZES;
+
+// The symbol's stroke, on its 24 grid: thicker at xs so it holds at 28 px.
+const SYMBOL_STROKE: Record<BadgeSize, string> = {
+  xs: "2.6",
+  sm: "1.8",
+  lg: "1.8",
+  xl: "1.8",
+};
+
+/** The reveal's words above the name, also for 249's announcement. */
+export const NEW_BADGE = "New badge";
 
 export interface BadgeProps {
   shape: BadgeShape;
   earned: boolean;
   capstone?: boolean;
-  size?: "sm" | "lg";
+  size?: BadgeSize;
   /** The badge's name, its accessible name. */
   name: string;
   /** The Lesson's symbol, on a 24 grid at the badge's centre (The Badge family). */
   symbol?: ReactNode;
-  /** Pops in, the moment it is earned. */
+  /** Pops in, the moment it is earned; it always shows its caption. */
   reveal?: boolean;
+  /**
+   * The name under the shape, with "Not yet" until earned. It repeats the
+   * image's name, so screen readers skip it. Off for a row that names it.
+   */
+  caption?: boolean;
 }
 
 /**
@@ -46,9 +67,10 @@ export function Badge({
   name,
   symbol,
   reveal = false,
+  caption = true,
 }: BadgeProps) {
   const entrance = popEntrance(useMotionTokens());
-  return (
+  const art = (
     <svg
       role="img"
       aria-label={earned ? name : `${name}, not yet`}
@@ -81,11 +103,27 @@ export function Badge({
           </g>
         )}
         {symbol !== undefined && (
-          <g transform="translate(20 20)" strokeWidth="1.8">
+          <g transform="translate(20 20)" strokeWidth={SYMBOL_STROKE[size]}>
             {symbol}
           </g>
         )}
       </m.g>
     </svg>
+  );
+  if (!caption && !reveal) return art;
+  return (
+    <figure className="inline-flex flex-col items-center gap-1.5">
+      {art}
+      <figcaption
+        aria-hidden="true"
+        className="flex flex-col items-center text-xs"
+      >
+        {reveal && (
+          <span className="font-semibold text-accent-text">{NEW_BADGE}</span>
+        )}
+        <span className="text-text">{name}</span>
+        {!earned && <span className="text-muted">Not yet</span>}
+      </figcaption>
+    </figure>
   );
 }

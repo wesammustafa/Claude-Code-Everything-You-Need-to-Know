@@ -34,6 +34,7 @@ const PAIRS: readonly (readonly [fg: string, bg: string, need: number])[] = [
   ...["bg", "surface", "surface-2", "accent-soft"].map(
     (bg) => ["accent-mark", bg, NON_TEXT] as const,
   ),
+  // An unearned Badge is drawn in mark, so it never sits on accent-soft.
   ...["bg", "surface", "surface-2"].map(
     (bg) => ["mark", bg, NON_TEXT] as const,
   ),
