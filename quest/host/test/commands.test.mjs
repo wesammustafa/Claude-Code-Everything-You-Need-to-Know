@@ -12,7 +12,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { onPath } from "../src/path-lookup.mjs";
+import { onPath } from "../src/path-lookup.ts";
 import { realAdapters } from "../src/real.mjs";
 
 // spec: needs.path-lookup

@@ -7,7 +7,7 @@ import { createChildren } from "./children.ts";
 import { bytesOf, matchOf, stampOf } from "./files.mjs";
 import { probeFolder } from "./folders.mjs";
 import { gitFirstName, gitReady, gitStatus } from "./git.mjs";
-import { onPath } from "./path-lookup.mjs";
+import { onPath } from "./path-lookup.ts";
 import { loadState, saveState } from "./store.mjs";
 import { watchDirs } from "./watch.mjs";
 
