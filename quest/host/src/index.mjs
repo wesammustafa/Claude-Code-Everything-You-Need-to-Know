@@ -14,4 +14,4 @@ export {
   TICK_MS,
 } from "./host.mjs";
 export { folderPath } from "./folders.ts";
-export { perf, realAdapters, realClock } from "./real.mjs";
+export { perf, realAdapters, realClock } from "./real.ts";

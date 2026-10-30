@@ -9,6 +9,7 @@ import { probeFolder } from "./folders.ts";
 import { gitFirstName, gitReady, gitStatus } from "./git.ts";
 import { onPath } from "./path-lookup.ts";
 import { loadState, saveState } from "./store.ts";
+import type { Adapters, Clock, RealOptions } from "./types.ts";
 import { watchDirs } from "./watch.ts";
 
 // The app's one clock: monotonic, and on a 1/1024 ms grid so sums and
@@ -17,18 +18,21 @@ import { watchDirs } from "./watch.ts";
 // reading, not a pose: the step is under a microsecond. A whole-ms clock
 // passes through unchanged.
 export const perf = () => Math.round(performance.now() * 1024) / 1024;
-export const realClock = {
+export const realClock: Clock = {
   now: perf,
   // The wall clock, in epoch milliseconds, for the server time an event and
   // a heartbeat carry.
   epoch: () => Date.now(),
   setInterval: (fn, ms) => setInterval(fn, ms),
-  clearInterval: (id) => clearInterval(id),
+  clearInterval: (id) => {
+    clearInterval(id as ReturnType<typeof setInterval> | undefined);
+  },
   setTimeout: (fn, ms) => setTimeout(fn, ms),
-  clearTimeout: (id) => clearTimeout(id),
+  clearTimeout: (id) => {
+    clearTimeout(id as ReturnType<typeof setTimeout> | undefined);
+  },
 };
 
-/** @param {import("./types.ts").RealOptions} options @returns {import("./types.ts").Adapters} */
 export function realAdapters({
   root,
   env = process.env,
@@ -38,14 +42,14 @@ export function realAdapters({
   askGit,
   runCheck: checkChild = runCheck,
   runProbe: probeChild = runProbe,
-}) {
+}: RealOptions): Adapters {
   const children = createChildren();
   let keep = false;
   // What git says first: whether this folder is a repository, and a name to
   // greet.
   const ask =
     askGit ??
-    ((dir) =>
+    ((dir: string) =>
       Promise.all([
         gitReady(dir, { children }),
         gitFirstName(dir, { children }),
@@ -77,13 +81,18 @@ export function realAdapters({
       // A save the app could not move aside is never written over.
       load: () => {
         const saved = loadState(root);
-        keep = saved?.unreadable === "kept";
+        keep =
+          saved !== null &&
+          "unreadable" in saved &&
+          saved.unreadable === "kept";
         return saved;
       },
       save: (data) => !keep && saveState(root, data),
     },
     commands: { has: (name) => onPath(name, env, platform) },
-    stop: () => children.stop(),
+    stop: () => {
+      children.stop();
+    },
     children,
   };
 }

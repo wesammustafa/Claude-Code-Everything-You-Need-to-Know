@@ -13,7 +13,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fakeAdapters, fakeClock } from "../src/fake.ts";
-import { realAdapters } from "../src/real.mjs";
+import { realAdapters } from "../src/real.ts";
 import { sanitize } from "../src/store.ts";
 
 // The same tree, made on disk, or in the fakes: files with their times.

@@ -16,7 +16,7 @@ import {
   withRepo,
   write,
 } from "../../../practice-template/checks/test/helpers.mjs";
-import { realAdapters } from "../src/real.mjs";
+import { realAdapters } from "../src/real.ts";
 
 vitest(
   "the host runs every probe in the engine's table, and its registry is that table",

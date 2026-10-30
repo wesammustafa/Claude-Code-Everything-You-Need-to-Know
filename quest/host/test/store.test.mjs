@@ -23,7 +23,7 @@ import {
   saveState,
   storePath,
 } from "../src/store.ts";
-import { realAdapters } from "../src/real.mjs";
+import { realAdapters } from "../src/real.ts";
 
 const MINE = "/home/sam/code/my-app";
 
