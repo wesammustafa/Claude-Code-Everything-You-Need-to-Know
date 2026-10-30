@@ -6,7 +6,7 @@ import { mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { repo } from "../../../practice-template/checks/test/helpers.mjs";
 import { fakeClock } from "../src/fake.mjs";
-import { watchDirs } from "../src/watch.mjs";
+import { watchDirs } from "../src/watch.ts";
 
 // spec: watching
 test("the watcher arms a .practice folder made after it started", async () => {

@@ -9,7 +9,7 @@ import { probeFolder } from "./folders.mjs";
 import { gitFirstName, gitReady, gitStatus } from "./git.mjs";
 import { onPath } from "./path-lookup.ts";
 import { loadState, saveState } from "./store.mjs";
-import { watchDirs } from "./watch.mjs";
+import { watchDirs } from "./watch.ts";
 
 // The app's one clock: monotonic, and on a 1/1024 ms grid so sums and
 // differences of its times are exact (a deadline on the 40 ms grid lands on
