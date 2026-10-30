@@ -1,0 +1,16 @@
+{
+  "name": "@quest/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build && vite build -c vite.run-check.config.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "2.1.5",
+    "@quest/contract": "0.0.0",
+    "@quest/engine": "0.0.0",
+    "@quest/host": "0.0.0",
+    "hono": "4.13.14"
+  }
+}

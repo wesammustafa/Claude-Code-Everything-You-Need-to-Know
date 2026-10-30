@@ -36,12 +36,29 @@ export interface ActionResponse {
   snapshot: Snapshot;
 }
 
+/** `GET /api/health`: the server is up, with this process's instance. */
+export interface HealthResponse {
+  ok: true;
+  instance: InstanceId;
+}
+
 /** Sent every 15 seconds on the stream, so an idle stream stays open. */
 export interface Heartbeat {
   /** The server's time, in epoch milliseconds. */
   serverTime: number;
   instance: InstanceId;
   revision: Revision;
+}
+
+/**
+ * What `GET /api/events` sends, keyed by each message's SSE event name. Only
+ * an `event` message carries an `id:`, the event's ID, for a reconnect's
+ * `Last-Event-ID`; the stream sends `retry: 1000` once.
+ */
+export interface StreamMessages {
+  snapshot: Snapshot;
+  event: EventEnvelope;
+  heartbeat: Heartbeat;
 }
 
 /**

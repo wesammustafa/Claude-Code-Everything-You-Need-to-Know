@@ -1,0 +1,23 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "types": ["node"],
+    "tsBuildInfoFile": "dist/.tsbuildinfo",
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true
+  },
+  "include": [
+    "src",
+    "test",
+    "build",
+    "dev.ts",
+    "vite.config.ts",
+    "vite.run-check.config.ts",
+    "vitest.config.ts",
+    "../client/build/plugins.ts",
+    "../client/build/inputs.ts",
+    "../client/build/shipped-packages.ts",
+    "../release/src/licenses.ts"
+  ]
+}

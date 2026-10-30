@@ -3,6 +3,7 @@
   "references": [
     { "path": "quest/contract" },
     { "path": "quest/client" },
-    { "path": "quest/release" }
+    { "path": "quest/release" },
+    { "path": "quest/server" }
   ]
 }

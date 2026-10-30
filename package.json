@@ -14,11 +14,11 @@
     "test:checks": "npm run course:compile && node --test 'practice-template/checks/test/*.test.mjs'",
     "test:starter": "node --test 'practice-template/project/test/**/*.test.js'",
     "course:compile": "npm run compile:course --workspace @quest/release",
-    "build": "npm run build --workspaces --if-present",
+    "build": "npm run course:compile && npm run build --workspaces --if-present",
     "e2e": "playwright test -c quest/client/playwright.config.ts",
     "pip:build": "node quest/client/pip/build.ts",
     "pip:turn": "node quest/client/pip/turn.ts",
-    "dev": "node quest/client/dev.ts",
+    "dev": "npm run course:compile && node quest/server/dev.ts",
     "verify": "npm run guide:selftest && npm run guide && npm run typecheck && npm run lint && npm run test:quest && npm run test:checks && npm run test:starter"
   },
   "devDependencies": {
