@@ -36,4 +36,4 @@ export {
   STEP_ID,
   globName,
   isGlob,
-} from "../../engine/src/content.mjs";
+} from "../../engine/src/content.ts";

@@ -1,7 +1,7 @@
 // The course as the engine reads it (ticket 210): the manifest's path and
 // levels, the compiled course (dist/course.json, from npm run
 // course:compile), and the pure step-file parser bound to the manifest and
-// the Checks. The pure parser is content.mjs; this module reads files.
+// the Checks. The pure parser is content.ts; this module reads files.
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import {
@@ -10,7 +10,7 @@ import {
   indexLevel as manifestIndexLevel,
   parseLesson as parseContent,
   workLevels,
-} from "./content.mjs";
+} from "./content.ts";
 import { lessons as checks } from "../../../practice-template/checks/lessons/index.mjs";
 import { PROBES, probeError } from "./probes.ts";
 

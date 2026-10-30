@@ -17,7 +17,7 @@ import {
   parseManifest,
   READS,
   WHERE,
-} from "../src/content.mjs";
+} from "../src/content.ts";
 import { C, TERMS } from "../src/copy.ts";
 import { TYPED_MAX, WARMUPS } from "../src/rules.ts";
 import { inline } from "../src/text.ts";

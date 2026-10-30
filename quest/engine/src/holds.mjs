@@ -4,7 +4,7 @@
 // decide what they mean. Pure: nothing here reads the disk or starts a
 // process.
 import { createHash } from "node:crypto";
-import { isGlob } from "./content.mjs";
+import { isGlob } from "./content.ts";
 import { C } from "./copy.ts";
 import { cut, graphemes, isEmoji, strip } from "./text.ts";
 

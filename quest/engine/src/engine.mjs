@@ -8,7 +8,7 @@
 // and nothing outside this package is imported but the Checks the course
 // is parsed with (no module that reads a file): what a screen shows is the
 // client's.
-import { fingerprint, GIT, isChoice, READS, SINCE_GIT } from "./content.mjs";
+import { fingerprint, GIT, isChoice, READS, SINCE_GIT } from "./content.ts";
 import { evidenceOf, grewFrom, judge } from "./holds.mjs";
 import { EVENT_TYPES, momentsOf } from "./moments.mjs";
 import {

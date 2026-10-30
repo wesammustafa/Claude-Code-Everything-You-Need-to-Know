@@ -16,7 +16,7 @@
 // modules and the probes. It returns the problems, each naming its file and
 // line (none when everything matches), and how many step files, quotes,
 // code blocks and warm-ups from another page it compared.
-import { coursePath, parseLesson, parseManifest } from "./content.mjs";
+import { coursePath, parseLesson, parseManifest } from "./content.ts";
 import { frontmatter } from "./frontmatter.ts";
 
 const MANIFEST = "course/manifest.json";

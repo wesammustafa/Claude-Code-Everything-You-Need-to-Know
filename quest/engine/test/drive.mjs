@@ -104,7 +104,7 @@ export {
   whileRunsOf,
   whileRunsOpen,
 } from "../src/engine.mjs";
-export { GIT, OWN_PARTS, READS } from "../src/content.mjs";
+export { GIT, OWN_PARTS, READS } from "../src/content.ts";
 export {
   loadCourse,
   parseLesson,

@@ -2,7 +2,7 @@
 // tree clean, or part of it. Main runs git; these decide what its answer
 // means. Pure: nothing here reads the disk or starts a process.
 import { createHash } from "node:crypto";
-import { GIT } from "./content.mjs";
+import { GIT } from "./content.ts";
 import { C } from "./copy.ts";
 
 // A `git status --porcelain` entry (checks/paths.mjs statusEntries) is staged

@@ -8,7 +8,7 @@ import {
   generateCheckIndex,
   parseLesson,
   parseManifest,
-} from "../src/content.mjs";
+} from "../src/content.ts";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const manifestText = readFileSync(`${root}course/manifest.json`, "utf8");

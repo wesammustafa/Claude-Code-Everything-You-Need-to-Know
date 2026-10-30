@@ -1,4 +1,4 @@
-import { GIT, HOLDS } from "./content.mjs";
+import { GIT, HOLDS } from "./content.ts";
 
 // How much help a step gets. GUIDED shows every command, HINTED shows the
 // goal with hints on request, CHALLENGE shows the goal only. A skill's help

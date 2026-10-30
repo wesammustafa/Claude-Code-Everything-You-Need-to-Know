@@ -4,7 +4,7 @@
 // the input the engine handled (the input, `stale`, or null for an action
 // whose guard failed). The names and fields are the contract's events
 // (quest/contract/src/events.ts).
-import { GIT, READS } from "./content.mjs";
+import { GIT, READS } from "./content.ts";
 import { cleanLine } from "./status.mjs";
 import {
   beatOf,

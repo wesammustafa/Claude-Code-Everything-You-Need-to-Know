@@ -5,7 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.mjs",
-    "./content": "./src/content.mjs",
+    "./content": "./src/content.ts",
     "./course": "./src/course.mjs"
   },
   "dependencies": {

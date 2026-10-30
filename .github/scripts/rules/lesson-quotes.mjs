@@ -10,7 +10,7 @@
 // are code, never quotes or headings. This rule fails when such a quote or
 // block, the title, the Stamp or a step count no longer matches its lesson, or
 // a block doesn't close. It reads each line and the front matter as the app
-// does (quest/engine/src/content.mjs here; learn/lib/content.mjs and
+// does (quest/engine/src/content.ts here; learn/lib/content.mjs and
 // checks/frontmatter.mjs in the published template), so no spacing, quoting
 // or line ending the app accepts can hide a quote. It needs the template's
 // lesson files: with LEARN_DIR set to a template checkout's learn/lessons
@@ -34,7 +34,7 @@ const RAW = 'https://raw.githubusercontent.com/wesammustafa/claude-code-practice
 const flat = (text) => text.replace(/\s+/g, ' ').trim();
 // A code block in a lesson file opens on a fence at the first column, three
 // backticks or tildes or more, and closes on a fence of the same character,
-// at least as long, as the app reads it (quest/engine/src/content.mjs; in
+// at least as long, as the app reads it (quest/engine/src/content.ts; in
 // the published template, learn/lib/content.mjs). The app never shows the
 // fence's info string, so only the block's lines are compared.
 const LESSON_FENCE = /^(`{3,}|~{3,})([^`]*)$/;
