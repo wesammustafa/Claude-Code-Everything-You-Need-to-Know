@@ -707,4 +707,17 @@ describe("actions", () => {
     await done;
     expect(store.getState().pending).toEqual(new Set());
   });
+
+  test("a second act on a pending key sends nothing", async () => {
+    const { store, source, calls } = tab();
+    source().emit("snapshot", snap("a", 4));
+    const { promise, resolve } = Promise.withResolvers<FakeAnswer>();
+    answer = () => promise;
+    const first = store.act(action, "finish");
+    expect(await store.act(action, "finish")).toEqual({ applied: false });
+    expect(calls).toHaveLength(1);
+    resolve(ok(snap("a", 5)));
+    expect(await first).toEqual({ applied: true });
+    expect(store.getState().pending).toEqual(new Set());
+  });
 });

@@ -255,3 +255,54 @@ test.describe("a Switch's thumb", () => {
     });
   }
 });
+
+// Moved from shell.spec.ts (221): no screen shows a Disclosure until 245.
+test.describe("the disclosure", () => {
+  test("a disclosure opens and closes from the keyboard", async ({ page }) => {
+    await openSheet(page);
+    const details = page.locator("[data-sheet] details");
+    const summary = details.locator("summary");
+    await summary.focus();
+    await expect(summary).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(details).toHaveAttribute("open", "");
+    await page.keyboard.press("Space");
+    await expect(details).not.toHaveAttribute("open");
+  });
+
+  for (const [motion, duration] of [
+    ["no-preference", "0.22s"],
+    ["reduce", "0s"],
+  ] as const) {
+    test(`a disclosure's chevron turns only with full motion (${motion})`, async ({
+      page,
+    }) => {
+      await page.emulateMedia({ reducedMotion: motion });
+      await openSheet(page);
+      const chevron = page.locator("[data-sheet] summary svg");
+      expect(
+        await chevron.evaluate((el) => getComputedStyle(el).transitionDuration),
+      ).toBe(duration);
+      await page
+        .locator("[data-sheet]")
+        .getByText("What the check looks for")
+        .click();
+      if (motion === "reduce") {
+        // Snapped: already at its new angle on the next frame, never part way.
+        expect(
+          await chevron.evaluate(
+            (el) =>
+              new Promise<string>((done) =>
+                requestAnimationFrame(() => {
+                  done(getComputedStyle(el).rotate);
+                }),
+              ),
+          ),
+        ).toBe("90deg");
+      }
+      await expect
+        .poll(() => chevron.evaluate((el) => getComputedStyle(el).rotate))
+        .toBe("90deg");
+    });
+  }
+});

@@ -298,12 +298,11 @@ export function createLiveStore(deps: LiveDeps): LiveStore {
   const { EventSource } = deps;
   let stream: Stream | null = null;
 
-  const inFlight = new Map<string, number>();
-  const setPending = (key: string, change: number) => {
-    const count = (inFlight.get(key) ?? 0) + change;
-    if (count > 0) inFlight.set(key, count);
+  const inFlight = new Set<string>();
+  const setPending = (key: string, pending: boolean) => {
+    if (pending) inFlight.add(key);
     else inFlight.delete(key);
-    set({ pending: new Set(inFlight.keys()) });
+    set({ pending: new Set(inFlight) });
   };
 
   return {
@@ -317,7 +316,10 @@ export function createLiveStore(deps: LiveDeps): LiveStore {
     feed,
     async act(action, key = action.type) {
       if (!state.actionsEnabled || closed) return { applied: false };
-      setPending(key, 1);
+      // One request per key at a time: a second press while the first is in
+      // flight would post the same action twice.
+      if (inFlight.has(key)) return { applied: false };
+      setPending(key, true);
       try {
         const answer = await post(action);
         if (answer === null) return { applied: false };
@@ -329,7 +331,7 @@ export function createLiveStore(deps: LiveDeps): LiveStore {
       } catch {
         return { applied: false };
       } finally {
-        setPending(key, -1);
+        setPending(key, false);
       }
     },
     async showMilestone(id) {

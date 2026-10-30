@@ -7,6 +7,7 @@ import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { LessonBadge } from "../src/components/badges";
 import { Choice } from "../src/components/Choice";
+import { Disclosure } from "../src/components/Disclosure";
 import { ProgressBar } from "../src/components/ProgressBar";
 import { QuestMotion } from "../src/components/QuestMotion";
 import { Segmented } from "../src/components/Segmented";
@@ -64,6 +65,9 @@ function Sheet() {
           ]}
         />
         <ProgressBar value={1} max={2} label="Progress" />
+        <Disclosure summary="What the check looks for" variant="card">
+          <p>The lines show here.</p>
+        </Disclosure>
       </div>
       {(["sm", "xl"] as const).map((size) =>
         [true, false].map((earned) => (

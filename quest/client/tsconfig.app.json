@@ -10,6 +10,7 @@
   "include": [
     "src",
     "test",
+    "e2e/snapshots.ts",
     "pip/contract.ts",
     "pip/posters.ts",
     "pip/contract-page"

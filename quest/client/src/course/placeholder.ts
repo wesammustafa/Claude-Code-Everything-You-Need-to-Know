@@ -1,8 +1,12 @@
-// Placeholder course data for the shell, until the client reads the course and
-// the Learner's place from the server's snapshot. Each title is its Guide
-// page's heading, quoted exactly.
+// Placeholder course data for the top bar, the Learning journey and
+// Progress, until they read the course from the server's snapshot: 243
+// moves TopBar and Journey off it and 250 Progress, then this file goes.
+// The Lesson screens read the snapshot already (221). Each title is its
+// Guide page's heading, quoted exactly.
+import type { LevelId } from "@quest/contract";
+import { LEVEL_NAMES, lessonLabel as placeLabel } from "./labels";
 
-export type LevelId = "beginner" | "intermediate" | "advanced";
+export type { LevelId };
 
 export interface LessonInfo {
   id: string;
@@ -19,14 +23,13 @@ export interface LevelInfo {
 
 function level(
   id: LevelId,
-  name: string,
   prefix: string,
   titles: readonly string[],
   capstone: string,
 ): LevelInfo {
   return {
     id,
-    name,
+    name: LEVEL_NAMES[id],
     lessons: [
       ...titles.map((title, i) => ({
         id: `${prefix}-${String(i + 1)}`,
@@ -42,7 +45,6 @@ function level(
 export const LEVELS: readonly LevelInfo[] = [
   level(
     "beginner",
-    "Beginner",
     "b",
     [
       "Install, sign in and look around",
@@ -55,7 +57,6 @@ export const LEVELS: readonly LevelInfo[] = [
   ),
   level(
     "intermediate",
-    "Intermediate",
     "i",
     [
       "Turn a repeated workflow into a skill",
@@ -71,7 +72,6 @@ export const LEVELS: readonly LevelInfo[] = [
   ),
   level(
     "advanced",
-    "Advanced",
     "a",
     [
       "Parallel sessions with worktrees",
@@ -100,9 +100,8 @@ export function levelOf(lesson: LessonInfo): LevelInfo {
 
 /** "Lesson 3" or "Capstone", as the Learner reads a lesson's place in its Level. */
 export function lessonLabel(lesson: LessonInfo): string {
-  if (lesson.capstone) return "Capstone";
   const index = levelOf(lesson).lessons.indexOf(lesson);
-  return `Lesson ${String(index + 1)}`;
+  return placeLabel(index + 1, lesson.capstone);
 }
 
 export function nextLesson(lesson: LessonInfo): LessonInfo | undefined {
