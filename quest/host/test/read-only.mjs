@@ -57,12 +57,12 @@ const RUN_CHECK_DEF =
   /\bconst\s+RUN_CHECK\s*=\s*join\(\s*dirname\(\s*fileURLToPath\(\s*import\.meta\.url\s*\)\s*\)\s*,\s*["']run-check\.mjs["']\s*,?\s*\)/g;
 const RUN_CHECK_BOUND = /\bRUN_CHECK\s*=(?!=)|\bas\s+RUN_CHECK\b/g;
 // A signal goes only to the Check child's own process group, which its
-// spawn makes: `process.kill(-child.pid, ...)`, in check-child.mjs alone.
+// spawn makes: `process.kill(-child.pid, ...)`, in check-child.ts alone.
 // `process` is read by its members only, so no kill hides behind a name, a
 // computed member or an argument.
 const KILL = /\bprocess\s*(?:\?\.|\.)\s*kill\b/g;
 const GROUP_KILL = /\bprocess\.kill\(\s*-\s*child\.pid\s*,/g;
-const KILLS_HERE = "quest/host/src/check-child.mjs";
+const KILLS_HERE = "quest/host/src/check-child.ts";
 const PROCESS_HANDED =
   /(?<![=!<>])=\s*process\b(?!\s*(?:\?\.|\.))|\bprocess\s*(?:\?\.\s*)?\[|[(,]\s*process\s*[,)]/;
 

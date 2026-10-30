@@ -24,7 +24,7 @@ import {
   OUTPUT_CAP,
   runCheck,
   runProbe,
-} from "../src/check-child.mjs";
+} from "../src/check-child.ts";
 import { createChildren } from "../src/children.ts";
 import { fakeClock } from "../src/fake.ts";
 import { GIT_LIMIT } from "../src/git.mjs";

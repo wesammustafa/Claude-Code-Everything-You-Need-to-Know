@@ -60,7 +60,7 @@ test("the engine and the host make no network call, start only the Check child a
   // The scope can't shrink unseen: the files that run each kind of effect.
   for (const must of [
     "quest/host/src/host.mjs",
-    "quest/host/src/check-child.mjs",
+    "quest/host/src/check-child.ts",
     "quest/host/src/git.mjs",
     "quest/host/src/store.ts",
     "quest/host/src/run-check.mjs",
@@ -129,7 +129,7 @@ const PLANTS = {
 const PLANTED_IN = [
   "quest/host/src/host.mjs",
   "quest/engine/src/engine.ts",
-  "quest/host/src/check-child.mjs",
+  "quest/host/src/check-child.ts",
   "quest/host/src/probes.mjs",
   "quest/engine/src/probes.ts",
 ];
@@ -158,7 +158,7 @@ test("a network call, a process and a write planted in each real file that runs 
   );
 });
 
-// The Check child's entry, as check-child.mjs names it.
+// The Check child's entry, as check-child.ts names it.
 const RUN_CHECK =
   'const RUN_CHECK = join(\n  dirname(fileURLToPath(import.meta.url)),\n  "run-check.mjs",\n);\n';
 
@@ -229,7 +229,7 @@ test("the guard closes the ways around it, and lets a wrapped git call, a RegExp
     assert.deepEqual(planted(text), [], `flagged:\n${text}`);
   // The group kill passes in the Check child's runner alone.
   const kill = 'process.kill(-child.pid, "SIGKILL");\n';
-  assert.deepEqual(planted(kill, "quest/host/src/check-child.mjs"), []);
+  assert.deepEqual(planted(kill, "quest/host/src/check-child.ts"), []);
   assert.notDeepEqual(planted(kill), []);
 });
 

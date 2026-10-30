@@ -2,7 +2,7 @@
 // is, the watcher, the store in the practice copy and the PATH. Each host
 // gets its own registry of children, so closing it stops its own.
 import { existsSync } from "node:fs";
-import { runCheck, runProbe } from "./check-child.mjs";
+import { runCheck, runProbe } from "./check-child.ts";
 import { createChildren } from "./children.ts";
 import { bytesOf, matchOf, stampOf } from "./files.ts";
 import { probeFolder } from "./folders.mjs";

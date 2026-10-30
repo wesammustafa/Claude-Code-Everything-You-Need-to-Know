@@ -3,7 +3,7 @@
 // (children.ts), so closing the host stops it.
 import { execFile } from "node:child_process";
 import { statusEntries } from "../../../practice-template/checks/paths.mjs";
-import { childEnv } from "./check-child.mjs";
+import { childEnv } from "./check-child.ts";
 import { shared } from "./children.ts";
 import { isStaged, listing } from "./engine.ts";
 
