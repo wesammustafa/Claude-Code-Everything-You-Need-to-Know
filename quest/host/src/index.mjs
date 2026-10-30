@@ -13,5 +13,5 @@ export {
   SAVE_QUIET_MS,
   TICK_MS,
 } from "./host.mjs";
-export { folderPath } from "./folders.mjs";
+export { folderPath } from "./folders.ts";
 export { perf, realAdapters, realClock } from "./real.mjs";

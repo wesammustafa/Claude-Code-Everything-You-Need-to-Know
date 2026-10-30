@@ -1,7 +1,7 @@
 // Where a typed folder path points (ticket 209): moved from main.mjs.
 import { test } from "vitest";
 import assert from "node:assert/strict";
-import { folderPath } from "../src/folders.mjs";
+import { folderPath } from "../src/folders.ts";
 
 const ROOT = "/home/sam/claude-code-practice";
 const HOME = "/home/sam";

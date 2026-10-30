@@ -27,7 +27,7 @@ import {
   workFolder,
 } from "./engine.ts";
 import { oneAtATime, owing, singleFlight } from "./flight.ts";
-import { folderPath } from "./folders.mjs";
+import { folderPath } from "./folders.ts";
 import { snapshot as toSave } from "./store.ts";
 
 export const TICK_MS = 1_000;
