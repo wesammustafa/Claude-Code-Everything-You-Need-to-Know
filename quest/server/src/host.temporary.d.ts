@@ -1,4 +1,4 @@
-// TEMPORARY: ticket 215 deletes this file (214 deletes the @quest/engine/course block).
+// TEMPORARY: ticket 215 deletes this file.
 //
 // The quest/host and quest/engine surface the server imports, typed by hand
 // while both are still .mjs (owner, 2026-10-30: 216 runs before 215). Kept to
@@ -117,8 +117,4 @@ declare module "@quest/host/fake" {
     tree?: Record<string, string | null>;
     saved?: object | null;
   }): Adapters;
-}
-
-declare module "@quest/engine/course" {
-  export function loadCourse(root: string): readonly object[];
 }
