@@ -5,29 +5,33 @@
 // message gets one narrow question of its own, the first hint a Learner
 // sees after "Not yet"; and at every check beat that checks its item, a
 // resumed play reaches the "The check says:" rung with that message.
+//
+// One test file per lesson (ladders/<id>.test.mjs) calls ladderTest, so
+// Vitest runs the lessons in parallel workers; coverage.test.mjs holds the
+// files equal to the manifest's lessons.
 import { test } from "vitest";
 import assert from "node:assert/strict";
 import { chmodSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseLesson } from "../src/course.mjs";
-import { lessons } from "../../../practice-template/checks/lessons/index.mjs";
-import { openRepo } from "../../../practice-template/checks/repo.mjs";
+import { parseLesson } from "../../src/course.mjs";
+import { lessons } from "../../../../practice-template/checks/lessons/index.mjs";
+import { openRepo } from "../../../../practice-template/checks/repo.mjs";
 import {
   commit,
   repo,
   withRepo,
   write,
-} from "../../../practice-template/checks/test/helpers.mjs";
+} from "../../../../practice-template/checks/test/helpers.mjs";
 import {
   driver,
   finishedBefore,
   liveCourse,
   rungsOf,
   stepOf,
-} from "./drive.mjs";
+} from "../drive.mjs";
 
-const root = fileURLToPath(new URL("../../../", import.meta.url));
+const root = fileURLToPath(new URL("../../../../", import.meta.url));
 const manifest = JSON.parse(
   readFileSync(join(root, "course/manifest.json"), "utf8"),
 );
@@ -107,7 +111,9 @@ function climbToCheck(lesson, step, index, targets, sc, hint) {
   return rungsOf(d.state)[d.state.beat.rung];
 }
 
-for (const { id, steps } of manifest.lessons) {
+/** The ladder test of the manifest lesson `id`. */
+export function ladderTest(id) {
+  const { steps } = manifest.lessons.find((l) => l.id === id);
   test(
     `${id}: every FAIL message has its own first hint, and real failures reach "The check says:" at every check beat`,
     { timeout: 1_800_000 },
@@ -121,7 +127,7 @@ for (const { id, steps } of manifest.lessons) {
         }),
       );
       const { scenarios } = await import(
-        `../../../practice-template/checks/test/ladders/${id}.mjs`
+        `../../../../practice-template/checks/test/ladders/${id}.mjs`
       );
       // Each scenario runs once.
       const hints = new Map(scenarios.map((sc) => [sc, failure(id, sc)]));

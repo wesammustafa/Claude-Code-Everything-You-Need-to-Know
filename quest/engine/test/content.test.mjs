@@ -2425,7 +2425,7 @@ test('card: a CHALLENGE Your turn or task step shows no run line beside "No comm
 // Checks that keep their command behind h, each with its reason.
 const CHECK_COMMAND_BEHIND_H = {
   "a-capstone C":
-    "any line on C.0's card, a goal or a run line, pushed even the title off the Terminal app's 60x20 ASCII card under three of its FAIL messages (only a workflow that waits for a mention, no credential, a key in a committed note), the real failures ladders.test.mjs drives to the check rung; it needs shorter messages or another Check title before it shows its command",
+    "any line on C.0's card, a goal or a run line, pushed even the title off the Terminal app's 60x20 ASCII card under three of its FAIL messages (only a workflow that waits for a mention, no credential, a key in a committed note), the real failures the ladders tests drive to the check rung; it needs shorter messages or another Check title before it shows its command",
 };
 
 test("card: every Check shows its npm run check command on the card, not only behind h (27, pattern I)", () => {

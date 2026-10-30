@@ -1,6 +1,7 @@
 // The capstones' reused check items (the hint ladders' own test moved to
-// quest/engine/test/ladders.test.mjs in ticket 210). Every way an item can
-// fail is produced there from a practice copy, by a scenario in ladders/.
+// quest/engine/test/ladders/ in ticket 210, one file per lesson). Every way
+// an item can fail is produced there from a practice copy, by a scenario in
+// ladders/.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { lessons } from '../lessons/index.mjs';
