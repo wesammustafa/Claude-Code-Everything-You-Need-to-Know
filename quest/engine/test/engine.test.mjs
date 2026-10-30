@@ -339,7 +339,7 @@ test("the import walk sees every way a module reaches another", () => {
 
 test("the engine and its snapshot reach nothing outside quest/engine/src and no module that reads a file, reach the package's text module, and read no clock and pick nothing at random", () => {
   // The snapshot's module too (ticket 212), which the host imports.
-  const files = reached(join(SRC, "project.mjs"), reached(ENGINE));
+  const files = reached(join(SRC, "project.ts"), reached(ENGINE));
   for (const file of files) {
     assert.ok(inside(file, SRC), `engine.ts reaches ${relative(ROOT, file)}`);
     assert.ok(!READS_FILES.includes(file), `engine.ts reaches ${file}`);

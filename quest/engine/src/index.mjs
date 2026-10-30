@@ -13,7 +13,7 @@ export {
   initialState,
   reduce,
 } from "./engine.ts";
-export { project, startedLesson } from "./project.mjs";
+export { project, startedLesson } from "./project.ts";
 
 // What the host reads off the state: what to watch, what an overview asks
 // about, where the Learner is and works, and the evidence a check guards.
@@ -36,7 +36,7 @@ export {
 export { grewFrom, stampFor } from "./holds.ts";
 export { isStaged, listing, statusStamp } from "./status.ts";
 
-// The selectors project(state) builds the snapshot from (project.mjs).
+// The selectors project(state) builds the snapshot from (project.ts).
 export {
   answerKey,
   answersGit,

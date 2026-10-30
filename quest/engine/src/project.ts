@@ -11,7 +11,39 @@
 // counters. The rules render.mjs decided until ticket 210 are here as
 // fields: the warm-up explainer, notch-harder, the on-card Why, the Windows
 // variants, the handover and the invitation.
-import { READS } from "./content.ts";
+import type {
+  ActiveLesson,
+  BeatLine,
+  BeatView,
+  CodeView,
+  CompleteLesson,
+  CourseView,
+  FolderNeed,
+  FolderQuestion,
+  HelpTier,
+  HintsView,
+  HintView,
+  LearnerView,
+  LessonId,
+  LessonSummary,
+  Mastery,
+  OverviewLesson,
+  OverviewNote,
+  PlayingLesson,
+  Snapshot,
+  StairStep,
+  StepDownLesson,
+  StepSummary,
+  StepView,
+} from "@quest/contract";
+import {
+  must,
+  READS,
+  type Beat,
+  type CodeLine,
+  type LessonContent,
+  type Step,
+} from "./content.ts";
 import { cleanLine } from "./status.ts";
 import {
   asksFolder,
@@ -19,9 +51,11 @@ import {
   asStarted,
   authoredTier,
   backOffered,
-  beatOf,
+  beatState,
   cardOf,
   contentOf,
+  currentBeat,
+  currentStep,
   doneBefore,
   folderKey,
   folderOf,
@@ -31,8 +65,8 @@ import {
   hintStatus,
   isDone,
   isLastBeat,
+  lessonIn,
   lessonNumber,
-  lessonOf,
   levelFolder,
   levelKey,
   levelLessons,
@@ -44,11 +78,11 @@ import {
   offered,
   pickWarmups,
   pinOf,
+  progressOf,
   repoNeed,
   ruleTiers,
   rungsOf,
   stepNote,
-  stepOf,
   stepsOf,
   tearDownLeft,
   tierOf,
@@ -59,9 +93,18 @@ import {
   whileRunsOf,
 } from "./engine.ts";
 import { mix, TIERS } from "./tiers.ts";
+import type { CourseEntry, EngineState, HintRung } from "./types.ts";
+
+// The snapshot as the engine builds it: the host adds the header.
+export type EngineSnapshot = Omit<
+  Snapshot,
+  "instance" | "revision" | "milestones"
+>;
+// The fields every lesson view starts from.
+type LessonHead = Pick<ActiveLesson, "id" | "title" | "level" | "capstone">;
 
 /** The snapshot of `s`, but its instance, revision and milestones. */
-export function project(s) {
+export function project(s: EngineState): EngineSnapshot {
   return {
     course: courseView(s),
     learner: learnerView(s),
@@ -75,20 +118,23 @@ export function project(s) {
  * play (its overview, its end). The host lapses the pending milestones of
  * any other lesson then.
  */
-export function startedLesson(prev, next) {
+export function startedLesson(
+  prev: EngineState,
+  next: EngineState,
+): LessonId | null {
   if (next.phase !== "playing") return null;
   const was = prev.phase === "playing" || prev.phase === "step-down";
   return next.lesson !== prev.lesson || !was ? next.lesson : null;
 }
 
 // ---- the course --------------------------------------------------------------
-function courseView(s) {
+function courseView(s: EngineState): CourseView {
   return {
     levels: levelsOf(s).map((level) => {
       const lessons = levelLessons(s, level);
       return {
         id: level,
-        complete: lessons.every((l) => s.progress[l.id].complete),
+        complete: lessons.every((l) => progressOf(s, l.id).complete),
         lessons: lessons.map((l) => summary(s, l)),
       };
     }),
@@ -96,7 +142,7 @@ function courseView(s) {
   };
 }
 
-function summary(s, l) {
+function summary(s: EngineState, l: CourseEntry): LessonSummary {
   return {
     id: l.id,
     number: lessonNumber(s, l.id),
@@ -104,7 +150,7 @@ function summary(s, l) {
     minutes: l.minutes ?? "",
     page: l.page ?? "",
     capstone: l.id.endsWith("capstone"),
-    complete: s.progress[l.id].complete,
+    complete: progressOf(s, l.id).complete,
     badge: l.content?.badge ?? null,
     folder: folderNeed(s, l),
     tearDownLeft: tearDownLeft(s, l.id),
@@ -114,7 +160,7 @@ function summary(s, l) {
 // Where a lesson runs: Beginner's practice copy, its level's work folder,
 // its own new copy of the template, or the copy where its level has a work
 // folder (i-capstone).
-function folderNeed(s, l) {
+function folderNeed(s: EngineState, l: CourseEntry): FolderNeed {
   if (pinOf(l) === "new copy")
     return { kind: "new-copy", lesson: l.id, set: Boolean(s.folders[l.id]) };
   const level = levelKey(s, l.id);
@@ -124,12 +170,10 @@ function folderNeed(s, l) {
 }
 
 // ---- the Learner -------------------------------------------------------------
-const firstName = (name) =>
-  String(name ?? "")
-    .trim()
-    .split(/\s+/)[0] || null;
+const firstName = (name: string | null | undefined) =>
+  (name ?? "").trim().split(/\s+/)[0] || null;
 
-function learnerView(s) {
+function learnerView(s: EngineState): LearnerView {
   return {
     welcomed: s.welcomed,
     name: firstName(s.facts.name),
@@ -156,13 +200,14 @@ function learnerView(s) {
 // it used, by its saved time, and on a tie the later step in course order.
 // Only skills with a step finished since help was saved, and only steps the
 // lessons still have: a beat's own skill counts for nothing here.
-function masteryOf(s) {
-  const mastery = {};
+function masteryOf(s: EngineState) {
+  const mastery: Record<string, Mastery> = {};
   for (const l of s.course) {
-    const help = s.progress[l.id].help ?? {};
+    const help = progressOf(s, l.id).help ?? {};
     for (const step of l.content?.steps ?? []) {
       const h = help[step.id];
-      if (h && !(mastery[step.skill]?.at > h.at))
+      const was = mastery[step.skill];
+      if (h && !(was && was.at > h.at))
         mastery[step.skill] = { used: h.used, at: h.at };
     }
   }
@@ -170,8 +215,8 @@ function masteryOf(s) {
 }
 
 // ---- the active lesson -------------------------------------------------------
-function activeLesson(s) {
-  const l = lessonOf(s);
+function activeLesson(s: EngineState): ActiveLesson {
+  const l = lessonIn(s);
   const head = {
     id: l.id,
     title: l.title ?? l.content?.title ?? l.id,
@@ -184,20 +229,26 @@ function activeLesson(s) {
   return overviewOf(s, head);
 }
 
-const stairs = (steps, tiers) =>
-  steps.map((x, i) => ({ part: x.part, tier: tiers[i] }));
+// Every step has its tier: tiersOf gives one per step.
+const tierAt = (tiers: readonly (HelpTier | undefined)[], i: number) =>
+  must(tiers[i], `no tier for step ${String(i)}`);
+const stairs = (
+  steps: readonly Step[],
+  tiers: readonly (HelpTier | undefined)[],
+): StairStep[] =>
+  steps.map((x, i) => ({ part: x.part, tier: tierAt(tiers, i) }));
 
 // The steps and tiers the overview's start will play: with the warm-ups it
 // would pick, and the help as planned or with less help.
-function planOf(s, lessHelp) {
+function planOf(s: EngineState, lessHelp: boolean) {
   const st = asStarted(s);
-  const p = st.progress[s.lesson];
+  const p = progressOf(st);
   p.lessHelp = lessHelp;
   p.warm = pickWarmups(s);
   return stairs(stepsOf(st), tiersOf(st));
 }
 
-function overviewOf(s, head) {
+function overviewOf(s: EngineState, head: LessonHead): OverviewLesson {
   const c = contentOf(s);
   // A lesson with no lesson file: never opened, so there is nothing to say.
   if (!c)
@@ -211,7 +262,7 @@ function overviewOf(s, head) {
       start: null,
       resumable: false,
     };
-  const p = s.progress[s.lesson];
+  const p = progressOf(s);
   const planned = planOf(s, false);
   const less = planOf(s, true);
   const lessDiffers = JSON.stringify(less) !== JSON.stringify(planned);
@@ -219,7 +270,7 @@ function overviewOf(s, head) {
     ...head,
     phase: "overview",
     intro: {
-      can: [...(c.intro.can ?? [])],
+      can: [...c.intro.can],
       payoff: c.intro.payoff ?? null,
       why: c.intro.why ?? null,
       read: c.intro.read ?? null,
@@ -238,8 +289,8 @@ function overviewOf(s, head) {
 // (ticket 213), then, in introNotes' order, the work folder's problem, the
 // page's line for the Learner's repository, on Windows the page's note,
 // the commands missing, and each prerequisite that failed.
-function notesOf(s, c) {
-  const notes = [];
+function notesOf(s: EngineState, c: LessonContent) {
+  const notes: OverviewNote[] = [];
   if (s.changed.includes(s.lesson)) notes.push({ kind: "changed" });
   const problem = asksFolder(s) ? null : folderProblem(s);
   if (problem) notes.push({ kind: "folder-problem", problem });
@@ -253,14 +304,14 @@ function notesOf(s, c) {
     notes.push({
       kind: "unmet",
       line: r.hint ?? "",
-      lesson: r.offer ? r.lesson : null,
+      lesson: r.offer ? (r.lesson ?? null) : null,
     });
   return notes;
 }
 
-function folderQuestionOf(s) {
+function folderQuestionOf(s: EngineState): FolderQuestion | null {
   if (!asksHere(s)) return null;
-  const key = folderKey(s);
+  const key = must(folderKey(s), "a folder question has its key");
   const ask = s.folderAsk?.key === key ? s.folderAsk : null;
   return {
     key,
@@ -273,25 +324,25 @@ function folderQuestionOf(s) {
 }
 
 // ---- play --------------------------------------------------------------------
-const NO_HINTS = {
+const NO_HINTS: HintsView = {
   shown: [],
   available: false,
   unavailable: null,
   confirmExact: false,
 };
 
-function playingOf(s, head) {
-  const p = s.progress[s.lesson];
+function playingOf(s: EngineState, head: LessonHead): PlayingLesson {
+  const p = progressOf(s);
   const steps = stepsOf(s);
   const tiers = tiersOf(s);
   const current = s.beat ? s.pos.step : steps.findIndex((x) => x.id === p.step);
   // A step counts as passed once its last beat is done, by any route.
   const passedNow = Boolean(s.beat) && isDone(s.beat) && isLastBeat(s);
-  const list = steps.map((x, i) => ({
+  const list: StepSummary[] = steps.map((x, i) => ({
     id: x.id,
     part: x.part,
     title: x.title,
-    tier: tiers[i],
+    tier: tierAt(tiers, i),
     state:
       i === current
         ? passedNow
@@ -313,10 +364,10 @@ function playingOf(s, head) {
       offers: { back: null, skip: null },
       waitQuestion: null,
     };
-  const step = stepOf(s);
-  const st = s.beat;
+  const step = currentStep(s);
+  const st = beatState(s);
   const back = backOffered(s);
-  const yesNo = Boolean(st.confirm) && !isDone(st);
+  const yesNo = st.confirm && !isDone(st);
   return {
     ...head,
     phase: "playing",
@@ -335,33 +386,46 @@ function playingOf(s, head) {
 // The Level's first warm-up the Learner plays (the warm-up explainer): the
 // lesson's first step, a warm-up, while no other lesson of its Level played
 // one. Each lesson's saved `warm` says what it played.
-const firstWarmupOfLevel = (s) =>
+const firstWarmupOfLevel = (s: EngineState) =>
   s.pos.step === 0 &&
   !levelLessons(s, levelOf(s)).some(
-    (l) => l.id !== s.lesson && s.progress[l.id]?.warm.length,
+    (l) => l.id !== s.lesson && Boolean(s.progress[l.id]?.warm.length),
   );
 
-const TERMINALS = new Set(["terminal", "claude", "claude-2", "shell"]);
-const WHERE = new Set([...TERMINALS, "editor", "browser"]);
+const TERMINALS = new Set<string>(["terminal", "claude", "claude-2", "shell"]);
+const WHERE = [
+  "terminal",
+  "claude",
+  "claude-2",
+  "shell",
+  "editor",
+  "browser",
+] as const;
+type Where = (typeof WHERE)[number];
+const isWhere = (kind: string | null): kind is Where =>
+  WHERE.some((w) => w === kind);
 
-function stepView(s) {
-  const step = stepOf(s);
-  const beat = beatOf(s);
-  const p = s.progress[s.lesson];
+function stepView(s: EngineState): StepView {
+  const step = currentStep(s);
+  const beat = currentBeat(s);
+  const p = progressOf(s);
   const warmup = step.part === "Warm-up";
   return {
     index: s.pos.step,
     id: step.id,
     part: step.part,
     title: step.title,
-    tier: tierOf(s),
+    tier: must(tierOf(s), "the step on the card has its tier"),
     authoredTier: authoredTier(s),
     where: whereOf(s, step, beat),
-    note: stepNote(s),
+    note: stepNote(s) ?? null,
     doneBefore: !warmup && doneBefore(s),
     extraHelp: Boolean(p.easedSteps[step.id]),
     warmup: warmup
-      ? { from: step.from, explainer: firstWarmupOfLevel(s) }
+      ? {
+          from: must(step.from, `warm-up ${step.id} has its lesson`),
+          explainer: firstWarmupOfLevel(s),
+        }
       : null,
   };
 }
@@ -371,24 +435,24 @@ function stepView(s) {
 // work folder: that folder, or the practice copy for a step that runs
 // there (a Worked example, ticket 183, or a command that names <your
 // repo>, run from the copy). Null where everything is in the copy.
-function whereOf(s, step, beat) {
+function whereOf(s: EngineState, step: Step, beat: Beat): StepView["where"] {
   const kind = beat.where ?? step.where ?? null;
-  if (!WHERE.has(kind)) return null;
+  if (!isWhere(kind)) return null;
   return {
     kind,
-    terminal: contentOf(s).terminals?.[kind] ?? null,
+    terminal: contentOf(s)?.terminals?.[kind] ?? null,
     folder: TERMINALS.has(kind) ? placeOf(s, step, beat) : null,
   };
 }
 
-function placeOf(s, step, beat) {
+function placeOf(s: EngineState, step: Step, beat: Beat) {
   const dir = folderOf(s, s.lesson, step);
   if (!dir) return null;
   const root = s.facts.root;
   const level = levelKey(s);
   const levelDir = level ? levelFolder(s, level) : root;
   const fromCopy = [...beat.lines, ...beat.bottom].some((l) =>
-    l.text?.includes("<your repo>"),
+    l.text.includes("<your repo>"),
   );
   if (dir !== root && !fromCopy) return dir;
   return dir !== root || levelDir !== root ? root : null;
@@ -396,11 +460,11 @@ function placeOf(s, step, beat) {
 
 // The practice copy's folder in a command, quoted where the shell needs it,
 // and the lesson's work folder for <your repo> (ticket 86).
-function quotePath(path, win32) {
+function quotePath(path: string, win32: boolean) {
   if (/^[\w@%+=:,./~\\-]+$/.test(path)) return path;
   return win32 ? `"${path}"` : `'${path.replace(/'/g, "'\\''")}'`;
 }
-function fill(s, text) {
+function fill(s: EngineState, text: string) {
   const win32 = Boolean(s.facts.win32);
   const out = text.replace(
     "<your practice copy>",
@@ -410,28 +474,30 @@ function fill(s, text) {
   return dir ? out.replace("<your repo>", quotePath(dir, win32)) : out;
 }
 // A command for this platform: its Windows line on native Windows.
-const commandOf = (s, line) =>
-  (s.facts.win32 && line.win) || fill(s, line.text);
+const commandOf = (
+  s: EngineState,
+  line: { text: string; win?: string | undefined },
+) => (s.facts.win32 && line.win) || fill(s, line.text);
 
-const codeView = (line) => ({
+const codeView = (line: CodeLine): CodeView => ({
   lines: line.lines
     .slice(line.from - 1, line.to)
     .map((text, k) => ({ n: line.from + k, text })),
-  point: line.point ?? null,
+  point: line.point,
   copy: line.text,
 });
 
 // A beat whose check is about a file: a check item, or a file read here.
-const looksAtFile = (beat) =>
+const looksAtFile = (beat: Beat) =>
   beat.verify.kind === "check" || READS.has(beat.verify.kind);
 
-function beatView(s) {
-  const beat = beatOf(s);
-  const st = s.beat;
+function beatView(s: EngineState): BeatView {
+  const beat = currentBeat(s);
+  const st = beatState(s);
   const hide = hidesRuns(s);
   const win32 = Boolean(s.facts.win32);
-  const lines = [];
-  let code = null;
+  const lines: BeatLine[] = [];
+  let code: CodeView | null = null;
   for (const l of beat.lines) {
     // A guess shows only its notes before the question.
     if (beat.kind === "predict" && l.key !== "note") continue;
@@ -477,7 +543,7 @@ function beatView(s) {
         tier === "guided" &&
         ["do", "ask"].includes(beat.kind) &&
         beat.why.length > 0
-          ? beat.why[0]
+          ? (beat.why[0] ?? null)
           : null,
       all: [...beat.why],
     },
@@ -526,12 +592,13 @@ function beatView(s) {
 // The guess a question recalls (ticket 104): the saved pick on a predict
 // beat of the step its recall line names. The one earlier answer a
 // snapshot carries.
-function recallOf(s, beat) {
-  if (!beat.recall) return null;
-  const guessed = stepsOf(s).find((x) => x.id === beat.recall)?.beats ?? [];
-  const hit = Object.entries(s.progress[s.lesson].answers).find(
+function recallOf(s: EngineState, beat: Beat) {
+  const recall = beat.recall;
+  if (!recall) return null;
+  const guessed = stepsOf(s).find((x) => x.id === recall)?.beats ?? [];
+  const hit = Object.entries(progressOf(s).answers).find(
     ([k]) =>
-      k.startsWith(`${beat.recall}.`) &&
+      k.startsWith(`${recall}.`) &&
       guessed[Number(k.slice(k.lastIndexOf(".") + 1))]?.kind === "predict",
   );
   return hit ? hit[1] : null;
@@ -540,40 +607,41 @@ function recallOf(s, beat) {
 // The check items of the beat's last result, as their text and whether each
 // passed: the run that passed a whole check, else the latest. A slow item a
 // run left out is not shown as failing.
-function verificationOf(s, beat) {
+function verificationOf(s: EngineState, beat: Beat) {
   const v = beat.verify;
   if (v.kind !== "check") return [];
-  const items = s.beat.passed ?? s.checks[s.lesson]?.items ?? [];
+  const items = beatState(s).passed ?? s.checks[s.lesson]?.items ?? [];
   return items
     .filter((it) => (v.all || v.items.includes(it.index)) && !it.slow)
-    .map((it) => ({ text: it.text, pass: Boolean(it.pass) }));
+    .map((it) => ({ text: it.text, pass: it.pass }));
 }
 
 // Why a Check could not run, from the host's message: it ran out of time,
 // it printed too much or not what was expected, or anything else.
-function brokenKind(message) {
+function brokenKind(message: string | null | undefined): BeatView["broken"] {
   if (message === "it took too long") return "timeout";
   if (
-    ["it printed too much", "it printed something unexpected"].includes(message)
+    message === "it printed too much" ||
+    message === "it printed something unexpected"
   )
     return "output";
   return "crashed";
 }
 
-function hintView(s, r) {
+function hintView(s: EngineState, r: HintRung): HintView {
   if (r.kind !== "bottom") return { kind: r.kind, text: r.text };
   return {
     kind: "exact",
     commands: r.lines.map((b) =>
       b.key === "code" && !(s.facts.win32 && b.win)
-        ? { leadIn: b.leadIn ?? null, text: b.text, code: codeView(b) }
+        ? { leadIn: null, text: b.text, code: codeView(b) }
         : { leadIn: b.leadIn ?? null, text: commandOf(s, b), code: null },
     ),
   };
 }
 
-function hintsView(s) {
-  const st = s.beat;
+function hintsView(s: EngineState): HintsView {
+  const st = beatState(s);
   if (isDone(st)) return NO_HINTS;
   const rungs = rungsOf(s);
   const available = hintAvailable(s);
@@ -582,7 +650,7 @@ function hintsView(s) {
   const waits =
     !available &&
     left &&
-    beatOf(s).kind !== "type" &&
+    currentBeat(s).kind !== "type" &&
     tierOf(s) === "challenge" &&
     first !== null &&
     !st.unlocked;
@@ -590,17 +658,20 @@ function hintsView(s) {
     shown: rungs.slice(0, st.rung + 1).map((r) => hintView(s, r)),
     available,
     unavailable: waits ? (first === "r" ? "run-check" : "pick-answer") : null,
-    confirmExact: Boolean(st.confirm),
+    confirmExact: st.confirm,
   };
 }
 
-function waitQuestionOf(s) {
+function waitQuestionOf(s: EngineState): PlayingLesson["waitQuestion"] {
   const box = whileRunsOf(s);
   if (!box) return null;
   const { beat, answer } = box;
-  const picked = answer === null ? null : beat.options[answer];
+  const picked =
+    answer === null
+      ? null
+      : must(beat.options[answer], `no option ${String(answer)}`);
   return {
-    prompt: beat.ask,
+    prompt: must(beat.ask, `warm-up ${box.step.id} asks a question`),
     options: beat.options.map((o, i) =>
       answer !== null && (o.kind === "right" || i === answer)
         ? { text: o.text, kind: o.kind === "right" ? "right" : "wrong" }
@@ -617,29 +688,31 @@ function waitQuestionOf(s) {
 }
 
 // ---- a Step-down and the lesson's end ----------------------------------------
-const byTier = (tiers) =>
+const byTier = (tiers: readonly HelpTier[]) =>
   TIERS.map((tier) => ({
     tier,
     count: tiers.filter((t) => t === tier).length,
   })).filter((x) => x.count > 0);
 
-function stepDownOf(s, head) {
+function stepDownOf(s: EngineState, head: LessonHead): StepDownLesson {
   const steps = stepsOf(s);
   const tiers = tiersOf(s);
   return {
     ...head,
     phase: "step-down",
-    from: s.levelFrom,
-    to: s.levelTo,
+    from: must(s.levelFrom, "a step-down has its level"),
+    to: must(s.levelTo, "a step-down has its level"),
     toCome: byTier(
-      tiers.filter((_, i) => i >= s.pos.step && steps[i].part !== "Warm-up"),
+      tiers
+        .map((_, i) => tierAt(tiers, i))
+        .filter((_, i) => i >= s.pos.step && steps[i]?.part !== "Warm-up"),
     ),
     moreHelp: moreHelpGives(s),
   };
 }
 
 // The share of a lesson's planned steps above Guided.
-function lessHelpShare(s, id) {
+function lessHelpShare(s: EngineState, id: LessonId) {
   const m = mix(
     ruleTiers(
       s.course.map((l) => l.content),
@@ -652,14 +725,14 @@ function lessHelpShare(s, id) {
 // "A notch harder" (ticket 186): the next lesson is in the same Level, has
 // a lesson file, and plans a larger share of steps above Guided. Help fades
 // within a Level, so a next Level's first lesson never is.
-const notchHarder = (s, next) =>
+const notchHarder = (s: EngineState, next: CourseEntry) =>
   Boolean(next.content) &&
   levelOf(s, next.id) === levelOf(s) &&
   lessHelpShare(s, next.id) > lessHelpShare(s, s.lesson);
 
-function completeOf(s, head) {
+function completeOf(s: EngineState, head: LessonHead): CompleteLesson {
   const c = contentOf(s);
-  const p = s.progress[s.lesson];
+  const p = progressOf(s);
   const steps = stepsOf(s);
   const tiers = tiersOf(s);
   const skills = [
@@ -682,7 +755,7 @@ function completeOf(s, head) {
     firstTime: s.firstCompletion === s.lesson,
     checkSummary: (s.checks[s.lesson]?.items ?? [])
       .filter((it) => !it.slow)
-      .map((it) => ({ text: it.text, pass: Boolean(it.pass) })),
+      .map((it) => ({ text: it.text, pass: it.pass })),
     staircase: stairs(steps, tiers).filter((x) => x.part !== "Warm-up"),
     handover: head.capstone && p.bottomAt === null,
     invitation: head.capstone,

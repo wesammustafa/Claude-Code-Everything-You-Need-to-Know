@@ -327,7 +327,7 @@ const inOverview = (s: EngineState) =>
 export const lessonOf = (s: EngineState, id: LessonId = s.lesson) =>
   s.course.find((l) => l.id === id);
 // A lesson the course has, where the caller knows it does.
-const lessonIn = (s: EngineState, id: LessonId = s.lesson) =>
+export const lessonIn = (s: EngineState, id: LessonId = s.lesson) =>
   must(lessonOf(s, id), `no lesson ${id} in the course`);
 // A lesson's progress: every lesson of the course has one.
 export const progressOf = (s: EngineState, id: LessonId = s.lesson) =>
@@ -436,7 +436,8 @@ export const currentStep = (s: EngineState) =>
 export const currentBeat = (s: EngineState) =>
   must(beatOf(s), `no beat ${String(s.pos.beat)} in ${s.lesson}`);
 // The beat on the card's state, where the caller knows there is one.
-const beatState = (s: EngineState) => must(s.beat, "no beat on the card");
+export const beatState = (s: EngineState) =>
+  must(s.beat, "no beat on the card");
 // Whether a beat shows (ticket 104): one with a when line only while the
 // saved pick on its choice is its option. The store keeps 200 characters of
 // a pick, so a pick made in this sitting compares as a saved one does.
