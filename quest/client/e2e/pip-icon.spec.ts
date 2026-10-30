@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./live.ts";
 
 // Pip's icon is the favicon and the top bar's brand mark. Its colours here are
 // the tokens' values; src/pip/icon.test.ts measures their contrast.

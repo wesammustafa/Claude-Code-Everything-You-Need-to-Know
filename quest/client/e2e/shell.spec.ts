@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "./live.ts";
 import { watch } from "./watch.ts";
 
 const SCREENS: readonly (readonly [path: string, heading: string])[] = [

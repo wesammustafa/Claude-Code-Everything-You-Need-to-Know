@@ -2,7 +2,7 @@
 // proves the release build holds none of its route, code, stylesheet or the
 // board, without a browser; this checks the built app in one: it has no
 // screen at the Playground's address.
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./live.ts";
 
 test("the built app has no screen at the Playground's address", async ({
   page,

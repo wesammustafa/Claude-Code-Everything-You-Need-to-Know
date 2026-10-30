@@ -24,6 +24,16 @@ const PRESS =
 
 const DISABLED = "disabled:cursor-not-allowed disabled:opacity-disabled";
 
+// While its action is in flight a button holds the pressed look: the only
+// thing the page animates before the answer comes ("Connection states").
+const PENDING =
+  "data-pending:translate-y-(--press-y) data-pending:scale-(--press-scale)";
+const PENDING_FILL: Record<ButtonVariant, string> = {
+  primary: "data-pending:bg-accent-pressed",
+  secondary: "data-pending:bg-pressed",
+  ghost: "data-pending:bg-pressed data-pending:text-text",
+};
+
 const SIZES: Record<ButtonSize, string> = {
   sm: "h-8 px-3 text-sm rounded-sm",
   md: "h-9.5 px-4 text-control rounded-md",
@@ -90,7 +100,10 @@ function Content({
 }
 
 export type ButtonProps = ButtonLookProps &
-  Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children">;
+  Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> & {
+    /** Its action is in flight: it holds the pressed state and is busy. */
+    pending?: boolean | undefined;
+  };
 
 export function Button({
   variant = "secondary",
@@ -100,12 +113,20 @@ export function Button({
   className,
   children,
   type = "button",
+  pending = false,
   ...rest
 }: ButtonProps) {
   return (
     <button
       type={type}
-      className={cx("group", buttonClasses(variant, size), className)}
+      className={cx(
+        "group",
+        buttonClasses(variant, size),
+        pending && PENDING,
+        pending && PENDING_FILL[variant],
+        className,
+      )}
+      {...(pending ? { "aria-busy": true, "data-pending": "" } : {})}
       {...rest}
     >
       <Content icon={icon} iconEnd={iconEnd} size={size}>

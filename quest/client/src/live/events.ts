@@ -1,9 +1,7 @@
 // How engine events reach the page's consumers (Pip's director, and later the
-// moments), each event ID at most once. The connection layer (ticket 220)
-// brings the real stream; until then the page's own local source feeds the
-// same path, so Pip's director is wired once and 220 only swaps the source.
+// moments), each event ID at most once across the page's tabs. The stream
+// (store.ts) is the feed.
 import type { EventEnvelope } from "@quest/contract";
-import { readEventEnvelope } from "./parse";
 
 /** One revision's events, in order. */
 export type EventBatchListener = (events: readonly EventEnvelope[]) => void;
@@ -11,39 +9,6 @@ export type EventBatchListener = (events: readonly EventEnvelope[]) => void;
 /** A source of event batches. */
 export interface EventFeed {
   subscribe(listener: EventBatchListener): () => void;
-}
-
-/**
- * The DOM event the page's local source listens for: its `detail` is an array
- * of event envelopes, one revision's events. A stand-in for the stream until
- * the connection layer (ticket 220) replaces it, and the way the end-to-end
- * tests feed Pip's director meanwhile. Only same-origin script can dispatch it.
- */
-export const LOCAL_EVENTS = "quest:events";
-
-/**
- * The page's local event source. Each dispatch is one batch; envelopes that
- * are not well formed are dropped, and an empty batch is never delivered.
- */
-export function createLocalEventFeed(target: EventTarget): EventFeed {
-  return {
-    subscribe(listener) {
-      const onEvents = (event: Event) => {
-        if (!(event instanceof CustomEvent)) return;
-        const detail: unknown = event.detail;
-        if (!Array.isArray(detail)) return;
-        const batch = detail.flatMap((value: unknown) => {
-          const envelope = readEventEnvelope(value);
-          return envelope === null ? [] : [envelope];
-        });
-        if (batch.length > 0) listener(batch);
-      };
-      target.addEventListener(LOCAL_EVENTS, onEvents);
-      return () => {
-        target.removeEventListener(LOCAL_EVENTS, onEvents);
-      };
-    },
-  };
 }
 
 /** The BroadcastChannel tabs share shown event IDs over. */
@@ -182,55 +147,100 @@ export function createShownEvents(
 }
 
 /**
+ * How old a waiting Reaction may be, by server time, and still play when its
+ * hidden tab returns: the host's EVENT_KEEP_MS.
+ */
+export const REACTION_KEEP_MS = 900_000;
+
+/** What a hidden tab needs to play its waiting Reaction on its return. */
+export interface ReturnOptions {
+  /** Calls `visible` each time the page becomes visible; returns the unsubscribe. */
+  onVisible?: (visible: () => void) => () => void;
+  /** The server's time now, in epoch milliseconds, as near as the tab knows it. */
+  serverNow?: () => number;
+  /**
+   * Which server process the events came from: a batch held under another
+   * one is dropped on return, since its moment belongs to a past instance.
+   */
+  instance?: () => string | null;
+}
+
+/**
  * The feed with every event ID delivered at most once in this tab and never
  * after another tab showed it. A visible tab, where a Reaction can be seen,
  * claims each ID before it delivers it, and drops one another tab claimed
- * first. A hidden tab claims nothing and keeps its IDs to itself. (Which
- * waiting Reaction plays when a hidden tab returns is the connection layer's
- * rule, ticket 220. So is a visible tab whose Pip is scrolled off-screen:
- * it still claims an ID that its director then drops, so no tab plays it.)
- * Batches reach the listener in the order they came.
+ * first. A hidden tab claims nothing and delivers nothing: it keeps only the
+ * newest batch (one revision's events, from which the director picks one
+ * Reaction) and records the IDs of every batch it replaces. When the page is
+ * visible again, the held batch is claimed and delivered alone, unless it is
+ * older than REACTION_KEEP_MS by server time or from a past server
+ * process; another tab that showed one of
+ * its IDs meanwhile wins that ID. (A visible tab whose Pip is scrolled
+ * off-screen still claims an ID that its director then drops, so no tab
+ * plays it.) Batches reach the listener in the order they came.
  */
 export function onceAcrossTabs(
   feed: EventFeed,
   shown: ShownEvents,
   visible: () => boolean,
+  options: ReturnOptions = {},
 ): EventFeed {
   return {
     subscribe(listener) {
       let open = true;
       let queue = Promise.resolve();
+      let held: readonly EventEnvelope[] | null = null;
+      let heldUnder: string | null = null;
+      const heldIds = () => new Set(held?.map((event) => event.id));
+      const deliver = async (batch: readonly EventEnvelope[]) => {
+        const won = await shown.claim(batch.map((event) => event.id));
+        const mine = batch.filter((event) => won.has(event.id));
+        if (!open || mine.length === 0) return;
+        // A listener that throws is reported, and the next batch still goes.
+        try {
+          listener(mine);
+        } catch (error) {
+          reportError(error);
+        }
+      };
       const stop = feed.subscribe((events) => {
+        const waiting = heldIds();
         const fresh: EventEnvelope[] = [];
         const ids = new Set<string>();
         for (const event of events) {
-          if (shown.has(event.id) || ids.has(event.id)) continue;
+          if (shown.has(event.id) || ids.has(event.id) || waiting.has(event.id))
+            continue;
           ids.add(event.id);
           fresh.push(event);
         }
         if (fresh.length === 0) return;
-        const seen = visible();
-        const deliver = async () => {
-          let mine = fresh;
-          if (seen) {
-            const won = await shown.claim([...ids]);
-            mine = fresh.filter((event) => won.has(event.id));
-          } else {
-            shown.record([...ids]);
-          }
-          if (!open || mine.length === 0) return;
-          // A listener that throws is reported, and the next batch still goes.
-          try {
-            listener(mine);
-          } catch (error) {
-            reportError(error);
-          }
-        };
-        queue = queue.then(deliver);
+        if (visible()) {
+          queue = queue.then(() => deliver(fresh));
+          return;
+        }
+        if (held !== null) shown.record([...waiting]);
+        held = fresh;
+        heldUnder = options.instance?.() ?? null;
+      });
+      const stopVisible = options.onVisible?.(() => {
+        const batch = held;
+        held = null;
+        if (batch === null) return;
+        const newest = Math.max(...batch.map((event) => event.serverTime));
+        const now = options.serverNow?.();
+        const stale =
+          (now !== undefined && now - newest > REACTION_KEEP_MS) ||
+          (options.instance?.() ?? null) !== heldUnder;
+        if (stale) {
+          shown.record(batch.map((event) => event.id));
+          return;
+        }
+        queue = queue.then(() => deliver(batch));
       });
       return () => {
         open = false;
         stop();
+        stopVisible?.();
       };
     },
   };
