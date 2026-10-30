@@ -26,7 +26,7 @@ import {
   watching,
   workFolder,
 } from "./engine.mjs";
-import { oneAtATime, owing, singleFlight } from "./flight.mjs";
+import { oneAtATime, owing, singleFlight } from "./flight.ts";
 import { folderPath } from "./folders.mjs";
 import { snapshot as toSave } from "./store.mjs";
 

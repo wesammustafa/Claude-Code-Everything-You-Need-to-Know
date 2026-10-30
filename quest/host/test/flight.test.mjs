@@ -4,7 +4,7 @@
 // runs one Check child at a time.
 import { test } from "vitest";
 import assert from "node:assert/strict";
-import { oneAtATime, owing, singleFlight } from "../src/flight.mjs";
+import { oneAtATime, owing, singleFlight } from "../src/flight.ts";
 
 const settle = (ms = 5) => new Promise((r) => setTimeout(r, ms));
 
