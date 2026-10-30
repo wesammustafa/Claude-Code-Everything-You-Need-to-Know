@@ -1,3 +1,4 @@
+// @ts-check
 // Turn a repeated workflow into a skill (Intermediate, lesson 1). The Learner
 // finishes the partial tdd skill so it runs by name and loads on its own,
 // commits it, and saves the commit they made after reviewing a /tdd run's
@@ -11,6 +12,7 @@ export const title = 'Turn a repeated workflow into a skill';
 const SKILL = '.claude/skills/tdd/SKILL.md';
 const SAVE_COMMIT = '`git rev-parse HEAD > .practice/i-1-commit.txt`';
 
+/** @param {import('../repo.mjs').Repo} repo */
 function committedSkill(repo) {
   try {
     return repo.git('show', `HEAD:${SKILL}`);
@@ -19,11 +21,13 @@ function committedSkill(repo) {
   }
 }
 
+/** @param {import('../repo.mjs').Repo} repo */
 function missing(repo) {
   if (repo.exists(SKILL)) return `${SKILL} is not committed. Run \`git add ${SKILL}\` and commit it.`;
   return `There is no ${SKILL}. Save the partial skill from the lesson's Your turn there, finish it, and commit it.`;
 }
 
+/** @type {import('./index.mjs').Item[]} */
 export const items = [
   {
     text: '`.claude/skills/tdd/SKILL.md` is committed, with no TODO left',
@@ -58,7 +62,7 @@ export const items = [
     check(repo) {
       const saved = repo.read('.practice/i-1-commit.txt');
       if (saved === null || !saved.trim()) return `After you review and commit the /tdd run's test and code, run ${SAVE_COMMIT}.`;
-      const sha = saved.trim().split(/\s+/)[0];
+      const sha = /** @type {string} */ (saved.trim().split(/\s+/)[0]);
       let files;
       try {
         files = repo.git('show', '--name-only', '--format=', sha).split('\n').filter(Boolean);

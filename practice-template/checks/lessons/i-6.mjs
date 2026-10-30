@@ -1,3 +1,4 @@
+// @ts-check
 // Delegate to a custom subagent (Intermediate, lesson 6). The Learner
 // finishes a read-only test-gaps subagent, commits it, and delegates to it in
 // a session started with a SubagentStart hook that logs each subagent's name.
@@ -10,6 +11,7 @@ const AGENT = '.claude/agents/test-gaps.md';
 const READ_ONLY = new Set(['Read', 'Grep', 'Glob', 'LSP']);
 const WEB = new Set(['WebFetch', 'WebSearch']);
 
+/** @param {import('../repo.mjs').Repo} repo */
 function committedFields(repo) {
   try {
     return frontmatter(repo.git('show', `HEAD:${AGENT}`))?.fields ?? {};
@@ -18,13 +20,15 @@ function committedFields(repo) {
   }
 }
 
+/** @param {import('../repo.mjs').Repo} repo */
 function missing(repo) {
   return repo.exists(AGENT) ? `${AGENT} is not committed. Run \`git add ${AGENT}\` and commit it.` : `There is no ${AGENT}. Save the partial file from the lesson's Your turn there.`;
 }
 
-const list = (value) => (Array.isArray(value) ? value : String(value ?? '').split(','))
+const list = (/** @type {unknown} */ value) => (Array.isArray(value) ? value : String(value ?? '').split(','))
   .map((t) => t.trim()).filter(Boolean);
 
+/** @type {import('./index.mjs').Item[]} */
 export const items = [
   {
     text: '`.claude/agents/test-gaps.md` is committed with its name and a description of when to use it',

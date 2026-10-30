@@ -1,3 +1,4 @@
+// @ts-check
 // Permission modes and plan mode (Beginner, lesson 2). Your turn works the
 // ticket in practice/b-2/ticket.md and reviews the plan before approving.
 // The Learner saves three snapshots under .practice/: git's status while the
@@ -17,6 +18,7 @@ const SAVE_BEFORE = 'While the plan is on screen, run `git status --porcelain > 
 
 // Only the practice template's own tool is run: `--dir` pointed at another
 // repository must not execute that repository's src/cli.js.
+/** @param {import('../repo.mjs').Repo} repo */
 function notTemplate(repo) {
   try {
     if (JSON.parse(repo.read('package.json') ?? '').name === 'claude-code-practice') return null;
@@ -27,6 +29,10 @@ function notTemplate(repo) {
 }
 
 // Runs the working tree's CLI on a scratch folder holding `files`.
+/**
+ * @param {import('../repo.mjs').Repo} repo
+ * @param {Record<string, string>} files
+ */
 function runTool(repo, files) {
   const work = mkdtempSync(join(tmpdir(), 'b-2-'));
   try {
@@ -39,6 +45,7 @@ function runTool(repo, files) {
   }
 }
 
+/** @type {import('./index.mjs').Item[]} */
 export const items = [
   {
     text: '`.practice/b-2-before.txt`, saved while the plan was on screen, lists no changed files',

@@ -1,3 +1,4 @@
+// @ts-check
 // Pick the model and effort (Intermediate, lesson 3). The Learner fills in
 // the model and effort of a skill for a routine, precisely described task,
 // and commits the entry a /changelog run wrote. Picking the model and effort
@@ -11,6 +12,10 @@ const SMALL = /^(sonnet|claude-sonnet-[\w.-]+)(\[1m\])?$|^(haiku|claude-haiku-[\
 const LARGE = /^(opus|fable|best|opusplan|claude-opus-[\w.-]+|claude-fable-[\w.-]+)(\[1m\])?$/;
 const LEVELS = ['low', 'medium', 'high', 'xhigh', 'max'];
 
+/**
+ * @param {import('../repo.mjs').Repo} repo
+ * @param {string} path
+ */
 function committed(repo, path) {
   try {
     return repo.git('show', `HEAD:${path}`);
@@ -19,6 +24,7 @@ function committed(repo, path) {
   }
 }
 
+/** @type {import('./index.mjs').Item[]} */
 export const items = [
   {
     text: 'the committed changelog skill runs a smaller model at low or medium effort',

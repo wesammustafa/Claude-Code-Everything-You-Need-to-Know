@@ -89,7 +89,7 @@ function committedRule(repo, probe) {
 // 'negated' (a `!` rule keeps the path), 'exclude' (only .git/info/exclude
 // ignores it) or 'uncommitted' (a .gitignore rule that isn't committed).
 /**
- * @typedef {Rule | ({ problem: 'none' } & Partial<Rule>) | ({ problem: 'negated' | 'exclude' | 'uncommitted' } & Rule)} Ignore
+ * @typedef {(Rule & { problem?: undefined }) | ({ problem: 'none' } & Partial<Rule>) | ({ problem: 'negated' | 'exclude' | 'uncommitted' } & Rule)} Ignore
  */
 
 /**
