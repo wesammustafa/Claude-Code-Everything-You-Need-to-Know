@@ -4,7 +4,7 @@
 import { existsSync } from "node:fs";
 import { runCheck, runProbe } from "./check-child.mjs";
 import { createChildren } from "./children.ts";
-import { bytesOf, matchOf, stampOf } from "./files.mjs";
+import { bytesOf, matchOf, stampOf } from "./files.ts";
 import { probeFolder } from "./folders.mjs";
 import { gitFirstName, gitReady, gitStatus } from "./git.mjs";
 import { onPath } from "./path-lookup.ts";
