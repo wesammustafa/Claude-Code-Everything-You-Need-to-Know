@@ -19,7 +19,7 @@ import {
   WHERE,
 } from "../src/content.mjs";
 import { C, TERMS } from "../src/copy.ts";
-import { TYPED_MAX, WARMUPS } from "../src/rules.mjs";
+import { TYPED_MAX, WARMUPS } from "../src/rules.ts";
 import { inline } from "../src/text.ts";
 import { lessons } from "../../../practice-template/checks/lessons/index.mjs";
 import { PROBES, probeError } from "../src/probes.mjs";

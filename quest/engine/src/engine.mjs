@@ -21,7 +21,7 @@ import {
 import { effectiveTier, ruleTiers, TIERS } from "./tiers.mjs";
 export { ruleTiers };
 
-import { TYPED_MAX, WARMUPS } from "./rules.mjs";
+import { TYPED_MAX, WARMUPS } from "./rules.ts";
 
 export { EVENT_TYPES, TYPED_MAX, WARMUPS };
 
