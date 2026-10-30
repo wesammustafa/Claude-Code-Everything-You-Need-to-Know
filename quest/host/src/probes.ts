@@ -40,7 +40,8 @@ const ask = (repo: Repo, ...args: string[]): string | null => {
     return null;
   }
 };
-const plural = (n: number, word: string) => `${String(n)} ${word}${n === 1 ? "" : "s"}`;
+const plural = (n: number, word: string) =>
+  `${String(n)} ${word}${n === 1 ? "" : "s"}`;
 const some = (names: string[]) =>
   names.slice(0, 3).join(", ") +
   (names.length > 3 ? ` and ${String(names.length - 3)} more` : "");
@@ -49,7 +50,8 @@ const live = (repo: Repo) =>
   liveWorktrees({ git: (...args: string[]) => repo.gitLocal(...args) }).filter(
     (r) => !r.prunable,
   );
-const nameOf = (path: string) => path.replace(/\/+$/, "").split("/").pop() ?? "";
+const nameOf = (path: string) =>
+  path.replace(/\/+$/, "").split("/").pop() ?? "";
 const branchSha = (repo: Repo, branch: string) =>
   ask(repo, "rev-parse", "--verify", "-q", `refs/heads/${branch}^{commit}`);
 
@@ -57,7 +59,9 @@ const branchSha = (repo: Repo, branch: string) =>
 function worktrees(repo: Repo, [n = ""]: string[]): Probed {
   const found = claudeWorktrees(live(repo));
   const names = found.map((r) => nameOf(r.path));
-  const state = digest(found.map((r) => `${r.path} ${r.head ?? "null"}`).join("\n"));
+  const state = digest(
+    found.map((r) => `${r.path} ${r.head ?? "null"}`).join("\n"),
+  );
   if (found.length >= Number(n))
     return {
       pass: true,
@@ -196,7 +200,9 @@ function todos(repo: Repo, [n = ""]: string[]): Probed {
     .filter(Boolean);
   const folders = [
     ...new Set(
-      files.filter((f) => f.includes("/")).map((f) => `${f.split("/")[0] ?? ""}/`),
+      files
+        .filter((f) => f.includes("/"))
+        .map((f) => `${f.split("/")[0] ?? ""}/`),
     ),
   ].sort();
   const state = digest(folders.join("\n"));
@@ -226,11 +232,7 @@ export const RUNS: Readonly<
 };
 
 // Runs a probe on `repo` (checks/repo.mjs openRepo).
-export function probeRepo(
-  repo: Repo,
-  name: string,
-  args: string[],
-): Probed {
+export function probeRepo(repo: Repo, name: string, args: string[]): Probed {
   const error = probeError(name, args);
   if (error) throw new Error(error);
   const run = RUNS[name];
