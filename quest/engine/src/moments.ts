@@ -4,18 +4,20 @@
 // the input the engine handled (the input, `stale`, or null for an action
 // whose guard failed). The names and fields are the contract's events
 // (quest/contract/src/events.ts).
-import { GIT, READS } from "./content.mjs";
-import { cleanLine } from "./status.mjs";
+import type { QuestEvent } from "@quest/contract";
+import { GIT, must, READS } from "./content.ts";
 import {
-  beatOf,
   contentOf,
+  currentBeat,
+  currentStep,
   isDone,
   isLastBeat,
   levelLessons,
   levelsOf,
-  stepOf,
   watching,
-} from "./engine.mjs";
+} from "./engine.ts";
+import { cleanLine } from "./status.ts";
+import type { CourseEntry, EngineInput, EngineState } from "./types.ts";
 
 // Every event type, in the contract's order.
 export const EVENT_TYPES = Object.freeze([
@@ -38,41 +40,52 @@ export const EVENT_TYPES = Object.freeze([
   "work.changed",
   "help.offered",
   "notice",
-]);
+] as const satisfies readonly QuestEvent["type"][]);
 
 // The beats a result passes: a check, a file the app reads, git status or a
 // probe. A question or a self beat turns done by an answer or a click.
-const CHECKED = new Set(["check", ...READS, ...GIT, "probe"]);
+const CHECKED = new Set<string>(["check", ...READS, ...GIT, "probe"]);
 
 // The same beat on screen before and after: the same lesson, step and beat.
-const sameBeat = (prev, next) =>
+const sameBeat = (prev: EngineState, next: EngineState) =>
   Boolean(prev.beat && next.beat) &&
   prev.phase === "playing" &&
   next.phase === "playing" &&
   prev.lesson === next.lesson &&
   prev.pos.step === next.pos.step &&
   prev.pos.beat === next.pos.beat &&
-  stepOf(prev).id === stepOf(next).id;
+  currentStep(prev).id === currentStep(next).id;
 
-const allComplete = (s, lessons) =>
-  lessons.length > 0 && lessons.every((l) => s.progress[l.id].complete);
+const allComplete = (s: EngineState, lessons: readonly CourseEntry[]) =>
+  lessons.length > 0 && lessons.every((l) => s.progress[l.id]?.complete);
 
 // The Not yet line a FAIL is about (the contract's `evidence`): the check's
 // message, or the engine's line about a file or git status.
-const notYetLine = (s) =>
-  s.beat.fail?.hint ?? cleanLine(beatOf(s).verify, s.beat.fail?.paths ?? []);
+const notYetLine = (s: EngineState) => {
+  const fail = s.beat?.fail;
+  return (
+    (fail && "hint" in fail ? fail.hint : undefined) ??
+    cleanLine(
+      currentBeat(s).verify,
+      (fail && "paths" in fail ? fail.paths : undefined) ?? [],
+    )
+  );
+};
 
 /** The events `handled` marked, from `prev` to `next`, in order. */
-export function momentsOf(prev, next, handled) {
-  const events = [];
+export function momentsOf(
+  prev: EngineState,
+  next: EngineState,
+  handled: EngineInput | null,
+): QuestEvent[] {
+  const events: QuestEvent[] = [];
   const type = handled?.type ?? null;
-  const same = sameBeat(prev, next);
   const was = prev.beat;
   const st = next.beat;
+  const same = sameBeat(prev, next) && was !== null && st !== null;
   const turned = same && !isDone(was) && isDone(st);
-  const checked = same && CHECKED.has(beatOf(next).verify.kind);
-  const warmup = same && stepOf(next).part === "Warm-up";
-  const stepId = same ? stepOf(next).id : null;
+  const checked = same && CHECKED.has(currentBeat(next).verify.kind);
+  const warmup = same && currentStep(next).part === "Warm-up";
 
   // 1-2. A run the card says "Checking" for starts, and its items count.
   if (same && st.run && !was.run) events.push({ type: "check.started" });
@@ -89,7 +102,9 @@ export function momentsOf(prev, next, handled) {
   if (turned && checked) {
     events.push({
       type: "check.passed",
-      firstTime: !prev.progress[prev.lesson].done.includes(stepId),
+      firstTime: !prev.progress[prev.lesson]?.done.includes(
+        currentStep(next).id,
+      ),
     });
     verdict = true;
   } else if (
@@ -146,8 +161,8 @@ export function momentsOf(prev, next, handled) {
   if (prev.phase !== "step-down" && next.phase === "step-down")
     events.push({
       type: "stepDown.reached",
-      from: next.levelFrom,
-      to: next.levelTo,
+      from: must(next.levelFrom, "a step-down has its level"),
+      to: must(next.levelTo, "a step-down has its level"),
     });
 
   // 11-13. The Lesson's end, and its Level's and the course's.
@@ -161,7 +176,7 @@ export function momentsOf(prev, next, handled) {
       type: "lesson.completed",
       ...(badge ? { badge } : {}),
       capstone: l.endsWith("capstone"),
-      firstTime: !prev.progress[l].complete,
+      firstTime: !prev.progress[l]?.complete,
     });
   }
   for (const level of levelsOf(next)) {
@@ -181,8 +196,6 @@ export function momentsOf(prev, next, handled) {
     !was.touched &&
     was.look !== null &&
     st.look !== null &&
-    was.look !== undefined &&
-    st.look !== undefined &&
     was.look !== st.look;
   const active = type === "activity" && watching(next) !== null;
   if (
@@ -194,9 +207,10 @@ export function momentsOf(prev, next, handled) {
     events.push({ type: "work.changed" });
 
   // 15. Something the Learner should read.
-  if (type === "notice")
-    events.push({ type: "notice", kind: String(handled.kind) });
+  if (handled?.type === "notice")
+    events.push({ type: "notice", kind: handled.kind });
   return events;
 }
 
-const sameRunning = (a, b) => a?.n === b?.n && a?.m === b?.m;
+type Running = { n: number; m: number } | null | undefined;
+const sameRunning = (a: Running, b: Running) => a?.n === b?.n && a?.m === b?.m;

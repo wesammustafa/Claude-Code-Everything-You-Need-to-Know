@@ -17,13 +17,13 @@ import {
   parseManifest,
   READS,
   WHERE,
-} from "../src/content.mjs";
-import { C, TERMS } from "../src/copy.mjs";
-import { TYPED_MAX, WARMUPS } from "../src/rules.mjs";
-import { inline } from "../src/text.mjs";
+} from "../src/content.ts";
+import { C, TERMS } from "../src/copy.ts";
+import { TYPED_MAX, WARMUPS } from "../src/rules.ts";
+import { inline } from "../src/text.ts";
 import { lessons } from "../../../practice-template/checks/lessons/index.mjs";
-import { PROBES, probeError } from "../src/probes.mjs";
-import { ruleTiers, TIERS } from "../src/tiers.mjs";
+import { PROBES, probeError } from "../src/probes.ts";
+import { ruleTiers, TIERS } from "../src/tiers.ts";
 import {
   DEMO_B2,
   DEMO_I1,
@@ -412,17 +412,17 @@ test("the app's own words name no command or code that the step's quotes don't",
   const words = copyWords(C);
   assert.ok(words.length >= 20);
   for (const w of words) {
-    assert.doesNotMatch(w, /`/, `copy.mjs: "${w}" holds a code span`);
+    assert.doesNotMatch(w, /`/, `copy.ts: "${w}" holds a code span`);
     assert.doesNotMatch(
       w,
       /(^|\s)\/[a-z]/,
-      `copy.mjs: "${w}" names a slash command`,
+      `copy.ts: "${w}" names a slash command`,
     );
-    assert.doesNotMatch(w, /\d+\.\d+\.\d+/, `copy.mjs: "${w}" names a version`);
+    assert.doesNotMatch(w, /\d+\.\d+\.\d+/, `copy.ts: "${w}" names a version`);
     assert.doesNotMatch(
       w,
       /\b(Opus|Sonnet|Haiku|Fable)\b|claude-[a-z]+-\d/,
-      `copy.mjs: "${w}" names a model`,
+      `copy.ts: "${w}" names a model`,
     );
   }
 });
@@ -516,7 +516,7 @@ const claims = (copy) => {
 
 test("the app's own words claim only what the app saw", () => {
   for (const k of CELEBRATIONS)
-    assert.notEqual(at(C, k), undefined, `copy.mjs has no ${k}`);
+    assert.notEqual(at(C, k), undefined, `copy.ts has no ${k}`);
   assert.deepEqual(claims(C), []);
   // Each pattern catches a string that breaks it, wherever it sits.
   for (const bad of [
@@ -588,7 +588,7 @@ test("the app's own words claim only what the app saw", () => {
   }
 });
 
-// One name for each thing (TERMS in copy.mjs). An older name is an alias,
+// One name for each thing (TERMS in copy.ts). An older name is an alias,
 // and so is any table of the three tiers that words them differently. A
 // sentence that tells the learner what a tier change gives them is no
 // table: it isn't checked here.

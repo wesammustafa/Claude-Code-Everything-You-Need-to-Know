@@ -15,9 +15,9 @@ import {
   snapshot as toSave,
   stepOf,
 } from "./drive.mjs";
-import { fingerprint } from "../src/content.mjs";
-import { HELP_USED } from "../src/index.mjs";
-import { project } from "../src/project.mjs";
+import { fingerprint } from "../src/content.ts";
+import { HELP_USED } from "../src/index.ts";
+import { project } from "../src/project.ts";
 
 const OLD = "0".repeat(64);
 const lesson = (id) => course.find((l) => l.id === id);

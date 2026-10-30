@@ -3,10 +3,270 @@
 // states no Claude Code fact. The lesson test compares every quoted value
 // with the page. Parsing and compilation are pure: callers supply all text,
 // Check modules and probe definitions.
+import type { LevelId } from "@quest/contract";
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import { frontmatter } from "./frontmatter.mjs";
-import { inline } from "./text.mjs";
+import { frontmatter, type FrontValue } from "./frontmatter.ts";
+import type { Probe } from "./probes.ts";
+import { inline } from "./text.ts";
+
+// ---- the parsed lesson ---------------------------------------------------------
+// A line of a beat: a quote or the app's words under its key, a run line, or
+// a code block with the lines it shows and the one it explains.
+export interface TextLine {
+  key: "goal" | "say" | "do" | "run" | "note" | "rule" | "after" | "expect";
+  text: string;
+  quoted: boolean;
+  doneWhen?: true;
+  // A run line's Windows line and its tick (a run line only).
+  win?: string;
+  tick?: string;
+}
+export interface CodeLine {
+  key: "code";
+  text: string;
+  quoted: true;
+  lines: string[];
+  from: number;
+  to: number;
+  point: number;
+  win?: string;
+  doneWhen?: undefined;
+  leadIn?: undefined;
+}
+export type Line = TextLine | CodeLine;
+// A bottom line: the exact command, its Windows line and its lead-in.
+export interface Bottom {
+  key?: undefined;
+  text: string;
+  win?: string | undefined;
+  leadIn?: string;
+}
+export interface Option {
+  kind: "right" | "wrong" | "option" | "stuck" | "other" | "decoy";
+  text: string;
+  quoted: boolean;
+  because?: string;
+}
+// A back line: the step, then why, quoted or in the app's words.
+export interface Back {
+  step: string;
+  text: string;
+  quoted: boolean;
+  line: number;
+}
+// A when line: the choice's step and beat, and the option it shows for.
+export interface When {
+  step: string;
+  beat: number;
+  option: string;
+  line: number;
+}
+
+// What a beat's verify line asks (parseVerify). The fields the engine
+// reads off any kind are optional on every kind, as they are absent there.
+interface VerifyFields {
+  all?: true;
+  paths?: string[];
+  fresh?: true;
+  since?: string | null;
+}
+// One member a kind, so a test of the kind narrows to it.
+type Each<K extends string, F> = K extends unknown ? { kind: K } & F : never;
+export type Verify = VerifyFields &
+  (
+    | Each<"answer" | "self" | "none" | "git-staged" | "git-clean", unknown>
+    | { kind: "check"; all: true; items?: undefined }
+    | { kind: "check"; items: number[] }
+    | { kind: "file"; path: string }
+    | { kind: "json"; path: string; key: string | null; value: string | null }
+    | Each<"match" | "no-match", { path: string; regex: string }>
+    | { kind: "probe"; name: string; args: string[] }
+    | Each<"head-moved" | "git-unchanged", { since: string | null }>
+    | Each<"git-changed" | "git-only", { path: string }>
+  );
+export type VerifyKind = Verify["kind"];
+// A beat that reads its file, and one git status answers.
+export type ReadVerify = Extract<
+  Verify,
+  { kind: "file" | "json" | "match" | "no-match" }
+>;
+export type GitVerify = Extract<
+  Verify,
+  {
+    kind:
+      | "git-clean"
+      | "git-changed"
+      | "git-only"
+      | "git-staged"
+      | "head-moved"
+      | "git-unchanged";
+  }
+>;
+
+export interface Beat {
+  kind: "do" | "predict" | "ask" | "type" | "self";
+  lines: Line[];
+  options: Option[];
+  hints: string[];
+  bottom: Bottom[];
+  why: string[];
+  accept: string[];
+  line: number;
+  verify: Verify;
+  lastKey?: string;
+  where?: string | undefined;
+  wait?: { text: string | null };
+  back?: Back;
+  when?: When;
+  // The rest of a beat's keys, camel-cased: quotes and the app's words.
+  doneLabel?: string;
+  watching?: string;
+  evidence?: string;
+  safety?: string;
+  skill?: string;
+  ask?: string;
+  revealAt?: string;
+  recall?: string;
+  codespace?: string;
+  winNote?: string;
+  point?: string;
+  reveal?: string;
+  self?: string;
+}
+// A step, or a warm-up. Every step names its skill (content.test.mjs holds
+// it); the other step keys are optional.
+export interface Step {
+  id: string;
+  part: string;
+  unit: string | null;
+  n: number | null;
+  of: number | null;
+  title: string;
+  beats: Beat[];
+  line: number;
+  skill: string;
+  tier?: string;
+  where?: string;
+  from?: string;
+  optional?: string;
+}
+export interface Rung {
+  item: string;
+  narrow: { part: string; question: string }[];
+  hints: string[];
+  bottom: Bottom[];
+  back?: Back;
+}
+export interface CardEntry {
+  skill: string;
+  show: string;
+  does: string;
+}
+export interface Need {
+  commands: string[];
+  linux: boolean;
+  quote: string;
+}
+interface RequirementFields {
+  lesson?: string;
+  item?: number;
+  path?: string;
+  probe?: "todos";
+  args?: string[];
+}
+export type Requirement = RequirementFields &
+  (
+    | { probe: "todos"; args: string[] }
+    | { lesson: string; item: number }
+    | { lesson: string; path: string }
+  );
+export interface Intro {
+  can: string[];
+  minutes?: string;
+  why?: string;
+  payoff?: string;
+  read?: string;
+  "win-note"?: string;
+  "need-repo"?: string;
+}
+// A parsed step file: the front matter keys the app reads, and the lesson's
+// intro, steps, ladder, card, needs, requirements and numbered terminals.
+// The course loader adds the page's title and links to a compiled one.
+export interface LessonContent {
+  lesson?: string;
+  stamp?: string;
+  badge?: string;
+  folder?: string;
+  worked?: string;
+  intro: Intro;
+  warmup: Step[];
+  steps: Step[];
+  ladder: Rung[];
+  card: CardEntry[];
+  needs: Need[];
+  requires: Requirement[];
+  terminals: Record<string, number> | null;
+  title?: string;
+  next?: string | null;
+  stuck?: string;
+  page?: string;
+}
+// The lesson as parseLesson builds it, line by line: a beat's verify is its
+// line's text until parseVerify reads it, a card entry gets its lines one
+// by one, and a step its keys.
+type DraftBeat = Omit<Beat, "verify"> & { verify?: string | Verify };
+type DraftStep = Omit<Step, "beats" | "skill"> & {
+  beats: DraftBeat[];
+  skill?: string;
+};
+type DraftLesson = Omit<
+  LessonContent,
+  "steps" | "warmup" | "card" | "needs" | "requires" | "terminals"
+> & {
+  steps: DraftStep[];
+  warmup: DraftStep[];
+  card: Partial<CardEntry>[];
+  needs?: Need[];
+  requires?: Requirement[];
+  terminals?: Record<string, number> | null;
+};
+
+// A Check module, as the parser and the compile step read it.
+export interface CheckModule {
+  title: string;
+  items: readonly { text: string }[];
+}
+// What a parse is given: the manifest, the Checks and the probes, and where
+// to send each piece of the page it shows.
+export type PageText = (
+  | { kind: "quote"; text: string }
+  | {
+      kind: "block";
+      lines: string[];
+    }
+) & { line: number; heading: string; from: string | null };
+export interface ParseContext {
+  manifest?: Manifest;
+  checks?: Readonly<Record<string, CheckModule | undefined>>;
+  probes?: {
+    PROBES: Readonly<Record<string, Probe>>;
+    probeError: (name: string, args: readonly string[]) => string | null;
+  };
+  rejectFolder?: boolean;
+  onPageText?: (piece: PageText) => void;
+}
+
+// The parser's error: the file and the line, from 0, that it can't read.
+// A front matter key with no line (null) is reported at line 1.
+type Fail = (n: number | null, msg: string) => never;
+
+// The value, or an Error naming what is missing where the code has none to
+// read (ticket 214: the places the JavaScript read it unguarded).
+export function must<T>(v: T | null | undefined, what: string): T {
+  if (v === null || v === undefined) throw new Error(what);
+  return v;
+}
 
 // `### <id> | <part> step N of M | <title>`, or `### C | Check | <title>`
 // and `### R<n> | Warm-up | <title>`. A page whose Your turn is parts, not
@@ -16,17 +276,20 @@ import { inline } from "./text.mjs";
 export const STEP_HEADING =
   /^### (W\d+|Y\d+|T\d+|D\d+|C|R\d+) \| (?:(Worked example|Your turn|The task|Tear down) (step|part) (\d+) of (\d+)|(Check|Warm-up)) \| (\S.*)$/;
 // Each numbered part's id letter.
-export const PART_IDS = {
+export const PART_IDS: Readonly<Record<string, string>> = {
   "Worked example": "W",
   "Your turn": "Y",
   "The task": "T",
   "Tear down": "D",
 };
 // Parts whose steps the learner does on their own, with the goal in front.
-export const OWN_PARTS = new Set(["Your turn", "The task"]);
+export const OWN_PARTS: ReadonlySet<string> = new Set([
+  "Your turn",
+  "The task",
+]);
 // `optional: <when to skip it>` (ticket 102), the app's own words: the card
 // shows them, and x skips the step.
-export const STEP_KEYS = new Set([
+export const STEP_KEYS: ReadonlySet<string> = new Set([
   "tier",
   "skill",
   "where",
@@ -40,7 +303,7 @@ export const STEP_ID = /^[WYTDCR]\d*$/;
 // since ticket 103 also a second Claude Code session (`claude-2`) and a
 // browser, whose beats verify with self, or with `none` and a later beat of
 // the step that reads a local file.
-export const WHERE = new Set([
+export const WHERE: ReadonlySet<string> = new Set([
   "terminal",
   "claude",
   "claude-2",
@@ -53,15 +316,24 @@ export const WHERE = new Set([
 // order, one item a terminal, and an item may name two that share one
 // (`terminal claude`). Each beat in one of them is then labelled "in
 // terminal <n>" (ticket 103).
-export const NUMBERED = ["terminal", "claude", "claude-2", "shell"];
+export const NUMBERED: readonly string[] = [
+  "terminal",
+  "claude",
+  "claude-2",
+  "shell",
+];
 // Verify kinds the app answers by reading the beat's file itself, with no
 // process: `file`, and HOLDS, what a file holds (ticket 87).
-export const HOLDS = new Set(["json", "match", "no-match"]);
-export const READS = new Set(["file", ...HOLDS]);
+export const HOLDS: ReadonlySet<string> = new Set([
+  "json",
+  "match",
+  "no-match",
+]);
+export const READS: ReadonlySet<string> = new Set(["file", ...HOLDS]);
 // Verify kinds the app answers with git status (ticket 88): the whole tree
 // clean, or part of it; and, against how git was when a step opened (ticket
 // 105), HEAD moved with the tree clean, or the same paths listed.
-export const GIT = new Set([
+export const GIT: ReadonlySet<string> = new Set([
   "git-clean",
   "git-changed",
   "git-only",
@@ -70,8 +342,21 @@ export const GIT = new Set([
   "git-unchanged",
 ]);
 // The verify kinds that compare git with how it was when a step opened.
-export const SINCE_GIT = new Set(["head-moved", "git-unchanged"]);
-export const BEAT_KINDS = new Set(["do", "predict", "ask", "type", "self"]);
+export const SINCE_GIT: ReadonlySet<string> = new Set([
+  "head-moved",
+  "git-unchanged",
+]);
+// A verify that reads its file, and one git status answers, by the same
+// sets.
+export const isReadVerify = (v: Verify): v is ReadVerify => READS.has(v.kind);
+export const isGitVerify = (v: Verify): v is GitVerify => GIT.has(v.kind);
+export const BEAT_KINDS: ReadonlySet<string> = new Set([
+  "do",
+  "predict",
+  "ask",
+  "type",
+  "self",
+]);
 // Keys a beat may hold, and whether their value must be a quote of the page.
 // `wait` (ticket 103) marks a long wait, for an agent, workflow or CI run:
 // `- wait: long` in the app's words, or `- wait: "<the page's words>"` where
@@ -81,7 +366,7 @@ export const BEAT_KINDS = new Set(["do", "predict", "ask", "type", "self"]);
 // above it, such as "In the practice template:", drawn above its command
 // wherever the bottom line shows; at most one a bottom line. Like `win`, it
 // goes under its bottom line, before or after that line's `win`.
-export const BEAT_KEYS = {
+export const BEAT_KEYS: Readonly<Record<string, boolean | null>> = {
   where: false,
   verify: false,
   wait: null,
@@ -131,7 +416,7 @@ export const BEAT_KEYS = {
 export const WHEN = /^([WYTDC]\d*)\.(\d+)=(\S.*)$/;
 // A choice: an ask beat whose every option is an `option`, so no pick on it
 // is right or wrong, and none is graded.
-export const isChoice = (b) =>
+export const isChoice = (b: DraftBeat | undefined) =>
   b?.kind === "ask" &&
   b.options.length > 0 &&
   b.options.every((o) => o.kind === "option");
@@ -145,7 +430,7 @@ export const isChoice = (b) =>
 // the learner's own repositories, naming no command, at most one; shown
 // only where the lesson runs in its level's work folder and that folder is
 // not the practice copy (ticket 179).
-export const INTRO_KEYS = {
+export const INTRO_KEYS: Readonly<Record<string, boolean>> = {
   minutes: true,
   can: true,
   why: true,
@@ -160,7 +445,7 @@ export const INTRO_KEYS = {
 // the app's own words. A check that keeps answering the same sends the
 // learner back there. A ladder's bottom line takes a `win` and a `lead-in`
 // line as a beat's does.
-export const LADDER_KEYS = {
+export const LADDER_KEYS: Readonly<Record<string, boolean | null>> = {
   hint: true,
   bottom: true,
   win: true,
@@ -170,8 +455,12 @@ export const LADDER_KEYS = {
 // The card (the c overlay): each entry a `skill` line in the app's words,
 // then the page's command (`show`) and what it does (`does`). An entry shows
 // once the learner finished a step on its skill.
-export const CARD_KEYS = { skill: false, show: true, does: true };
-const OPTION_KEYS = new Set([
+export const CARD_KEYS: Readonly<Record<string, boolean>> = {
+  skill: false,
+  show: true,
+  does: true,
+};
+const OPTION_KEYS: ReadonlySet<string> = new Set([
   "right",
   "wrong",
   "option",
@@ -203,7 +492,7 @@ const manifestSchema = z
   })
   .superRefine((manifest, ctx) => {
     const levels = new Set(manifest.levels.map((level) => level.id));
-    const ids = new Set();
+    const ids = new Set<string>();
     for (const [index, lesson] of manifest.lessons.entries()) {
       if (!levels.has(lesson.level))
         ctx.addIssue({
@@ -222,7 +511,7 @@ const manifestSchema = z
         ctx.addIssue({
           code: "custom",
           path: ["lessons", index, "order"],
-          message: `expected ${index + 1}`,
+          message: `expected ${String(index + 1)}`,
         });
       if (lesson.steps !== `course/steps/${lesson.id}.md`)
         ctx.addIssue({
@@ -245,18 +534,24 @@ const manifestSchema = z
     }
   });
 
-export function parseManifest(value, file = "course/manifest.json") {
+export type Manifest = z.infer<typeof manifestSchema>;
+export type ManifestLesson = Manifest["lessons"][number];
+
+export function parseManifest(
+  value: unknown,
+  file = "course/manifest.json",
+): Manifest {
   const result = manifestSchema.safeParse(value);
   if (result.success) return result.data;
-  const issue = result.error.issues[0];
+  const issue = must(result.error.issues[0], `${file}:1: invalid`);
   throw new Error(`${file}:1: ${issue.path.join(".")}: ${issue.message}`);
 }
 
-export const coursePath = (manifest) =>
+export const coursePath = (manifest: Manifest) =>
   [...manifest.lessons].sort((a, b) => a.order - b.order);
-export const indexLevel = (manifest, id) =>
+export const indexLevel = (manifest: Manifest, id: string) =>
   manifest.levels.find((level) => id === `${level.id}-index`)?.id ?? null;
-export const workLevels = (manifest) =>
+export const workLevels = (manifest: Manifest) =>
   manifest.levels
     .filter((level) =>
       manifest.lessons.some(
@@ -264,7 +559,7 @@ export const workLevels = (manifest) =>
       ),
     )
     .map((level) => level.id);
-export const folderKeys = (manifest) => [
+export const folderKeys = (manifest: Manifest) => [
   ...workLevels(manifest),
   ...coursePath(manifest)
     .filter((lesson) => lesson.folder === "new-copy")
@@ -274,11 +569,14 @@ export const PATH_MAX = 1024;
 export const GUIDE =
   "https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know";
 export const COMMANDS_URL = `${GUIDE}/blob/main/docs/reference/commands.md`;
-export const indexUrl = (level) => `${GUIDE}/blob/main/docs/${level}/README.md`;
+export const indexUrl = (level: LevelId) =>
+  `${GUIDE}/blob/main/docs/${level}/README.md`;
 
-function value(raw) {
+function value(raw: string) {
   const q = raw.match(/^"(.*)"$/);
-  return q ? { text: q[1], quoted: true } : { text: raw, quoted: false };
+  return q
+    ? { text: must(q[1], "a quote's text"), quoted: true }
+    : { text: raw, quoted: false };
 }
 
 // Parses one content file. Throws an Error naming the file and line on any
@@ -289,14 +587,18 @@ function value(raw) {
 // each with its 1-based `line`, the `heading` it sits under, and `from`, the
 // Lesson or Level index a warm-up names, or null for the file's own page.
 // The lesson test compares them with the pages.
-export function parseLesson(text, file = "lesson", context = {}) {
+export function parseLesson(
+  text: string,
+  file = "lesson",
+  context: ParseContext = {},
+): LessonContent {
   const manifest = context.manifest ?? { levels: [], lessons: [] };
   const checks = context.checks ?? {};
   const probes = context.probes ?? {
     PROBES: {},
-    probeError: (name) => `unknown probe ${name}`,
+    probeError: (name: string) => `unknown probe ${name}`,
   };
-  const { PROBES, probeError } = probes;
+  const { probeError } = probes;
   const fm = frontmatter(text);
   if (!fm) throw new Error(`${file}: no front matter`);
   const lines = text.replace(/\r\n?/g, "\n").split("\n");
@@ -304,12 +606,17 @@ export function parseLesson(text, file = "lesson", context = {}) {
   if ("folder" in fm.fields && context.rejectFolder) {
     const line = lines.findIndex((l) => l.startsWith("folder:"));
     throw new Error(
-      `${file}:${line + 1}: folder is declared only in course/manifest.json`,
+      `${file}:${String(line + 1)}: folder is declared only in course/manifest.json`,
     );
   }
-  if ("folder" in fm.fields && !["copy", "new copy"].includes(fm.fields.folder))
+  if (
+    "folder" in fm.fields &&
+    !(["copy", "new copy"] as (FrontValue | undefined)[]).includes(
+      fm.fields.folder,
+    )
+  )
     throw new Error(
-      `${file}: folder is copy or new copy, not ${fm.fields.folder}`,
+      `${file}: folder is copy or new copy, not ${String(fm.fields.folder)}`,
     );
   // `worked: copy` runs the lesson's Worked example steps (W) in the
   // practice copy, while its Your turn steps, its Check and its
@@ -317,54 +624,62 @@ export function parseLesson(text, file = "lesson", context = {}) {
   // says "In your practice copy:" over its Worked example. A pinned folder
   // already places every step, so the two never go together.
   if ("worked" in fm.fields && fm.fields.worked !== "copy")
-    throw new Error(`${file}: worked is copy, not ${fm.fields.worked}`);
+    throw new Error(`${file}: worked is copy, not ${String(fm.fields.worked)}`);
   if ("worked" in fm.fields && "folder" in fm.fields)
     throw new Error(
-      `${file}: worked: copy with folder: ${fm.fields.folder}, which already places every step`,
+      `${file}: worked: copy with folder: ${String(fm.fields.folder)}, which already places every step`,
     );
-  const lesson = {
-    ...fm.fields,
+  // The front matter keys a lesson reads are `key: value` lines; needs,
+  // requires and terminals are read from the fields below and replaced.
+  const lesson: DraftLesson = {
+    ...(fm.fields as Pick<
+      LessonContent,
+      "lesson" | "stamp" | "badge" | "folder" | "worked"
+    >),
     intro: { can: [] },
     warmup: [],
     steps: [],
     ladder: [],
     card: [],
   };
-  const cardLines = [];
-  const needLines = [];
-  let section = null;
-  let step = null;
-  let beat = null;
-  let rung = null;
-  let payoffLine = null;
-  const fail = (n, msg) => {
-    throw new Error(`${file}:${n + 1}: ${msg}`);
+  const cardLines: number[] = [];
+  const needLines: { quote: string; line: number }[] = [];
+  let section: string | null = null;
+  let step: DraftStep | null = null;
+  let beat: DraftBeat | null = null;
+  let rung: Rung | null = null;
+  let payoffLine: number | null = null;
+  const fail: Fail = (n, msg) => {
+    throw new Error(`${file}:${String((n ?? 0) + 1)}: ${msg}`);
   };
   // Where a quote or block on line n sits, for onPageText: only a warm-up's
   // from line points it at another page.
-  const pageText = (entry, n) => {
+  const pageText = (
+    entry: { kind: "quote"; text: string } | { kind: "block"; lines: string[] },
+    n: number,
+  ) => {
     const inStep = (section === "steps" || section === "warm-up") && step;
     context.onPageText?.({
       ...entry,
       line: n + 1,
       heading: inStep
-        ? lines[step.line - 1].slice(4)
+        ? must(lines[inStep.line - 1], `${file}: no heading line`).slice(4)
         : section === "ladder" && rung
           ? rung.item
           : (section ?? "front matter"),
       from: section === "warm-up" && step ? (step.from ?? null) : null,
     });
   };
-  const leadIn = (bottom, text, n) => {
+  const leadIn = (bottom: Bottom, text: string, n: number) => {
     if (bottom.leadIn) fail(n, "a second lead-in line on one bottom line");
     bottom.leadIn = text;
   };
   for (let i = start; i < lines.length; i++) {
-    const line = lines[i];
+    const line = must(lines[i], `${file}: no line ${String(i + 1)}`);
     if (!line.trim()) continue;
     const h2 = line.match(/^## (intro|warm-up|steps|ladder|card)$/);
     if (h2) {
-      section = h2[1];
+      section = must(h2[1], `${file}: a section heading`);
       continue;
     }
     if (
@@ -378,25 +693,26 @@ export function parseLesson(text, file = "lesson", context = {}) {
           i,
           `a ${section === "warm-up" ? "step" : "warm-up"} heading in the ${section} section: ${line}`,
         );
-      if (m[2] && m[1][0] !== PART_IDS[m[2]])
+      const id = must(m[1], `${file}: a step id`);
+      if (m[2] && id[0] !== PART_IDS[m[2]])
         fail(
           i,
-          `a ${m[2]} step's id is ${PART_IDS[m[2]]}<n>, not ${m[1]}: ${line}`,
+          `a ${m[2]} step's id is ${String(PART_IDS[m[2]])}<n>, not ${id}: ${line}`,
         );
       if (m[3] === "part" && m[2] !== "Your turn")
-        fail(i, `only Your turn has parts; ${m[2]} has steps: ${line}`);
+        fail(i, `only Your turn has parts; ${String(m[2])} has steps: ${line}`);
       const checked = lesson.steps.some((x) => x.part === "Check");
       if (m[2] === "Tear down" && !checked)
         fail(i, `a Tear down step only follows the Check: ${line}`);
       if (lesson.steps.at(-1)?.part === "Tear down" && m[2] !== "Tear down")
         fail(i, `only Tear down steps follow the Check: ${line}`);
       step = {
-        id: m[1],
-        part: m[2] ?? m[6],
+        id,
+        part: must(m[2] ?? m[6], `${file}: a step's part`),
         unit: m[3] ?? null,
         n: m[4] ? Number(m[4]) : null,
         of: m[5] ? Number(m[5]) : null,
-        title: m[7],
+        title: must(m[7], `${file}: a step's title`),
         beats: [],
         line: i + 1,
       };
@@ -413,12 +729,16 @@ export function parseLesson(text, file = "lesson", context = {}) {
     if (narrow) {
       if (section !== "ladder" || !rung)
         fail(i, "a narrow line outside a ladder block");
-      rung.narrow.push({ part: narrow[1], question: narrow[2] });
+      rung.narrow.push({
+        part: must(narrow[1], `${file}: a narrow line's part`),
+        question: must(narrow[2], `${file}: a narrow line's question`),
+      });
       continue;
     }
     const kv = line.match(/^- ([a-z-]+): (.+)$/);
     if (!kv) fail(i, `a line the app can't read: ${line}`);
-    const [, key, raw] = kv;
+    const key = must(kv[1], `${file}: a key`);
+    const raw = must(kv[2], `${file}: a value`);
     const v = value(raw.trim());
     if (v.quoted) pageText({ kind: "quote", text: v.text }, i);
     if (section === "intro") {
@@ -428,7 +748,8 @@ export function parseLesson(text, file = "lesson", context = {}) {
       else if (key === "need") needLines.push({ quote: v.text, line: i });
       else if (key in lesson.intro)
         fail(i, `a second ${key} line in the intro`);
-      else lesson.intro[key] = v.text;
+      // Any intro key but can, which has its own line above.
+      else lesson.intro[key as Exclude<keyof Intro, "can">] = v.text;
       if (key === "payoff") payoffLine = i;
       // The p overlay spells out the read line's address: it needs one.
       if (key === "read" && inline(v.text).filter((r) => r.url).length !== 1)
@@ -446,9 +767,12 @@ export function parseLesson(text, file = "lesson", context = {}) {
         cardLines.push(i);
       } else if (!lesson.card.length)
         fail(i, "a card line before its skill line");
-      else if (key in lesson.card.at(-1))
-        fail(i, `a second ${key} line in a card entry`);
-      else lesson.card.at(-1)[key] = v.text;
+      else {
+        const entry = must(lesson.card.at(-1), `${file}: a card entry`);
+        // A card key but skill, which opens the entry above.
+        if (key in entry) fail(i, `a second ${key} line in a card entry`);
+        else entry[key as "show" | "does"] = v.text;
+      }
       continue;
     }
     if (section === "ladder") {
@@ -466,16 +790,19 @@ export function parseLesson(text, file = "lesson", context = {}) {
       else if (key === "bottom") rung.bottom.push({ text: v.text });
       else if (!rung.bottom.length)
         fail(i, `a ${key} line with no bottom line above it`);
-      else if (key === "lead-in") leadIn(rung.bottom.at(-1), v.text, i);
-      else rung.bottom.at(-1).win = v.text;
+      else {
+        const bottom = must(rung.bottom.at(-1), `${file}: a bottom line`);
+        if (key === "lead-in") leadIn(bottom, v.text, i);
+        else bottom.win = v.text;
+      }
       continue;
     }
-    if (!["steps", "warm-up"].includes(section) || !step)
+    if (!["steps", "warm-up"].includes(section ?? "") || !step)
       fail(i, `a line outside a step: ${line}`);
     if (key === "beat") {
       if (!BEAT_KINDS.has(raw)) fail(i, `unknown beat kind ${raw}`);
       beat = {
-        kind: raw,
+        kind: raw as Beat["kind"],
         lines: [],
         options: [],
         hints: [],
@@ -510,7 +837,8 @@ export function parseLesson(text, file = "lesson", context = {}) {
         );
       if (key === "optional" && ["Warm-up", "Check"].includes(step.part))
         fail(i, `a ${step.part} step can't be optional`);
-      step[key] = raw;
+      // One of STEP_KEYS.
+      step[key as "tier" | "skill" | "where" | "from" | "optional"] = raw;
       continue;
     }
     if (!(key in BEAT_KEYS)) fail(i, `unknown beat key ${key}`);
@@ -519,7 +847,8 @@ export function parseLesson(text, file = "lesson", context = {}) {
       fail(i, `${key} must be a quote of the lesson`);
     if (BEAT_KEYS[key] === false && v.quoted)
       fail(i, `${key} holds the app's own words: no quotes`);
-    if (OPTION_KEYS.has(key)) beat.options.push({ kind: key, ...v });
+    if (OPTION_KEYS.has(key))
+      beat.options.push({ kind: key as Option["kind"], ...v });
     else if (key === "because") {
       const last = beat.options.at(-1);
       if (!last) fail(i, "a because line with no option above it");
@@ -529,13 +858,16 @@ export function parseLesson(text, file = "lesson", context = {}) {
       // a code block, or the last bottom line when that came last.
       const last =
         beat.lastKey === "bottom" ? beat.bottom.at(-1) : beat.lines.at(-1);
-      if (beat.lastKey !== "bottom" && !["run", "code"].includes(last?.key))
+      if (
+        beat.lastKey !== "bottom" &&
+        !(["run", "code"] as (string | undefined)[]).includes(last?.key)
+      )
         fail(i, "a win line with no run, code or bottom line above it");
-      last.win = v.text;
+      must(last, `${file}: a line for win`).win = v.text;
     } else if (key === "lead-in") {
       if (beat.lastKey !== "bottom")
         fail(i, "a lead-in line with no bottom line above it");
-      leadIn(beat.bottom.at(-1), v.text, i);
+      leadIn(must(beat.bottom.at(-1), `${file}: a bottom line`), v.text, i);
     } else if (key === "code") {
       if (beat.lines.some((l) => l.key === "code"))
         fail(i, "a second code block on one beat");
@@ -546,7 +878,8 @@ export function parseLesson(text, file = "lesson", context = {}) {
         );
       const open = lines[i + 1]?.match(FENCE);
       if (!open) fail(i, "a code line with no fenced block under it");
-      const end = lines.findIndex((l, k) => k > i + 1 && closes(open[1], l));
+      const fence = must(open[1], `${file}: a fence`);
+      const end = lines.findIndex((l, k) => k > i + 1 && closes(fence, l));
       if (end < 0) fail(i, "a code block with no closing fence");
       const block = lines.slice(i + 2, end);
       pageText({ kind: "block", lines: block }, i + 1);
@@ -568,16 +901,19 @@ export function parseLesson(text, file = "lesson", context = {}) {
         Number(shows[3]),
       ];
       if (from < 1 || to > block.length || from > to)
-        fail(i, `lines ${from}-${to}: the block has ${block.length} lines`);
+        fail(
+          i,
+          `lines ${String(from)}-${String(to)}: the block has ${String(block.length)} lines`,
+        );
       if (to - from + 1 > CODE_LINES)
         fail(
           i,
-          `this beat shows ${to - from + 1} lines of code; a beat shows at most ${CODE_LINES}: name the lines it shows, as lines ${from}-${from + CODE_LINES - 1}`,
+          `this beat shows ${String(to - from + 1)} lines of code; a beat shows at most ${String(CODE_LINES)}: name the lines it shows, as lines ${String(from)}-${String(from + CODE_LINES - 1)}`,
         );
       if (point < from || point > to)
         fail(
           i,
-          `point ${point} is not a line this beat shows (${from} to ${to})`,
+          `point ${String(point)} is not a line this beat shows (${String(from)} to ${String(to)})`,
         );
       beat.lines.push({
         key: "code",
@@ -617,7 +953,12 @@ export function parseLesson(text, file = "lesson", context = {}) {
           i,
           "a when line on a step's first beat: the first beat always shows",
         );
-      beat.when = { step: m[1], beat: Number(m[2]), option: m[3], line: i + 1 };
+      beat.when = {
+        step: must(m[1], `${file}: a when line's step`),
+        beat: Number(m[2]),
+        option: must(m[3], `${file}: a when line's option`),
+        line: i + 1,
+      };
     } else if (key === "tick") {
       const last = beat.lines.at(-1);
       if (last?.key !== "run") fail(i, "a tick line with no run line above it");
@@ -645,23 +986,27 @@ export function parseLesson(text, file = "lesson", context = {}) {
       // words, for a step whose page has none to quote: like `expect`, a done
       // beat hides it where the evidence line replaces it.
       beat.lines.push({
-        key,
+        key: key as TextLine["key"],
         text: v.text,
         quoted: v.quoted,
         ...(key === "say" && /^Done when /.test(v.text)
           ? { doneWhen: true }
           : {}),
       });
-    } else beat[camel(key)] = v.text;
+      // The rest of BEAT_KEYS, camel-cased: verify is its line's text here.
+    } else (beat as Record<string, unknown>)[camel(key)] = v.text;
   }
   // A payoff that is no `can` line would flag nothing on screen.
-  if (payoffLine !== null && !lesson.intro.can.includes(lesson.intro.payoff))
-    fail(
-      payoffLine,
-      `the payoff "${lesson.intro.payoff}" is not one of the intro's can lines`,
-    );
+  if (payoffLine !== null) {
+    const payoff = must(lesson.intro.payoff, `${file}: a payoff`);
+    if (!lesson.intro.can.includes(payoff))
+      fail(
+        payoffLine,
+        `the payoff "${payoff}" is not one of the intro's can lines`,
+      );
+  }
   // The front matter's line for `key`, for an error to name.
-  const fmLine = (key) => {
+  const fmLine = (key: string) => {
     const i = lines.slice(0, start).findIndex((l) => l.startsWith(`${key}:`));
     return i < 0 ? null : i;
   };
@@ -679,28 +1024,30 @@ export function parseLesson(text, file = "lesson", context = {}) {
     fail,
   );
   lesson.card.forEach((e, k) => {
+    const at = must(cardLines[k], `${file}: a card line`);
     if (!e.show || !e.does)
-      fail(cardLines[k], "a card entry needs a show and a does line");
+      fail(at, "a card entry needs a show and a does line");
     if (!lesson.steps.some((s) => s.skill === e.skill))
       fail(
-        cardLines[k],
-        `the card entry's skill ${e.skill} is no step of this lesson`,
+        at,
+        `the card entry's skill ${String(e.skill)} is no step of this lesson`,
       );
   });
   for (const s of [...lesson.warmup, ...lesson.steps]) {
     if (!s.beats.length)
-      throw new Error(`${file}:${s.line}: step ${s.id} has no beats`);
+      throw new Error(`${file}:${String(s.line)}: step ${s.id} has no beats`);
     for (const b of s.beats) {
       b.where = b.where ?? s.where;
       if (b.where !== undefined && !WHERE.has(b.where))
-        throw new Error(`${file}:${b.line}: unknown where ${b.where}`);
+        throw new Error(`${file}:${String(b.line)}: unknown where ${b.where}`);
       if (
         lesson.terminals &&
+        b.where !== undefined &&
         NUMBERED.includes(b.where) &&
         !(b.where in lesson.terminals)
       )
         throw new Error(
-          `${file}:${b.line}: where ${b.where}, which terminals doesn't number`,
+          `${file}:${String(b.line)}: where ${b.where}, which terminals doesn't number`,
         );
       b.verify = parseVerify(b, file, probes);
       if (
@@ -709,7 +1056,7 @@ export function parseLesson(text, file = "lesson", context = {}) {
         !READS.has(b.verify.kind)
       )
         throw new Error(
-          `${file}:${b.line}: a "Done when" say line needs a check beat or a beat that reads a file`,
+          `${file}:${String(b.line)}: a "Done when" say line needs a check beat or a beat that reads a file`,
         );
     }
   }
@@ -717,13 +1064,15 @@ export function parseLesson(text, file = "lesson", context = {}) {
   // later beat of the step reads the local file it leaves (a git probe,
   // ticket 105, reads only local refs too). That later beat shows whenever
   // the browser beat does: it has no when line (104), or the same one.
-  const sameWhen = (a, b) =>
+  // Every beat's verify is parsed by now, and every card entry whole.
+  const parsed = lesson as LessonContent;
+  const sameWhen = (a: Beat, b: Beat) =>
     !a.when ||
     (b.when &&
       a.when.step === b.when.step &&
       a.when.beat === b.when.beat &&
       a.when.option === b.when.option);
-  for (const s of lesson.steps) {
+  for (const s of parsed.steps) {
     s.beats.forEach((b, k) => {
       if (b.where !== "browser" || b.verify.kind === "self") return;
       const later = s.beats
@@ -738,22 +1087,26 @@ export function parseLesson(text, file = "lesson", context = {}) {
         );
       if (b.verify.kind !== "none" || !later)
         throw new Error(
-          `${file}:${b.line}: a browser beat verifies with self, or with none and a later beat of its step that reads a local file`,
+          `${file}:${String(b.line)}: a browser beat verifies with self, or with none and a later beat of its step that reads a local file`,
         );
     });
   }
-  backsOf(lesson, file, checks);
-  whensOf(lesson, file);
-  return lesson;
+  backsOf(parsed, file, checks);
+  whensOf(parsed, file);
+  return parsed;
 }
 
 // `terminals: [claude, claude-2, shell]` (ticket 103): each where the page
 // numbers, to its terminal's number, or null without the key.
-function terminalsOf(raw, at, fail) {
+function terminalsOf(
+  raw: FrontValue | undefined,
+  at: number | null,
+  fail: Fail,
+) {
   if (raw === undefined) return null;
   const items = listOf(raw);
   if (!items.length) fail(at, "terminals names at least one terminal");
-  const out = {};
+  const out: Record<string, number> = {};
   items.forEach((item, k) => {
     for (const w of item.trim().split(/\s+/)) {
       if (!NUMBERED.includes(w))
@@ -770,14 +1123,18 @@ function terminalsOf(raw, at, fail) {
 
 // `back: <step id> <why>` (ticket 192): the step, then why its state is
 // where this one's comes from, quoted from the page or in the app's words.
-function backLine(raw, n, fail) {
+function backLine(raw: string, n: number, fail: Fail): Back {
   const m = raw.match(/^(\S+) (\S.*)$/);
   if (!m)
     fail(
       n,
       "a back line is a step id, then why: a quote of the page or the app's own words",
     );
-  return { step: m[1], ...value(m[2].trim()), line: n + 1 };
+  return {
+    step: must(m[1], "a back line's step"),
+    ...value(must(m[2], "a back line's why").trim()),
+    line: n + 1,
+  };
 }
 
 // Each back line goes to an earlier step of this lesson: on a beat, before
@@ -785,10 +1142,14 @@ function backLine(raw, n, fail) {
 // its item, so every step that shows the item's FAIL is after it. A back to
 // another lesson, to a step this lesson doesn't have, or to the step itself
 // or one after it is an error, naming its line.
-function backsOf(lesson, file, checks) {
+function backsOf(
+  lesson: LessonContent,
+  file: string,
+  checks: Readonly<Record<string, CheckModule | undefined>>,
+) {
   const ids = lesson.steps.map((s) => s.id);
-  const check = (back, from, what) => {
-    const at = `${file}:${back.line}`;
+  const check = (back: Back, from: number | null, what: string) => {
+    const at = `${file}:${String(back.line)}`;
     if (/^[a-z]+-/.test(back.step))
       throw new Error(
         `${at}: back ${back.step} names another lesson: a back goes to a step of this lesson`,
@@ -800,13 +1161,12 @@ function backsOf(lesson, file, checks) {
     if (from !== null && ids.indexOf(back.step) >= from)
       throw new Error(`${at}: back ${back.step} is not before ${what}`);
   };
-  lesson.steps.forEach((s, k) =>
-    s.beats.forEach(
-      (b) =>
-        b.back && check(b.back, k, `step ${s.id}, the step it goes back from`),
-    ),
-  );
-  const items = checks[lesson.lesson]?.items ?? [];
+  lesson.steps.forEach((s, k) => {
+    s.beats.forEach((b) => {
+      if (b.back) check(b.back, k, `step ${s.id}, the step it goes back from`);
+    });
+  });
+  const items = checks[String(lesson.lesson)]?.items ?? [];
   for (const rung of lesson.ladder) {
     if (!rung.back) continue;
     const item = items.findIndex((it) => it.text === rung.item);
@@ -823,7 +1183,7 @@ function backsOf(lesson, file, checks) {
     check(
       rung.back,
       first < 0 ? null : first,
-      `step ${lesson.steps[first]?.id}, the first step that checks this item`,
+      `step ${String(lesson.steps[first]?.id)}, the first step that checks this item`,
     );
   }
 }
@@ -831,20 +1191,20 @@ function backsOf(lesson, file, checks) {
 // Each when line names a choice made before its beat, in this lesson's
 // steps, and one of that choice's options (ticket 104). A choice is an ask
 // beat whose every option is an `option`: no pick on it is right or wrong.
-function whensOf(lesson, file) {
-  lesson.steps.forEach((s, k) =>
+function whensOf(lesson: LessonContent, file: string) {
+  lesson.steps.forEach((s, k) => {
     s.beats.forEach((b, n) => {
       if (!b.when) return;
       const { step, beat, option, line } = b.when;
-      const at = `${file}:${line}: when ${step}.${beat}`;
+      const at = `${file}:${String(line)}: when ${step}.${String(beat)}`;
       const from = lesson.steps.findIndex((x) => x.id === step);
       if (from < 0) throw new Error(`${at}: this lesson has no step ${step}`);
       if (from > k || (from === k && beat >= n))
         throw new Error(
           `${at}: that beat is not before this one; a when follows a choice made earlier`,
         );
-      const q = lesson.steps[from].beats[beat];
-      if (!isChoice(q))
+      const q = lesson.steps[from]?.beats[beat];
+      if (!q || !isChoice(q))
         throw new Error(
           `${at}: names no choice, an ask beat whose every option is an option line`,
         );
@@ -852,12 +1212,12 @@ function whensOf(lesson, file) {
         throw new Error(
           `${at}: "${option}" is none of its options: ${q.options.map((o) => `"${o.text}"`).join(", ")}`,
         );
-    }),
-  );
+    });
+  });
 }
 
 // A front matter list: an inline or block list, or one item alone.
-const listOf = (raw) =>
+const listOf = (raw: FrontValue | undefined) =>
   raw === undefined ? [] : Array.isArray(raw) ? raw : [raw];
 
 // `needs: [jq python3, bwrap socat on linux]`: the commands the page's You
@@ -866,12 +1226,17 @@ const listOf = (raw) =>
 // the first need line), and "on linux" makes them Linux only, as the
 // sandbox's are. Errors name the front matter's needs line.
 const COMMAND = /^[A-Za-z0-9][\w.+-]*$/;
-function needsOf(raw, lines, at, fail) {
+function needsOf(
+  raw: FrontValue | undefined,
+  lines: { quote: string; line: number }[],
+  at: number | null,
+  fail: Fail,
+): Need[] {
   const items = listOf(raw);
   if (items.length !== lines.length) {
     fail(
-      at ?? lines[0].line,
-      `needs has ${items.length} item${items.length === 1 ? "" : "s"} and the intro ${lines.length} need line${lines.length === 1 ? "" : "s"}: each item is the commands one need line quotes`,
+      at ?? must(lines[0], "a need line").line,
+      `needs has ${String(items.length)} item${items.length === 1 ? "" : "s"} and the intro ${String(lines.length)} need line${lines.length === 1 ? "" : "s"}: each item is the commands one need line quotes`,
     );
   }
   return items.map((item, k) => {
@@ -886,7 +1251,7 @@ function needsOf(raw, lines, at, fail) {
         at,
         `needs item "${item}" is command names, then "on linux" for Linux only`,
       );
-    return { commands, linux, quote: lines[k].quote };
+    return { commands, linux, quote: must(lines[k], "a need line").quote };
   });
 }
 
@@ -898,20 +1263,35 @@ function needsOf(raw, lines, at, fail) {
 // prerequisite; a file is a file, not a folder. `probe todos <n>` (ticket
 // 105) is what the work folder itself must hold, from no lesson: TODO or
 // FIXME in n top-level folders. Errors name the front matter's requires line.
-function requiresOf(raw, id, at, fail, { manifest, checks, probeError }) {
+function requiresOf(
+  raw: FrontValue | undefined,
+  id: FrontValue | undefined,
+  at: number | null,
+  fail: Fail,
+  {
+    manifest,
+    checks,
+    probeError,
+  }: {
+    manifest: Manifest;
+    checks: Readonly<Record<string, CheckModule | undefined>>;
+    probeError: (name: string, args: readonly string[]) => string | null;
+  },
+): Requirement[] {
   const items = listOf(raw);
   const path = coursePath(manifest);
   const here = path.findIndex((entry) => entry.id === id);
   if (items.length && here < 0)
-    fail(at, `requires: ${id} is no lesson on the path`);
+    fail(at, `requires: ${String(id)} is no lesson on the path`);
   const before = path.slice(0, here).map((entry) => entry.id);
-  const seen = new Set();
-  return items.map((item) => {
+  const seen = new Set<string>();
+  return items.map((item): Requirement => {
     const todos = item.trim().match(/^probe todos (\S+)$/);
     if (todos) {
-      if (probeError("todos", [todos[1]]))
+      const count = must(todos[1], "a todos count");
+      if (probeError("todos", [count]))
         fail(at, `requires item "${item}": probe todos takes a count, like 2`);
-      return { probe: "todos", args: [todos[1]] };
+      return { probe: "todos", args: [count] };
     }
     const m = item.trim().match(/^(\S+) (?:check (\d+)|file (\S+))$/);
     if (!m)
@@ -919,9 +1299,13 @@ function requiresOf(raw, id, at, fail, { manifest, checks, probeError }) {
         at,
         `requires item "${item}" is <lesson> check <item>, <lesson> file <path> or probe todos <n>`,
       );
-    const [, lesson, n, file] = m;
+    const lesson = must(m[1], "a required lesson");
+    const [, , n, file] = m;
     if (!before.includes(lesson))
-      fail(at, `requires item "${item}": ${lesson} is no lesson before ${id}`);
+      fail(
+        at,
+        `requires item "${item}": ${lesson} is no lesson before ${String(id)}`,
+      );
     if (seen.has(m[0])) fail(at, `requires item "${item}" is named twice`);
     seen.add(m[0]);
     if (n !== undefined) {
@@ -935,18 +1319,20 @@ function requiresOf(raw, id, at, fail, { manifest, checks, probeError }) {
         );
       return { lesson, item: Number(n) };
     }
-    if (!workPath(file) || file.endsWith("/"))
+    // The other alternative matched: a file.
+    const named = must(file, "a required file");
+    if (!workPath(named) || named.endsWith("/"))
       fail(
         at,
-        `requires item "${item}" names a file from the work folder, like .claude/settings.json, not ${file}`,
+        `requires item "${item}" names a file from the work folder, like .claude/settings.json, not ${named}`,
       );
-    return { lesson, path: file };
+    return { lesson, path: named };
   });
 }
 
 // A path named from the work folder, like src/ or .claude/settings.json:
 // never ./, / or .. in it, nor a backslash.
-const workPath = (path) =>
+const workPath = (path: string) =>
   !path.includes("\\") &&
   !path.startsWith("/") &&
   !path
@@ -981,17 +1367,20 @@ export const CODE_LINES = 8;
 // the page's info string; it closes on a line of the same character, at
 // least as long, as CommonMark has it.
 const FENCE = /^(`{3,}|~{3,})([^`]*)$/;
-const closes = (fence, line) => {
+const closes = (fence: string, line: string) => {
   const m = line.match(/^(`{3,}|~{3,})[ \t]*$/);
-  return Boolean(m) && m[1][0] === fence[0] && m[1].length >= fence.length;
+  const mark = m?.[1];
+  return (
+    mark !== undefined && mark[0] === fence[0] && mark.length >= fence.length
+  );
 };
 
 // A path a reading beat names may end in a glob, for a file whose name
 // Claude picks: `*` stands for any characters and `?` for one, in the file
 // name only (`file .claude/workflows/*.js fresh`). It reads the newest file
 // that matches (verify.mjs matchOf), and the card shows that file's path.
-export const isGlob = (path) => /[*?]/.test(path);
-export const globName = (name) =>
+export const isGlob = (path: string) => /[*?]/.test(path);
+export const globName = (name: string) =>
   new RegExp(
     `^${name
       .replace(/[.+^${}()|[\]\\]/g, "\\$&")
@@ -999,12 +1388,19 @@ export const globName = (name) =>
       .replace(/\?/g, ".")}$`,
   );
 
-const camel = (k) => k.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+const camel = (k: string) =>
+  k.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 
-function parseVerify(beat, file, { PROBES, probeError }) {
+function parseVerify(
+  beat: DraftBeat,
+  file: string,
+  { PROBES, probeError }: NonNullable<ParseContext["probes"]>,
+): Verify {
   if (beat.kind !== "do")
     return { kind: beat.kind === "self" ? "self" : "answer" };
-  const v = beat.verify ?? (beat.ask ? "answer" : "none");
+  // Its line's text: each beat's verify is parsed once.
+  const v =
+    (beat.verify as string | undefined) ?? (beat.ask ? "answer" : "none");
   if (v === "check all") return { kind: "check", all: true };
   // `fresh`: it counts only once the beat's evidence file has changed since
   // its step opened (or since the step `since` names), so a step that redoes
@@ -1013,33 +1409,34 @@ function parseVerify(beat, file, { PROBES, probeError }) {
   // (a no-match whole when nothing was), and a rewritten one whole.
   const fresh = v.match(/ fresh(?: since ([WYTDCR]\d*))?$/);
   const base = fresh ? v.slice(0, fresh.index) : v;
-  const extra = fresh ? { fresh: true, since: fresh[1] ?? null } : {};
+  const extra: { fresh?: true; since?: string | null } = fresh
+    ? { fresh: true, since: fresh[1] ?? null }
+    : {};
+  const at = `${file}:${String(beat.line)}`;
   // The beats that read a file themselves: its evidence is its own file.
-  const own = (path) => {
-    if (beat.evidence && beat.evidence !== path)
+  const own = (path: string | undefined) => {
+    const named = must(path, `${at}: a path`);
+    if (beat.evidence && beat.evidence !== named)
+      throw new Error(`${at}: a file check's evidence is its own file`);
+    if (isGlob(named.slice(0, named.lastIndexOf("/") + 1)))
       throw new Error(
-        `${file}:${beat.line}: a file check's evidence is its own file`,
+        `${at}: a glob goes in the file name only, like .claude/workflows/*.js, not ${named}`,
       );
-    if (isGlob(path.slice(0, path.lastIndexOf("/") + 1)))
-      throw new Error(
-        `${file}:${beat.line}: a glob goes in the file name only, like .claude/workflows/*.js, not ${path}`,
-      );
-    beat.evidence = path;
+    beat.evidence = named;
+    return named;
   };
   // `file <path>`: a file no check item covers, done once it holds a line.
   const path = base.match(/^file (\S+)$/);
   if (path) {
-    own(path[1]);
-    return { kind: "file", path: path[1], ...extra };
+    return { kind: "file", path: own(path[1]), ...extra };
   }
   // `json <path> [<key.path>[=<value>]]`: done once the file parses, and
   // holds the key, with that value when one is given.
   const json = base.match(/^json (\S+)(?: ([^\s=]+)(?:=(.+))?)?$/);
   if (json) {
-    own(json[1]);
     return {
       kind: "json",
-      path: json[1],
+      path: own(json[1]),
       key: json[2] ?? null,
       value: json[3] ?? null,
       ...extra,
@@ -1050,8 +1447,12 @@ function parseVerify(beat, file, { PROBES, probeError }) {
   // a file that only grew, the lines are the ones added (see `fresh` above).
   const lines = base.match(/^(match|no-match) (\S+) (.+)$/);
   if (lines) {
-    own(lines[2]);
-    return { kind: lines[1], path: lines[2], regex: lines[3], ...extra };
+    return {
+      kind: lines[1] as "match" | "no-match",
+      path: own(lines[2]),
+      regex: must(lines[3], `${at}: a pattern`),
+      ...extra,
+    };
   }
   // `probe <name> [args]` (ticket 105): a git probe, which the host's
   // quest/host/src/probes.mjs runs in the check child. branch-ahead is
@@ -1059,46 +1460,50 @@ function parseVerify(beat, file, { PROBES, probeError }) {
   // the step `since` names).
   const probe = base.match(/^probe (\S+)((?: \S+)*)$/);
   if (probe) {
-    const args = probe[2].split(" ").filter(Boolean);
-    const error = probeError(probe[1], args);
-    if (error) throw new Error(`${file}:${beat.line}: ${error}`);
-    beat.watching = beat.watching ?? PROBES[probe[1]].watching;
+    const name = must(probe[1], `${at}: a probe`);
+    const args = must(probe[2], `${at}: a probe's arguments`)
+      .split(" ")
+      .filter(Boolean);
+    const error = probeError(name, args);
+    if (error) throw new Error(`${at}: ${error}`);
+    // probeError names any probe PROBES lacks.
+    const known = must(PROBES[name], `${at}: unknown probe ${name}`);
+    beat.watching = beat.watching ?? known.watching;
     return {
       kind: "probe",
-      name: probe[1],
+      name,
       args,
-      ...(PROBES[probe[1]].fresh
-        ? { fresh: true, since: null, ...extra }
-        : extra),
+      ...(known.fresh ? { fresh: true, since: null, ...extra } : extra),
     };
   }
   if (fresh && !beat.evidence)
-    throw new Error(
-      `${file}:${beat.line}: a fresh check needs an evidence file`,
-    );
+    throw new Error(`${at}: a fresh check needs an evidence file`);
   const check = base.match(/^check (\d+(?: \d+)*)$/);
   if (check)
-    return { kind: "check", items: check[1].split(" ").map(Number), ...extra };
+    return {
+      kind: "check",
+      items: must(check[1], `${at}: check items`).split(" ").map(Number),
+      ...extra,
+    };
   if (fresh)
-    throw new Error(
-      `${file}:${beat.line}: only a check, a file or a probe can be fresh`,
-    );
+    throw new Error(`${at}: only a check, a file or a probe can be fresh`);
   // `head-moved [since <step>]`: HEAD is another commit than when that step
   // (by default its own) opened, and git status lists nothing.
   // `git-unchanged [since <step>]`: git status lists the same paths as then.
   const since = v.match(/^(head-moved|git-unchanged)(?: since (\S+))?$/);
   if (since) {
+    const kind = since[1] as "head-moved" | "git-unchanged";
     if (since[2] !== undefined && !STEP_ID.test(since[2]))
       throw new Error(
-        `${file}:${beat.line}: ${since[1]} since a step id, like W2, not ${since[2]}`,
+        `${at}: ${kind} since a step id, like W2, not ${since[2]}`,
       );
-    return { kind: since[1], since: since[2] ?? null };
+    return { kind, since: since[2] ?? null };
   }
   // A path git status is asked about, as it names one: from the work folder.
-  const gitPath = (path) => {
+  const gitPath = (path: string) => {
     if (!workPath(path)) {
       throw new Error(
-        `${file}:${beat.line}: a git path is named from the work folder, like src/ or .claude/settings.json, not ${path}`,
+        `${at}: a git path is named from the work folder, like src/ or .claude/settings.json, not ${path}`,
       );
     }
     return path;
@@ -1107,18 +1512,27 @@ function parseVerify(beat, file, { PROBES, probeError }) {
   // none, nothing at all.
   const clean = v.match(/^git-clean (\S+(?: \S+)*)$/);
   if (clean)
-    return { kind: "git-clean", paths: clean[1].split(" ").map(gitPath) };
+    return {
+      kind: "git-clean",
+      paths: must(clean[1], `${at}: git paths`).split(" ").map(gitPath),
+    };
   // `git-changed <path>`: git status lists something under the path.
   // `git-only <path>`: it lists something, and all of it under the path.
   const scoped = v.match(/^(git-changed|git-only) (\S+)$/);
-  if (scoped) return { kind: scoped[1], path: gitPath(scoped[2]) };
+  if (scoped)
+    return {
+      kind: scoped[1] as "git-changed" | "git-only",
+      path: gitPath(must(scoped[2], `${at}: a git path`)),
+    };
   // `git-staged`: git status says a path is staged.
   if (["git-clean", "git-staged", "answer", "self", "none"].includes(v))
-    return { kind: v };
-  throw new Error(`${file}:${beat.line}: unknown verify value ${v}`);
+    return {
+      kind: v as "git-clean" | "git-staged" | "answer" | "self" | "none",
+    };
+  throw new Error(`${at}: unknown verify value ${v}`);
 }
 
-export function fingerprint(content) {
+export function fingerprint(content: LessonContent) {
   const steps = content.steps.map((step) => ({
     id: step.id,
     part: step.part,
@@ -1130,9 +1544,9 @@ export function fingerprint(content) {
   return createHash("sha256").update(JSON.stringify(steps)).digest("hex");
 }
 
-function pageMetadata(text, file) {
+function pageMetadata(text: string, file: string) {
   const title = text.match(/^# (\S.*)$/m)?.[1];
-  const minutes = text.match(/^<sub>.*? · ([^·]+) · Needs:/m)?.[1].trim();
+  const minutes = text.match(/^<sub>.*? · ([^·]+) · Needs:/m)?.[1]?.trim();
   const stamp = text.match(/Verified against Claude Code [^<]+/)?.[0].trim();
   if (!title || !minutes || !stamp)
     throw new Error(`${file}:1: expected a title, time estimate and Stamp`);
@@ -1148,8 +1562,8 @@ const compiledCourseSchema = z.strictObject({
       minutes: z.string(),
       stamp: z.string(),
       next: z.string().nullable(),
-      url: z.string().url(),
-      stuck: z.string().url(),
+      url: z.url(),
+      stuck: z.url(),
       items: z.array(z.string()),
       content: z.unknown(),
       fingerprint: z.string().length(64),
@@ -1158,12 +1572,39 @@ const compiledCourseSchema = z.strictObject({
   ),
 });
 
+// A compiled Lesson (course.json): its manifest entry, its page's title,
+// time estimate and Stamp, its links and Check items, and its parsed steps
+// with their fingerprints.
+export type CompiledLesson = ManifestLesson & {
+  title: string;
+  minutes: string;
+  stamp: string;
+  newCopy: boolean;
+  next: string | null;
+  url: string;
+  stuck: string;
+  items: string[];
+  content: LessonContent;
+  fingerprint: string;
+  legacyFingerprint: string;
+};
+export interface CompiledCourse {
+  levels: Manifest["levels"];
+  lessons: CompiledLesson[];
+}
+
 export function compileCourse(
-  value,
-  stepFiles,
-  pages,
-  { lessons: checks, probes },
-) {
+  value: unknown,
+  stepFiles: Readonly<Record<string, string | undefined>>,
+  pages: Readonly<Record<string, string | undefined>>,
+  {
+    lessons: checks,
+    probes,
+  }: {
+    lessons: Readonly<Record<string, CheckModule | undefined>>;
+    probes: NonNullable<ParseContext["probes"]>;
+  },
+): CompiledCourse {
   const manifest = parseManifest(value);
   const path = coursePath(manifest);
   const compiled = {
@@ -1184,7 +1625,7 @@ export function compileCourse(
       const metadata = pageMetadata(page, entry.page);
       if (content.lesson !== entry.id)
         throw new Error(
-          `${entry.steps}:2: expected lesson ${entry.id}, not ${content.lesson}`,
+          `${entry.steps}:2: expected lesson ${entry.id}, not ${String(content.lesson)}`,
         );
       if (content.stamp !== metadata.stamp)
         throw new Error(
@@ -1199,7 +1640,7 @@ export function compileCourse(
       );
       if (late)
         throw new Error(
-          `${entry.steps}:1: requires ${late.lesson}, no lesson before ${entry.id} here`,
+          `${entry.steps}:1: requires ${String(late.lesson)}, no lesson before ${entry.id} here`,
         );
       if (content.worked && entry.folder !== "work")
         throw new Error(
@@ -1213,7 +1654,7 @@ export function compileCourse(
       for (const item of entry.slow) {
         if (!check.items[item])
           throw new Error(
-            `course/manifest.json:1: ${entry.id} has no slow Check item ${item}`,
+            `course/manifest.json:1: ${entry.id} has no slow Check item ${String(item)}`,
           );
       }
       const print = fingerprint(content);
@@ -1232,18 +1673,19 @@ export function compileCourse(
     }),
   };
   const result = compiledCourseSchema.safeParse(compiled);
-  if (result.success) return result.data;
-  const issue = result.error.issues[0];
+  // The schema holds the shape; each content is the parser's own.
+  if (result.success) return result.data as CompiledCourse;
+  const issue = must(result.error.issues[0], "course/course.json:1: invalid");
   throw new Error(
     `course/course.json:1: ${issue.path.join(".")}: ${issue.message}`,
   );
 }
 
-export function generateCheckIndex(value) {
+export function generateCheckIndex(value: unknown) {
   const manifest = parseManifest(value);
   const path = coursePath(manifest);
-  const alias = (id) =>
-    id.replace(/-([a-z0-9])/g, (_, letter) => letter.toUpperCase());
+  const alias = (id: string) =>
+    id.replace(/-([a-z0-9])/g, (_, letter: string) => letter.toUpperCase());
   const imports = path
     .map((entry) => `import * as ${alias(entry.id)} from './${entry.id}.mjs';`)
     .join("\n");

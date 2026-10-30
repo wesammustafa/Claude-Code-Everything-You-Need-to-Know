@@ -3,7 +3,7 @@
 // one `npm run check` passes, and one it rejects fails there too.
 import { test } from "vitest";
 import assert from "node:assert/strict";
-import { judge } from "../src/holds.mjs";
+import { judge } from "../src/holds.ts";
 import {
   check,
   commit,

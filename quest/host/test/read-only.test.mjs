@@ -24,15 +24,16 @@ const ROOT = resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
 const at = (path) => join(ROOT, path);
 // The Checks' side: Guard B (learn-io) covers it, and the walk stops there.
 const CHECKS = at("practice-template/checks") + "/";
-const ENGINE = at("quest/engine/src/engine.mjs");
+const ENGINE = at("quest/engine/src/engine.ts");
 const HOST_ROOTS = [
   at("quest/host/src/index.mjs"),
   at("quest/host/src/fake.mjs"),
 ];
 
-const mjsIn = (dir) =>
+// The engine's sources are TypeScript since ticket 214.
+const sourcesIn = (dir) =>
   readdirSync(at(dir), { recursive: true })
-    .filter((f) => f.endsWith(".mjs"))
+    .filter((f) => /\.(mjs|ts)$/.test(f))
     .map((f) => join(at(dir), f));
 const walk = (roots) => {
   const out = new Set();
@@ -44,8 +45,8 @@ const walk = (roots) => {
 // module they reach short of the Checks.
 function scope() {
   const files = new Set([
-    ...mjsIn("quest/host/src"),
-    ...mjsIn("quest/engine/src"),
+    ...sourcesIn("quest/host/src"),
+    ...sourcesIn("quest/engine/src"),
     ...walk([...HOST_ROOTS, ENGINE]),
   ]);
   return asSources(ROOT, files);
@@ -64,13 +65,19 @@ test("the engine and the host make no network call, start only the Check child a
     "quest/host/src/store.mjs",
     "quest/host/src/run-check.mjs",
     "quest/host/src/probes.mjs",
-    "quest/engine/src/probes.mjs",
-    "quest/engine/src/engine.mjs",
-    "quest/engine/src/course.mjs",
-    "quest/engine/src/holds.mjs",
-    "quest/engine/src/status.mjs",
+    "quest/engine/src/probes.ts",
+    "quest/engine/src/engine.ts",
+    "quest/engine/src/course.ts",
+    "quest/engine/src/holds.ts",
+    "quest/engine/src/status.ts",
   ])
     assert.ok(paths.includes(must), `the guard reads ${must}`);
+  // Every engine source, whatever its extension, is read.
+  for (const file of readdirSync(at("quest/engine/src")))
+    assert.ok(
+      paths.includes(`quest/engine/src/${file}`),
+      `the guard reads quest/engine/src/${file}`,
+    );
   assert.ok(!paths.some((p) => p.startsWith("practice-template/checks/")));
   assert.deepEqual(readOnlyFindings(sources), []);
 });
@@ -115,10 +122,10 @@ const PLANTS = {
 };
 const PLANTED_IN = [
   "quest/host/src/host.mjs",
-  "quest/engine/src/engine.mjs",
+  "quest/engine/src/engine.ts",
   "quest/host/src/check-child.mjs",
   "quest/host/src/probes.mjs",
-  "quest/engine/src/probes.mjs",
+  "quest/engine/src/probes.ts",
 ];
 
 // spec: never-runs-claude

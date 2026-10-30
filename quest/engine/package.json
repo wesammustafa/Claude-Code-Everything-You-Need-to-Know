@@ -4,11 +4,12 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.mjs",
-    "./content": "./src/content.mjs",
-    "./course": "./src/course.mjs"
+    ".": "./src/index.ts",
+    "./content": "./src/content.ts",
+    "./course": "./src/course.ts"
   },
   "dependencies": {
+    "@quest/contract": "0.0.0",
     "zod": "4.6.7"
   }
 }

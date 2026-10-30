@@ -17,7 +17,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
-import { loadCourse } from "../../engine/src/course.mjs";
+import { loadCourse } from "../../engine/src/course.ts";
 import { statusPaths } from "../../../practice-template/checks/paths.mjs";
 import {
   commit,

@@ -41,11 +41,11 @@ import {
   whileRunsOf,
   whileRunsOpen,
 } from "./drive.mjs";
-// The app's words a beat's fail hint or evidence is built from (status.mjs
-// and holds.mjs pick them), and the text measures E2 and E14 test.
+// The app's words a beat's fail hint or evidence is built from (status.ts
+// and holds.ts pick them), and the text measures E2 and E14 test.
 import { at, atStep, b1Done, missing, reopen } from "./flow-places.mjs";
-import { C } from "../src/copy.mjs";
-import { inline, width, wrapRuns } from "../src/text.mjs";
+import { C } from "../src/copy.ts";
+import { inline, width, wrapRuns } from "../src/text.ts";
 
 // ---- ways out when a check keeps failing for an earlier reason (ticket 192) --
 const AFTER = ".practice/b-2-after.txt";

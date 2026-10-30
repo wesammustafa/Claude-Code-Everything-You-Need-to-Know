@@ -98,9 +98,14 @@ const PAGES = [
 ];
 
 // was learn-course:77
-test("PATH lists all 23 lessons in course order, each with its page, its level and the minutes its page's header line gives", () => {
+test("The course lists all 23 lessons in course order, each with its page, its level and the minutes its page's header line gives", () => {
   assert.deepEqual(
-    PATH.map(({ id, level, page, minutes }) => ({ id, level, page, minutes })),
+    liveCourse.map(({ id, level, page, minutes }) => ({
+      id,
+      level,
+      page,
+      minutes,
+    })),
     PAGES.map(([id, level, page, minutes]) => ({
       id,
       level,

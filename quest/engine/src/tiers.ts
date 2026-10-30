@@ -1,4 +1,5 @@
-import { GIT, HOLDS } from "./content.mjs";
+import type { HelpTier } from "@quest/contract";
+import { GIT, HOLDS, must, type LessonContent, type Step } from "./content.ts";
 
 // How much help a step gets. GUIDED shows every command, HINTED shows the
 // goal with hints on request, CHALLENGE shows the goal only. A skill's help
@@ -7,15 +8,24 @@ import { GIT, HOLDS } from "./content.mjs";
 // lesson brings new skills, so it may start with more help than the capstone
 // before it, and a lesson full of new skills may give more help than the one
 // two before it in its level: the climb test reports that dip, not fails it.
-export const TIERS = ["guided", "hinted", "challenge"];
-const rank = (t) => TIERS.indexOf(t);
-const at = (i) => TIERS[Math.max(0, Math.min(2, i))];
+export const TIERS = ["guided", "hinted", "challenge"] as const;
+const rank = (t: HelpTier) => TIERS.indexOf(t);
+const at = (i: number) =>
+  must(TIERS[Math.max(0, Math.min(2, i))], "a tier from 0 to 2");
+// How many steps each tier has, in TIERS' order.
+export type Mix = [guided: number, hinted: number, challenge: number];
 
 // A step the app checks: a check item, git status (the whole tree or part
 // of it, ticket 88), what a file holds (ticket 87), or a git probe (ticket
 // 105). A `file` beat, done once its file holds any line, is not one.
-const CHECKED = new Set(["check", ...GIT, ...HOLDS, "probe"]);
-const verifiable = (step) => step.beats.some((b) => CHECKED.has(b.verify.kind));
+const CHECKED: ReadonlySet<string> = new Set([
+  "check",
+  ...GIT,
+  ...HOLDS,
+  "probe",
+]);
+const verifiable = (step: Step) =>
+  step.beats.some((b) => CHECKED.has(b.verify.kind));
 
 // The tier the course's rule gives each step of `lessonIndex`, from the
 // content of the lessons before it. `contents` is every lesson's parsed
@@ -24,9 +34,16 @@ const verifiable = (step) => step.beats.some((b) => CHECKED.has(b.verify.kind));
 // them all. An optional step, which a learner may skip, counts toward no
 // skill (ticket 102). A Tear down step after the Check gets the help a Your
 // turn step does, and CHALLENGE in a capstone.
-export function ruleTiers(contents, lessonIndex, counted = () => true) {
-  const lesson = contents[lessonIndex];
-  const before = new Map();
+export function ruleTiers(
+  contents: readonly (LessonContent | null | undefined)[],
+  lessonIndex: number,
+  counted: (k: number, skill: string) => boolean = () => true,
+): HelpTier[] {
+  const lesson = must(
+    contents[lessonIndex],
+    `no lesson content at ${String(lessonIndex)}`,
+  );
+  const before = new Map<string, number>();
   contents.slice(0, lessonIndex).forEach((c, k) => {
     for (const skill of new Set(
       (c?.steps ?? []).filter((s) => !s.optional).map((s) => s.skill),
@@ -48,19 +65,26 @@ export function ruleTiers(contents, lessonIndex, counted = () => true) {
 
 // The tier a learner meets: "less help" turns GUIDED into HINTED for one
 // lesson, and an eased skill comes back one tier easier.
-export function effectiveTier(tier, { lessHelp = false, eased = false } = {}) {
+export function effectiveTier(
+  tier: HelpTier,
+  {
+    lessHelp = false,
+    eased = false,
+  }: { lessHelp?: boolean; eased?: boolean } = {},
+) {
   let r = rank(tier);
   if (lessHelp && r === 0) r = 1;
   if (eased) r -= 1;
   return at(r);
 }
 
-export const mix = (tiers) =>
-  TIERS.map((t) => tiers.filter((x) => x === t).length);
+// TIERS has three tiers, so the counts are three.
+export const mix = (tiers: readonly HelpTier[]) =>
+  TIERS.map((t) => tiers.filter((x) => x === t).length) as Mix;
 
 // Scales a mix to `cells` glyphs. The share of steps with less help is
 // rounded first, so a lesson with a larger share never draws fewer.
-export function scaleMix(m, cells) {
+export function scaleMix(m: Readonly<Mix>, cells: number) {
   const total = m.reduce((a, b) => a + b, 0) || 1;
   const less = Math.round(((m[1] + m[2]) * cells) / total);
   const challenge = Math.min(less, Math.round((m[2] * cells) / total));

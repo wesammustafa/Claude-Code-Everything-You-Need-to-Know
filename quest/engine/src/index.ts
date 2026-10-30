@@ -12,8 +12,8 @@ export {
   IDLE_MS,
   initialState,
   reduce,
-} from "./engine.mjs";
-export { project, startedLesson } from "./project.mjs";
+} from "./engine.ts";
+export { project, startedLesson } from "./project.ts";
 
 // What the host reads off the state: what to watch, what an overview asks
 // about, where the Learner is and works, and the evidence a check guards.
@@ -29,14 +29,14 @@ export {
   stepsOf,
   watching,
   workFolder,
-} from "./engine.mjs";
+} from "./engine.ts";
 
 // The verification helpers the host's adapters share: a file's stamp and
 // whether it only grew, and git status's listing and stamp.
-export { grewFrom, stampFor } from "./holds.mjs";
-export { isStaged, listing, statusStamp } from "./status.mjs";
+export { grewFrom, stampFor } from "./holds.ts";
+export { isStaged, listing, statusStamp } from "./status.ts";
 
-// The selectors project(state) builds the snapshot from (project.mjs).
+// The selectors project(state) builds the snapshot from (project.ts).
 export {
   answerKey,
   answersGit,
@@ -87,5 +87,20 @@ export {
   unmet,
   whileRunsOf,
   whileRunsOpen,
-} from "./engine.mjs";
-export { mix, TIERS } from "./tiers.mjs";
+} from "./engine.ts";
+export { mix, TIERS } from "./tiers.ts";
+
+// The engine's types, for the host and the server that drive it.
+export type { EngineSnapshot } from "./project.ts";
+export type {
+  BeatState,
+  CourseEntry,
+  Effect,
+  EngineInput,
+  EngineState,
+  Facts,
+  HostInput,
+  LessonProgress,
+  SavedProgress,
+  Watch,
+} from "./types.ts";

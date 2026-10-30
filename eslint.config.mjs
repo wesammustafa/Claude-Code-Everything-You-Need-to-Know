@@ -48,4 +48,23 @@ export default defineConfig([
       ],
     },
   },
+  // The engine is pure: it runs inside the host and never reaches back into
+  // the host, the server or the browser (ticket 214).
+  {
+    files: ["quest/engine/**/*.{ts,tsx,mts,cts}"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@quest/host*", "@quest/server*", "@quest/client*"],
+              message:
+                "The engine is pure: it never imports the host, the server or the client.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]);

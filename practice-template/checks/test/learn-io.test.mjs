@@ -9,7 +9,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PATH, SLOW } from '../../../quest/engine/src/course.mjs';
+import { PATH, SLOW } from '../../../quest/engine/src/course.ts';
 import { sanitize, saveState } from '../../../quest/host/src/store.mjs';
 import { lessons } from '../lessons/index.mjs';
 import { check, exportHead } from './helpers.mjs';

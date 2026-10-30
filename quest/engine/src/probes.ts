@@ -8,12 +8,25 @@
 // step checks them, and the lesson host runs each probe
 // (quest/host/src/probes.mjs) in its Check child.
 
+// What an argument must be: a pattern, or a test of its own.
+interface ArgTest {
+  test: (arg: string) => boolean;
+}
+// A probe: its arguments (`many`: one or more of the last), what the card
+// says it watches, and whether it is always fresh.
+export interface Probe {
+  args: ArgTest[];
+  many?: boolean;
+  watching: string;
+  fresh?: boolean;
+}
+
 const COUNT = /^[1-9]\d{0,2}$/;
 // A branch name as a probe takes it: no spaces, no leading dash, no `..`.
 const BRANCH = /^(?!-)(?!.*\.\.)[\w./-]+$/;
 // A path named from the work folder, like .claude/worktrees/docs-pass:
 // never /, ./ or .. in it, nor a backslash or a space.
-const PATH = {
+const PATH: ArgTest = {
   test: (p) =>
     !/[\s\\]/.test(p) &&
     !p.startsWith("/") &&
@@ -25,7 +38,7 @@ const PATH = {
 
 // Each probe: its arguments (`many`: one or more of the last), what the
 // card says it watches, and whether it is always fresh.
-export const PROBES = {
+export const PROBES: Readonly<Record<string, Probe>> = {
   worktrees: { args: [COUNT], watching: "git worktree list" },
   "branch-ahead": { args: [BRANCH], watching: "git branch", fresh: true },
   merged: { args: [BRANCH], many: true, watching: "git log" },
@@ -36,7 +49,7 @@ export const PROBES = {
 };
 
 // Why `name args` is no probe, or null where it is one.
-export function probeError(name, args) {
+export function probeError(name: string, args: readonly string[]) {
   const p = PROBES[name];
   if (!p)
     return `unknown probe ${name}: one of ${Object.keys(PROBES).join(", ")}`;

@@ -4,23 +4,29 @@
 // decide what they mean. Pure: nothing here reads the disk or starts a
 // process.
 import { createHash } from "node:crypto";
-import { isGlob } from "./content.mjs";
-import { C } from "./copy.mjs";
-import { cut, graphemes, isEmoji, strip } from "./text.mjs";
+import { isGlob, type ReadVerify } from "./content.ts";
+import { C } from "./copy.ts";
+import { cut, graphemes, isEmoji, strip } from "./text.ts";
+
+// What a reading beat's verify came to: a pass with the evidence it shows,
+// or the not-yet line a miss gets.
+export type Judged =
+  | { pass: true; evidence: string | null; hint?: undefined }
+  | { pass: false; hint: string; evidence?: undefined };
 
 // A file's text: UTF-16 with a byte-order mark (Windows PowerShell 5.1
 // writes it), or UTF-8 with or without one.
-function textOf(buf) {
+function textOf(buf: Buffer) {
   return buf[0] === 0xff && buf[1] === 0xfe
     ? buf.subarray(2).toString("utf16le")
-    : buf.toString("utf8").replace(/^﻿/, "");
+    : buf.toString("utf8").replace(/^\uFEFF/, "");
 }
 
 // What a binary file is, in place of its bytes: a PNG's width and height,
 // or any other's size. Null for text, which holds no NUL byte (UTF-16 with a
 // byte-order mark is text).
 const PNG = Buffer.from("89504e470d0a1a0a", "hex");
-function binaryOf(buf) {
+function binaryOf(buf: Buffer) {
   if (
     (buf[0] === 0xff && buf[1] === 0xfe) ||
     !buf.subarray(0, 8000).includes(0)
@@ -34,8 +40,8 @@ function binaryOf(buf) {
     return C.pngImage(buf.readUInt32BE(16), buf.readUInt32BE(20));
   return C.binaryData(
     buf.length < 1024
-      ? `${buf.length} bytes`
-      : `${Math.round(buf.length / 1024)} KB`,
+      ? `${String(buf.length)} bytes`
+      : `${String(Math.round(buf.length / 1024))} KB`,
   );
 }
 
@@ -44,8 +50,14 @@ function binaryOf(buf) {
 // space), and each emoji after the first becomes *, so a row holds one. A
 // longer row is cut and ends in …, the way the render cuts one; the reset
 // `cut` adds goes, since the row may sit inside a sentence.
-const ESC = /\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07\x1b]*(?:\x07|\x1b\\)?|.)?/gs;
-function oneRow(s, max = 60) {
+// The escape and bell characters as a pattern writes them.
+const X1B = "\\x1b";
+const X07 = "\\x07";
+const ESC = new RegExp(
+  `${X1B}(?:\\[[0-?]*[ -/]*[@-~]|\\][^${X07}${X1B}]*(?:${X07}|${X1B}\\\\)?|.)?`,
+  "gs",
+);
+function oneRow(s: string, max = 60) {
   let emoji = 0;
   const flat = s
     .replace(ESC, "")
@@ -65,13 +77,13 @@ function oneRow(s, max = 60) {
 // A file that is all front matter shows its first line inside, and one
 // whose every line only opens a block shows that line.
 const OPENS = ["---", "{", "["];
-function firstOf(text) {
+function firstOf(text: string) {
   const lines = text
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter(Boolean);
   const end = lines[0] === "---" ? lines.indexOf("---", 1) : -1;
-  const says = (l) => !OPENS.includes(l);
+  const says = (l: string) => !OPENS.includes(l);
   const line = lines.slice(end + 1).find(says) ?? lines.find(says) ?? lines[0];
   return line === undefined ? null : oneRow(line);
 }
@@ -79,14 +91,15 @@ function firstOf(text) {
 // What a file is, to tell whether it changed (verify.mjs stampOf builds it
 // with this; grewFrom reads it back): its time, its size and the start of
 // its SHA-1. A fresh beat keeps the stamp its step opened with.
-const sha = (buf) => createHash("sha1").update(buf).digest("hex").slice(0, 12);
-export const stampFor = (mtimeMs, buf) =>
-  `${Math.trunc(mtimeMs)}:${buf.length}:${sha(buf)}`;
+const sha = (buf: Buffer) =>
+  createHash("sha1").update(buf).digest("hex").slice(0, 12);
+export const stampFor = (mtimeMs: number, buf: Buffer) =>
+  `${String(Math.trunc(mtimeMs))}:${String(buf.length)}:${sha(buf)}`;
 
 // How many bytes the file stamped `stamp` held, when it only grew since:
 // what it held then is the start of `buf`. 0 when it was rewritten, or the
 // stamp holds nothing (no file then).
-export function grewFrom(stamp, buf) {
+export function grewFrom(stamp: string | null | undefined, buf: Buffer) {
   const [, size, hash] = (stamp ?? "").split(":");
   const n = Number(size);
   return n > 0 && n <= buf.length && sha(buf.subarray(0, n)) === hash ? n : 0;
@@ -94,7 +107,7 @@ export function grewFrom(stamp, buf) {
 
 // The lines a match reads: all of them, or past the file's first `from`
 // bytes only the lines written or added to since the stamp.
-function linesOf(buf, text, from) {
+function linesOf(buf: Buffer, text: string, from: number) {
   const lines = text.split(/\r?\n/);
   if (!from) return lines;
   const before = textOf(buf.subarray(0, from)).length;
@@ -107,14 +120,14 @@ function linesOf(buf, text, from) {
 }
 
 // The line a done beat shows of its file, to show what the learner made.
-export function evidenceOf(buf) {
+export function evidenceOf(buf: Buffer | null | undefined) {
   if (!buf) return null;
   return binaryOf(buf) ?? firstOf(textOf(buf));
 }
 
 // The value at a dotted key path, or `undefined` where any part is missing.
 // An array's parts are its indexes, so `length` is no key of one.
-function at(value, key) {
+function at(value: unknown, key: string) {
   let v = value;
   for (const part of key.split(".")) {
     if (v === null || typeof v !== "object") return undefined;
@@ -124,17 +137,23 @@ function at(value, key) {
         : !Object.hasOwn(v, part)
     )
       return undefined;
-    v = v[part];
+    // An array's index or an object's own key, as checked above.
+    v = (v as Record<string, unknown>)[part];
   }
   return v;
 }
-const shown = (v) => oneRow(typeof v === "string" ? v : JSON.stringify(v));
+const shown = (v: unknown) =>
+  oneRow(typeof v === "string" ? v : JSON.stringify(v));
 
 // Whether `buf` (null: no file) passes a reading beat's verify, with the
 // evidence a pass shows or the not-yet line a miss gets. A fresh match reads
 // only what was added past `from` (grewFrom); a no-match reads the whole file
 // when nothing was added, so a line it forbids that is still there counts.
-export function judge(verify, buf, from = 0) {
+export function judge(
+  verify: ReadVerify,
+  buf: Buffer | null | undefined,
+  from = 0,
+): Judged {
   const { path } = verify;
   if (!buf)
     return {
@@ -155,7 +174,7 @@ export function judge(verify, buf, from = 0) {
     const first = firstOf(text);
     return {
       pass: true,
-      evidence: count > 1 ? C.andMore(first, count - 1) : first,
+      evidence: count > 1 ? C.andMore(String(first), count - 1) : first,
     };
   }
   if (verify.kind === "match" || verify.kind === "no-match") {
@@ -175,13 +194,15 @@ export function judge(verify, buf, from = 0) {
       ? { pass: true, evidence: null }
       : { pass: false, hint: C.stillHas(path, line) };
   }
-  let value;
+  let value: unknown;
   try {
     value = JSON.parse(text);
   } catch (error) {
+    // JSON.parse throws a SyntaxError.
+    const message = error instanceof Error ? error.message : String(error);
     return {
       pass: false,
-      hint: C.notJson(path, oneRow(error.message, Infinity)),
+      hint: C.notJson(path, oneRow(message, Infinity)),
     };
   }
   if (!verify.key) return { pass: true, evidence: evidenceOf(buf) };
