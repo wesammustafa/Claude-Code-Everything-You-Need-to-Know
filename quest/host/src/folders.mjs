@@ -3,7 +3,7 @@ import { execFile } from "node:child_process";
 import { statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { childEnv } from "./check-child.mjs";
-import { shared } from "./children.mjs";
+import { shared } from "./children.ts";
 import { GIT_LIMIT, gitReady, NOT_A_REPO } from "./git.mjs";
 
 // What a work folder is (ticket 86): whether it is a folder at all, whether

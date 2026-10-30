@@ -97,6 +97,21 @@ const NEWER_NODE = /\bimport\.meta\.main\b|\bstyleText\b/;
 
 const count = (re, text) => [...text.matchAll(re)].length;
 
+// TypeScript's type-only imports, which load nothing at run time: whole
+// `import type` statements, and `type` names inside an import's braces.
+const TYPE_IMPORT =
+  /\b(?:import|export)\s+type\s+(?:(?!\bfrom\b)[^;])*?\s*from\s*["'][^"']*["'];?/g;
+const TYPE_NAME =
+  /(\bimport\s*\{[^}]*?)\btype\s+[\w$]+(?:\s+as\s+[\w$]+)?\s*,?/g;
+export function valuesOnly(text) {
+  let out = text.replace(TYPE_IMPORT, "");
+  for (let before = ""; before !== out;) {
+    before = out;
+    out = out.replace(TYPE_NAME, "$1");
+  }
+  return out;
+}
+
 // The findings for `files` ([{ path, text }], paths from the repository's
 // root, with forward slashes). `store` is the one file that may write.
 export function readOnlyFindings(
@@ -104,7 +119,8 @@ export function readOnlyFindings(
   { store = "quest/host/src/store.mjs" } = {},
 ) {
   const found = [];
-  for (const { path, text } of files) {
+  for (const { path, text: source } of files) {
+    const text = valuesOnly(source);
     const say = (what) => found.push(`${path}: ${what}`);
     if (NET_SPECIFIER.test(text)) say("imports a network module");
     for (const re of NET_CALLS)

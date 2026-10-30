@@ -6,5 +6,9 @@
   "exports": {
     ".": "./src/index.mjs",
     "./fake": "./src/fake.mjs"
+  },
+  "dependencies": {
+    "@quest/contract": "0.0.0",
+    "@quest/engine": "0.0.0"
   }
 }

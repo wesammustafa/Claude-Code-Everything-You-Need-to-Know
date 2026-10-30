@@ -3,7 +3,7 @@
 // gets its own registry of children, so closing it stops its own.
 import { existsSync } from "node:fs";
 import { runCheck, runProbe } from "./check-child.mjs";
-import { createChildren } from "./children.mjs";
+import { createChildren } from "./children.ts";
 import { bytesOf, matchOf, stampOf } from "./files.mjs";
 import { probeFolder } from "./folders.mjs";
 import { gitFirstName, gitReady, gitStatus } from "./git.mjs";

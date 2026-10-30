@@ -72,6 +72,12 @@ test("the engine and the host make no network call, start only the Check child a
     "quest/engine/src/status.ts",
   ])
     assert.ok(paths.includes(must), `the guard reads ${must}`);
+  // Every host source, whatever its extension, is read.
+  for (const file of readdirSync(at("quest/host/src")))
+    assert.ok(
+      paths.includes(`quest/host/src/${file}`),
+      `the guard reads quest/host/src/${file}`,
+    );
   // Every engine source, whatever its extension, is read.
   for (const file of readdirSync(at("quest/engine/src")))
     assert.ok(
@@ -170,6 +176,8 @@ test("the guard closes the ways around it, and lets a wrapped git call, a RegExp
     'import { execFile } from "node:child_process";\nconst run = execFile;\n',
     'const h = await import("node:http2");\n',
     'import { request } from "node:https";\n',
+    'import { type ChildProcess, spawn } from "node:child_process";\nspawn("curl", []);\n',
+    'import type { Stats } from "node:fs";\nimport { writeFileSync } from "node:fs";\n',
     'import "node:net";\n',
     'import { writeFileSync as w } from "node:fs";\nw("a", "b");\n',
     'import * as fs from "node:fs";\n',
@@ -212,6 +220,9 @@ test("the guard closes the ways around it, and lets a wrapped git call, a RegExp
     'import {\n  existsSync,\n  readFileSync,\n} from "node:fs";\n',
     'import { execFile } from "node:child_process";\nexecFile("git", ["config", "user.name"], opts);\n',
     '/** @param {import("./types.mjs").Host} host */\nconst page = await import("./page.mjs");\n',
+    'import type { ChildProcess } from "node:child_process";\nimport type { Stats } from "node:fs";\n',
+    'import { execFile, type ChildProcess } from "node:child_process";\nexecFile("git", ["status"]);\n',
+    'import { readFileSync, type Stats } from "node:fs";\n',
     `import { execFile, spawn } from "node:child_process";\n${RUN_CHECK}spawn(process.execPath, [RUN_CHECK, a], { detached: true });\n`,
   ];
   for (const text of passes)
@@ -238,7 +249,7 @@ test("the layering walk sees a module that reaches the host", () => {
   try {
     const file = join(dir, "reaches.mjs");
     // The walk follows relative specifiers alone.
-    const to = relative(dir, at("quest/host/src/children.mjs"));
+    const to = relative(dir, at("quest/host/src/children.ts"));
     writeFileSync(
       file,
       `import { createChildren } from ${JSON.stringify(to.split("\\").join("/"))};\n`,

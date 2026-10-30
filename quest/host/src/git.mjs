@@ -1,10 +1,10 @@
 // Read-only git: status, where HEAD is, whether a folder is a repository,
 // and a name to greet. Every git child is tracked in a host's registry
-// (children.mjs), so closing the host stops it.
+// (children.ts), so closing the host stops it.
 import { execFile } from "node:child_process";
 import { statusEntries } from "../../../practice-template/checks/paths.mjs";
 import { childEnv } from "./check-child.mjs";
-import { shared } from "./children.mjs";
+import { shared } from "./children.ts";
 import { isStaged, listing } from "./engine.mjs";
 
 // How long one git command may take.

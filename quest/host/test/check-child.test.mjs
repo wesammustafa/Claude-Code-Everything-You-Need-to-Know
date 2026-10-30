@@ -25,7 +25,7 @@ import {
   runCheck,
   runProbe,
 } from "../src/check-child.mjs";
-import { createChildren } from "../src/children.mjs";
+import { createChildren } from "../src/children.ts";
 import { fakeClock } from "../src/fake.mjs";
 import { GIT_LIMIT } from "../src/git.mjs";
 import { root } from "../../engine/test/drive.mjs";

@@ -67,4 +67,23 @@ export default defineConfig([
       ],
     },
   },
+  // The host runs the engine and never reaches up into the server or the
+  // browser (ticket 215).
+  {
+    files: ["quest/host/**/*.{ts,tsx,mts,cts}"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@quest/server*", "@quest/client*"],
+              message:
+                "The host never imports the server or the client.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]);

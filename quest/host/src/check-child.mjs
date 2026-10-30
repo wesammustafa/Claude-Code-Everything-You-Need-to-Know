@@ -1,6 +1,6 @@
 // The Check child: a lesson's check, or one git probe, run in a child
 // process so a slow item never freezes the app. Each run is tracked in a
-// host's registry (children.mjs), so closing the host stops it, with every
+// host's registry (children.ts), so closing the host stops it, with every
 // process it started.
 import { spawn } from "node:child_process";
 import { dirname, join } from "node:path";
@@ -9,7 +9,7 @@ import { STUB_RUNS } from "../../../practice-template/checks/lessons/a-4.mjs";
 import { NPM_TEST_LIMIT } from "../../../practice-template/checks/lessons/b-3.mjs";
 import { lessons } from "../../../practice-template/checks/lessons/index.mjs";
 import { TIME_LIMIT } from "../../../practice-template/checks/stub-claude.mjs";
-import { shared } from "./children.mjs";
+import { shared } from "./children.ts";
 import { SLOW } from "./engine.mjs";
 
 const RUN_CHECK = join(
