@@ -2,7 +2,7 @@
 // It names the engine's modules by relative path, as the read-only guard's
 // walk follows only relative imports: the package entry for the engine,
 // and the course and step-file modules for the rest. The host's probes.mjs
-// alone imports quest/engine/src/probes.mjs directly: the probe table, data
+// alone imports quest/engine/src/probes.ts directly: the probe table, data
 // with no engine module behind it.
 export {
   ACTION_TYPES,

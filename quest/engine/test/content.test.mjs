@@ -22,7 +22,7 @@ import { C, TERMS } from "../src/copy.ts";
 import { TYPED_MAX, WARMUPS } from "../src/rules.ts";
 import { inline } from "../src/text.ts";
 import { lessons } from "../../../practice-template/checks/lessons/index.mjs";
-import { PROBES, probeError } from "../src/probes.mjs";
+import { PROBES, probeError } from "../src/probes.ts";
 import { ruleTiers, TIERS } from "../src/tiers.mjs";
 import {
   DEMO_B2,

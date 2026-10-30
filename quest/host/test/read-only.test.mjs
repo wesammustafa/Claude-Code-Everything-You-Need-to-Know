@@ -65,7 +65,7 @@ test("the engine and the host make no network call, start only the Check child a
     "quest/host/src/store.mjs",
     "quest/host/src/run-check.mjs",
     "quest/host/src/probes.mjs",
-    "quest/engine/src/probes.mjs",
+    "quest/engine/src/probes.ts",
     "quest/engine/src/engine.mjs",
     "quest/engine/src/course.mjs",
     "quest/engine/src/holds.mjs",
@@ -125,7 +125,7 @@ const PLANTED_IN = [
   "quest/engine/src/engine.mjs",
   "quest/host/src/check-child.mjs",
   "quest/host/src/probes.mjs",
-  "quest/engine/src/probes.mjs",
+  "quest/engine/src/probes.ts",
 ];
 
 // spec: never-runs-claude

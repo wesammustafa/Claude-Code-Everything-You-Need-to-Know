@@ -13,7 +13,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { lessons } from "../../../practice-template/checks/lessons/index.mjs";
-import { PROBES, probeError } from "../src/probes.mjs";
+import { PROBES, probeError } from "../src/probes.ts";
 import { STAMP, checkLessons } from "../src/lessons.mjs";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));

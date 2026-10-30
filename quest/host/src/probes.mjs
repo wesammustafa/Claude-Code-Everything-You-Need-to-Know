@@ -2,7 +2,7 @@
 // Advanced step leaves in git where no check item applies, such as
 // worktrees, branches, merges and pushes. The lesson host runs them in its
 // Check child (run-check.mjs --probe), in the work folder. The table of
-// probes and their arguments is the engine's (quest/engine/src/probes.mjs),
+// probes and their arguments is the engine's (quest/engine/src/probes.ts),
 // which parses the beats that name them; this file holds how each runs.
 //
 // Each answers `{ pass, hint, evidence, state }`: `hint` says what is not
@@ -16,7 +16,7 @@ import {
   liveWorktrees,
   CLAUDE_WORKTREES,
 } from "../../../practice-template/checks/worktrees.mjs";
-import { PROBES, probeError } from "../../engine/src/probes.mjs";
+import { PROBES, probeError } from "../../engine/src/probes.ts";
 
 // The host's registry: the engine's table, the same object.
 export { PROBES, probeError };

@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { PROBES, probeError } from "../../engine/src/probes.mjs";
+import { PROBES, probeError } from "../../engine/src/probes.ts";
 import { PROBES as HOST_PROBES, probeRepo, RUNS } from "../src/probes.mjs";
 import { openRepo } from "../../../practice-template/checks/repo.mjs";
 import {
