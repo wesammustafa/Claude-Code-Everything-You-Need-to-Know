@@ -1,0 +1,10 @@
+{
+  "name": "@quest/host",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.mjs",
+    "./fake": "./src/fake.mjs"
+  }
+}

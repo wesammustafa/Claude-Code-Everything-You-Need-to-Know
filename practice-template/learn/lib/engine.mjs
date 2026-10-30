@@ -111,7 +111,7 @@ export function initialState({ course, saved = null, facts, now = 0 }) {
 
 // Where the Learner is (ticket 207): on a step card, on an overview, or on
 // a lesson with no lesson file. Away (the terminal's map) is none of them.
-const onCard = (s) => !s.away && s.phase === 'playing' && Boolean(s.beat);
+export const onCard = (s) => !s.away && s.phase === 'playing' && Boolean(s.beat);
 const inOverview = (s) => !s.away && s.phase === 'overview' && Boolean(contentOf(s));
 const checkOnlyHere = (s) => !s.away && !contentOf(s);
 

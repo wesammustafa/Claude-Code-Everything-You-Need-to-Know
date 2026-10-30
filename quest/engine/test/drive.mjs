@@ -119,11 +119,8 @@ export {
   SLOW,
   WORK_LEVELS,
 } from "../../../practice-template/learn/lib/content.mjs";
-export {
-  FORMAT,
-  sanitize,
-  snapshot,
-} from "../../../practice-template/learn/lib/store.mjs";
+// The store's format lives with the host since ticket 209.
+export { FORMAT, sanitize, snapshot } from "../../host/src/store.mjs";
 export {
   judge,
   stampFor,

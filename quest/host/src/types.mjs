@@ -1,0 +1,158 @@
+// The host's adapters and interface, as JSDoc types only (ticket 209). Real
+// adapters (real.mjs) and fake ones (fake.mjs) share these shapes; ticket
+// 215's TypeScript conversion starts from them.
+
+/**
+ * The host's one clock: monotonic milliseconds, and the intervals of the
+ * tick and the poll. The host sets no other timer.
+ * @typedef {object} Clock
+ * @property {() => number} now
+ * @property {(fn: () => void, ms: number) => unknown} setInterval
+ * @property {(id: unknown) => void} clearInterval
+ */
+
+/**
+ * @typedef {object} CheckItem
+ * @property {number} index
+ * @property {string} text
+ * @property {boolean} pass
+ * @property {string} hint
+ * @property {boolean} [slow]
+ */
+
+/**
+ * A lesson's check, in the Check child: its items, or why it could not run.
+ * @typedef {object} Checks
+ * @property {(dir: string, lesson: string, items: number[] | null, opts?: { slow?: boolean, onRunning?: (n: number, m: number) => void }) => Promise<{ items: CheckItem[] } | { error: string }>} run
+ */
+
+/**
+ * One git probe, in the Check child.
+ * @typedef {object} Probes
+ * @property {(dir: string, name: string, args: string[]) => Promise<{ pass: boolean, hint?: string, evidence?: string | null, state: string } | { error: string }>} run
+ */
+
+/**
+ * Read-only git: its first answers about the copy, [why it is no
+ * repository or null, a first name], and status.
+ * @typedef {object} Git
+ * @property {(root: string) => Promise<[string | null, string]>} ask
+ * @property {(dir: string, opts?: { files?: boolean, head?: boolean }) => Promise<{ paths: string[], staged: string[], head?: string | null } | { error: string }>} status
+ */
+
+/**
+ * @typedef {object} FolderLook
+ * @property {string} path
+ * @property {boolean} missing
+ * @property {boolean} git
+ * @property {string | null} gitBroken
+ * @property {boolean} practice
+ */
+
+/**
+ * @typedef {object} Folders
+ * @property {(path: string) => Promise<FolderLook>} look
+ */
+
+/**
+ * Files in a work folder, read as they are now. A path is from `dir`; a
+ * glob matches the newest file.
+ * @typedef {object} Files
+ * @property {(dir: string, path: string) => string | null} match
+ * @property {(dir: string, path: string) => Buffer | null} bytes
+ * @property {(dir: string, path: string) => string | null} stamp
+ * @property {(abs: string) => boolean} exists
+ */
+
+/**
+ * Arms a watcher on a folder; it calls onChange after changes settle.
+ * @typedef {(dir: string, onChange: () => void) => { close: () => void }} Watch
+ */
+
+/**
+ * The store, bound to the practice copy: save returns false, writing
+ * nothing, while `.practice/` is missing, and throws where the write fails.
+ * @typedef {object} Store
+ * @property {() => object | null} load
+ * @property {(data: object) => boolean} save
+ */
+
+/**
+ * The PATH lookup, bound to the environment: no process starts.
+ * @typedef {object} Commands
+ * @property {(name: string) => boolean} has
+ */
+
+/**
+ * @typedef {object} Adapters
+ * @property {Clock} clock
+ * @property {Checks} checks
+ * @property {Probes} probes
+ * @property {Git} git
+ * @property {Folders} folders
+ * @property {Files} files
+ * @property {Watch} watch
+ * @property {Store} store
+ * @property {Commands} commands
+ * @property {() => void} stop kills this host's children
+ * @property {{ size: () => number }} [children] the real adapters' registry, for tests
+ */
+
+/**
+ * The terminal's key translator, in place of the engine until ticket 210.
+ * `effect` runs a terminal effect and says whether it was one.
+ * @typedef {object} Translator
+ * @property {(state: object, input: object) => { state: object, effects: object[], events?: object[] }} reduce
+ * @property {(args: object) => object} initialState
+ * @property {(state: object) => string | null} workFolder
+ * @property {(state: object) => string | null} evidence
+ * @property {(state: object) => boolean} opensWithCheck
+ * @property {string[]} inputs
+ * @property {(effect: object) => boolean} effect
+ */
+
+/**
+ * @typedef {object} HostOptions
+ * @property {string} root the practice copy
+ * @property {object[]} course
+ * @property {object | null} [saved]
+ * @property {Record<string, string | undefined>} [env]
+ * @property {string} [platform]
+ * @property {Adapters} adapters
+ * @property {object} [facts] facts the client knows, over the host's own
+ * @property {Translator | null} [translator]
+ * @property {FolderLook | null} [ahead] the folder --dir gave, looked at
+ */
+
+/**
+ * @typedef {object} Heard
+ * @property {object} state
+ * @property {object} input
+ * @property {object[]} events
+ */
+
+/**
+ * @typedef {object} Host
+ * @property {() => Promise<object | null>} open
+ * @property {() => void} start
+ * @property {() => void} firstLook
+ * @property {(action: object) => object} dispatch
+ * @property {() => object | null} snapshot
+ * @property {(fn: (heard: Heard) => void) => () => void} subscribe
+ * @property {() => void} close
+ * @property {Clock} clock
+ */
+
+/**
+ * @typedef {object} RealOptions
+ * @property {string} root
+ * @property {Record<string, string | undefined>} [env]
+ * @property {string} [platform]
+ * @property {Clock} [clock]
+ * @property {(dir: string, onChange: () => void) => { close: () => void }} [watch]
+ * @property {(root: string) => Promise<[string | null, string]>} [askGit]
+ * @property {Function} [runCheck]
+ * @property {Function} [runProbe]
+ */
+
+export {};
