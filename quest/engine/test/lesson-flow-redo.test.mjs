@@ -41,7 +41,7 @@ import {
   whileRunsOf,
   whileRunsOpen,
 } from "./drive.mjs";
-// The app's words a beat's fail hint or evidence is built from (status.mjs
+// The app's words a beat's fail hint or evidence is built from (status.ts
 // and holds.ts pick them), and the text measures E2 and E14 test.
 import { at, atStep, b1Done, missing, reopen } from "./flow-places.mjs";
 import { C } from "../src/copy.ts";

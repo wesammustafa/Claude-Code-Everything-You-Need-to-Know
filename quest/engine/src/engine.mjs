@@ -17,7 +17,7 @@ import {
   judgeGit,
   needsChange,
   statusStamp,
-} from "./status.mjs";
+} from "./status.ts";
 import { effectiveTier, ruleTiers, TIERS } from "./tiers.ts";
 export { ruleTiers };
 

@@ -7,7 +7,7 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { judgeGit, listedUnder } from "../../engine/src/status.mjs";
+import { judgeGit, listedUnder } from "../../engine/src/status.ts";
 import { statusPaths } from "../../../practice-template/checks/paths.mjs";
 import {
   commit,

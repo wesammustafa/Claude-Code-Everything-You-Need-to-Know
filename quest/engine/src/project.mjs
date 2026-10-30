@@ -12,7 +12,7 @@
 // fields: the warm-up explainer, notch-harder, the on-card Why, the Windows
 // variants, the handover and the invitation.
 import { READS } from "./content.ts";
-import { cleanLine } from "./status.mjs";
+import { cleanLine } from "./status.ts";
 import {
   asksFolder,
   asksHere,

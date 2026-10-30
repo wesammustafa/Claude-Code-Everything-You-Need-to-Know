@@ -5,7 +5,7 @@
 // whose guard failed). The names and fields are the contract's events
 // (quest/contract/src/events.ts).
 import { GIT, READS } from "./content.ts";
-import { cleanLine } from "./status.mjs";
+import { cleanLine } from "./status.ts";
 import {
   beatOf,
   contentOf,
