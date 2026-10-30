@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { lessons } from "../../../practice-template/checks/lessons/index.mjs";
 import { PROBES, probeError } from "../src/probes.ts";
-import { STAMP, checkLessons } from "../src/lessons.mjs";
+import { STAMP, checkLessons } from "../src/lessons.ts";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const probes = { PROBES, probeError };

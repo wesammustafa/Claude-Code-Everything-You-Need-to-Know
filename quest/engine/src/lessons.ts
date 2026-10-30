@@ -16,7 +16,17 @@
 // modules and the probes. It returns the problems, each naming its file and
 // line (none when everything matches), and how many step files, quotes,
 // code blocks and warm-ups from another page it compared.
-import { coursePath, parseLesson, parseManifest } from "./content.ts";
+import {
+  coursePath,
+  must,
+  parseLesson,
+  parseManifest,
+  type CheckModule,
+  type LessonContent,
+  type Manifest,
+  type PageText,
+  type ParseContext,
+} from "./content.ts";
 import { frontmatter } from "./frontmatter.ts";
 
 const MANIFEST = "course/manifest.json";
@@ -30,7 +40,7 @@ export const STAMP =
 // manifest and the page hold these now, so a step file that still has one
 // would repeat, and could contradict, them. `folder` is the parser's own
 // error (rejectFolder).
-export const DROPPED = {
+export const DROPPED: Readonly<Record<string, string>> = {
   title: "the title is the page's top heading",
   source: "the manifest names the page",
   "source-commit": "the Stamp dates the page",
@@ -42,8 +52,8 @@ export const DROPPED = {
 // The parts whose steps a "step N of M" heading counts.
 export const COUNTED = ["Worked example", "Your turn", "The task", "Tear down"];
 
-const flat = (text) => text.replace(/\s+/g, " ").trim();
-const sameLines = (a, b) =>
+const flat = (text: string) => text.replace(/\s+/g, " ").trim();
+const sameLines = (a: readonly string[], b: readonly string[]) =>
   a.length === b.length && a.every((line, i) => line === b[i]);
 
 // A page fence, as CommonMark reads one: indented at most three spaces and
@@ -51,27 +61,27 @@ const sameLines = (a, b) =>
 // is no block here (though GitHub shows it as one). It closes on a line of
 // the same character, at least as long, holding nothing else.
 const PAGE_FENCE = /^ {0,3}(`{3,}|~{3,})/;
-const closesPage = (mark, line) => {
-  const f = line.match(PAGE_FENCE);
+const closesPage = (mark: string, line: string) => {
+  const fence = line.match(PAGE_FENCE)?.[1];
   return (
-    Boolean(f) &&
-    f[1][0] === mark[0] &&
-    f[1].length >= mark.length &&
+    fence !== undefined &&
+    fence[0] === mark[0] &&
+    fence.length >= mark.length &&
     /^\s*[`~]+\s*$/.test(line)
   );
 };
 
 // The page's lines outside its fenced blocks.
-export function outsideFences(markdown) {
-  const out = [];
-  let mark = null;
+export function outsideFences(markdown: string) {
+  const out: string[] = [];
+  let mark: string | null = null;
   for (const line of markdown.split("\n")) {
     if (mark) {
       if (closesPage(mark, line)) mark = null;
       continue;
     }
     const f = line.match(PAGE_FENCE);
-    if (f) mark = f[1];
+    if (f) mark = must(f[1], "a fence");
     else out.push(line);
   }
   return out;
@@ -80,9 +90,9 @@ export function outsideFences(markdown) {
 // The lines of each fenced block of the page, without its fences, less the
 // indent its opening fence has (three spaces inside a numbered step). A block
 // left open runs to the end of the page.
-export function fencedBlocks(markdown) {
-  const blocks = [];
-  let fence = null;
+export function fencedBlocks(markdown: string) {
+  const blocks: string[][] = [];
+  let fence: { mark: string; indent: RegExp; lines: string[] } | null = null;
   for (const line of markdown.split("\n")) {
     if (fence) {
       if (closesPage(fence.mark, line)) fence = null;
@@ -92,7 +102,11 @@ export function fencedBlocks(markdown) {
     const f = line.match(PAGE_FENCE);
     if (f) {
       const indent = line.length - line.trimStart().length;
-      fence = { mark: f[1], indent: new RegExp(`^ {0,${indent}}`), lines: [] };
+      fence = {
+        mark: must(f[1], "a fence"),
+        indent: new RegExp(`^ {0,${String(indent)}}`),
+        lines: [],
+      };
       blocks.push(fence.lines);
     }
   }
@@ -100,7 +114,7 @@ export function fencedBlocks(markdown) {
 }
 
 // The numbered steps at the top level under the page's `## <part>` heading.
-export function stepCount(markdown, part) {
+export function stepCount(markdown: string, part: string) {
   let inside = false;
   let count = 0;
   for (const line of outsideFences(markdown)) {
@@ -110,7 +124,15 @@ export function stepCount(markdown, part) {
   return count;
 }
 
-function source(path, raw) {
+// A page a step file may quote: its text flattened, and its blocks.
+interface Source {
+  path: string;
+  text: string;
+  body: string;
+  blocks: string[][];
+}
+
+function source(path: string, raw: string): Source {
   const text = raw.replace(/\r\n?/g, "\n");
   return { path, text, body: flat(text), blocks: fencedBlocks(text) };
 }
@@ -121,23 +143,29 @@ export function checkLessons({
   pages,
   checks = {},
   probes,
+}: {
+  manifest: unknown;
+  stepFiles: Readonly<Record<string, string | undefined>>;
+  pages: Readonly<Record<string, string | undefined>>;
+  checks?: Readonly<Record<string, CheckModule | undefined>>;
+  probes?: ParseContext["probes"];
 }) {
-  let manifest;
+  let manifest: Manifest;
   try {
     manifest = parseManifest(value, MANIFEST);
   } catch (error) {
     const problem = error instanceof Error ? error.message : String(error);
     return { problems: [problem], lessons: 0, quotes: 0, blocks: 0, from: 0 };
   }
-  const problems = [];
+  const problems: string[] = [];
   const compared = { lessons: 0, quotes: 0, blocks: 0, from: 0 };
   // Every page a step file may quote: each Lesson's own, by its id, and each
   // Level index, by `<level>-index`, the name a warm-up's from line gives it.
-  const sources = new Map();
+  const sources = new Map<string, Source>();
   // Every name a warm-up's from line may give, whether or not its page
   // exists: a missing page is reported once, as the manifest's problem.
-  const listed = new Set();
-  const pageOf = (id, path) => {
+  const listed = new Set<string>();
+  const pageOf = (id: string, path: string) => {
     listed.add(id);
     const raw = pages[path];
     if (typeof raw !== "string")
@@ -161,13 +189,13 @@ export function checkLessons({
       continue;
     }
     const own = sources.get(entry.id);
-    const shown = [];
-    let lesson;
+    const shown: PageText[] = [];
+    let lesson: LessonContent;
     try {
       lesson = parseLesson(raw, file, {
         manifest,
         checks,
-        probes,
+        ...(probes && { probes }),
         rejectFolder: true,
         onPageText: (piece) => shown.push(piece),
       });
@@ -177,13 +205,13 @@ export function checkLessons({
     }
     const lines = raw.replace(/\r\n?/g, "\n").split("\n");
     // A key the front matter lacks is reported at its opening line.
-    const lineOf = (key) =>
+    const lineOf = (key: string) =>
       lines.findIndex((line) => line.startsWith(`${key}:`)) + 1 || 1;
     const fields = frontmatter(raw)?.fields ?? {};
     for (const [key, why] of Object.entries(DROPPED)) {
       if (key in fields)
         problems.push(
-          `${file}:${lineOf(key)}: ${key} is no step-file field: ${why}`,
+          `${file}:${String(lineOf(key))}: ${key} is no step-file field: ${why}`,
         );
     }
     if (lesson.lesson === undefined)
@@ -192,7 +220,7 @@ export function checkLessons({
       );
     else if (lesson.lesson !== entry.id)
       problems.push(
-        `${file}:${lineOf("lesson")}: lesson is ${lesson.lesson}, but ${MANIFEST} lists this file for ${entry.id}`,
+        `${file}:${String(lineOf("lesson"))}: lesson is ${lesson.lesson}, but ${MANIFEST} lists this file for ${entry.id}`,
       );
     if (!own) continue;
     compared.lessons += 1;
@@ -208,19 +236,19 @@ export function checkLessons({
       );
     else if (lesson.stamp !== stamp)
       problems.push(
-        `${file}:${lineOf("stamp")}: is stamped "${lesson.stamp}", but ${own.path} is stamped "${stamp}". Re-verify the step file and copy the page's Stamp.`,
+        `${file}:${String(lineOf("stamp"))}: is stamped "${lesson.stamp}", but ${own.path} is stamped "${stamp}". Re-verify the step file and copy the page's Stamp.`,
       );
 
     // A "Your turn part N of M" heading splits one step into parts, so it
     // isn't counted against the page's numbered steps.
-    const miscounted = new Set();
+    const miscounted = new Set<string>();
     for (const step of lesson.steps) {
       if (step.unit !== "step" || miscounted.has(step.part)) continue;
       const count = stepCount(own.text, step.part);
       if (step.of !== count) {
         miscounted.add(step.part);
         problems.push(
-          `${file}:${step.line}: counts ${step.of} steps in ${step.part}, but ${own.path} has ${count}.`,
+          `${file}:${String(step.line)}: counts ${String(step.of)} steps in ${step.part}, but ${own.path} has ${String(count)}.`,
         );
       }
     }
@@ -231,7 +259,7 @@ export function checkLessons({
         if (sources.has(step.from)) compared.from += 1;
       } else
         problems.push(
-          `${file}:${step.line}: a warm-up from ${step.from}, which ${MANIFEST} doesn't list as a Lesson or Level index`,
+          `${file}:${String(step.line)}: a warm-up from ${step.from}, which ${MANIFEST} doesn't list as a Lesson or Level index`,
         );
     }
 
@@ -239,7 +267,7 @@ export function checkLessons({
       const page = piece.from === null ? own : sources.get(piece.from);
       if (!page) continue;
       compared[piece.kind === "quote" ? "quotes" : "blocks"] += 1;
-      const at = `${file}:${piece.line}`;
+      const at = `${file}:${String(piece.line)}`;
       if (piece.kind === "quote") {
         if (!page.body.includes(flat(piece.text)))
           problems.push(
@@ -248,7 +276,7 @@ export function checkLessons({
       } else if (!page.blocks.some((block) => sameLines(block, piece.lines))) {
         const first = piece.lines.find((line) => line.trim());
         problems.push(
-          `${at}: shows a code block starting "${first}" (${piece.heading}), which is not in ${page.path}.`,
+          `${at}: shows a code block starting "${String(first)}" (${piece.heading}), which is not in ${page.path}.`,
         );
       }
     }
