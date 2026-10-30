@@ -95,9 +95,9 @@ test("prerequisite asks wait in line, and the latest takes the place of one wait
     "next: i-2\nrequires: [b-5 check 0]\n---",
   );
   const course = threeLevels({ "i-1": i1 });
-  const { translator } = scripted({
+  const { engine } = scripted({
     effects: {
-      flush: (s, input) => [
+      "waitQuestion.answer": (s, input) => [
         {
           type: "prereqs",
           lesson: "i-1",
@@ -110,7 +110,7 @@ test("prerequisite asks wait in line, and the latest takes the place of one wait
   });
   const { host, adapters, heard } = fakeHost({
     course,
-    translator,
+    engine,
     saved: {
       format: 1,
       welcomed: true,
@@ -120,7 +120,8 @@ test("prerequisite asks wait in line, and the latest takes the place of one wait
   });
   await host.open();
   const b5 = () => adapters.checks.calls.filter((c) => c.lesson === "b-5");
-  for (const asked of [1, 2, 3]) host.dispatch({ type: "flush", asked });
+  for (const asked of [1, 2, 3])
+    host.dispatch({ type: "waitQuestion.answer", asked });
   await turn();
   assert.equal(b5().length, 1, "a second check child ran beside the first");
   b5()[0].resolve({ items: [{ index: 0, pass: false, hint: "not yet" }] });

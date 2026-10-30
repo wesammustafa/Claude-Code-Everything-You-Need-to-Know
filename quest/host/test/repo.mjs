@@ -4,14 +4,14 @@
 // place of the live ones, and b-1's check answered from its version file.
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { b1Item, root } from "../../engine/test/drive.mjs";
+import { b1Item, REDUCER_COURSE, root } from "../../engine/test/drive.mjs";
 import {
   exportHead,
   write,
 } from "../../../practice-template/checks/test/helpers.mjs";
 import { runCheck } from "../src/check-child.mjs";
 
-const FIXTURES = join(root, "checks/test/fixtures/reducer-course");
+const FIXTURES = REDUCER_COURSE;
 
 export function reducerRepo() {
   const dir = exportHead(root);

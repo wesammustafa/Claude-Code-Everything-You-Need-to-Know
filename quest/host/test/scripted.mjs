@@ -1,7 +1,8 @@
 // Helpers for the host's tests on fake adapters (not a test file): a host
 // over the Beginner fixture course in a fake practice copy, and a scripted
-// engine, the real one wrapped so a test can add effects to an input and
-// see each input it reduced, in order, with how deeply reduces nested.
+// engine, the real one wrapped so a test can add effects to an input of a
+// real type and see each input it reduced, in order, with how deeply
+// reduces nested.
 import { initialState, reduce } from "../src/engine.mjs";
 import { createHost } from "../src/host.mjs";
 import { fakeAdapters, fakeClock } from "../src/fake.mjs";
@@ -29,18 +30,14 @@ export const w3 = (pass, rest = {}) => ({
   ],
 });
 
-// The engine with `effects[type]` (a list, or a function of the state after
-// the input and the input) added to what an input of that type asks for.
-// `log` holds each input reduced, its depth (1: not nested) and the state
-// it was reduced on.
-export function scripted({
-  effects = {},
-  inputs = ["key", "paste", "flush"],
-} = {}) {
+// The real engine, wrapped: `effects[type]` (a list, or a function of the
+// state after the input and the input) is added to what an input of that
+// type asks for. `log` holds each input reduced, its depth (1: not nested)
+// and the input.
+export function scripted({ effects = {} } = {}) {
   const log = [];
   let depth = 0;
-  const claimed = [];
-  const translator = {
+  const engine = {
     initialState,
     reduce(state, input) {
       depth += 1;
@@ -55,15 +52,8 @@ export function scripted({
         depth -= 1;
       }
     },
-    inputs,
-    // The terminal's kind of effect: one named `terminal` is claimed.
-    effect(e) {
-      if (e.type !== "terminal") return false;
-      claimed.push(e);
-      return true;
-    },
   };
-  return { translator, log, claimed };
+  return { engine, log };
 }
 
 // A host on fake adapters over the Beginner fixture course (b-1 alone has
@@ -72,7 +62,7 @@ export function fakeHost({
   saved = null,
   tree = { [PRACTICE]: null },
   clock = fakeClock(),
-  translator = null,
+  engine = undefined,
   course = b1Only,
   facts = {},
   ahead = null,
@@ -89,7 +79,7 @@ export function fakeHost({
     platform,
     adapters,
     facts,
-    translator,
+    engine,
     ahead,
   });
   const heard = [];

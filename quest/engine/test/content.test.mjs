@@ -20,7 +20,7 @@ import {
 } from "../src/content.mjs";
 import { C, TERMS } from "../src/copy.mjs";
 import { TYPED_MAX, WARMUPS } from "../src/rules.mjs";
-import { inline, width, wrapRuns } from "../src/text.mjs";
+import { inline } from "../src/text.mjs";
 import { lessons } from "../../../practice-template/checks/lessons/index.mjs";
 import {
   PROBES,
@@ -158,19 +158,6 @@ test("card: every lesson puts the commands its page gives on the card, each once
     [],
     "a command on two lessons' cards",
   );
-});
-
-test("intro: each why wraps to at most 2 lines at the 60-column content width", () => {
-  // The intro's text width is the window less 4 columns (render's W); the
-  // Why lead and its space come off that.
-  const room = 60 - 4 - width(`${C.whyLead} `);
-  for (const [id, l] of Object.entries(parsed)) {
-    const lines = wrapRuns(inline(`"${l.intro.why}"`), room);
-    assert.ok(
-      lines.length <= 2,
-      `${id}: the why wraps to ${lines.length} lines`,
-    );
-  }
 });
 
 // Go further (146): one primary source to read next, as the page lists it.
@@ -384,11 +371,12 @@ test("warm-ups: questions from an earlier lesson, numbered, from memory", () => 
   );
 });
 
-// C.warmupWhy goes on the first warm-up a learner meets in a level, which
-// since 194 can be any lesson's (a lesson plays one only on a missed skill),
-// and says the lesson's words follow a wrong answer: every warm-up's must. A
-// wrong pick shows its option's because at once; a wrong typed answer its
-// first hint, where it has one, and its reveal after a second try.
+// The warm-up explainer goes on the first warm-up a learner meets in a
+// level, which since 194 can be any lesson's (a lesson plays one only on a
+// missed skill), and says the lesson's words follow a wrong answer: every
+// warm-up's must. A wrong pick shows its option's because at once; a wrong
+// typed answer its first hint, where it has one, and its reveal after a
+// second try.
 test("every warm-up shows the lesson's words after a wrong answer", () => {
   for (const [id, l] of Object.entries(parsed)) {
     for (const w of l.warmup) {
@@ -425,7 +413,7 @@ test("the app's own words name no command or code that the step's quotes don't",
     }
   }
   const words = copyWords(C);
-  assert.ok(words.length > 50);
+  assert.ok(words.length >= 20);
   for (const w of words) {
     assert.doesNotMatch(w, /`/, `copy.mjs: "${w}" holds a code span`);
     assert.doesNotMatch(
@@ -505,59 +493,9 @@ const BANNED = [
 // streak, no "no hints". "quick question" is a where label, not one of these.
 const CELEBRATION_BANNED =
   /\b(first try|no hints?|fast|quick(?:ly)?|streak)\b/i;
-// The words a celebration shows: the done feedback and burst on a step, and
-// every word the levelup, complete and next screens read (a test below
-// keeps those screens' keys on this list). Keys under C.k are 'k.<name>'.
-const CELEBRATIONS = [
-  "stepDone",
-  "session",
-  "beatDone",
-  "cleanCopy",
-  "cleanUnder",
-  "changedShows",
-  "stagedShows",
-  "holds",
-  "already",
-  "alreadyCheck",
-  "alreadyDone",
-  "checkPasses",
-  "runItToo",
-  "guessRight",
-  "nowYouKnow",
-  "findOutAt",
-  "right",
-  "answered",
-  "otherFine",
-  "done",
-  "stepOf",
-  "levelUp",
-  "toHinted",
-  "toChallenge",
-  "nextCounts",
-  "k.letsGo",
-  "k.bringIt",
-  "k.moreHelp",
-  "complete",
-  "lessonDone",
-  "badge",
-  "k.whatsNext",
-  "checkedSummary",
-  "handover",
-  "invitation",
-  "invitationAt",
-  "answeredSummary",
-  "yourClimb",
-  "nextUp",
-  "notchHarder",
-  "savedBreak",
-  "goFurther",
-  "recallAsk",
-  "k.startN",
-  "k.page",
-  "k.map",
-  "k.card",
-  "k.quit",
-];
+// The words a celebration shows, of the engine's own: the evidence a passed
+// git step shows. The screens' celebration words are the client's (249).
+const CELEBRATIONS = ["changedShows", "stagedShows"];
 const at = (copy, k) => k.split(".").reduce((v, part) => v?.[part], copy);
 const banned = new Map();
 const bannedIn = (w) => {
@@ -583,8 +521,6 @@ test("the app's own words claim only what the app saw", () => {
   for (const k of CELEBRATIONS)
     assert.notEqual(at(C, k), undefined, `copy.mjs has no ${k}`);
   assert.deepEqual(claims(C), []);
-  assert.equal(C.helpShrinks, "The help shrinks each time a skill comes back:");
-  assert.equal(C.lessonDone("B1"), "B1 done! You practised:");
   // Each pattern catches a string that breaks it, wherever it sits.
   for (const bad of [
     "You mastered plan mode.",
@@ -606,7 +542,7 @@ test("the app's own words claim only what the app saw", () => {
   ]) {
     assert.equal(claims({ x: bad }).length, 1, bad);
     assert.equal(
-      claims({ ...C, k: { ...C.k, x: () => [bad] } }).length,
+      claims({ ...C, x: () => [bad] }).length,
       1,
       `${bad}, in a function's array`,
     );
@@ -621,17 +557,17 @@ test("the app's own words claim only what the app saw", () => {
     "A 3 step streak",
   ]) {
     assert.equal(
-      claims({ ...C, stepDone: () => bad }).length,
+      claims({ ...C, changedShows: () => bad }).length,
       1,
       `${bad}, on a celebration`,
     );
     assert.equal(
-      claims({ ...C, levelUp: [bad] }).length,
+      claims({ ...C, stagedShows: [bad] }).length,
       1,
-      `${bad}, on the level-up`,
+      `${bad}, on a celebration's array`,
     );
     assert.deepEqual(
-      claims({ ...C, notYet: bad }),
+      claims({ ...C, noChange: bad }),
       [],
       `${bad}, off a celebration`,
     );
@@ -653,40 +589,12 @@ test("the app's own words claim only what the app saw", () => {
       `${branch}`,
     );
   }
-  assert.equal(
-    claims({
-      ...C,
-      nextCounts: (h, c) => (h === 0 && c === 2 ? "A fast finish." : "Fine."),
-    }).length,
-    1,
-  );
-  for (const k of [
-    "answered",
-    "otherFine",
-    "findOutAt",
-    "done",
-    "savedBreak",
-    "k.bringIt",
-    "k.whatsNext",
-  ]) {
-    const [top, sub] = k.split(".");
-    const bad = "Answered on the first try.";
-    const copy = sub
-      ? { ...C, k: { ...C.k, [sub]: bad } }
-      : { ...C, [top]: bad };
-    assert.equal(claims(copy).length, 1, `${k}, on a celebration`);
-  }
-  assert.equal(
-    C.where.ask,
-    "quick question",
-    "the where label stays off the celebration list",
-  );
 });
 
 // One name for each thing (TERMS in copy.mjs). An older name is an alias,
 // and so is any table of the three tiers that words them differently. A
-// sentence that tells the learner what a tier change gives them and which
-// key to press (doneBefore, toHinted) is no table: it isn't checked here.
+// sentence that tells the learner what a tier change gives them is no
+// table: it isn't checked here.
 // The work folder's words (ticket 86) have theirs too: a working folder or
 // directory, a repo, the page's "template copy" for the practice copy or for
 // a new copy.
@@ -731,31 +639,18 @@ test("one name for each thing: the app's words use no alias of a TERMS name", ()
     hinted: "the goal, hints if you ask",
     challenge: "just the goal",
   });
-  // The guide's level names, one each: the map, the welcome and a warm-up read them here.
+  // The guide's level names, one each, for the screens that name a level.
   assert.deepEqual(TERMS.levels, {
     beginner: "Beginner",
     intermediate: "Intermediate",
     advanced: "Advanced",
   });
-  assert.equal(C.levels, TERMS.levels);
-  assert.equal(
-    C.pathLabel(TERMS.levels.intermediate, 2, 9),
-    "Intermediate path · 2 of 9 done",
-  );
   assert.deepEqual(aliases(C), []);
   // A lesson file's unquoted lines are the app's words too; its quotes are the guide's.
   for (const [id, l] of Object.entries(parsed)) {
     for (const step of allSteps(l))
       assert.deepEqual(appWords(step).flatMap(aliasIn), [], `${id} ${step.id}`);
   }
-  assert.equal(C.pip1, "I'm Pip. I watch your practice copy and light up");
-  assert.equal(C.cleanCopy, "Your practice copy is clean: nothing to commit.");
-  assert.equal(C.folderOther, "In another folder, such as your repository");
-  assert.equal(
-    C.folderPrompt("Intermediate"),
-    "The work folder for Intermediate",
-  );
-  assert.equal(C.folderNewCopy, "Give the folder of your new copy");
   for (const bad of [
     "I'm Pip. I watch your practice folder and light up",
     "Your copy is clean: nothing to commit.",
@@ -1486,6 +1381,32 @@ const SKELETON_ALL = [
   "exit 0",
 ];
 
+test("a win line stands in for the command line just above it, and one with none above it fails", () => {
+  const block = fenced(["mkdir -p .practice"]);
+  const WIN = "New-Item -ItemType Directory -Force .practice";
+  const l = parseLesson(
+    withCode(["- code: point 1", ...block, `- win: "${WIN}"`]),
+    "b-2.md",
+  );
+  assert.equal(
+    l.steps[0].beats[0].lines.find((x) => x.key === "code").win,
+    WIN,
+  );
+  assert.throws(
+    () =>
+      parseLesson(
+        withCode([
+          "- code: point 1",
+          ...block,
+          '- note: "x"',
+          `- win: "${WIN}"`,
+        ]),
+        "b-2.md",
+      ),
+    /a win line with no run, code or bottom line above it/,
+  );
+});
+
 test("a beat shows at most 8 lines of code, with a pointer on the line it explains; a longer block shows a window of it on each beat", () => {
   const whole = codeOf(["- code: point 3", ...fenced(SKELETON)]);
   assert.deepEqual([whole.from, whole.to, whole.point], [1, 8, 3]);
@@ -1565,7 +1486,7 @@ test("a code block shows on a do, ask or self beat, and names no folder a run li
 // the rest with each level's rework.
 // Parser failure cases use a stable synthetic lesson, independent of editorial numbering.
 const B2 = readFileSync(
-  join(root, "practice-template/checks/test/fixtures/reducer-course/b-2.md"),
+  join(root, "quest/engine/test/fixtures/reducer-course/b-2.md"),
   "utf8",
 );
 const B2_BACK =
@@ -2497,7 +2418,7 @@ test('card: a CHALLENGE Your turn or task step shows no run line beside "No comm
       const run = s.beats[n]?.lines.find((x) => x.key === "run");
       if (run)
         off.push(
-          `${placeOf(c.lesson, s, n, "run", run.text)}: run "${run.text}" beside "${C.noCommands}"`,
+          `${placeOf(c.lesson, s, n, "run", run.text)}: run "${run.text}" beside "No commands this time."`,
         );
     });
   });
@@ -2507,7 +2428,7 @@ test('card: a CHALLENGE Your turn or task step shows no run line beside "No comm
 // Checks that keep their command behind h, each with its reason.
 const CHECK_COMMAND_BEHIND_H = {
   "a-capstone C":
-    "any line on C.0's card, a goal or a run line, pushes even the title off a 60x20 ASCII card under three of its FAIL messages (only a workflow that waits for a mention, no credential, a key in a committed note), so learn-check-says fails; it needs shorter messages or another Check title first",
+    "any line on C.0's card, a goal or a run line, pushed even the title off the Terminal app's 60x20 ASCII card under three of its FAIL messages (only a workflow that waits for a mention, no credential, a key in a committed note), the real failures ladders.test.mjs drives to the check rung; it needs shorter messages or another Check title before it shows its command",
 };
 
 test("card: every Check shows its npm run check command on the card, not only behind h (27, pattern I)", () => {
@@ -2722,4 +2643,102 @@ test("code in a link's text shows as code with no backticks, as the page does, a
         assert.ok(!r.text.includes("`"), `${f}: ${r.text}`);
     }
   }
+});
+
+// Lesson 2 commits its reviewed change (ticket 27, S3), so lesson 3 starts
+// from a clean tree with nothing to set aside.
+test("lesson 3 starts from the clean tree lesson 2 committed", () => {
+  const first = parsed["b-3"].steps[0].beats[0];
+  assert.equal(first.verify.kind, "git-clean");
+  assert.equal(first.where, "terminal");
+  assert.ok(!first.bottom.some((line) => line.text.includes("git stash")));
+  assert.ok(
+    parsed["b-2"].steps.some(
+      (s) =>
+        s.part === "Worked example" &&
+        s.beats.some(
+          (b) =>
+            b.verify.kind === "git-clean" &&
+            b.lines.some(
+              (line) =>
+                line.key === "run" && line.text.startsWith("git commit"),
+            ),
+        ),
+    ),
+    "b-2 commits its Worked example",
+  );
+  assert.ok(
+    !readFileSync(join(dir, "b-2.md"), "utf8").includes("git stash"),
+    "b-2 stashes nothing",
+  );
+});
+
+test("capstone prepares committed memory and preserves its Windows reproduction warning", () => {
+  const first = parsed["b-capstone"].steps[0];
+  assert.ok(
+    first.beats.some(
+      (b) => b.verify.kind === "check" && b.verify.items?.includes(5),
+    ),
+  );
+  assert.ok(first.beats.some((b) => b.verify.kind === "git-clean"));
+  assert.ok(first.beats.some((b) => b.winNote?.includes("Set-Content")));
+});
+
+test("Beginner live content teaches the promoted features and all four memory notes", () => {
+  const text = (id) => readFileSync(join(dir, `${id}.md`), "utf8");
+  for (const feature of ["Ctrl+B", "/btw", "/tasks"])
+    assert.ok(text("b-3").includes(feature), feature);
+  // Ticket 27, S2: b-4 recovers with Esc and a rewind of code and
+  // conversation; /branch and Summarize from here move to Go further.
+  for (const feature of [
+    "Restore code and conversation",
+    "**Restore code**",
+    "Esc",
+    "/compact",
+    "/clear",
+  ])
+    assert.ok(text("b-4").includes(feature), feature);
+  for (const gone of ["/branch", "Summarize from here"])
+    assert.ok(!text("b-4").includes(gone), gone);
+  for (const note of [
+    "npm run tests",
+    "~/scratch/linkcheck-docs",
+    "summary at the end",
+    "linkcheck:",
+  ])
+    assert.ok(text("b-5").includes(note), note);
+  for (const scope of ["~/.claude/CLAUDE.md", "CLAUDE.local.md", "Auto memory"])
+    assert.ok(text("b-5").includes(scope), scope);
+  assert.ok(!text("b-1").includes(".practice/version.txt"));
+});
+
+// No hint can see whether the Learner took it, so a hint never holds a
+// command that saves a file for the check: that command is a bottom rung,
+// behind the y/n that records the exact command.
+test("no capstone hint holds a command that saves a file for the check", () => {
+  const savesForCheck = (text) =>
+    [...text.matchAll(/`([^`]+)`/g)].some(([, code]) =>
+      /\s>\s*\.practice\//.test(code),
+    );
+  const capstones = Object.entries(parsed).filter(([id]) =>
+    id.endsWith("-capstone"),
+  );
+  assert.equal(capstones.length, 3);
+  for (const [id, { steps, ladder }] of capstones) {
+    const hints = [
+      ...steps.flatMap((step) => step.beats.flatMap((b) => b.hints)),
+      ...ladder.flatMap((l) => l.hints),
+    ];
+    assert.deepEqual(hints.filter(savesForCheck), [], id);
+  }
+  // The scan finds such a command where it belongs, on a bottom rung.
+  assert.ok(
+    capstones.some(([, { steps }]) =>
+      steps.some((step) =>
+        step.beats.some((b) =>
+          b.bottom.some((x) => savesForCheck(`\`${x.text}\``)),
+        ),
+      ),
+    ),
+  );
 });

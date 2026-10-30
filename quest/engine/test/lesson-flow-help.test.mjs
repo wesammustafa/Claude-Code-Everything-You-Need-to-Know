@@ -363,7 +363,7 @@ test("warm-ups set the help: every kind of miss adds the ease, an empty answer t
   assert.deepEqual(twice.state.eased, ["status"]);
 });
 
-// The warm-up closure test (MISSABLE in learn-content.test.mjs) counts the
+// The warm-up closure test (MISSABLE in content.test.mjs) counts the
 // questions in this test and the next as ones that can mark a skill missed.
 test("s on a question with no wrong option still marks its skill for a warm-up, and on a guess it does nothing", () => {
   // was learn-flow:1232

@@ -3,31 +3,88 @@
 // inputs are Learner actions (ACTION_TYPES), the results of its own effects
 // and clock ticks; its effects (EFFECT_TYPES) ask the wiring to run a
 // check, read git status or a file, look at a folder or save progress, and
-// their results come back as inputs. Nothing here reads a file, a clock or
-// the terminal, and no terminal module is imported: what the screen shows
-// is the key translator's (flow.mjs).
-import { GIT, isChoice, READS, SINCE_GIT, WORK_LEVELS } from './content.mjs';
-import { evidenceOf, grewFrom, judge } from './holds.mjs';
-import { cleanListed, eachFile, judgeGit, needsChange, statusStamp } from './status.mjs';
-import { effectiveTier, ruleTiers, TIERS } from './tiers.mjs';
+// their results come back as inputs. Nothing here reads a file or a clock,
+// and nothing outside this package is imported but the Checks the course
+// is parsed with: what a screen shows is the client's.
+import { GIT, isChoice, READS, SINCE_GIT } from "./content.mjs";
+import { WORK_LEVELS } from "./course.mjs";
+import { evidenceOf, grewFrom, judge } from "./holds.mjs";
+import {
+  cleanListed,
+  eachFile,
+  judgeGit,
+  needsChange,
+  statusStamp,
+} from "./status.mjs";
+import { effectiveTier, ruleTiers, TIERS } from "./tiers.mjs";
 
-import { TYPED_MAX, WARMUPS } from '../../../quest/engine/src/rules.mjs';
+import { TYPED_MAX, WARMUPS } from "./rules.mjs";
 
 export { TYPED_MAX, WARMUPS };
 
 export const IDLE_MS = 120_000;
 
-// The effects the engine asks for. `copy`, `later` and `quit` are the
-// terminal's.
-export const EFFECT_TYPES = ['save', 'check', 'file', 'git', 'probe', 'stamp', 'folder', 'prereqs', 'commands'];
+// The effects the engine asks for.
+export const EFFECT_TYPES = [
+  "save",
+  "check",
+  "file",
+  "git",
+  "probe",
+  "stamp",
+  "folder",
+  "prereqs",
+  "commands",
+];
 // Every field of the engine's state. `levelTo` and `levelFrom` come with
 // the first step-down.
-export const ENGINE_FIELDS = ['course', 'facts', 'progress', 'eased', 'missed', 'welcomed', 'folders', 'now', 'missedNow', 'answeredNow', 'whileShown',
-  'lesson', 'phase', 'pos', 'away', 'beat', 'levelTo', 'levelFrom', 'checks', 'git', 'session', 'lastActivity', 'asks', 'probes', 'commands', 'prereqs',
-  'prereqAsks', 'folderAnswered', 'folderAsk'];
+export const ENGINE_FIELDS = [
+  "course",
+  "facts",
+  "progress",
+  "eased",
+  "missed",
+  "welcomed",
+  "folders",
+  "now",
+  "missedNow",
+  "answeredNow",
+  "whileShown",
+  "lesson",
+  "phase",
+  "pos",
+  "beat",
+  "levelTo",
+  "levelFrom",
+  "checks",
+  "git",
+  "session",
+  "lastActivity",
+  "asks",
+  "probes",
+  "commands",
+  "prereqs",
+  "prereqAsks",
+  "folderAnswered",
+  "folderAsk",
+];
 
 const clone = (x) => structuredClone(x);
-const blankProgress = () => ({ step: null, beat: 0, done: [], answers: {}, levels: [], lessHelp: false, moreHelpAt: null, easedSteps: {}, complete: false, warm: [], recalled: [], stamps: {}, bottomAt: null });
+const blankProgress = () => ({
+  step: null,
+  beat: 0,
+  done: [],
+  answers: {},
+  levels: [],
+  lessHelp: false,
+  moreHelpAt: null,
+  easedSteps: {},
+  complete: false,
+  warm: [],
+  recalled: [],
+  stamps: {},
+  bottomAt: null,
+});
 export const sameJson = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
 export function initialState({ course, saved = null, facts, now = 0 }) {
@@ -38,8 +95,12 @@ export function initialState({ course, saved = null, facts, now = 0 }) {
     if (l.content) {
       // Unknown step ids from an older content file start that lesson's place over.
       const pr = progress[l.id];
-      pr.warm = pr.warm.filter((id) => l.content.warmup.some((w) => w.id === id));
-      pr.recalled = pr.recalled.filter((id) => l.content.warmup.some((w) => w.id === id));
+      pr.warm = pr.warm.filter((id) =>
+        l.content.warmup.some((w) => w.id === id),
+      );
+      pr.recalled = pr.recalled.filter((id) =>
+        l.content.warmup.some((w) => w.id === id),
+      );
       const steps = playOrder(l.content, pr);
       const ids = new Set(steps.map((s) => s.id));
       pr.done = pr.done.filter((id) => ids.has(id));
@@ -47,16 +108,23 @@ export function initialState({ course, saved = null, facts, now = 0 }) {
       const step = steps.find((x) => x.id === pr.step);
       if (!step) Object.assign(pr, { step: null, beat: 0 });
       else if (!(pr.beat >= 0 && pr.beat < step.beats.length)) pr.beat = 0;
-      else if (!beatShown(pr, step.beats[pr.beat])) pr.beat = shownBefore(pr, step, pr.beat);
+      else if (!beatShown(pr, step.beats[pr.beat]))
+        pr.beat = shownBefore(pr, step, pr.beat);
     }
   }
-  const open = course.find((l) => l.content && progress[l.id].step && !progress[l.id].complete)
-    ?? course.find((l) => l.content && !progress[l.id].complete);
+  const open =
+    course.find(
+      (l) => l.content && progress[l.id].step && !progress[l.id].complete,
+    ) ?? course.find((l) => l.content && !progress[l.id].complete);
   const folders = { ...(saved?.folders ?? {}) };
   // Every lesson in the app is done: open the map at the next lesson, or
   // where only lessons that run in a new copy with no folder saved are left,
   // at the first of them.
-  const next = open ?? course.find((l) => toFinish({ progress, folders }, l)) ?? course.find((l) => !progress[l.id].complete) ?? course[0];
+  const next =
+    open ??
+    course.find((l) => toFinish({ progress, folders }, l)) ??
+    course.find((l) => !progress[l.id].complete) ??
+    course[0];
   const welcomed = Boolean(saved?.welcomed);
   const eased = saved?.eased ?? [];
   // A warm-up the learner quit on with its skill eased was most likely missed
@@ -64,12 +132,18 @@ export function initialState({ course, saved = null, facts, now = 0 }) {
   const answeredNow = [];
   for (const l of course) {
     const pr = progress[l.id];
-    const w = l.content?.warmup.find((x) => x.id === pr.step && pr.warm.includes(x.id));
-    if (w && eased.includes(w.beats[pr.beat]?.skill ?? w.skill)) answeredNow.push(`${l.id}.${w.id}`);
+    const w = l.content?.warmup.find(
+      (x) => x.id === pr.step && pr.warm.includes(x.id),
+    );
+    if (w && eased.includes(w.beats[pr.beat]?.skill ?? w.skill))
+      answeredNow.push(`${l.id}.${w.id}`);
   }
   const p = progress[next.id];
   return {
-    course, facts, progress, now,
+    course,
+    facts,
+    progress,
+    now,
     eased,
     missed: saved?.missed ?? [],
     missedNow: [],
@@ -80,12 +154,15 @@ export function initialState({ course, saved = null, facts, now = 0 }) {
     welcomed,
     // The Learner's place: the active lesson and its phase, 'overview',
     // 'playing' (a resume waits there with no beat open until the lesson
-    // opens), 'step-down' or 'complete'. `away` is the terminal's map and
-    // welcome, where nothing is watched (translator-only, gone in 210).
+    // opens), 'step-down' or 'complete'.
     lesson: next.id,
-    phase: next.content && p.step && !p.complete ? 'playing' : 'overview',
-    pos: { step: 0, beat: 0 }, away: false, beat: null,
-    checks: {}, git: null, session: 0, lastActivity: now,
+    phase: next.content && p.step && !p.complete ? "playing" : "overview",
+    pos: { step: 0, beat: 0 },
+    beat: null,
+    checks: {},
+    git: null,
+    session: 0,
+    lastActivity: now,
     // How many times r asked for a run, in memory: each r's number goes out
     // on its effect and comes back on its result (`asked`).
     asks: 0,
@@ -94,12 +171,12 @@ export function initialState({ course, saved = null, facts, now = 0 }) {
     folders,
     probes: {},
     // The folder answer being checked: whose folder it is, the folder it
-    // last found missing, and the number of the ask main is looking at, in
+    // last found missing, and the number of the ask the host is looking at, in
     // memory.
     folderAsk: null,
     // The lesson whose intro took the answer, which then shows it, in memory.
     folderAnswered: null,
-    // What main found on the PATH, { command: true or false }, and, for
+    // What the host found on the PATH, { command: true or false }, and, for
     // each lesson, the folder its prerequisites were looked at in and what
     // each one came to, { dir, met: { index: { pass, hint, asked } } }, with
     // the number of the latest ask for them: in memory.
@@ -110,38 +187,43 @@ export function initialState({ course, saved = null, facts, now = 0 }) {
 }
 
 // Where the Learner is (ticket 207): on a step card, on an overview, or on
-// a lesson with no lesson file. Away (the terminal's map) is none of them.
-export const onCard = (s) => !s.away && s.phase === 'playing' && Boolean(s.beat);
-const inOverview = (s) => !s.away && s.phase === 'overview' && Boolean(contentOf(s));
-const checkOnlyHere = (s) => !s.away && !contentOf(s);
+// a lesson with no lesson file. The engine watches the active step on
+// every screen the client shows.
+export const onCard = (s) => s.phase === "playing" && Boolean(s.beat);
+const inOverview = (s) => s.phase === "overview" && Boolean(contentOf(s));
+const checkOnlyHere = (s) => !contentOf(s);
 
 // ---- lookups -----------------------------------------------------------------
 export const lessonOf = (s, id = s.lesson) => s.course.find((l) => l.id === id);
 // A lesson's level, from its PATH entry: 'beginner' for b-2.
 export const levelOf = (s, id = s.lesson) => lessonOf(s, id)?.level;
 // The lessons of a level, in course order, capstone last.
-export const levelLessons = (s, level) => s.course.filter((l) => l.level === level);
+export const levelLessons = (s, level) =>
+  s.course.filter((l) => l.level === level);
 // The course's levels, in course order.
 export const levelsOf = (s) => [...new Set(s.course.map((l) => l.level))];
 // A lesson's number within its level, as its page says "Lesson 2 of 8".
-export const lessonNumber = (s, id = s.lesson) => levelLessons(s, levelOf(s, id)).findIndex((l) => l.id === id) + 1;
+export const lessonNumber = (s, id = s.lesson) =>
+  levelLessons(s, levelOf(s, id)).findIndex((l) => l.id === id) + 1;
 export const contentOf = (s, id = s.lesson) => lessonOf(s, id)?.content;
 // Where a lesson pins its folder: 'copy', the practice copy whatever its
 // level's work folder is (i-capstone), or 'new copy', the new copy of the
 // template it asks for (a-5, a-capstone). Its lesson file's front matter
 // says so, or, while it has none, its PATH entry.
-export const pinOf = (l) => l.content?.folder ?? l.folder ?? (l.newCopy ? 'new copy' : null);
+export const pinOf = (l) =>
+  l.content?.folder ?? l.folder ?? (l.newCopy ? "new copy" : null);
 // What a lesson's folder is saved under: its level, or the lesson itself for
 // one that runs in a new copy. Beginner, and a lesson pinned to the copy,
 // have none.
 export function folderKey(s, id = s.lesson) {
   const l = lessonOf(s, id);
-  if (pinOf(l) === 'new copy') return l.id;
-  return pinOf(l) === 'copy' ? null : levelKey(s, id);
+  if (pinOf(l) === "new copy") return l.id;
+  return pinOf(l) === "copy" ? null : levelKey(s, id);
 }
 // A lesson's level where that level practises in a work folder: Intermediate
 // or Advanced. Null for Beginner.
-export const levelKey = (s, id = s.lesson) => (WORK_LEVELS.includes(levelOf(s, id)) ? levelOf(s, id) : null);
+export const levelKey = (s, id = s.lesson) =>
+  WORK_LEVELS.includes(levelOf(s, id)) ? levelOf(s, id) : null;
 // A later level's work folder: the one saved for it, the practice copy by default.
 export const levelFolder = (s, level) => s.folders[level] ?? s.facts.root;
 // The folder a lesson's check, git status and file reads run in: its work
@@ -155,8 +237,9 @@ export const levelFolder = (s, level) => s.folders[level] ?? s.facts.root;
 // its prerequisites, its notes and its first look are.
 export function folderOf(s, id = s.lesson, step = null) {
   const l = lessonOf(s, id);
-  if (pinOf(l) === 'new copy') return s.folders[l.id] ?? null;
-  if (step?.part === 'Worked example' && l.content?.worked === 'copy') return s.facts.root;
+  if (pinOf(l) === "new copy") return s.folders[l.id] ?? null;
+  if (step?.part === "Worked example" && l.content?.worked === "copy")
+    return s.facts.root;
   const k = folderKey(s, id);
   return (k && s.folders[k]) || s.facts.root;
 }
@@ -164,29 +247,47 @@ export function folderOf(s, id = s.lesson, step = null) {
 // it completes only after its last Tear down step.
 export const tearDownLeft = (s, id = s.lesson) => {
   const p = s.progress[id];
-  return Boolean(contentOf(s, id)?.steps.some((x) => x.part === 'Tear down')) && !p.complete && p.done.includes('C');
+  return (
+    Boolean(contentOf(s, id)?.steps.some((x) => x.part === "Tear down")) &&
+    !p.complete &&
+    p.done.includes("C")
+  );
 };
 // A lesson the learner can still finish: not complete, and not one that
 // runs in a new copy of the template while that copy's folder is not saved,
 // as no check of it runs until then. The next lesson the map marks and
 // opens at is one of these.
-export const toFinish = ({ progress, folders }, l) => !progress[l.id].complete && (pinOf(l) !== 'new copy' || Boolean(folders[l.id]));
+export const toFinish = ({ progress, folders }, l) =>
+  !progress[l.id].complete &&
+  (pinOf(l) !== "new copy" || Boolean(folders[l.id]));
 // The steps a learner meets, in order: the warm-up questions chosen when the
 // lesson started, then the lesson's own steps.
-const playOrder = (content, p) => [...p.warm.map((id) => content.warmup.find((w) => w.id === id)).filter(Boolean), ...content.steps];
-export const stepsOf = (s, id = s.lesson) => (contentOf(s, id) ? playOrder(contentOf(s, id), s.progress[id]) : []);
+const playOrder = (content, p) => [
+  ...p.warm
+    .map((id) => content.warmup.find((w) => w.id === id))
+    .filter(Boolean),
+  ...content.steps,
+];
+export const stepsOf = (s, id = s.lesson) =>
+  contentOf(s, id) ? playOrder(contentOf(s, id), s.progress[id]) : [];
 export const stepOf = (s) => stepsOf(s)[s.pos.step];
 export const beatOf = (s) => stepOf(s).beats[s.pos.beat];
 // Whether a beat shows (ticket 104): one with a when line only while the
 // saved pick on its choice is its option. The store keeps 200 characters of
 // a pick, so a pick made in this sitting compares as a saved one does.
-export const beatShown = (p, beat) => !beat.when || p.answers[`${beat.when.step}.${beat.when.beat}`]?.slice(0, 200) === beat.when.option.slice(0, 200);
+export const beatShown = (p, beat) =>
+  !beat.when ||
+  p.answers[`${beat.when.step}.${beat.when.beat}`]?.slice(0, 200) ===
+    beat.when.option.slice(0, 200);
 // The step's next beat that shows after beat `at`, or -1; and its last one
 // that shows before `at`, or -1. A step's first beat always shows.
-const shownAfter = (p, step, at) => step.beats.findIndex((b, i) => i > at && beatShown(p, b));
-const shownBefore = (p, step, at) => step.beats.findLastIndex((b, i) => i < at && beatShown(p, b));
+const shownAfter = (p, step, at) =>
+  step.beats.findIndex((b, i) => i > at && beatShown(p, b));
+const shownBefore = (p, step, at) =>
+  step.beats.findLastIndex((b, i) => i < at && beatShown(p, b));
 // Whether the beat on screen is the last of its step that shows.
-export const isLastBeat = (s) => shownAfter(s.progress[s.lesson], stepOf(s), s.pos.beat) < 0;
+export const isLastBeat = (s) =>
+  shownAfter(s.progress[s.lesson], stepOf(s), s.pos.beat) < 0;
 
 // What this learner did with each skill: `steps` holds "k skill" for each
 // lesson k where they finished one of its own steps on it (warm-ups aside),
@@ -217,7 +318,11 @@ function history(s) {
 // count: a skill an earlier lesson also teaches shows nothing early.
 export function cardOf(s) {
   const { steps } = history(s);
-  return s.course.flatMap((l, k) => (l.content?.card ?? []).filter((e) => steps.has(`${k} ${e.skill}`)).map((e) => ({ ...e, lesson: l.id })));
+  return s.course.flatMap((l, k) =>
+    (l.content?.card ?? [])
+      .filter((e) => steps.has(`${k} ${e.skill}`))
+      .map((e) => ({ ...e, lesson: l.id })),
+  );
 }
 // The entries the next screen asks the learner to recall: this lesson's own
 // on the card.
@@ -232,9 +337,15 @@ export const nextLessonOf = (s) => {
 // before it, so there it takes a finished step on every skill they teach.
 export function doneBefore(s) {
   const { finished } = history(s);
-  if (!s.lesson.endsWith('capstone')) return finished.has(stepOf(s).skill);
+  if (!s.lesson.endsWith("capstone")) return finished.has(stepOf(s).skill);
   const idx = s.course.findIndex((l) => l.id === s.lesson);
-  return s.course.slice(0, idx).every((l) => (l.content?.steps ?? []).every((x) => x.optional || finished.has(x.skill)));
+  return s.course
+    .slice(0, idx)
+    .every((l) =>
+      (l.content?.steps ?? []).every(
+        (x) => x.optional || finished.has(x.skill),
+      ),
+    );
 }
 
 // Each step's tier in play order. A warm-up recalls an earlier lesson from
@@ -248,20 +359,29 @@ export function tiersOf(s, id = s.lesson) {
   const idx = s.course.findIndex((l) => l.id === id);
   const p = s.progress[id];
   const h = history(s);
-  const rule = ruleTiers(contents, idx, (k, skill) => h.steps.has(`${k} ${skill}`) || h.recalled.has(skill));
+  const rule = ruleTiers(
+    contents,
+    idx,
+    (k, skill) => h.steps.has(`${k} ${skill}`) || h.recalled.has(skill),
+  );
   const steps = stepsOf(s, id);
   const more = moreHelp(p, steps);
   return steps.map((step, i) => {
-    if (step.part === 'Warm-up') return 'challenge';
+    if (step.part === "Warm-up") return "challenge";
     const t = rule[contents[idx].steps.indexOf(step)];
-    return effectiveTier(t, { lessHelp: p.lessHelp, eased: more[i] || Boolean(p.easedSteps[step.id]) });
+    return effectiveTier(t, {
+      lessHelp: p.lessHelp,
+      eased: more[i] || Boolean(p.easedSteps[step.id]),
+    });
   });
 }
 // Which steps g on a level-up gives one tier more help: the step it was
 // pressed on and every one after it in play order, but the Check.
 function moreHelp(p, steps) {
   const from = steps.findIndex((x) => x.id === p.moreHelpAt);
-  return steps.map((step, i) => from !== -1 && i >= from && step.part !== 'Check');
+  return steps.map(
+    (step, i) => from !== -1 && i >= from && step.part !== "Check",
+  );
 }
 // Whether g on the level-up on screen gives any step more help. Not on the
 // Check, which stays CHALLENGE, nor after an earlier g, which covers every
@@ -270,42 +390,105 @@ function moreHelp(p, steps) {
 export function moreHelpGives(s) {
   const p = s.progress[s.lesson];
   const step = stepOf(s);
-  const easedSteps = Object.fromEntries(Object.entries(p.easedSteps).filter(([id]) => id !== step.id));
-  const after = tiersOf({ ...s, progress: { ...s.progress, [s.lesson]: { ...p, moreHelpAt: step.id, easedSteps } } });
+  const easedSteps = Object.fromEntries(
+    Object.entries(p.easedSteps).filter(([id]) => id !== step.id),
+  );
+  const after = tiersOf({
+    ...s,
+    progress: {
+      ...s.progress,
+      [s.lesson]: { ...p, moreHelpAt: step.id, easedSteps },
+    },
+  });
   return tiersOf(s).some((t, i) => TIERS.indexOf(after[i]) < TIERS.indexOf(t));
 }
 export function authoredTier(s) {
   const step = stepOf(s);
-  if (step.part === 'Warm-up') return 'challenge';
+  if (step.part === "Warm-up") return "challenge";
   const idx = s.course.findIndex((l) => l.id === s.lesson);
-  return ruleTiers(s.course.map((l) => l.content), idx)[contentOf(s).steps.indexOf(step)];
+  return ruleTiers(
+    s.course.map((l) => l.content),
+    idx,
+  )[contentOf(s).steps.indexOf(step)];
 }
 export const tierOf = (s) => tiersOf(s)[s.pos.step];
+
+// What the host reads off the state on its own (ticket 209, lifted here in
+// 210): the folder to watch, the evidence file a check guards, and whether
+// the app opens with a check.
+// The folder the Learner works in now: the step on screen's, or, before
+// its beat opens, the saved step's; else the lesson's.
+export const workFolder = (s) =>
+  s.phase === "playing" && contentOf(s)
+    ? folderOf(
+        s,
+        s.lesson,
+        s.beat
+          ? stepOf(s)
+          : (stepsOf(s).find((x) => x.id === s.progress[s.lesson].step) ??
+              null),
+      )
+    : folderOf(s);
+
+// The file whose change during a check makes it run again (guard 8): the
+// beat on the card's, as the engine's own re-ask names it.
+export const evidence = (s) =>
+  onCard(s) ? (beatOf(s).evidence ?? null) : null;
+
+// Whether the app opens with a look at the lesson's check: a Learner
+// welcomed back to a lesson with a page that is not complete.
+export const opensWithCheck = (s) =>
+  s.welcomed && Boolean(contentOf(s)) && !s.progress[s.lesson].complete;
 
 // What the wiring should keep an eye on for the beat on screen.
 // `dir` is the folder it runs in.
 export function watching(s) {
   // A lesson that runs in a new copy has no check to run until it has one.
-  if (checkOnlyHere(s)) return folderOf(s) ? { check: { lesson: s.lesson, items: null }, dir: folderOf(s) } : null;
+  if (checkOnlyHere(s))
+    return folderOf(s)
+      ? { check: { lesson: s.lesson, items: null }, dir: folderOf(s) }
+      : null;
   if (!onCard(s)) return null;
   const dir = folderOf(s, s.lesson, stepOf(s));
-  if (['done', 'already'].includes(s.beat.status)) return null;
+  if (["done", "already"].includes(s.beat.status)) return null;
   const v = beatOf(s).verify;
-  if (v.kind === 'check') return { check: { lesson: s.lesson, items: v.all ? null : v.items }, dir };
+  if (v.kind === "check")
+    return { check: { lesson: s.lesson, items: v.all ? null : v.items }, dir };
   if (READS.has(v.kind)) return { file: v.path, dir };
-  if (GIT.has(v.kind)) return { git: true, dir, ...(eachFile(v) ? { files: true } : {}), ...(v.kind === 'head-moved' ? { head: true } : {}) };
-  if (v.kind === 'probe') return { probe: { name: v.name, args: v.args }, dir };
+  if (GIT.has(v.kind))
+    return {
+      git: true,
+      dir,
+      ...(eachFile(v) ? { files: true } : {}),
+      ...(v.kind === "head-moved" ? { head: true } : {}),
+    };
+  if (v.kind === "probe") return { probe: { name: v.name, args: v.args }, dir };
   return null;
 }
 // The effect that asks git about what `w` watches, in its folder.
-const gitAsk = (w, extra = {}) => ({ type: 'git', ...extra, dir: w.dir, ...(w.files ? { files: true } : {}), ...(w.head ? { head: true } : {}) });
+const gitAsk = (w, extra = {}) => ({
+  type: "git",
+  ...extra,
+  dir: w.dir,
+  ...(w.files ? { files: true } : {}),
+  ...(w.head ? { head: true } : {}),
+});
 // The effect that runs the probe `w` watches (ticket 105).
-const probeAsk = (w, extra = {}) => ({ type: 'probe', ...extra, name: w.probe.name, args: w.probe.args, dir: w.dir });
+const probeAsk = (w, extra = {}) => ({
+  type: "probe",
+  ...extra,
+  name: w.probe.name,
+  args: w.probe.args,
+  dir: w.dir,
+});
 // Whether a git result answers what `w` watches: a beat on part of the tree
 // reads only one that lists each untracked file, and a whole-tree beat only
 // one that lists what git status shows; a head-moved beat only one that
 // says where HEAD is.
-export const answersGit = (w, ev) => Boolean(w?.git) && Boolean(ev.files) === Boolean(w.files) && ('head' in ev) === Boolean(w.head);
+export const answersGit = (w, ev) =>
+  Boolean(w?.git) &&
+  Boolean(ev.files) === Boolean(w.files) &&
+  "head" in ev === Boolean(w.head);
 
 // The intro that holds the folder question: a lesson that runs in a new
 // copy; for a level, the first of its intros the learner opens while it has
@@ -314,14 +497,21 @@ export const answersGit = (w, ev) => Boolean(w?.git) && Boolean(ev.files) === Bo
 export function asksHere(s) {
   const key = folderKey(s);
   if (!key) return false;
-  return key !== levelOf(s) || !(key in s.folders) || s.folderAnswered === s.lesson || levelLessons(s, key)[0].id === s.lesson;
+  return (
+    key !== levelOf(s) ||
+    !(key in s.folders) ||
+    s.folderAnswered === s.lesson ||
+    levelLessons(s, key)[0].id === s.lesson
+  );
 }
 // The intro asks where to practise until there is an answer. A folder given
 // with --dir, or on the map, is one.
-export const asksFolder = (s) => inOverview(s) && asksHere(s) && !(folderKey(s) in s.folders);
+export const asksFolder = (s) =>
+  inOverview(s) && asksHere(s) && !(folderKey(s) in s.folders);
 // The answers it offers: this practice copy, or another folder; a lesson
 // that runs in a new copy offers only its folder.
-export const folderOptions = (s) => (folderKey(s) === levelOf(s) ? ['copy', 'other'] : ['other']);
+export const folderOptions = (s) =>
+  folderKey(s) === levelOf(s) ? ["copy", "other"] : ["other"];
 
 // The learner's answer: saved, and from now on where that key's lessons
 // run. What a check found in the folder before, and the states a fresh
@@ -329,49 +519,68 @@ export const folderOptions = (s) => (folderKey(s) === levelOf(s) ? ['copy', 'oth
 // stays where it was, a Worked example in the practice copy (ticket 183),
 // keeps its states.
 function setFolder(s, key, path, effects) {
-  const moved = s.course.filter((l) => folderKey(s, l.id) === key && folderOf(s, l.id) !== path).map((l) => l.id);
-  const where = (id) => new Map(stepsOf(s, id).map((x) => [x.id, folderOf(s, id, x)]));
+  const moved = s.course
+    .filter((l) => folderKey(s, l.id) === key && folderOf(s, l.id) !== path)
+    .map((l) => l.id);
+  const where = (id) =>
+    new Map(stepsOf(s, id).map((x) => [x.id, folderOf(s, id, x)]));
   const was = new Map(moved.map((id) => [id, where(id)]));
   s.folders[key] = path;
   for (const id of moved) {
     delete s.checks[id];
     const now = where(id);
     const stays = (k) => {
-      const step = k.slice(0, k.lastIndexOf('.'));
+      const step = k.slice(0, k.lastIndexOf("."));
       return now.has(step) && now.get(step) === was.get(id).get(step);
     };
-    s.progress[id].stamps = Object.fromEntries(Object.entries(s.progress[id].stamps).filter(([k]) => stays(k)));
+    s.progress[id].stamps = Object.fromEntries(
+      Object.entries(s.progress[id].stamps).filter(([k]) => stays(k)),
+    );
   }
   if (s.folderAsk?.key === key) s.folderAsk = null;
   if (inOverview(s)) s.folderAnswered = s.lesson;
-  effects.push({ type: 'save' });
-  if (checkOnlyHere(s) && folderKey(s) === key) effects.push({ type: 'check', lesson: s.lesson, items: null, dir: path });
+  effects.push({ type: "save" });
+  if (checkOnlyHere(s) && folderKey(s) === key)
+    effects.push({ type: "check", lesson: s.lesson, items: null, dir: path });
 }
 
 // ---- what a lesson needs (ticket 89) ----------------------------------------
 // The groups of commands the lesson's page needs here: a Linux-only one on
 // Linux alone.
-const needsHere = (s) => (contentOf(s)?.needs ?? []).filter((n) => !n.linux || s.facts.linux);
-// What the intro on screen asks main to look at: the commands it needs,
+const needsHere = (s) =>
+  (contentOf(s)?.needs ?? []).filter((n) => !n.linux || s.facts.linux);
+// What the intro on screen asks the host to look at: the commands it needs,
 // and, once its folder question has an answer, its prerequisites there.
 export function introAsks(s) {
   if (!inOverview(s)) return [];
   const names = needsHere(s).flatMap((n) => n.commands);
   const requires = contentOf(s)?.requires ?? [];
-  return [...(names.length ? [{ type: 'commands', names }] : []),
-    ...(requires.length && !asksFolder(s) && folderOf(s) ? [{ type: 'prereqs', lesson: s.lesson, dir: folderOf(s), requires }] : [])];
+  return [
+    ...(names.length ? [{ type: "commands", names }] : []),
+    ...(requires.length && !asksFolder(s) && folderOf(s)
+      ? [{ type: "prereqs", lesson: s.lesson, dir: folderOf(s), requires }]
+      : []),
+  ];
 }
-// A prerequisite main looked at, in the folder it looked in: a check item
+// A prerequisite the host looked at, in the folder it looked in: a check item
 // passes or not (null: the run couldn't say, an error); a file is read as a
 // `file` beat reads it, done once it holds a line. An answer to an older ask
 // than the one already shown says nothing.
 function onPrereq(s, ev) {
   const req = contentOf(s, ev.lesson)?.requires?.[ev.at];
   if (!req || ev.dir !== folderOf(s, ev.lesson)) return;
-  if (s.prereqs[ev.lesson]?.dir !== ev.dir) s.prereqs[ev.lesson] = { dir: ev.dir, met: {} };
+  if (s.prereqs[ev.lesson]?.dir !== ev.dir)
+    s.prereqs[ev.lesson] = { dir: ev.dir, met: {} };
   const asked = ev.asked ?? 0;
   if (asked < (s.prereqs[ev.lesson].met[ev.at]?.asked ?? 0)) return;
-  const r = req.path ? judge({ kind: 'file', path: req.path }, ev.read) : { pass: ev.pass ?? null, hint: req.probe ? ev.hint ?? '' : lessonOf(s, req.lesson).items[req.item] };
+  const r = req.path
+    ? judge({ kind: "file", path: req.path }, ev.read)
+    : {
+        pass: ev.pass ?? null,
+        hint: req.probe
+          ? (ev.hint ?? "")
+          : lessonOf(s, req.lesson).items[req.item],
+      };
   s.prereqs[ev.lesson].met[ev.at] = { pass: r.pass, hint: r.hint, asked };
 }
 // The intro's prerequisites that failed in the lesson's folder now, with
@@ -381,24 +590,52 @@ function onPrereq(s, ev) {
 export function unmet(s) {
   const r = s.prereqs[s.lesson];
   if (!r || r.dir !== folderOf(s) || asksFolder(s)) return [];
-  return (contentOf(s)?.requires ?? []).flatMap((req, k) => (r.met[k]?.pass === false ? [{ ...req, hint: r.met[k].hint, offer: Boolean(req.lesson) && folderOf(s, req.lesson) === r.dir }] : []));
+  return (contentOf(s)?.requires ?? []).flatMap((req, k) =>
+    r.met[k]?.pass === false
+      ? [
+          {
+            ...req,
+            hint: r.met[k].hint,
+            offer: Boolean(req.lesson) && folderOf(s, req.lesson) === r.dir,
+          },
+        ]
+      : [],
+  );
 }
 // The lesson the intro offers to open first: the first failed
 // prerequisite's that can set it right.
 export const offered = (s) => unmet(s).find((r) => r.offer)?.lesson ?? null;
 // The intro's start options, and, where a prerequisite failed, its lesson.
-export const introOptions = (s) => ['start', 'less', ...(offered(s) ? ['first'] : [])];
-// Each You need line with the commands it names that main found on no PATH
-// folder. Nothing until main has looked.
-export const missingNeeds = (s) => needsHere(s).map((n) => ({ quote: n.quote, names: n.commands.filter((c) => s.commands[c] === false) })).filter((n) => n.names.length);
-// What main found wrong with the lesson's work folder, where it isn't the
+export const introOptions = (s) => [
+  "start",
+  "less",
+  ...(offered(s) ? ["first"] : []),
+];
+// Each You need line with the commands it names that the host found on no PATH
+// folder. Nothing until the host has looked.
+export const missingNeeds = (s) =>
+  needsHere(s)
+    .map((n) => ({
+      quote: n.quote,
+      names: n.commands.filter((c) => s.commands[c] === false),
+    }))
+    .filter((n) => n.names.length);
+// What the host found wrong with the lesson's work folder, where it isn't the
 // copy (ticket 86): 'missing', 'gitBroken', 'notGit' or 'noPractice'. Null
-// until main has looked, and where all is well.
+// until the host has looked, and where all is well.
 export function folderProblem(s) {
   const dir = folderOf(s);
   const found = dir && dir !== s.facts.root ? s.probes[dir] : null;
   if (!found) return null;
-  return found.missing ? 'missing' : found.gitBroken ? 'gitBroken' : !found.git ? 'notGit' : !found.practice ? 'noPractice' : null;
+  return found.missing
+    ? "missing"
+    : found.gitBroken
+      ? "gitBroken"
+      : !found.git
+        ? "notGit"
+        : !found.practice
+          ? "noPractice"
+          : null;
 }
 // The page's You need line for the learner's own repository (ticket 179),
 // where the lesson runs in its level's work folder and that folder is set
@@ -407,24 +644,28 @@ export function folderProblem(s) {
 export function repoNeed(s) {
   const k = folderKey(s);
   const dir = k && k === levelKey(s) ? s.folders[k] : null;
-  return dir && dir !== s.facts.root ? contentOf(s)?.intro['need-repo'] ?? null : null;
+  return dir && dir !== s.facts.root
+    ? (contentOf(s)?.intro["need-repo"] ?? null)
+    : null;
 }
 // What the intro has to say before the learner starts, a note each: the
 // work folder's problem, the page's line for the learner's repository, on
 // native Windows the page's note, the commands missing, and each
 // prerequisite that failed. n shows them all.
 export const introNotes = (s) => [
-  ...(!asksFolder(s) && folderProblem(s) ? ['folder'] : []),
-  ...(repoNeed(s) ? ['repo'] : []),
-  ...(s.facts.win32 && contentOf(s)?.intro['win-note'] ? ['win'] : []),
-  ...(missingNeeds(s).length ? ['needs'] : []),
-  ...unmet(s).map(() => 'prereq'),
+  ...(!asksFolder(s) && folderProblem(s) ? ["folder"] : []),
+  ...(repoNeed(s) ? ["repo"] : []),
+  ...(s.facts.win32 && contentOf(s)?.intro["win-note"] ? ["win"] : []),
+  ...(missingNeeds(s).length ? ["needs"] : []),
+  ...unmet(s).map(() => "prereq"),
 ];
 
 // ---- hints -------------------------------------------------------------------
-// The status the hints and the key bar answer to: while r's run goes, the one
-// r put "Checking" over, so an open hint, h and the keys stay as they were.
-export const hintStatus = (st) => (st.status === 'opening' && st.before) || st.status;
+// The status the hints and the actions answer to: while a check run goes, the
+// one it put "Checking" over, so an open hint and the actions stay as they
+// were.
+export const hintStatus = (st) =>
+  (st.status === "opening" && st.before) || st.status;
 
 // Point, then teach, then the exact command after a y/n: the check's own
 // question for its FAIL message first, the lesson's words next, the bottom
@@ -437,18 +678,20 @@ export function rungsOf(s) {
   let bottom = [];
   const hideRuns = hidesRuns(s);
   // A hidden code block waits there whole, as the card would show it.
-  const runs = beat.lines.filter((l) => ['run', 'code'].includes(l.key)).map((l) => (l.key === 'code' ? l : { text: l.text, win: l.win }));
-  if (hintStatus(st) === 'fail' && st.fail?.item) {
+  const runs = beat.lines
+    .filter((l) => ["run", "code"].includes(l.key))
+    .map((l) => (l.key === "code" ? l : { text: l.text, win: l.win }));
+  if (hintStatus(st) === "fail" && st.fail?.item) {
     const ladder = lesson.ladder.find((l) => l.item === st.fail.item);
     const narrow = ladder?.narrow.find((n) => st.fail.hint.includes(n.part));
-    if (narrow) rungs.push({ kind: 'ask', text: narrow.question });
-    rungs.push({ kind: 'check', text: st.fail.hint });
-    for (const h of ladder?.hints ?? []) rungs.push({ kind: 'quote', text: h });
+    if (narrow) rungs.push({ kind: "ask", text: narrow.question });
+    rungs.push({ kind: "check", text: st.fail.hint });
+    for (const h of ladder?.hints ?? []) rungs.push({ kind: "quote", text: h });
     bottom = ladder?.bottom ?? [];
   }
-  for (const h of beat.hints) rungs.push({ kind: 'quote', text: h });
+  for (const h of beat.hints) rungs.push({ kind: "quote", text: h });
   if (!bottom.length) bottom = [...(hideRuns ? runs : []), ...beat.bottom];
-  if (bottom.length) rungs.push({ kind: 'bottom', lines: bottom });
+  if (bottom.length) rungs.push({ kind: "bottom", lines: bottom });
   return rungs;
 }
 
@@ -461,12 +704,17 @@ export function backTo(s) {
   if (!onCard(s) || isDone(s.beat)) return null;
   const st = s.beat;
   const steps = stepsOf(s);
-  const item = hintStatus(st) === 'fail' ? st.fail?.item : null;
-  const ladder = item ? contentOf(s).ladder.find((l) => l.item === item)?.back : null;
-  const part = (back) => steps.find((x) => x.id === back?.step)?.part === stepOf(s).part;
+  const item = hintStatus(st) === "fail" ? st.fail?.item : null;
+  const ladder = item
+    ? contentOf(s).ladder.find((l) => l.item === item)?.back
+    : null;
+  const part = (back) =>
+    steps.find((x) => x.id === back?.step)?.part === stepOf(s).part;
   const back = beatOf(s).back ?? (part(ladder) ? ladder : null);
   const at = back ? steps.findIndex((x) => x.id === back.step) : -1;
-  return at >= 0 && at < s.pos.step ? { ...back, at, title: steps[at].title } : null;
+  return at >= 0 && at < s.pos.step
+    ? { ...back, at, title: steps[at].title }
+    : null;
 }
 // Where e goes back offers it: on the same-answer note, or on the hint
 // ladder's last rung while it is open.
@@ -474,8 +722,10 @@ export function backOffered(s) {
   const back = backTo(s);
   const st = s.beat;
   if (!back || st.confirm) return null;
-  const note = st.same && hintStatus(st) === 'fail';
-  return note || (st.rung >= 0 && st.rung === rungsOf(s).length - 1) ? back : null;
+  const note = st.same && hintStatus(st) === "fail";
+  return note || (st.rung >= 0 && st.rung === rungsOf(s).length - 1)
+    ? back
+    : null;
 }
 
 // e: back to the step a back line names. Every saved file and done tick
@@ -485,31 +735,49 @@ function goBack(s, back, effects) {
   const p = s.progress[s.lesson];
   const steps = stepsOf(s);
   const opensAt = (key) => {
-    const id = key.slice(0, key.lastIndexOf('.'));
-    const beat = steps.find((x) => x.id === id)?.beats[Number(key.slice(key.lastIndexOf('.') + 1))];
+    const id = key.slice(0, key.lastIndexOf("."));
+    const beat = steps.find((x) => x.id === id)?.beats[
+      Number(key.slice(key.lastIndexOf(".") + 1))
+    ];
     return steps.findIndex((x) => x.id === (beat?.verify.since ?? id));
   };
-  p.stamps = Object.fromEntries(Object.entries(p.stamps).filter(([k]) => opensAt(k) < back.at));
+  p.stamps = Object.fromEntries(
+    Object.entries(p.stamps).filter(([k]) => opensAt(k) < back.at),
+  );
   openStep(s, back.at, effects);
 }
 
 // A GUIDED step met with less help: its run lines and code block leave the
 // card for the bottom rung.
-export const hidesRuns = (s) => tierOf(s) !== 'guided' && authoredTier(s) === 'guided';
+export const hidesRuns = (s) =>
+  tierOf(s) !== "guided" && authoredTier(s) === "guided";
 
 // What the learner tries before h opens a hint at CHALLENGE: r on a beat the
 // app checks, a pick on a question with a wrong answer, or nothing (null)
 // where nothing can fail, so h answers at once.
 export function tryFirst(s) {
   const beat = beatOf(s);
-  if (beat.verify.kind === 'check' || beat.verify.kind === 'probe' || GIT.has(beat.verify.kind) || READS.has(beat.verify.kind)) return 'r';
-  const canMiss = beat.options.some((o) => o.kind === 'wrong' || o.kind === 'decoy');
-  return beat.ask && beat.kind !== 'predict' && beat.kind !== 'type' && canMiss ? 'pick' : null;
+  if (
+    beat.verify.kind === "check" ||
+    beat.verify.kind === "probe" ||
+    GIT.has(beat.verify.kind) ||
+    READS.has(beat.verify.kind)
+  )
+    return "r";
+  const canMiss = beat.options.some(
+    (o) => o.kind === "wrong" || o.kind === "decoy",
+  );
+  return beat.ask && beat.kind !== "predict" && beat.kind !== "type" && canMiss
+    ? "pick"
+    : null;
 }
 
 // A beat on screen that waits on a long run (ticket 103): the idle offer
 // never fires there, so the motion layer never goes still for it.
-export const longWait = (s) => onCard(s) && !['done', 'already'].includes(s.beat.status) && Boolean(beatOf(s).wait);
+export const longWait = (s) =>
+  onCard(s) &&
+  !["done", "already"].includes(s.beat.status) &&
+  Boolean(beatOf(s).wait);
 
 // Recall while a long run works (ticket 150): the warm-up a long wait's box
 // offers, one of this lesson's pool that its warm-ups did not show and the
@@ -518,27 +786,40 @@ export const longWait = (s) => onCard(s) && !['done', 'already'].includes(s.beat
 // (ticket 104): it has no right answer to recall. Never scored.
 function whileRunsPick(s) {
   const p = s.progress[s.lesson];
-  const missed = (w) => w.beats.some((b) => s.missed.includes(b.skill ?? w.skill));
-  const pool = contentOf(s).warmup.filter((w) => !p.warm.includes(w.id) && !s.whileShown.includes(`${s.lesson}.${w.id}`) && w.beats[0].ask && w.beats[0].kind !== 'type' && w.beats[0].options.length && !isChoice(w.beats[0]));
-  return [...pool.filter(missed), ...pool.filter((w) => !missed(w))][0]?.id ?? null;
+  const missed = (w) =>
+    w.beats.some((b) => s.missed.includes(b.skill ?? w.skill));
+  const pool = contentOf(s).warmup.filter(
+    (w) =>
+      !p.warm.includes(w.id) &&
+      !s.whileShown.includes(`${s.lesson}.${w.id}`) &&
+      w.beats[0].ask &&
+      w.beats[0].kind !== "type" &&
+      w.beats[0].options.length &&
+      !isChoice(w.beats[0]),
+  );
+  return (
+    [...pool.filter(missed), ...pool.filter((w) => !missed(w))][0]?.id ?? null
+  );
 }
 // The box's warm-up step, its first beat and the answer picked (an option's
 // index, or null), while the long wait lasts; else null.
 export function whileRunsOf(s) {
   const id = longWait(s) ? s.beat.whileRuns?.id : null;
   const step = id && contentOf(s).warmup.find((w) => w.id === id);
-  return step ? { step, beat: step.beats[0], answer: s.beat.whileRuns.answer } : null;
+  return step
+    ? { step, beat: step.beats[0], answer: s.beat.whileRuns.answer }
+    : null;
 }
 // A question still open in the box: rule 3 holds ambient motion beside it.
 export const whileRunsOpen = (s) => whileRunsOf(s)?.answer === null;
 
 export function hintAvailable(s) {
-  if (!onCard(s) || ['done', 'already'].includes(s.beat.status)) return false;
-  if (beatOf(s).kind === 'type') return false;
+  if (!onCard(s) || ["done", "already"].includes(s.beat.status)) return false;
+  if (beatOf(s).kind === "type") return false;
   const rungs = rungsOf(s);
   if (!rungs.length || s.beat.rung >= rungs.length - 1) return false;
   // A FAIL, r, a first wrong pick or two quiet minutes set `unlocked`.
-  if (tierOf(s) === 'challenge' && tryFirst(s)) return s.beat.unlocked;
+  if (tierOf(s) === "challenge" && tryFirst(s)) return s.beat.unlocked;
   return true;
 }
 
@@ -550,27 +831,52 @@ function openBeat(s, effects) {
   p.step = step.id;
   p.beat = s.pos.beat;
   markEased(s, s.pos.step);
-  s.beat = { status: 'waiting', rung: -1, confirm: false, wrongs: [], answer: null, revealed: false, typedWrong: 0, feedback: null, idle: false, unlocked: false, explicit: false, ended: false, opened: s.now, eased: Boolean(p.easedSteps[step.id]) };
+  s.beat = {
+    status: "waiting",
+    rung: -1,
+    confirm: false,
+    wrongs: [],
+    answer: null,
+    revealed: false,
+    typedWrong: 0,
+    feedback: null,
+    idle: false,
+    unlocked: false,
+    explicit: false,
+    ended: false,
+    opened: s.now,
+    eased: Boolean(p.easedSteps[step.id]),
+  };
   const offer = beat.wait ? whileRunsPick(s) : null;
   if (offer) s.beat.whileRuns = { id: offer, answer: null };
   s.lastActivity = s.now;
   if (beat.codespace && s.facts.codespace) {
-    s.beat.status = 'already';
+    s.beat.status = "already";
     s.beat.codespace = true;
-  } else if (beat.verify.kind === 'check') {
-    s.beat.status = 'opening';
-    effects.push({ type: 'check', lesson: s.lesson, items: beat.verify.all ? null : beat.verify.items, evidence: beat.evidence ?? null, dir: folderOf(s, s.lesson, step) });
+  } else if (beat.verify.kind === "check") {
+    s.beat.status = "opening";
+    effects.push({
+      type: "check",
+      lesson: s.lesson,
+      items: beat.verify.all ? null : beat.verify.items,
+      evidence: beat.evidence ?? null,
+      dir: folderOf(s, s.lesson, step),
+    });
   } else if (READS.has(beat.verify.kind)) {
-    s.beat.status = 'opening';
-    effects.push({ type: 'file', path: beat.verify.path, dir: folderOf(s, s.lesson, step) });
+    s.beat.status = "opening";
+    effects.push({
+      type: "file",
+      path: beat.verify.path,
+      dir: folderOf(s, s.lesson, step),
+    });
   } else if (GIT.has(beat.verify.kind)) {
-    s.beat.status = 'opening';
+    s.beat.status = "opening";
     effects.push(gitAsk(watching(s)));
-  } else if (beat.verify.kind === 'probe') {
-    s.beat.status = 'opening';
+  } else if (beat.verify.kind === "probe") {
+    s.beat.status = "opening";
     effects.push(probeAsk(watching(s)));
   }
-  effects.push({ type: 'save' });
+  effects.push({ type: "save" });
 }
 
 // A fresh check compares its file with how it was when its step opened (or
@@ -580,8 +886,10 @@ function openBeat(s, effects) {
 // or what git status lists (ticket 105).
 const stampOf = (b) => {
   const v = b.verify;
-  if (v.kind === 'probe') return v.fresh ? { probe: { name: v.name, args: v.args } } : null;
-  if (SINCE_GIT.has(v.kind)) return { git: v.kind === 'head-moved' ? 'head' : 'status' };
+  if (v.kind === "probe")
+    return v.fresh ? { probe: { name: v.name, args: v.args } } : null;
+  if (SINCE_GIT.has(v.kind))
+    return { git: v.kind === "head-moved" ? "head" : "status" };
   return v.fresh ? { path: b.evidence } : null;
 };
 function stampFresh(s, effects) {
@@ -591,7 +899,13 @@ function stampFresh(s, effects) {
     other.beats.forEach((b, i) => {
       const key = `${other.id}.${i}`;
       const what = stampOf(b);
-      if (what && (b.verify.since ?? other.id) === step.id && !(key in stamps)) effects.push({ type: 'stamp', key, ...what, dir: folderOf(s, s.lesson, other) });
+      if (what && (b.verify.since ?? other.id) === step.id && !(key in stamps))
+        effects.push({
+          type: "stamp",
+          key,
+          ...what,
+          dir: folderOf(s, s.lesson, other),
+        });
     });
   }
 }
@@ -615,9 +929,15 @@ export function easeLands(s, index, tiers = tiersOf(s)) {
   const steps = stepsOf(s);
   const step = steps[index];
   const p = s.progress[s.lesson];
-  if (step.part === 'Warm-up' || p.done.includes(step.id) || p.bottomAt === step.id || p.easedSteps[step.id]) return false;
+  if (
+    step.part === "Warm-up" ||
+    p.done.includes(step.id) ||
+    p.bottomAt === step.id ||
+    p.easedSteps[step.id]
+  )
+    return false;
   if (moreHelp(p, steps)[index]) return false;
-  return tiers[index] !== 'guided';
+  return tiers[index] !== "guided";
 }
 
 function openStep(s, index, effects) {
@@ -633,16 +953,16 @@ function openStep(s, index, effects) {
   // a step that is harder on its own gets a line on its card instead.
   const { harder, stays } = climb(s, index, tiers, steps);
   if (harder && stays && !p.levels.includes(tiers[index])) {
-    s.phase = 'step-down';
+    s.phase = "step-down";
     s.levelTo = tiers[index];
     s.levelFrom = prev;
     s.beat = null;
     p.step = stepOf(s).id;
     p.beat = 0;
-    effects.push({ type: 'save' });
+    effects.push({ type: "save" });
     return;
   }
-  s.phase = 'playing';
+  s.phase = "playing";
   openBeat(s, effects);
 }
 
@@ -656,7 +976,7 @@ function climb(s, index, tiers = tiersOf(s), steps = stepsOf(s)) {
   const harder = Boolean(prev) && rank(tiers[index]) > rank(prev);
   const pending = new Set(s.eased);
   const stays = steps.slice(index + 1).every((step, k) => {
-    if (step.part === 'Warm-up') return true;
+    if (step.part === "Warm-up") return true;
     let r = rank(tiers[index + 1 + k]);
     if (pending.has(step.skill) && easeLands(s, index + 1 + k, tiers)) {
       pending.delete(step.skill);
@@ -670,7 +990,7 @@ function climb(s, index, tiers = tiersOf(s), steps = stepsOf(s)) {
 // The line a step that is harder on its own shows instead of a level-up:
 // its tier, or null.
 export function stepNote(s) {
-  if (!onCard(s) || stepOf(s).part === 'Warm-up') return null;
+  if (!onCard(s) || stepOf(s).part === "Warm-up") return null;
   const { harder, stays } = climb(s, s.pos.step);
   return harder && !stays ? tierOf(s) : null;
 }
@@ -693,11 +1013,16 @@ export function asStarted(s) {
 
 function startLesson(s, id, effects) {
   s.lesson = id;
-  s.away = false;
   const l = lessonOf(s, id);
   if (!l.content) {
-    s.phase = 'overview';
-    if (folderOf(s, id)) effects.push({ type: 'check', lesson: id, items: null, dir: folderOf(s, id) });
+    s.phase = "overview";
+    if (folderOf(s, id))
+      effects.push({
+        type: "check",
+        lesson: id,
+        items: null,
+        dir: folderOf(s, id),
+      });
     return;
   }
   const p = s.progress[id];
@@ -705,10 +1030,15 @@ function startLesson(s, id, effects) {
   const at = steps.findIndex((x) => x.id === p.step);
   if (at !== -1 && !p.complete) {
     const beat = p.beat >= 0 && p.beat < steps[at].beats.length ? p.beat : 0;
-    s.pos = { step: at, beat: beatShown(p, steps[at].beats[beat]) ? beat : shownBefore(p, steps[at], beat) };
-    s.phase = 'playing';
+    s.pos = {
+      step: at,
+      beat: beatShown(p, steps[at].beats[beat])
+        ? beat
+        : shownBefore(p, steps[at], beat),
+    };
+    s.phase = "playing";
     openBeat(s, effects);
-  } else s.phase = 'overview';
+  } else s.phase = "overview";
 }
 
 function finishStep(s, effects) {
@@ -742,9 +1072,9 @@ function nextStep(s, effects) {
   if (s.pos.step + 1 >= steps.length) {
     p.complete = true;
     p.step = null;
-    s.phase = 'complete';
+    s.phase = "complete";
     s.beat = null;
-    effects.push({ type: 'save' });
+    effects.push({ type: "save" });
     return;
   }
   openStep(s, s.pos.step + 1, effects);
@@ -766,8 +1096,11 @@ function back(s, effects) {
     openBeat(s, effects);
   } else if (s.pos.step > 0) {
     const prev = stepsOf(s)[s.pos.step - 1];
-    s.pos = { step: s.pos.step - 1, beat: shownBefore(p, prev, prev.beats.length) };
-    s.phase = 'playing';
+    s.pos = {
+      step: s.pos.step - 1,
+      beat: shownBefore(p, prev, prev.beats.length),
+    };
+    s.phase = "playing";
     openBeat(s, effects);
   }
 }
@@ -779,8 +1112,12 @@ function back(s, effects) {
 // longer fill the place). A beat that names the skill it recalls counts
 // under that skill, as its miss and its recall do.
 export function pickWarmups(s, id = s.lesson) {
-  const missed = (w) => w.beats.some((b) => s.missed.includes(b.skill ?? w.skill));
-  return contentOf(s, id).warmup.filter(missed).slice(0, WARMUPS).map((w) => w.id);
+  const missed = (w) =>
+    w.beats.some((b) => s.missed.includes(b.skill ?? w.skill));
+  return contentOf(s, id)
+    .warmup.filter(missed)
+    .slice(0, WARMUPS)
+    .map((w) => w.id);
 }
 function chooseWarmups(s) {
   s.progress[s.lesson].warm = pickWarmups(s);
@@ -797,13 +1134,15 @@ const skillOf = (s) => beatOf(s).skill ?? stepOf(s).skill;
 const warmKey = (s) => `${s.lesson}.${stepOf(s).id}`;
 function firstAnswer(s) {
   const p = s.progress[s.lesson];
-  if (stepOf(s).part !== 'Warm-up' || s.answeredNow.includes(warmKey(s))) return false;
+  if (stepOf(s).part !== "Warm-up" || s.answeredNow.includes(warmKey(s)))
+    return false;
   // On a first play the done list holds only this play's steps; a lesson
   // played again keeps its old ticks, so there it tells nothing.
   return p.complete || !p.done.includes(stepOf(s).id);
 }
 function answered(s) {
-  if (stepOf(s).part === 'Warm-up' && !s.answeredNow.includes(warmKey(s))) s.answeredNow.push(warmKey(s));
+  if (stepOf(s).part === "Warm-up" && !s.answeredNow.includes(warmKey(s)))
+    s.answeredNow.push(warmKey(s));
 }
 function missed(s, effects) {
   const skill = skillOf(s);
@@ -811,14 +1150,20 @@ function missed(s, effects) {
   if (firstAnswer(s) && !s.eased.includes(skill)) s.eased.push(skill);
   if (!s.missedNow.includes(skill)) s.missedNow.push(skill);
   answered(s);
-  effects.push({ type: 'save' });
+  effects.push({ type: "save" });
 }
 function recalled(s) {
   const st = s.beat;
   const skill = skillOf(s);
   const first = firstAnswer(s);
   answered(s);
-  if (!first || st.wrongs.length || st.typedWrong || s.missedNow.includes(skill)) return;
+  if (
+    !first ||
+    st.wrongs.length ||
+    st.typedWrong ||
+    s.missedNow.includes(skill)
+  )
+    return;
   s.missed = s.missed.filter((k) => k !== skill);
   s.eased = s.eased.filter((k) => k !== skill);
   const p = s.progress[s.lesson];
@@ -835,27 +1180,30 @@ function pick(s, index, effects) {
   const opt = beat.options[index];
   if (!opt || st.answer) return;
   const p = s.progress[s.lesson];
-  if (beat.kind === 'predict') {
+  if (beat.kind === "predict") {
     st.answer = { index, kind: opt.kind };
     p.answers[answerKey(s)] = opt.text;
-    st.status = 'done';
-    effects.push({ type: 'save' });
+    st.status = "done";
+    effects.push({ type: "save" });
     return;
   }
-  if (opt.kind === 'right' || opt.kind === 'option' || opt.kind === 'other') {
+  if (opt.kind === "right" || opt.kind === "option" || opt.kind === "other") {
     st.answer = { index, kind: opt.kind };
     // Saved as a guess is (ticket 104): a when line reads a choice's pick,
     // and a changed pick changes which beats after it show.
     p.answers[answerKey(s)] = opt.text;
-    st.feedback = opt.kind === 'right' ? { kind: 'right' } : { kind: opt.kind, because: opt.because };
-    st.status = 'done';
-    if (opt.kind === 'right') recalled(s);
-    effects.push({ type: 'save' });
+    st.feedback =
+      opt.kind === "right"
+        ? { kind: "right" }
+        : { kind: opt.kind, because: opt.because };
+    st.status = "done";
+    if (opt.kind === "right") recalled(s);
+    effects.push({ type: "save" });
     return;
   }
   // Saying it went wrong is a try too, so hints may open.
-  if (opt.kind === 'stuck') {
-    st.feedback = { kind: 'stuck', because: opt.because };
+  if (opt.kind === "stuck") {
+    st.feedback = { kind: "stuck", because: opt.because };
     st.unlocked = true;
     return;
   }
@@ -865,7 +1213,7 @@ function pick(s, index, effects) {
   st.unlocked = true;
   missed(s, effects);
   if (st.wrongs.length >= 2) return reveal(s, effects);
-  st.feedback = { kind: 'wrong', because: opt.because, point: beat.point };
+  st.feedback = { kind: "wrong", because: opt.because, point: beat.point };
 }
 
 function reveal(s, effects) {
@@ -873,15 +1221,24 @@ function reveal(s, effects) {
   const st = s.beat;
   st.revealed = true;
   missed(s, effects);
-  st.answer = { index: beat.options.findIndex((o) => o.kind === 'right'), kind: 'revealed' };
-  st.feedback = { kind: 'revealed' };
-  st.status = 'done';
-  effects.push({ type: 'save' });
+  st.answer = {
+    index: beat.options.findIndex((o) => o.kind === "right"),
+    kind: "revealed",
+  };
+  st.feedback = { kind: "revealed" };
+  st.status = "done";
+  effects.push({ type: "save" });
 }
 
 // Case, spaces, a leading slash and the + or - between keys don't matter, and
 // Escape is Esc.
-export const normalize = (text) => text.trim().toLowerCase().replace(/[+\-\s]+/g, '').replace(/^\//, '').replace(/^escape$/, 'esc');
+export const normalize = (text) =>
+  text
+    .trim()
+    .toLowerCase()
+    .replace(/[+\-\s]+/g, "")
+    .replace(/^\//, "")
+    .replace(/^escape$/, "esc");
 
 function submitTyped(s, text, effects) {
   const beat = beatOf(s);
@@ -889,33 +1246,51 @@ function submitTyped(s, text, effects) {
   const said = normalize(text);
   if (!said) return reveal(s, effects);
   if (beat.accept.some((a) => normalize(a) === said)) {
-    st.status = 'done';
-    st.feedback = { kind: 'right' };
+    st.status = "done";
+    st.feedback = { kind: "right" };
     recalled(s);
-    effects.push({ type: 'save' });
+    effects.push({ type: "save" });
     return;
   }
   st.typedWrong += 1;
   missed(s, effects);
   if (st.typedWrong >= 2) return reveal(s, effects);
-  const known = beat.options.find((o) => o.kind === 'wrong' && normalize(o.text) === said);
-  st.feedback = known ? { kind: 'wrong', because: known.because } : { kind: 'wrong', hint: beat.hints[0] };
+  const known = beat.options.find(
+    (o) => o.kind === "wrong" && normalize(o.text) === said,
+  );
+  st.feedback = known
+    ? { kind: "wrong", because: known.because }
+    : { kind: "wrong", hint: beat.hints[0] };
 }
 
 // ---- checks and git ----------------------------------------------------------
-export const RESULTS = ['check', 'check-error', 'file', 'git', 'git-error', 'probe', 'probe-error'];
+export const RESULTS = [
+  "check",
+  "check-error",
+  "file",
+  "git",
+  "git-error",
+  "probe",
+  "probe-error",
+];
 
-// `read` is the bytes of the beat's evidence file, as main read it.
+// `read` is the bytes of the beat's evidence file, as the host read it.
 function onCheck(s, ev, effects, rRuns) {
   ev = { ...ev, evidence: evidenceOf(ev.read) };
-  s.checks[ev.lesson] = { items: keptSlow(s, ev), evidence: ev.evidence, error: null };
+  s.checks[ev.lesson] = {
+    items: keptSlow(s, ev),
+    evidence: ev.evidence,
+    error: null,
+  };
   checkOnlyDone(s, ev, effects);
   if (rRuns || !onCard(s) || ev.lesson !== s.lesson) return;
   const beat = beatOf(s);
-  if (beat.verify.kind !== 'check') return;
+  if (beat.verify.kind !== "check") return;
   const st = s.beat;
-  if (['done', 'already'].includes(st.status)) return;
-  const indexes = beat.verify.all ? lessonOf(s).items.map((_, i) => i) : beat.verify.items;
+  if (["done", "already"].includes(st.status)) return;
+  const indexes = beat.verify.all
+    ? lessonOf(s).items.map((_, i) => i)
+    : beat.verify.items;
   const wanted = indexes.map((i) => ev.items.find((it) => it.index === i));
   // A result that doesn't cover every item decides nothing.
   if (wanted.some((it) => !it)) return;
@@ -924,12 +1299,24 @@ function onCheck(s, ev, effects, rRuns) {
   // any message about the items that pass now. A FAIL about a slow item stays
   // with its hints: a run without that item can't tell whether it passes now.
   if (!failing && wanted.some((it) => it.slow)) {
-    if (st.status === 'fail' && wanted.some((it) => it.slow && it.text === st.fail?.item)) {
+    if (
+      st.status === "fail" &&
+      wanted.some((it) => it.slow && it.text === st.fail?.item)
+    ) {
       st.slowWait = true;
       return;
     }
     if (st.baseline === undefined) st.baseline = null;
-    Object.assign(st, { status: 'waiting', slowWait: true, fail: null, error: null, rung: -1, confirm: false, explicit: false, same: false });
+    Object.assign(st, {
+      status: "waiting",
+      slowWait: true,
+      fail: null,
+      error: null,
+      rung: -1,
+      confirm: false,
+      explicit: false,
+      same: false,
+    });
     return;
   }
   st.slowWait = false;
@@ -941,7 +1328,9 @@ function onCheck(s, ev, effects, rRuns) {
 function keptSlow(s, ev) {
   if (lessonOf(s, ev.lesson)?.content) return ev.items;
   const before = s.checks[ev.lesson]?.items ?? [];
-  return ev.items.map((it) => (it.slow ? before.find((b) => b.index === it.index && !b.slow) ?? it : it));
+  return ev.items.map((it) =>
+    it.slow ? (before.find((b) => b.index === it.index && !b.slow) ?? it) : it,
+  );
 }
 
 // A lesson with no lesson file is complete once a full check passes: every
@@ -951,9 +1340,12 @@ function checkOnlyDone(s, ev, effects) {
   const l = lessonOf(s, ev.lesson);
   const p = s.progress[ev.lesson];
   if (!l || l.content || p.complete) return;
-  if (!l.items.every((_, i) => ev.items.some((it) => it.index === i && it.pass))) return;
+  if (
+    !l.items.every((_, i) => ev.items.some((it) => it.index === i && it.pass))
+  )
+    return;
   p.complete = true;
-  effects.push({ type: 'save' });
+  effects.push({ type: "save" });
 }
 
 // Where a fresh beat's file `ev.read` starts being new (holds.mjs grewFrom):
@@ -962,7 +1354,10 @@ function checkOnlyDone(s, ev, effects) {
 // so the first answer is judged as every later one is.
 export function readFrom(s, ev) {
   if (!beatOf(s).verify.fresh || !ev.read) return 0;
-  return grewFrom(s.progress[s.lesson].stamps[answerKey(s)] ?? ev.stamp, ev.read);
+  return grewFrom(
+    s.progress[s.lesson].stamps[answerKey(s)] ?? ev.stamp,
+    ev.read,
+  );
 }
 
 // A file the beat reads itself, by what it holds now (holds.mjs): `read`
@@ -971,9 +1366,19 @@ export function readFrom(s, ev) {
 function onFile(s, ev, effects, rRuns) {
   if (rRuns || !onCard(s)) return;
   const v = beatOf(s).verify;
-  if (!READS.has(v.kind) || ev.path !== v.path || ['done', 'already'].includes(s.beat.status)) return;
+  if (
+    !READS.has(v.kind) ||
+    ev.path !== v.path ||
+    ["done", "already"].includes(s.beat.status)
+  )
+    return;
   const r = judge(v, ev.read, readFrom(s, ev));
-  decide(s, { ...ev, evidence: r.evidence }, effects, r.pass ? null : { hint: r.hint });
+  decide(
+    s,
+    { ...ev, evidence: r.evidence },
+    effects,
+    r.pass ? null : { hint: r.hint },
+  );
 }
 
 // Turns a result into the beat's status. `failing` is null when it passes.
@@ -989,10 +1394,10 @@ function decide(s, ev, effects, failing) {
     const stamps = s.progress[s.lesson].stamps;
     const key = answerKey(s);
     if (!(key in stamps)) {
-      stamps[key] = ev.stamp ?? '';
-      effects.push({ type: 'save' });
+      stamps[key] = ev.stamp ?? "";
+      effects.push({ type: "save" });
     }
-    stale = (ev.stamp ?? '') === stamps[key];
+    stale = (ev.stamp ?? "") === stamps[key];
   }
   const explicit = st.explicit;
   st.explicit = false;
@@ -1001,19 +1406,24 @@ function decide(s, ev, effects, failing) {
   // changed between them: the learner redid the step and the check says the
   // same, so the cause is likely earlier (ticket 192). Only a result that
   // carries its file's state (`stamp`) tells a redo from a poll or an r.
-  const stamp = typeof ev.stamp === 'string' ? ev.stamp : null;
-  const redone = Boolean(failing) && stamp !== null && st.last?.hint === failing.hint && st.last.stamp !== null && st.last.stamp !== stamp;
+  const stamp = typeof ev.stamp === "string" ? ev.stamp : null;
+  const redone =
+    Boolean(failing) &&
+    stamp !== null &&
+    st.last?.hint === failing.hint &&
+    st.last.stamp !== null &&
+    st.last.stamp !== stamp;
   st.last = failing ? { hint: failing.hint, stamp } : null;
   if (!failing) st.same = false;
   if (!failing && stale) {
     if (st.baseline === undefined) st.baseline = null;
-    st.status = 'waiting';
+    st.status = "waiting";
     st.stale = true;
     return;
   }
   st.stale = false;
   if (!failing) {
-    st.status = st.baseline === undefined ? 'already' : 'done';
+    st.status = st.baseline === undefined ? "already" : "done";
     // The run that passed the lesson's whole check: its done line counts
     // these, not a later poll's, which leaves the slow items out.
     if (beat.verify.all) st.passed = ev.items;
@@ -1023,20 +1433,20 @@ function decide(s, ev, effects, failing) {
     st.feedback = null;
     st.rung = -1;
     st.confirm = false;
-    effects.push({ type: 'save' });
+    effects.push({ type: "save" });
     return;
   }
   // The first answer is what the learner starts from: no "not yet" for it.
   if (st.baseline === undefined) {
     st.baseline = failing.hint;
     if (!explicit) {
-      st.status = 'waiting';
+      st.status = "waiting";
       return;
     }
   }
   // Once a fail is on screen it follows the check; before that, a fail that
   // only repeats the first answer means nothing changed yet.
-  const shown = hintStatus(st) === 'fail';
+  const shown = hintStatus(st) === "fail";
   if (shown || failing.hint !== st.baseline || explicit) {
     if (st.fail?.hint !== failing.hint) {
       st.rung = -1;
@@ -1049,12 +1459,12 @@ function decide(s, ev, effects, failing) {
       st.same = true;
       st.sameShown = true;
     }
-    st.status = 'fail';
+    st.status = "fail";
     st.fail = failing;
     st.unlocked = true;
     st.idle = false;
     s.lastActivity = s.now;
-  } else st.status = 'waiting';
+  } else st.status = "waiting";
 }
 
 function onGit(s, ev, effects, rRuns) {
@@ -1064,32 +1474,42 @@ function onGit(s, ev, effects, rRuns) {
   if (rRuns || !onCard(s) || !GIT.has(beatOf(s).verify.kind)) return;
   const beat = beatOf(s);
   const st = s.beat;
-  if (['done', 'already'].includes(st.status)) return;
+  if (["done", "already"].includes(st.status)) return;
   // A beat that needs git status to list something starts from what it
   // lists first, as a check does.
   if (needsChange(beat.verify)) {
-    const r = judgeGit(beat.verify, ev, SINCE_GIT.has(beat.verify.kind) ? gitSince(s, ev, effects) : undefined);
+    const r = judgeGit(
+      beat.verify,
+      ev,
+      SINCE_GIT.has(beat.verify.kind) ? gitSince(s, ev, effects) : undefined,
+    );
     // Nothing changing is the work: the first look can say not yet.
-    if (beat.verify.kind === 'git-unchanged' && st.baseline === undefined) st.baseline = null;
-    return decide(s, { ...ev, evidence: r.evidence }, effects, r.pass ? null : { hint: r.hint });
+    if (beat.verify.kind === "git-unchanged" && st.baseline === undefined)
+      st.baseline = null;
+    return decide(
+      s,
+      { ...ev, evidence: r.evidence },
+      effects,
+      r.pass ? null : { hint: r.hint },
+    );
   }
   const listed = cleanListed(beat.verify, ev.paths);
   const clean = listed.length === 0;
   // With a done-label, the tree decides only after the learner says the
   // session has ended; before that it is shown live.
   if (beat.doneLabel && !st.ended) {
-    if (st.status === 'opening') st.status = 'waiting';
+    if (st.status === "opening") st.status = "waiting";
     return;
   }
   st.error = null;
   if (clean) {
-    st.status = 'done';
+    st.status = "done";
     st.rung = -1;
     st.confirm = false;
-    effects.push({ type: 'save' });
+    effects.push({ type: "save" });
     return;
   }
-  st.status = 'fail';
+  st.status = "fail";
   st.unlocked = true;
   st.fail = { paths: listed };
   st.explicit = false;
@@ -1103,10 +1523,14 @@ function gitSince(s, ev, effects) {
   const stamps = s.progress[s.lesson].stamps;
   const key = answerKey(s);
   if (!(key in stamps)) {
-    stamps[key] = v.kind === 'head-moved' ? ev.head ?? '' : statusStamp(ev.paths);
-    effects.push({ type: 'save' });
+    stamps[key] =
+      v.kind === "head-moved" ? (ev.head ?? "") : statusStamp(ev.paths);
+    effects.push({ type: "save" });
   }
-  return { stamp: stamps[key], n: stepsOf(s).findIndex((x) => x.id === (v.since ?? stepOf(s).id)) + 1 };
+  return {
+    stamp: stamps[key],
+    n: stepsOf(s).findIndex((x) => x.id === (v.since ?? stepOf(s).id)) + 1,
+  };
 }
 
 // What a git probe answered (ticket 105), for the probe beat on screen. A
@@ -1115,22 +1539,41 @@ function onProbe(s, ev, effects, rRuns) {
   if (rRuns || !onCard(s)) return;
   const beat = beatOf(s);
   const v = beat.verify;
-  if (v.kind !== 'probe' || ev.name !== v.name || !sameJson(ev.args, v.args) || ['done', 'already'].includes(s.beat.status)) return;
-  decide(s, { ...ev, path: beat.evidence, stamp: ev.state ?? null, evidence: ev.evidence ?? null }, effects, ev.pass ? null : { hint: ev.hint });
+  if (
+    v.kind !== "probe" ||
+    ev.name !== v.name ||
+    !sameJson(ev.args, v.args) ||
+    ["done", "already"].includes(s.beat.status)
+  )
+    return;
+  decide(
+    s,
+    {
+      ...ev,
+      path: beat.evidence,
+      stamp: ev.state ?? null,
+      evidence: ev.evidence ?? null,
+    },
+    effects,
+    ev.pass ? null : { hint: ev.hint },
+  );
 }
 
 // ---- the Learner's actions ---------------------------------------------------
-export const isDone = (st) => ['done', 'already'].includes(st?.status);
+export const isDone = (st) => ["done", "already"].includes(st?.status);
 // The y/n before the exact command: while it is up, only its answer acts.
 const yesNo = (s) => Boolean(s.beat?.confirm) && !isDone(s.beat);
 // On the card, its beat not done and no y/n up: where an answer acts.
 const answering = (s) => onCard(s) && !isDone(s.beat) && !yesNo(s);
 const openQuestion = (s) => Boolean(questionOf(beatOf(s))) && !s.beat.answer;
-const inRange = (option, n) => Number.isInteger(option) && option >= 0 && option < n;
-const steppingDown = (s) => !s.away && s.phase === 'step-down';
+const inRange = (option, n) =>
+  Number.isInteger(option) && option >= 0 && option < n;
+const steppingDown = (s) => s.phase === "step-down";
 // What a folder answer can be for: a level with a work folder, or a lesson
 // that runs in a new copy.
-const answersFolder = (s, key) => WORK_LEVELS.includes(key) || (Boolean(lessonOf(s, key)) && folderKey(s, key) === key);
+const answersFolder = (s, key) =>
+  WORK_LEVELS.includes(key) ||
+  (Boolean(lessonOf(s, key)) && folderKey(s, key) === key);
 
 // The step-down's accept: its tier joins the lesson's levels and the step
 // opens.
@@ -1148,145 +1591,179 @@ function stepDown(s, effects, more) {
       if (!s.eased.includes(step.skill)) s.eased.push(step.skill);
     }
   }
-  s.phase = 'playing';
+  s.phase = "playing";
   openBeat(s, effects);
 }
 
 // Each action's handler. A guard that fails returns false and changes
 // nothing: an action that can't act where the Learner is does nothing.
 const ACTIONS = {
-  'welcome.finish'(s, a, effects) {
+  "welcome.finish"(s, a, effects) {
     if (s.welcomed) return false;
     s.welcomed = true;
-    s.phase = 'overview';
-    s.away = false;
-    effects.push({ type: 'save' });
+    s.phase = "overview";
+    effects.push({ type: "save" });
   },
   // Resumes the lesson's play, or shows its overview.
-  'lesson.open'(s, { lesson }, effects) {
+  "lesson.open"(s, { lesson }, effects) {
     if (!lessonOf(s, lesson)) return false;
     startLesson(s, lesson, effects);
   },
   // Not while the overview's folder question is open: no Check runs until
   // it has its answer.
-  'lesson.start'(s, { help }, effects) {
+  "lesson.start"(s, { help }, effects) {
     if (!inOverview(s) || asksFolder(s)) return false;
     // A finished lesson played again keeps its badge and its ticks, but
     // every fresh check waits for new work and the help starts from the plan.
     const p = s.progress[s.lesson];
-    p.lessHelp = help === 'less';
+    p.lessHelp = help === "less";
     startPlay(p);
     s.answeredNow = s.answeredNow.filter((k) => !k.startsWith(`${s.lesson}.`));
     chooseWarmups(s);
     openStep(s, 0, effects);
   },
-  // The browser confirms first. Like the terminal's x, it keeps the eases,
-  // the misses and the answers of this sitting.
-  'lesson.restart'(s, { lesson }, effects) {
+  // The browser confirms first. It keeps the eases, the misses and the
+  // answers of this sitting.
+  "lesson.restart"(s, { lesson }, effects) {
     if (!lessonOf(s, lesson)) return false;
     s.progress[lesson] = blankProgress();
     s.lesson = lesson;
-    s.phase = 'overview';
-    s.away = false;
-    effects.push({ type: 'save' });
+    s.phase = "overview";
+    effects.push({ type: "save" });
   },
-  'lesson.next'(s, a, effects) {
-    const next = s.phase === 'complete' && nextLessonOf(s);
+  "lesson.next"(s, a, effects) {
+    const next = s.phase === "complete" && nextLessonOf(s);
     if (!next) return false;
     startLesson(s, next.id, effects);
   },
   // The Learner opens a folder answer, or edits the one open: the notes
   // about the last answer go.
-  'folder.ask'(s, { key }) {
+  "folder.ask"(s, { key }) {
     if (!answersFolder(s, key) || s.folderAsk?.asked) return false;
-    if (s.folderAsk?.key === key) Object.assign(s.folderAsk, { missing: null, isCopy: false });
+    if (s.folderAsk?.key === key)
+      Object.assign(s.folderAsk, { missing: null, isCopy: false });
     else s.folderAsk = { key, missing: null, isCopy: false, asked: 0 };
   },
-  // The practice copy is an answer for a level; another folder goes to main
+  // The practice copy is an answer for a level; another folder goes to the host
   // to look at first (`probed` answers).
-  'folder.choose'(s, { key, to }, effects) {
-    if (to === 'practice-copy') {
+  "folder.choose"(s, { key, to }, effects) {
+    if (to === "practice-copy") {
       if (!WORK_LEVELS.includes(key)) return false;
       return setFolder(s, key, s.facts.root, effects);
     }
-    const path = typeof to?.path === 'string' ? to.path.trim() : '';
+    const path = typeof to?.path === "string" ? to.path.trim() : "";
     if (!path || !answersFolder(s, key)) return false;
     s.asks += 1;
     // In place, so what a screen keeps on the answer stays with it.
-    if (s.folderAsk?.key === key) Object.assign(s.folderAsk, { asked: s.asks, missing: null, isCopy: false });
+    if (s.folderAsk?.key === key)
+      Object.assign(s.folderAsk, {
+        asked: s.asks,
+        missing: null,
+        isCopy: false,
+      });
     else s.folderAsk = { key, asked: s.asks, missing: null, isCopy: false };
-    effects.push({ type: 'folder', key, text: path, asked: s.asks });
+    effects.push({ type: "folder", key, text: path, asked: s.asks });
   },
   // The folder answer is dropped: a late `probed` for it says nothing.
-  'folder.cancel'(s) {
+  "folder.cancel"(s) {
     s.folderAsk = null;
   },
-  'step.continue'(s, a, effects) {
+  "step.continue"(s, a, effects) {
     if (!onCard(s) || !isDone(s.beat)) return false;
     advance(s, effects);
   },
-  'step.back'(s, a, effects) {
+  "step.back"(s, a, effects) {
     if (!onCard(s) || yesNo(s)) return false;
     back(s, effects);
   },
-  'step.skip'(s, a, effects) {
+  "step.skip"(s, a, effects) {
     if (!onCard(s) || yesNo(s) || !stepOf(s).optional) return false;
     skipStep(s, effects);
   },
   // Back to the step a back line names, where it is offered.
-  'step.revisit'(s, a, effects) {
+  "step.revisit"(s, a, effects) {
     const to = backOffered(s);
     if (!to) return false;
     goBack(s, to, effects);
   },
   // A typed-answer beat's options are its known wrong answers: it takes
   // only a typed answer.
-  'answer.pick'(s, { option }, effects) {
-    if (!answering(s) || !openQuestion(s) || beatOf(s).kind === 'type' || !inRange(option, beatOf(s).options.length)) return false;
+  "answer.pick"(s, { option }, effects) {
+    if (
+      !answering(s) ||
+      !openQuestion(s) ||
+      beatOf(s).kind === "type" ||
+      !inRange(option, beatOf(s).options.length)
+    )
+      return false;
     pick(s, option, effects);
   },
-  'answer.reveal'(s, a, effects) {
+  "answer.reveal"(s, a, effects) {
     if (!answering(s) || !openQuestion(s)) return false;
     const beat = beatOf(s);
-    if (beat.kind === 'predict' || beat.kind === 'type' || !beat.options.some((o) => o.kind === 'right')) return false;
+    if (
+      beat.kind === "predict" ||
+      beat.kind === "type" ||
+      !beat.options.some((o) => o.kind === "right")
+    )
+      return false;
     reveal(s, effects);
   },
-  'answer.type'(s, { text }, effects) {
-    if (!onCard(s) || yesNo(s) || beatOf(s).kind !== 'type' || s.beat.status === 'done') return false;
-    submitTyped(s, String(text ?? ''), effects);
+  "answer.type"(s, { text }, effects) {
+    if (
+      !onCard(s) ||
+      yesNo(s) ||
+      beatOf(s).kind !== "type" ||
+      s.beat.status === "done"
+    )
+      return false;
+    submitTyped(s, String(text ?? ""), effects);
   },
   // Self, none and self-kind beats: the Learner says it is done, and the
-  // card goes on, as the terminal's one key does.
-  'step.markDone'(s, a, effects) {
+  // card goes on.
+  "step.markDone"(s, a, effects) {
     if (!answering(s) || openQuestion(s)) return false;
     const beat = beatOf(s);
     const v = beat.verify.kind;
-    if (v !== 'self' && v !== 'none' && beat.kind !== 'self') return false;
-    s.beat.status = 'done';
+    if (v !== "self" && v !== "none" && beat.kind !== "self") return false;
+    s.beat.status = "done";
     advance(s, effects);
   },
   // "The session has ended": a git-clean beat with a done-label decides
   // only after it.
-  'session.ended'(s, a, effects) {
+  "session.ended"(s, a, effects) {
     if (!answering(s) || openQuestion(s)) return false;
     const beat = beatOf(s);
-    if (beat.verify.kind !== 'git-clean' || !beat.doneLabel) return false;
+    if (beat.verify.kind !== "git-clean" || !beat.doneLabel) return false;
     s.beat.ended = true;
     s.beat.explicit = true;
     effects.push(gitAsk(watching(s)));
   },
-  'check.run'(s, a, effects) {
+  "check.run"(s, a, effects) {
     const w = watching(s);
     if (!w) return false;
     if (checkOnlyHere(s)) {
       // Where the run takes a slow item, r's number goes out with it, so
       // its own result says when it ended. Elsewhere the run takes a moment.
       if (!lessonOf(s).slow.length) {
-        effects.push({ type: 'check', lesson: s.lesson, items: null, slow: true, dir: folderOf(s) });
+        effects.push({
+          type: "check",
+          lesson: s.lesson,
+          items: null,
+          slow: true,
+          dir: folderOf(s),
+        });
         return;
       }
       s.asks += 1;
-      effects.push({ type: 'check', lesson: s.lesson, items: null, slow: true, asked: s.asks, dir: folderOf(s) });
+      effects.push({
+        type: "check",
+        lesson: s.lesson,
+        items: null,
+        slow: true,
+        asked: s.asks,
+        dir: folderOf(s),
+      });
       return;
     }
     if (yesNo(s)) return false;
@@ -1295,27 +1772,44 @@ const ACTIONS = {
     st.explicit = true;
     // Asking for a check is a try, whatever the check says.
     st.unlocked = true;
-    if (w.git && beat.doneLabel) st.ended = st.ended || st.status === 'fail';
+    if (w.git && beat.doneLabel) st.ended = st.ended || st.status === "fail";
     // Show that r's run is going, until its own result lands: r's number
     // goes out on the effect and comes back on the result. `before` keeps
-    // the status "Checking" covers, for the hints and the key bar.
+    // the status "Checking" covers, for the hints and the actions.
     s.asks += 1;
-    Object.assign(st, { status: 'opening', slowWait: false, asked: s.asks, running: null, before: st.status === 'opening' ? st.before : st.status });
-    if (w.check) effects.push({ type: 'check', lesson: w.check.lesson, items: w.check.items, evidence: beat.evidence ?? null, slow: true, asked: s.asks, dir: w.dir });
-    if (w.file) effects.push({ type: 'file', path: w.file, asked: s.asks, dir: w.dir });
+    Object.assign(st, {
+      status: "opening",
+      slowWait: false,
+      asked: s.asks,
+      running: null,
+      before: st.status === "opening" ? st.before : st.status,
+    });
+    if (w.check)
+      effects.push({
+        type: "check",
+        lesson: w.check.lesson,
+        items: w.check.items,
+        evidence: beat.evidence ?? null,
+        slow: true,
+        asked: s.asks,
+        dir: w.dir,
+      });
+    if (w.file)
+      effects.push({ type: "file", path: w.file, asked: s.asks, dir: w.dir });
     if (w.git) effects.push(gitAsk(w, { asked: s.asks }));
     if (w.probe) effects.push(probeAsk(w, { asked: s.asks }));
   },
   // The next rung, or the y/n before the exact command.
-  'hint.next'(s) {
+  "hint.next"(s) {
     if (!hintAvailable(s) || yesNo(s)) return false;
     const st = s.beat;
     const rungs = rungsOf(s);
-    if (st.rung + 1 === rungs.length - 1 && rungs.at(-1).kind === 'bottom') st.confirm = true;
+    if (st.rung + 1 === rungs.length - 1 && rungs.at(-1).kind === "bottom")
+      st.confirm = true;
     else st.rung += 1;
   },
   // The y/n's answer: the exact command eases its skill.
-  'hint.takeExact'(s, { take }, effects) {
+  "hint.takeExact"(s, { take }, effects) {
     if (!onCard(s) || !yesNo(s)) return false;
     const st = s.beat;
     st.confirm = false;
@@ -1323,24 +1817,24 @@ const ACTIONS = {
     st.rung = rungsOf(s).length - 1;
     if (!s.eased.includes(stepOf(s).skill)) s.eased.push(stepOf(s).skill);
     s.progress[s.lesson].bottomAt = stepOf(s).id;
-    effects.push({ type: 'save' });
+    effects.push({ type: "save" });
   },
   // The long wait's question: answered once, scored nothing.
-  'waitQuestion.answer'(s, { option }) {
+  "waitQuestion.answer"(s, { option }) {
     const box = whileRunsOpen(s) && !yesNo(s) && whileRunsOf(s);
     if (!box || !inRange(option, box.beat.options.length)) return false;
     s.beat.whileRuns.answer = option;
     s.whileShown.push(`${s.lesson}.${box.step.id}`);
   },
-  'stepDown.accept'(s, a, effects) {
+  "stepDown.accept"(s, a, effects) {
     if (!steppingDown(s)) return false;
     stepDown(s, effects, false);
   },
-  'stepDown.moreHelp'(s, a, effects) {
+  "stepDown.moreHelp"(s, a, effects) {
     if (!steppingDown(s)) return false;
     stepDown(s, effects, true);
   },
-  'stepDown.back'(s, a, effects) {
+  "stepDown.back"(s, a, effects) {
     if (!steppingDown(s)) return false;
     back(s, effects);
   },
@@ -1356,29 +1850,23 @@ export const ACTION_TYPES = Object.keys(ACTIONS);
 // other, its lesson's.
 function resultFolder(s, ev) {
   const id = ev.lesson ?? s.lesson;
-  if (ev.type === 'stamp') {
-    const named = ev.key.slice(0, ev.key.lastIndexOf('.'));
+  if (ev.type === "stamp") {
+    const named = ev.key.slice(0, ev.key.lastIndexOf("."));
     return folderOf(s, id, stepsOf(s, id).find((x) => x.id === named) ?? null);
   }
-  return folderOf(s, id, id === s.lesson && onCard(s) && contentOf(s) ? stepOf(s) : null);
-}
-
-// What the wiring asks again of the beat on screen: files may have changed
-// while the Learner was away.
-function askAgain(s, effects) {
-  const w = watching(s);
-  if (w?.check) effects.push({ type: 'check', lesson: w.check.lesson, items: w.check.items, evidence: beatOf(s).evidence ?? null, dir: w.dir });
-  if (w?.file) effects.push({ type: 'file', path: w.file, dir: w.dir });
-  if (w?.git) effects.push(gitAsk(w));
-  if (w?.probe) effects.push(probeAsk(w));
+  return folderOf(
+    s,
+    id,
+    id === s.lesson && onCard(s) && contentOf(s) ? stepOf(s) : null,
+  );
 }
 
 // Applies one input to `s` in place and returns the input it handled: a
 // result about another folder comes back as `stale`, and an action whose
-// guard failed as null. Translator-only, with settle: gone in 210, where
-// reduce is the interface.
-export function apply(s, input, effects) {
-  if (Object.hasOwn(ACTIONS, input.type)) return ACTIONS[input.type](s, input, effects) === false ? null : input;
+// guard failed as null.
+function apply(s, input, effects) {
+  if (Object.hasOwn(ACTIONS, input.type))
+    return ACTIONS[input.type](s, input, effects) === false ? null : input;
   let ev = input;
   // r's run goes until its own result lands: the one that carries the latest
   // r's number, wherever the learner is by then. A poll's result, or an
@@ -1388,100 +1876,147 @@ export function apply(s, input, effects) {
   const rRuns = result && Boolean(s.beat?.asked);
   // One check child runs at a time, so its result means the run that
   // reported has ended: the count goes with it.
-  if ((ev.type === 'check' || ev.type === 'check-error') && s.beat?.running) s.beat.running = null;
+  if ((ev.type === "check" || ev.type === "check-error") && s.beat?.running)
+    s.beat.running = null;
   // A result about another folder than the one its lesson runs in now (a run
   // asked for before the learner changed it, or for a step in another
   // folder) decides nothing.
-  if ((result || ev.type === 'stamp') && ev.dir !== undefined && ev.dir !== resultFolder(s, ev)) ev = { ...ev, type: 'stale' };
+  if (
+    (result || ev.type === "stamp") &&
+    ev.dir !== undefined &&
+    ev.dir !== resultFolder(s, ev)
+  )
+    ev = { ...ev, type: "stale" };
   switch (ev.type) {
-    case 'check':
+    case "check":
       onCheck(s, ev, effects, rRuns);
       break;
-    case 'running': {
+    case "running": {
       // The check child starts its nth item of m. Only the run the card says
       // "Checking" for counts: this beat's check (its lesson and its items,
       // so a run the beat before asked for, still going, is not it), asked
       // by the latest r, or by the beat opening when no r is out.
       const w = watching(s)?.check;
-      if (s.beat?.status === 'opening' && (ev.asked ?? 0) === (s.beat.asked || 0) && w?.lesson === ev.lesson && sameJson(ev.items ?? null, w.items)) s.beat.running = { n: ev.n, m: ev.m };
+      if (
+        s.beat?.status === "opening" &&
+        (ev.asked ?? 0) === (s.beat.asked || 0) &&
+        w?.lesson === ev.lesson &&
+        sameJson(ev.items ?? null, w.items)
+      )
+        s.beat.running = { n: ev.n, m: ev.m };
       break;
     }
-    case 'check-error':
-      s.checks[ev.lesson] = { ...(s.checks[ev.lesson] ?? {}), error: ev.message };
-      if (!rRuns && onCard(s) && beatOf(s).verify.kind === 'check' && !['done', 'already'].includes(s.beat.status)) {
-        Object.assign(s.beat, { status: 'broken', error: ev.message, rung: -1, confirm: false });
+    case "check-error":
+      s.checks[ev.lesson] = {
+        ...(s.checks[ev.lesson] ?? {}),
+        error: ev.message,
+      };
+      if (
+        !rRuns &&
+        onCard(s) &&
+        beatOf(s).verify.kind === "check" &&
+        !["done", "already"].includes(s.beat.status)
+      ) {
+        Object.assign(s.beat, {
+          status: "broken",
+          error: ev.message,
+          rung: -1,
+          confirm: false,
+        });
       }
       break;
-    case 'git':
+    case "git":
       onGit(s, ev, effects, rRuns);
       break;
-    case 'probe':
+    case "probe":
       onProbe(s, ev, effects, rRuns);
       break;
-    case 'probe-error':
-      if (!rRuns && onCard(s) && beatOf(s).verify.kind === 'probe' && !['done', 'already'].includes(s.beat.status)) {
-        Object.assign(s.beat, { status: 'broken', error: ev.message, rung: -1, confirm: false });
+    case "probe-error":
+      if (
+        !rRuns &&
+        onCard(s) &&
+        beatOf(s).verify.kind === "probe" &&
+        !["done", "already"].includes(s.beat.status)
+      ) {
+        Object.assign(s.beat, {
+          status: "broken",
+          error: ev.message,
+          rung: -1,
+          confirm: false,
+        });
       }
       break;
-    case 'file':
+    case "file":
       onFile(s, ev, effects, rRuns);
       break;
-    case 'stamp': {
+    case "stamp": {
       const stamps = s.progress[s.lesson]?.stamps;
       if (stamps && !(ev.key in stamps) && ev.stamp !== null) {
-        stamps[ev.key] = ev.stamp ?? '';
-        effects.push({ type: 'save' });
+        stamps[ev.key] = ev.stamp ?? "";
+        effects.push({ type: "save" });
       }
       break;
     }
-    case 'git-error':
+    case "git-error":
       s.git = { paths: [], error: ev.message };
-      if (!rRuns && onCard(s) && GIT.has(beatOf(s).verify.kind) && !['done', 'already'].includes(s.beat.status)) {
-        Object.assign(s.beat, { status: 'broken', error: ev.message, rung: -1, confirm: false });
+      if (
+        !rRuns &&
+        onCard(s) &&
+        GIT.has(beatOf(s).verify.kind) &&
+        !["done", "already"].includes(s.beat.status)
+      ) {
+        Object.assign(s.beat, {
+          status: "broken",
+          error: ev.message,
+          rung: -1,
+          confirm: false,
+        });
       }
       break;
-    case 'tick':
+    case "tick":
       // A long wait (ticket 103) is quiet by design: no offer, no unlock.
-      if (onCard(s) && !['done', 'already'].includes(s.beat.status) && !longWait(s) && s.now - s.lastActivity >= IDLE_MS) {
+      if (
+        onCard(s) &&
+        !["done", "already"].includes(s.beat.status) &&
+        !longWait(s) &&
+        s.now - s.lastActivity >= IDLE_MS
+      ) {
         s.beat.idle = true;
         s.beat.unlocked = true;
       }
       break;
-    case 'facts':
+    case "facts":
       Object.assign(s.facts, ev.facts);
       break;
-    case 'commands':
+    case "commands":
       Object.assign(s.commands, ev.found);
       break;
-    case 'prereq':
+    case "prereq":
       onPrereq(s, ev);
       break;
-    case 'activity':
+    case "activity":
       // A file changed or git moved: the learner is working, so no "stuck?" offer.
       s.lastActivity = s.now;
       if (s.beat) s.beat.idle = false;
       break;
-    case 'probed': {
-      // What main found at a folder: kept for the notes, and, for the ask
+    case "probed": {
+      // What the host found at a folder: kept for the notes, and, for the ask
       // the answer is waiting on, the answer.
-      s.probes[ev.path] = { missing: ev.missing, git: ev.git, gitBroken: ev.gitBroken ?? null, practice: ev.practice };
+      s.probes[ev.path] = {
+        missing: ev.missing,
+        git: ev.git,
+        gitBroken: ev.gitBroken ?? null,
+        practice: ev.practice,
+      };
       const a = s.folderAsk;
       if (!ev.key || !a || a.key !== ev.key || a.asked !== ev.asked) break;
       if (ev.missing) Object.assign(a, { asked: 0, missing: ev.path });
       // A new copy is another folder than this practice copy.
-      else if (!WORK_LEVELS.includes(ev.key) && ev.path === s.facts.root) Object.assign(a, { asked: 0, isCopy: true });
+      else if (!WORK_LEVELS.includes(ev.key) && ev.path === s.facts.root)
+        Object.assign(a, { asked: 0, isCopy: true });
       else setFolder(s, ev.key, ev.path, effects);
       break;
     }
-    // The terminal's map and welcome (translator-only, gone in 210): away,
-    // nothing is watched; back, the beat on screen asks again.
-    case 'screen.away':
-      s.away = true;
-      break;
-    case 'screen.back':
-      s.away = false;
-      if (onCard(s)) askAgain(s, effects);
-      break;
     default:
       break;
   }
@@ -1491,10 +2026,19 @@ export function apply(s, input, effects) {
 // An overview that opens looks again at what its lesson needs, and so does
 // one whose folder changed or got its answer. Each ask for prerequisites has
 // its number, so an answer to an older one that comes late says nothing.
-// Translator-only, with apply: gone in 210.
-export function settle(prev, s, effects) {
-  if (inOverview(s) && (!inOverview(prev) || prev.lesson !== s.lesson || folderOf(prev) !== folderOf(s) || asksFolder(prev) !== asksFolder(s))) {
-    effects.push(...introAsks(s).map((e) => (e.type === 'prereqs' ? { ...e, asked: ++s.prereqAsks } : e)));
+function settle(prev, s, effects) {
+  if (
+    inOverview(s) &&
+    (!inOverview(prev) ||
+      prev.lesson !== s.lesson ||
+      folderOf(prev) !== folderOf(s) ||
+      asksFolder(prev) !== asksFolder(s))
+  ) {
+    effects.push(
+      ...introAsks(s).map((e) =>
+        e.type === "prereqs" ? { ...e, asked: ++s.prereqAsks } : e,
+      ),
+    );
   }
 }
 

@@ -1,9 +1,9 @@
 // Internal links and their fragments resolve, checked offline with lychee.
 // Four folders are skipped, here and in the weekly external-links run that
 // shares lychee(): course/steps/, practice-template/learn/lessons/ and the
-// reducer-course fixtures, whose quoted links resolve from their Guide pages,
-// and practice-template/project/samples/, which holds the linkcheck tests'
-// deliberately broken link.
+// engine's reducer-course fixtures, whose quoted links resolve from their
+// Guide pages, and practice-template/project/samples/, which holds the
+// linkcheck tests' deliberately broken link.
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { relative, sep } from 'node:path';
@@ -14,7 +14,7 @@ export const modes = ['pr', 'release'];
 const SKIPPED = [
   'course/steps/',
   'practice-template/learn/lessons/',
-  'practice-template/checks/test/fixtures/reducer-course/',
+  'quest/engine/test/fixtures/reducer-course/',
   'practice-template/project/samples/',
 ];
 

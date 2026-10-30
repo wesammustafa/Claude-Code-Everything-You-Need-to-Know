@@ -8,16 +8,18 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import {
   ACTION_TYPES,
+  evidence,
   folderOf,
   initialState,
   introAsks,
+  opensWithCheck,
   reduce,
   statusStamp,
   watching,
+  workFolder,
 } from "./engine.mjs";
 import { owing, singleFlight } from "./flight.mjs";
 import { folderPath } from "./folders.mjs";
-import * as look from "./look.mjs";
 import { snapshot as toSave } from "./store.mjs";
 
 export const TICK_MS = 1_000;
@@ -36,19 +38,12 @@ export function createHost({
   platform = "linux",
   adapters,
   facts: given = {},
-  translator = null,
+  // The real engine; a test may pass one that wraps it.
+  engine = { reduce, initialState },
   ahead = null,
 }) {
   const { clock, checks, probes, git, folders, files, store, commands } =
     adapters;
-  // The terminal's key translator stands in for the engine until ticket
-  // 210 deletes it, with its own screens' selectors and effects.
-  const reduceFn = translator?.reduce ?? reduce;
-  const init = translator?.initialState ?? initialState;
-  const workFolder = translator?.workFolder ?? look.workFolder;
-  const evidence = translator?.evidence ?? look.evidence;
-  const opensWithCheck = translator?.opensWithCheck ?? look.opensWithCheck;
-  const inputs = translator?.inputs ?? [];
   const home = env.HOME || env.USERPROFILE || homedir();
 
   let state = null;
@@ -75,7 +70,7 @@ export function createHost({
     try {
       while (queue.length && !closed) {
         const item = queue.shift();
-        const r = reduceFn(state, { now: clock.now(), ...item });
+        const r = engine.reduce(state, { now: clock.now(), ...item });
         state = r.state;
         run(r.effects);
         if (!closed) watchWork();
@@ -296,8 +291,7 @@ export function createHost({
             }),
         );
       else if (e.type === "save") save();
-      else if (!translator?.effect?.(e))
-        throw new Error(`unknown effect: ${e.type}`);
+      else throw new Error(`unknown effect: ${e.type}`);
     }
   }
 
@@ -373,7 +367,7 @@ export function createHost({
         linux: platform === "linux",
         ...given,
       };
-      state = init({ course, saved, facts, now: clock.now() });
+      state = engine.initialState({ course, saved, facts, now: clock.now() });
       return state;
     },
     // The watchers, the tick and the poll, then what --dir and the saved
@@ -419,7 +413,7 @@ export function createHost({
     },
     dispatch(action) {
       const type = action?.type;
-      if (!ACTION_TYPES.includes(type) && !inputs.includes(type))
+      if (!ACTION_TYPES.includes(type))
         throw new TypeError(`not an action: ${type}`);
       // The host's clock stamps every input: a client's own time is not one.
       const { now, ...a } = action;

@@ -4,7 +4,7 @@ import { test } from "vitest";
 import assert from "node:assert/strict";
 import { utimesSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { grewFrom } from "../../../practice-template/learn/lib/holds.mjs";
+import { grewFrom } from "../src/engine.mjs";
 import {
   repo,
   withRepo,

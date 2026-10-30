@@ -2,7 +2,7 @@
 // lesson's level from its PATH entry, lesson numbers within a level, a
 // warm-up's source lesson and level, the step from one level to the next,
 // and skill counts that carry across levels. The map, the welcome and every
-// screen's text are the terminal's, and stay in learn-levels.test.mjs.
+// screen's text were the terminal's, and went with it in ticket 210.
 import { test } from "vitest";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

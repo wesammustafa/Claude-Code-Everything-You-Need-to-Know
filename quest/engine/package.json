@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./content": "./src/content.mjs"
+    ".": "./src/index.mjs",
+    "./content": "./src/content.mjs",
+    "./course": "./src/course.mjs"
   },
   "dependencies": {
     "zod": "4.6.7"

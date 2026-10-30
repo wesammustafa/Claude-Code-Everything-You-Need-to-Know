@@ -22,13 +22,14 @@ import {
 const MINE = "/home/sam/mine";
 const inputs = (heard, type) =>
   heard.filter((h) => h.input.type === type).map((h) => h.input);
-// A host whose `flush` asks for `effects`: the way in for an effect the
-// test writes itself.
+// A host whose `waitQuestion.answer` asks for `effects`: the way in for an
+// effect the test writes itself. With no beat open the engine refuses the
+// action, so the effects are the test's alone.
 async function asking(effects, opts = {}) {
-  const { translator } = scripted({ effects: { flush: effects } });
-  const made = fakeHost({ saved: AT_W3, translator, ...opts });
+  const { engine } = scripted({ effects: { "waitQuestion.answer": effects } });
+  const made = fakeHost({ saved: AT_W3, engine, ...opts });
   await made.host.open();
-  made.ask = () => made.host.dispatch({ type: "flush" });
+  made.ask = () => made.host.dispatch({ type: "waitQuestion.answer" });
   return made;
 }
 

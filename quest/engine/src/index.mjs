@@ -1,0 +1,86 @@
+// The lesson engine's package entry (ticket 210): what the host and, from
+// ticket 212, the snapshot read. The step-file parser is "./content" and the
+// course loader "./course".
+
+// The interface: one input in, the state, effects and events out.
+export {
+  ACTION_TYPES,
+  EFFECT_TYPES,
+  IDLE_MS,
+  initialState,
+  reduce,
+} from "./engine.mjs";
+
+// What the host reads off the state: what to watch, what an overview asks
+// about, where the Learner is and works, and the evidence a check guards.
+export {
+  beatOf,
+  contentOf,
+  evidence,
+  folderOf,
+  introAsks,
+  onCard,
+  opensWithCheck,
+  stepOf,
+  stepsOf,
+  watching,
+  workFolder,
+} from "./engine.mjs";
+
+// The verification helpers the host's adapters share: a file's stamp and
+// whether it only grew, and git status's listing and stamp.
+export { grewFrom, stampFor } from "./holds.mjs";
+export { isStaged, listing, statusStamp } from "./status.mjs";
+
+// The selectors 212's project(state) builds the snapshot from.
+export {
+  answerKey,
+  answersGit,
+  asStarted,
+  asksFolder,
+  asksHere,
+  authoredTier,
+  backOffered,
+  backTo,
+  beatShown,
+  cardOf,
+  doneBefore,
+  easeLands,
+  folderKey,
+  folderOptions,
+  folderProblem,
+  hidesRuns,
+  hintAvailable,
+  hintStatus,
+  introNotes,
+  introOptions,
+  isDone,
+  isLastBeat,
+  lessonNumber,
+  lessonOf,
+  levelFolder,
+  levelKey,
+  levelLessons,
+  levelOf,
+  levelsOf,
+  longWait,
+  missingNeeds,
+  moreHelpGives,
+  nextLessonOf,
+  offered,
+  pickWarmups,
+  pinOf,
+  recallOf,
+  repoNeed,
+  rungsOf,
+  stepNote,
+  tearDownLeft,
+  tierOf,
+  tiersOf,
+  toFinish,
+  tryFirst,
+  unmet,
+  whileRunsOf,
+  whileRunsOpen,
+} from "./engine.mjs";
+export { mix, TIERS } from "./tiers.mjs";

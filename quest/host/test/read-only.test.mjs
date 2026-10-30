@@ -1,7 +1,6 @@
 // The widened read-only guard (ticket 209) on the engine and the host: the
 // sources it reads, three planted breaks it must catch, the ways around it
-// it must close, and the layering between the engine, the host and the
-// terminal.
+// it must close, and the layering between the engine and the host.
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -16,10 +15,9 @@ import {
 
 const ROOT = resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
 const at = (path) => join(ROOT, path);
-const LIB = at("practice-template/learn/lib");
 // The Checks' side: Guard B (learn-io) covers it, and the walk stops there.
 const CHECKS = at("practice-template/checks") + "/";
-const ENGINE = join(LIB, "engine.mjs");
+const ENGINE = at("quest/engine/src/engine.mjs");
 const HOST_ROOTS = [
   at("quest/host/src/index.mjs"),
   at("quest/host/src/fake.mjs"),
@@ -57,8 +55,11 @@ test("the engine and the host make no network call, start only the Check child a
     "quest/host/src/check-child.mjs",
     "quest/host/src/git.mjs",
     "quest/host/src/store.mjs",
-    "practice-template/learn/lib/engine.mjs",
-    "practice-template/learn/lib/content.mjs",
+    "quest/host/src/run-check.mjs",
+    "quest/engine/src/engine.mjs",
+    "quest/engine/src/course.mjs",
+    "quest/engine/src/holds.mjs",
+    "quest/engine/src/status.mjs",
   ])
     assert.ok(paths.includes(must), `the guard reads ${must}`);
   assert.ok(!paths.some((p) => p.startsWith("practice-template/checks/")));
@@ -154,35 +155,15 @@ test("the import walk follows imports wrapped over lines", () => {
   ]);
 });
 
-test("the engine reaches no host module, and the host reaches no terminal module", () => {
+test("the engine reaches no host module, and no module reaches the Terminal app's old practice-template/learn/", () => {
   for (const file of walk([ENGINE]))
     assert.ok(
       !rel(file).startsWith("quest/host/"),
       `the engine reaches ${rel(file)}`,
     );
-  const terminal = [
-    "flow",
-    "main",
-    "render",
-    "screen",
-    "keys",
-    "caps",
-    "theme",
-    "art",
-    "face",
-    "motion",
-    "plain",
-    "text",
-    "verify",
-    "watch",
-    "store",
-  ].map((n) => join(LIB, `${n}.mjs`));
-  for (const file of walk(HOST_ROOTS)) {
-    assert.ok(!terminal.includes(file), `the host reaches ${rel(file)}`);
+  for (const file of walk([...HOST_ROOTS, ENGINE]))
     assert.ok(
-      !relative(LIB, file).startsWith("pip"),
-      `the host reaches ${rel(file)}`,
+      !rel(file).startsWith("practice-template/learn/"),
+      `${rel(file)} is reached`,
     );
-    assert.notEqual(file, at("practice-template/learn/app.mjs"));
-  }
 });

@@ -1,7 +1,7 @@
 // Git probes (ticket 105): what an Advanced step leaves in git where no
 // check item applies, such as worktrees, branches, merges and pushes. The
-// learn app runs them in its check child (learn/run-check.mjs --probe), in
-// the work folder, and a lesson file names one on a beat:
+// lesson host runs them in its check child (quest/host/src/run-check.mjs
+// --probe), in the work folder, and a lesson file names one on a beat:
 //
 //   - verify: probe <name> [args] [fresh [since <step>]]
 //

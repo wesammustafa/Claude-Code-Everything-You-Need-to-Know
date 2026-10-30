@@ -14,7 +14,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
-import { loadCourse } from "../../../practice-template/learn/lib/content.mjs";
+import { loadCourse } from "../../engine/src/course.mjs";
 import { statusPaths } from "../../../practice-template/checks/paths.mjs";
 import { repo } from "../../../practice-template/checks/test/helpers.mjs";
 import { finishedBefore } from "../../engine/test/drive.mjs";

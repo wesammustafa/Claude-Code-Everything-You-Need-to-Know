@@ -1,8 +1,6 @@
 // The action driver (ticket 208): the lesson engine driven by Learner
-// actions, results and ticks, as learn-drive.mjs drives it by keys. It is
-// the lesson tests' only way into practice-template/learn/lib/, and it
-// never imports flow.mjs, the key translator: nothing here knows a key, a
-// view or a screen.
+// actions, results and ticks. It is the lesson tests' way into the engine's
+// modules in ../src: nothing here knows a key, a view or a screen.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -25,13 +23,9 @@ import {
   reduce,
   stepOf,
   stepsOf,
-} from "../../../practice-template/learn/lib/engine.mjs";
-import {
-  loadCourse,
-  parseLesson,
-  WORK_LEVELS,
-} from "../../../practice-template/learn/lib/content.mjs";
-import { versionSaved } from "../../../practice-template/checks/test/fixtures/saved-version.mjs";
+} from "../src/engine.mjs";
+import { loadCourse, parseLesson, WORK_LEVELS } from "../src/course.mjs";
+import { versionSaved } from "./fixtures/saved-version.mjs";
 import { openRepo } from "../../../practice-template/checks/repo.mjs";
 import {
   repo,
@@ -108,29 +102,20 @@ export {
   watching,
   whileRunsOf,
   whileRunsOpen,
-} from "../../../practice-template/learn/lib/engine.mjs";
+} from "../src/engine.mjs";
+export { GIT, OWN_PARTS, READS } from "../src/content.mjs";
 export {
-  GIT,
   loadCourse,
-  OWN_PARTS,
   parseLesson,
   PATH,
-  READS,
   SLOW,
   WORK_LEVELS,
-} from "../../../practice-template/learn/lib/content.mjs";
+} from "../src/course.mjs";
 // The store's format lives with the host since ticket 209.
 export { FORMAT, sanitize, snapshot } from "../../host/src/store.mjs";
-export {
-  judge,
-  stampFor,
-} from "../../../practice-template/learn/lib/holds.mjs";
-export { statusStamp } from "../../../practice-template/learn/lib/status.mjs";
-export {
-  mix,
-  ruleTiers,
-  TIERS,
-} from "../../../practice-template/learn/lib/tiers.mjs";
+export { judge, stampFor } from "../src/holds.mjs";
+export { statusStamp } from "../src/status.mjs";
+export { mix, ruleTiers, TIERS } from "../src/tiers.mjs";
 export {
   DEMO_B2,
   DEMO_I1,
@@ -142,13 +127,10 @@ export {
 export const root = fileURLToPath(
   new URL("../../../practice-template/", import.meta.url),
 );
-// The Beginner fixture course, read where learn-drive.mjs and the other
-// node:test files read it. Ticket 210 moves it here.
+// The Beginner fixture course: stable step files for tests of generic
+// behavior, so they don't follow the live course's editorial changes.
 export const REDUCER_COURSE = fileURLToPath(
-  new URL(
-    "../../../practice-template/checks/test/fixtures/reducer-course/",
-    import.meta.url,
-  ),
+  new URL("./fixtures/reducer-course/", import.meta.url),
 );
 const fixture = (id) => readFileSync(join(REDUCER_COURSE, `${id}.md`), "utf8");
 
@@ -384,12 +366,13 @@ const resumeStep = (s) =>
 // The folder the step on screen, or the one a resume opens, runs in.
 export const folderHere = (s) =>
   folderOf(s, s.lesson, s.beat ? stepOf(s) : resumeStep(s));
-// Whether the card offers "A little more help" (render.mjs's condition).
+// Whether the card offers "A little more help": an eased step, not done, on
+// its first beat.
 export const showsMoreHelp = (s) =>
   Boolean(s.beat?.eased) && !isDone(s.beat) && s.pos.beat === 0;
 
 // ---- results ---------------------------------------------------------------------
-// Each answers the effect it is given, as main.mjs answers it: `asked` and
+// Each answers the effect it is given, as the host answers it: `asked` and
 // `dir` come from the effect unless a test overrides them.
 const from = (eff) => ({
   ...(eff.asked !== undefined ? { asked: eff.asked } : {}),
