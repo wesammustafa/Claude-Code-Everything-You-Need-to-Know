@@ -94,6 +94,7 @@ export { mix, TIERS } from "./tiers.ts";
 export type { EngineSnapshot } from "./project.ts";
 export type {
   BeatState,
+  CheckItem,
   CourseEntry,
   Effect,
   EngineInput,

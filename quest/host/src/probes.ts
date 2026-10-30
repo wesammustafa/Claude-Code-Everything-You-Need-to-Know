@@ -60,7 +60,7 @@ function worktrees(repo: Repo, [n = ""]: string[]): Probed {
   const found = claudeWorktrees(live(repo));
   const names = found.map((r) => nameOf(r.path));
   const state = digest(
-    found.map((r) => `${r.path} ${r.head ?? "null"}`).join("\n"),
+    found.map((r) => `${r.path} ${String(r.head)}`).join("\n"),
   );
   if (found.length >= Number(n))
     return {
@@ -235,7 +235,6 @@ export const RUNS: Readonly<
 export function probeRepo(repo: Repo, name: string, args: string[]): Probed {
   const error = probeError(name, args);
   if (error) throw new Error(error);
-  const run = RUNS[name];
-  if (!run) throw new Error(`unknown probe ${name}`);
-  return run(repo, args);
+  // As the JavaScript had it: an unknown name throws a TypeError.
+  return (RUNS[name] as (typeof RUNS)[string])(repo, args);
 }

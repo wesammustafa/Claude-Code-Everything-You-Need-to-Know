@@ -71,6 +71,10 @@ type CheckArgs = [
 ];
 // The engine names a folder on every run effect.
 const dirOf = (dir: string | null) => dir as string;
+// A failed run, read as the JavaScript read it: an empty error counts as
+// an answer.
+const failed = (r: object): r is { error: string } =>
+  "error" in r && Boolean(r.error);
 // The host input of one type.
 type InputOf<K extends HostInput["type"]> = Extract<HostInput, { type: K }>;
 // A folder look as the engine reads it, after the fields `more` gives.
@@ -354,7 +358,7 @@ export function createHost({
     if (closed) return;
     // From here an r waits for another run: this one has answered.
     const asked = flags.report();
-    if ("error" in r) {
+    if (failed(r)) {
       input({
         type: "check-error",
         lesson,
@@ -396,7 +400,7 @@ export function createHost({
       const r = await git.status(dir, { files: listed, head });
       if (closed) return;
       input(
-        "error" in r
+        failed(r)
           ? { type: "git-error", message: r.error, asked, dir }
           : {
               type: "git",
@@ -420,7 +424,7 @@ export function createHost({
       });
       if (closed) return;
       input(
-        "error" in r
+        failed(r)
           ? { type: "probe-error", message: r.error, asked, dir }
           : ({
               type: "probe",
@@ -442,11 +446,11 @@ export function createHost({
     const { probe: p } = e;
     if (p) {
       const r = await inLane(() => probes.run(dirOf(e.dir), p.name, p.args));
-      return "error" in r ? null : r.state;
+      return failed(r) ? null : r.state;
     }
     if (e.git) {
       const r = await git.status(dirOf(e.dir), { head: e.git === "head" });
-      return "error" in r
+      return failed(r)
         ? null
         : e.git === "head"
           ? (r.head ?? "")
@@ -492,7 +496,7 @@ export function createHost({
           : name
             ? inLane(() => probes.run(e.dir, name, req.args ?? [])).then(
                 (r) => ({
-                  pass: "error" in r ? null : r.pass,
+                  pass: failed(r) ? null : r.pass,
                   hint: ("hint" in r ? r.hint : undefined) ?? "",
                 }),
               )

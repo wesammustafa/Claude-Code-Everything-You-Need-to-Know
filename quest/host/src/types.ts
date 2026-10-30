@@ -8,6 +8,7 @@ import type {
   Snapshot,
 } from "@quest/contract";
 import type {
+  CheckItem,
   CourseEntry,
   Effect,
   EngineInput,
@@ -32,13 +33,7 @@ export interface Clock {
   clearTimeout(id: unknown): void;
 }
 
-export interface CheckItem {
-  index: number;
-  text: string;
-  pass: boolean;
-  hint: string;
-  slow?: boolean;
-}
+export type { CheckItem };
 
 export interface CheckOptions {
   slow?: boolean | undefined;
