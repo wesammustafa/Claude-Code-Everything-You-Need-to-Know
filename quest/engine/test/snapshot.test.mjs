@@ -28,7 +28,7 @@ import {
   struggles,
   withCode,
 } from "./drive.mjs";
-import { project, startedLesson } from "../src/index.mjs";
+import { project, startedLesson } from "../src/index.ts";
 
 const lesson = (id) => course.find((l) => l.id === id);
 // A driver on a saved place, the lesson opened.

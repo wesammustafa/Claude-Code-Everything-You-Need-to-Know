@@ -5,7 +5,7 @@
 // tests below read every state, effect and input it met.
 import { test } from "vitest";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -557,4 +557,20 @@ test("the package's main export is the engine: reduce and initialState from @que
   assert.equal(typeof engine.reduce, "function");
   assert.equal(typeof engine.initialState, "function");
   assert.equal(engine.reduce, reduce);
+});
+
+// Ticket 214: every engine module is strict TypeScript, and the package's
+// entry is one of them.
+test("the engine's sources are TypeScript only, and the package entry is index.ts", () => {
+  const files = readdirSync(SRC, { recursive: true, withFileTypes: true })
+    .filter((d) => d.isFile())
+    .map((d) => relative(SRC, join(d.parentPath, d.name)));
+  assert.ok(files.length > 0, "the engine has sources");
+  assert.deepEqual(
+    files.filter((f) => !f.endsWith(".ts")),
+    [],
+    "no .mjs or .js left",
+  );
+  const pkg = JSON.parse(readFileSync(at("quest/engine/package.json"), "utf8"));
+  assert.equal(pkg.exports["."], "./src/index.ts");
 });

@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { ACTION_TYPES, EVENT_TYPES } from "./drive.mjs";
 import { LEVELS } from "../src/course.ts";
-import { HELP_USED } from "../src/index.mjs";
+import { HELP_USED } from "../src/index.ts";
 
 const contract = (file) =>
   readFileSync(new URL(`../../contract/src/${file}`, import.meta.url), "utf8");

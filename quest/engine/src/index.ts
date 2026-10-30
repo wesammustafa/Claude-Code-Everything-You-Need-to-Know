@@ -89,3 +89,18 @@ export {
   whileRunsOpen,
 } from "./engine.ts";
 export { mix, TIERS } from "./tiers.ts";
+
+// The engine's types, for the host and the server that drive it.
+export type { EngineSnapshot } from "./project.ts";
+export type {
+  BeatState,
+  CourseEntry,
+  Effect,
+  EngineInput,
+  EngineState,
+  Facts,
+  HostInput,
+  LessonProgress,
+  SavedProgress,
+  Watch,
+} from "./types.ts";

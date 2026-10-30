@@ -29,7 +29,7 @@ export {
   stepsOf,
   watching,
   workFolder,
-} from "../../engine/src/index.mjs";
+} from "../../engine/src/index.ts";
 export { FOLDER_KEYS, SLOW } from "../../engine/src/course.ts";
 export {
   PATH_MAX,

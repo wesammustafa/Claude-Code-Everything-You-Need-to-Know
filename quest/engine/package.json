@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.mjs",
+    ".": "./src/index.ts",
     "./content": "./src/content.ts",
     "./course": "./src/course.ts"
   },

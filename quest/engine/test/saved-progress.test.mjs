@@ -16,7 +16,7 @@ import {
   stepOf,
 } from "./drive.mjs";
 import { fingerprint } from "../src/content.ts";
-import { HELP_USED } from "../src/index.mjs";
+import { HELP_USED } from "../src/index.ts";
 import { project } from "../src/project.ts";
 
 const OLD = "0".repeat(64);
