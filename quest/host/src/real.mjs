@@ -28,7 +28,7 @@ export const realClock = {
   clearTimeout: (id) => clearTimeout(id),
 };
 
-/** @param {import("./types.mjs").RealOptions} options @returns {import("./types.mjs").Adapters} */
+/** @param {import("./types.ts").RealOptions} options @returns {import("./types.ts").Adapters} */
 export function realAdapters({
   root,
   env = process.env,

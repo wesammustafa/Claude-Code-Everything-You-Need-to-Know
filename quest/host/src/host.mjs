@@ -66,7 +66,7 @@ const placeOf = (s) =>
       : null,
   ]);
 
-/** @param {import("./types.mjs").HostOptions} options @returns {import("./types.mjs").Host} */
+/** @param {import("./types.ts").HostOptions} options @returns {import("./types.ts").Host} */
 export function createHost({
   root,
   course,
