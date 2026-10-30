@@ -180,7 +180,7 @@ function calls(dir, roots) {
  */
 
 /**
- * @typedef {{ args?: (out: string) => string[], commit?: Record<string, string>, stage?: Record<string, string>, change?: Record<string, string>, reply?: unknown, stderr?: string, exit?: number, timeout?: number, practice?: boolean, platform?: string }} StubOptions
+ * @typedef {{ args?: (out: string) => string[], commit?: Record<string, string>, stage?: Record<string, string>, change?: Record<string, string>, reply?: unknown, stderr?: string | undefined, exit?: number, timeout?: number, practice?: boolean, platform?: string }} StubOptions
  */
 
 /**

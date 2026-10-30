@@ -133,11 +133,17 @@ const optionLike = (/** @type {string} */ arg) => arg.length > 1 && arg[0] === '
 /** @typedef {{ at?: number, next: string | undefined }} Print */
 
 /**
+ * Flags by name: true, a string or null, or a list, by the flag's kind, so
+ * a caller reads each as the flag it knows.
+ * @typedef {Record<string, any>} Flags
+ */
+
+/**
  * @param {string[]} argv
- * @returns {{ print: boolean, promptFirst: boolean, next: string | undefined, prompt: string | undefined, operands: string[], flags: Record<string, true | string | null | (string | null)[]>, unknown: string[] }}
+ * @returns {{ print: boolean, promptFirst: boolean, next: string | undefined, prompt: string | undefined, operands: string[], flags: Flags, unknown: string[] }}
  */
 export function parseClaudeArgs(argv) {
-  /** @type {Record<string, true | string | null | (string | null)[]>} */
+  /** @type {Flags} */
   const flags = {};
   /** @type {ArgItem[]} */
   const operands = [];

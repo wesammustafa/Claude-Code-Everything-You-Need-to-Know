@@ -3,7 +3,7 @@
   "compilerOptions": {
     "composite": true,
     "allowJs": true,
-    "checkJs": false,
+    "checkJs": true,
     "noEmit": true,
     "types": ["node"],
     "tsBuildInfoFile": "node_modules/.tmp/checks.tsbuildinfo"

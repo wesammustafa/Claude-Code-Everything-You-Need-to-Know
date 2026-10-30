@@ -1,3 +1,4 @@
+// @ts-check
 // Every lesson and capstone with a check, in course order.
 
 /**

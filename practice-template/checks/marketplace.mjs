@@ -298,12 +298,16 @@ export const passingMarketplaces = (/** @type {import('./repo.mjs').Repo} */ rep
 
 // Why no committed marketplace passes. `start` says how to make one when
 // there is none, as the page describes it.
-/** @param {import('./repo.mjs').Repo} repo */
+/**
+ * @param {import('./repo.mjs').Repo} repo
+ * @returns {string}
+ */
 export function marketplaceHint(repo, start = 'Download the example marketplace into `team-marketplace/`, as the Worked example shows') {
   const all = committedMarketplaces(repo);
   if (all.length) {
     const rank = (/** @type {Marketplace} */ m) => m.stage * 10 + (m.entry ?? 0);
-    return all.reduce((a, b) => (rank(b) > rank(a) ? b : a)).hint;
+    // None passes, so the best one has a hint.
+    return /** @type {string} */ (all.reduce((a, b) => (rank(b) > rank(a) ? b : a)).hint);
   }
   const [loose] = uncommittedFiles(repo, '.claude-plugin/marketplace.json');
   if (loose) return commitHint(repo, loose, folder(posix.dirname(posix.dirname(loose))) || loose);
