@@ -5,15 +5,21 @@ import type { spawn as nodeSpawn } from "node:child_process";
 export type Env = Readonly<Record<string, string | undefined>>;
 
 /**
- * The forwarded address in a codespace, from the two variables Codespaces
- * sets in a terminal, or null outside one. Ticket 217 checks
- * X-Forwarded-Host against this host name.
+ * The forwarded host name in a codespace, from the two variables Codespaces
+ * sets in a terminal, or null outside one: the only X-Forwarded-Host the
+ * server trusts (src/trust.ts).
  */
-export function codespaceUrl(env: Env, port: number): string | null {
+export function codespaceHost(env: Env, port: number): string | null {
   const name = env.CODESPACE_NAME;
   const domain = env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN;
   if (!name || !domain) return null;
-  return `https://${name}-${String(port)}.${domain}`;
+  return `${name}-${String(port)}.${domain}`;
+}
+
+/** The forwarded address in a codespace, or null outside one. */
+export function codespaceUrl(env: Env, port: number): string | null {
+  const host = codespaceHost(env, port);
+  return host && `https://${host}`;
 }
 
 /** The local address the server listens on. */

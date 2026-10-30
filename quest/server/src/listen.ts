@@ -7,6 +7,19 @@ import { SECURITY_HEADERS } from "./headers.ts";
 export const BASE_PORT = 4747;
 export const PORT_TRIES = 10;
 
+/**
+ * Node's limits for this server (spec, Server security): 10 s for the
+ * headers, 30 s to receive a whole request, checked every second. Both
+ * cover only receiving the request, so a stream (ticket 218), whose GET has
+ * arrived, runs on. Headers keep Node's default 16 KB.
+ */
+export const SERVER_LIMITS: ServerOptions = {
+  headersTimeout: 10_000,
+  requestTimeout: 30_000,
+  connectionsCheckingInterval: 1_000,
+};
+export const MAX_CONNECTIONS = 64;
+
 export type Tried = "listening" | "taken";
 export type TryListen = (port: number) => Promise<Tried>;
 
@@ -59,8 +72,8 @@ export interface Listening {
 
 /**
  * Serves `fetch` on the first free port from `base`, or returns null when
- * every port is taken. `serverOptions` reach Node's server (ticket 217's
- * timeouts); `probe` replaces the real listen, for a test.
+ * every port is taken. `serverOptions` reach Node's server over
+ * SERVER_LIMITS; `probe` replaces the real listen, for a test.
  */
 export async function listen({
   fetch,
@@ -82,9 +95,14 @@ export async function listen({
         headers: SECURITY_HEADERS,
       }),
   });
-  const server = createServer(serverOptions, (request, response) => {
-    void handle(request, response);
-  });
+  const server = createServer(
+    { ...SERVER_LIMITS, ...serverOptions },
+    (request, response) => {
+      void handle(request, response);
+    },
+  );
+  // Past 64, Node closes a new socket at once.
+  server.maxConnections = MAX_CONNECTIONS;
   const attempt = probe?.(server) ?? ((port) => tryListen(server, port));
   const got = await firstFreePort({
     base,

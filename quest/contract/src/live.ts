@@ -36,6 +36,31 @@ export interface ActionResponse {
   snapshot: Snapshot;
 }
 
+/**
+ * Why `folder.choose`'s path was turned down before the host saw it: no
+ * such folder, longer than 1,024 characters once resolved, outside the
+ * Learner's home folder, the Practice copy itself, a folder holding the
+ * copy, or not the root of a git working tree.
+ */
+export type FolderRefusal =
+  | "missing"
+  | "too-long"
+  | "outside-home"
+  | "is-copy"
+  | "contains-copy"
+  | "not-repo-root";
+
+/**
+ * The body of a refused action other than a stale one (`409`, an
+ * `ActionResponse`): `forbidden` (`403`, an untrusted request), `invalid`
+ * (`400`, not an action), `folder` (`400`, with the reason), `too large`
+ * (`413`), `busy` (`429`, the queue is full) and `starting` (`503`, no
+ * snapshot yet).
+ */
+export type ActionError =
+  | { error: "forbidden" | "invalid" | "too large" | "busy" | "starting" }
+  | { error: "folder"; reason: FolderRefusal };
+
 /** `GET /api/health`: the server is up, with this process's instance. */
 export interface HealthResponse {
   ok: true;

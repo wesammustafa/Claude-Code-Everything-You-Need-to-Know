@@ -1,7 +1,8 @@
 import { brotliDecompressSync, gunzipSync } from "node:zlib";
 import { rmSync } from "node:fs";
 import { join } from "node:path";
-import { afterAll, describe, expect, test } from "vitest";
+import type { Server } from "node:http";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { createApp } from "../src/app.ts";
 import { encoded, loadStatics, pickEncoding } from "../src/statics.ts";
 import {
@@ -13,6 +14,7 @@ import {
   removeTrees,
   staticTree,
 } from "./fixture.ts";
+import { raw, request, serve } from "./raw.ts";
 
 const dir = staticTree();
 const statics = loadStatics(dir, TABLE);
@@ -24,10 +26,12 @@ const app = createApp({
 afterAll(removeTrees);
 
 const get = (path: string, accept?: string) =>
-  app.request(
-    path,
-    accept === undefined ? {} : { headers: { "Accept-Encoding": accept } },
-  );
+  app.request(path, {
+    headers: {
+      Host: "127.0.0.1:4747",
+      ...(accept === undefined ? {} : { "Accept-Encoding": accept }),
+    },
+  });
 
 async function bytes(response: Response): Promise<Buffer> {
   return Buffer.from(await response.arrayBuffer());
@@ -45,6 +49,33 @@ describe("names", () => {
     "/assets/app-abc123.js/",
   ])("%s is 404: only a listed name is served", async (path) => {
     expect((await get(path)).status).toBe(404);
+  });
+
+  describe("over a socket, as sent", () => {
+    let server: Server;
+    let port: number;
+    beforeAll(async () => {
+      ({ server, port } = await serve(app.fetch));
+    });
+    afterAll(() => {
+      server.closeAllConnections();
+      server.close();
+    });
+
+    test.each([
+      ["..", "/assets/../secret.txt"],
+      ["%2e%2e", "/assets/%2e%2e/secret.txt"],
+      ["..%2f", "/assets/..%2fsecret.txt"],
+      ["an absolute path", "//etc/passwd"],
+      ["a dot segment to /etc", "/../../../../etc/passwd"],
+    ])("%s is 404, never a file", async (_, path) => {
+      const reply = await raw(
+        port,
+        request("GET", path, { Host: "127.0.0.1:4747" }),
+      );
+      expect(reply?.status).toBe(404);
+      expect(reply?.body).not.toContain("not listed");
+    });
   });
 
   test("a listed file that is missing fails the start", () => {

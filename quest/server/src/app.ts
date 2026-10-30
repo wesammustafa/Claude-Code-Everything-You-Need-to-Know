@@ -1,8 +1,15 @@
 // The server's routes, in a fixed order: the headers on every response, the
 // trust checks (ticket 217), the API, then the static files by name.
 import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
 import type { HealthResponse } from "@quest/contract";
+import type { Host } from "@quest/host";
+import { actionRoute, type CheckFolder } from "./actions.ts";
+import { checkFolder as checkPath, homeOf } from "./folders.ts";
 import { API_CACHE, SECURITY_HEADERS } from "./headers.ts";
+import type { Env } from "./launch.ts";
+import { createQueue, type Queue } from "./queue.ts";
+import { trust } from "./trust.ts";
 import {
   IMMUTABLE_CACHE,
   PAGE_CACHE,
@@ -17,12 +24,31 @@ export interface AppOptions {
   statics: Statics;
   /** Where an unexpected error's message goes: stderr by default. */
   log?: (line: string) => void;
+  /** The environment: the codespace variables and the home folder. */
+  env?: Env;
+  /** The bound port, undefined until the server listens. */
+  port?: () => number | undefined;
+  /** The lesson host: without one, POST /api/actions is a 404. */
+  host?: Host;
+  /** Settles when the host's open() settles: actions wait for it. */
+  ready?: Promise<unknown>;
+  /** The Practice copy, which folder.choose may not name or hold. */
+  root?: string;
+  checkFolder?: CheckFolder;
+  queue?: Queue;
 }
 
 export function createApp({
   health,
   statics,
   log = (line) => process.stderr.write(`${line}\n`),
+  env = process.env,
+  port = () => undefined,
+  host,
+  ready = Promise.resolve(),
+  root = process.cwd(),
+  checkFolder = (path) => checkPath(path, { home: homeOf(env), root }),
+  queue = createQueue(),
 }: AppOptions): Hono {
   const app = new Hono();
 
@@ -33,15 +59,17 @@ export function createApp({
       c.res.headers.set(name, value);
   });
 
-  // Ticket 217: the Host, X-Forwarded-Host and POST checks go here, before
-  // every route.
+  // Before every route: the Host, X-Forwarded-Host and POST checks.
+  app.use(trust({ env, port }));
 
   app.get("/api/health", (c) => {
     c.header("Cache-Control", API_CACHE);
     return c.json(health());
   });
 
-  // Ticket 217: POST /api/actions. Ticket 218: GET /api/events.
+  if (host) actionRoute(app, { host, ready, queue, checkFolder });
+
+  // Ticket 218: GET /api/events.
 
   app.all("/api/*", (c) => {
     c.header("Cache-Control", API_CACHE);
@@ -73,6 +101,7 @@ export function createApp({
   // Only the message: never a header, a body or a stack with paths in it.
   app.onError((error, c) => {
     log(`Claude Code Quest: ${error.message}`);
+    if (error instanceof HTTPException) return error.getResponse();
     return c.text("Internal error", 500);
   });
 

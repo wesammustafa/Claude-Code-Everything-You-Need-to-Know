@@ -46,6 +46,13 @@ export async function startWith(
       closed++;
     },
     instance: "test-instance",
+    dispatch: () => {
+      calls.push("dispatch");
+      return { revision: 0, snapshot: null };
+    },
+    snapshot: () => null,
+    revision: () => 0,
+    serverTime: () => 0,
   };
   kit.started = await start({
     root: "/copy",

@@ -371,10 +371,21 @@ Claude Code Quest, the web learning app, lives in `quest/`, with its course in `
 Every change to the app keeps this safety contract:
 
 - the app binds `127.0.0.1` and makes no outbound request at runtime (no telemetry, CDN, web font or update check);
-- reads only the Practice copy and the Learner's Work folders, writes only `.practice/` through the store, and runs only the Check child and read-only git;
+- reads only the Practice copy and the Learner's Work folders, writes only `.practice/` through the store, and runs only the Check child, read-only git and the platform's browser opener;
 - never reads `.env` files, never calls the Claude API, never logs file contents or command output beyond the verification lines;
 - its own wording states no Claude Code fact;
 - every bundled dependency is pinned, on the license allowlist and credited in the notices.
+
+The server trusts a request only on these rules, on every route:
+
+- the Host is `127.0.0.1` or `localhost`, with any port, and nothing else;
+- an `X-Forwarded-Host` is accepted only in a codespace, and only when it is exactly that codespace's forwarded name for the server's port;
+- every method but GET and HEAD must send `Content-Type: application/json`, an `Origin` equal to `http://` plus the Host (or exactly `https://localhost:` plus the bound port on an accepted forwarded request), and, when it sends `Sec-Fetch-Site`, `same-origin`;
+- a GET or HEAD changes nothing, and no response carries a CORS header;
+- an untrusted request gets a `403` and nothing is logged;
+- every action passes a strict schema of the contract's actions, refusing unknown keys and capping every string, and no action names a command, a script or a file to read;
+- a folder from the browser is checked before the host sees it: an absolute path inside the Learner's home folder, resolved through symlinks, the root of a git working tree, not the Practice copy and not holding it;
+- logs carry an error's message only, never a header value, a cookie, a token or a request body.
 
 Dependencies follow these rules:
 

@@ -104,9 +104,19 @@ export async function start({
 
   // Listen before the host opens: open() waits on git, and the health check
   // and the static files never need the snapshot.
+  // Actions wait for open() to settle; the trust checks read the port once
+  // it is bound.
+  const opened = Promise.withResolvers<undefined>();
+  const bound: { port?: number } = {};
   const app = createApp({
     health: () => ({ ok: true, instance: host.instance }),
     statics,
+    env,
+    port: () => bound.port,
+    host,
+    ready: opened.promise,
+    root,
+    log: (line) => stderr.write(`${line}\n`),
   });
   const up = await listen({
     fetch: app.fetch,
@@ -122,6 +132,7 @@ export async function start({
     return null;
   }
   const { server, port } = up;
+  bound.port = port;
 
   const shutdown = { done: false };
   const stop = () => {
@@ -159,6 +170,8 @@ export async function start({
     stderr.write(
       `Claude Code Quest could not read the folder: ${error instanceof Error ? error.message : String(error)}\n`,
     );
+  } finally {
+    opened.resolve(undefined);
   }
   // A signal while git answered has already stopped everything.
   if (shutdown.done) return { ...up, host };
