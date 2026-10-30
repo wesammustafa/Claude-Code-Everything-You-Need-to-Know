@@ -87,7 +87,8 @@ const FS_READS = new Set([
 const FS_SPECIFIER = /["'](?:node:)?fs(?:\/promises)?["']/g;
 const FS_IMPORT =
   /\bimport\s+((?:(?!\bfrom\b)[^;])*?)\s*from\s*["'](?:node:)?fs(?:\/promises)?["']/g;
-// A read name opened to write: `readFileSync(p, { flag: "w" })`.
+// A read name opened to write: `readFileSync(p, { flag: "w" })`, in a
+// file that imports fs (a TypeScript `flags: Flags` elsewhere opens nothing).
 const OPEN_FLAG = /\bflags?\s*:/;
 const WRITES =
   /\b(writeFile|appendFile|rename|rm|rmdir|unlink|mkdir|copyFile|cp|createWriteStream|truncate|symlink|link|chmod|utimes|writeSync|writev)(Sync)?\s*\(/;
@@ -169,7 +170,8 @@ export function readOnlyFindings(
       }
       const write = WRITES.exec(text);
       if (write) say(`writes a file with ${write[0].replace(/\s*\($/, "")}`);
-      if (OPEN_FLAG.test(text)) say("opens a file with a flag");
+      if (clauses.length && OPEN_FLAG.test(text))
+        say("opens a file with a flag");
     }
 
     if (path.startsWith("quest/host/src/") && NEWER_NODE.test(text))
