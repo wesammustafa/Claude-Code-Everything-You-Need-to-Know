@@ -290,7 +290,7 @@ export const runCheck: RunCheck = (
   });
 };
 
-// Runs one git probe (probes.mjs, beside this file; ticket 105) in the
+// Runs one git probe (probes.ts, beside this file; ticket 105) in the
 // check child, in `dir`: { pass, hint, evidence, state }, or { error }. It
 // never fetches. The whole run has one `limit`.
 export const runProbe: RunProbe = (

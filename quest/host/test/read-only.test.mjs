@@ -64,7 +64,7 @@ test("the engine and the host make no network call, start only the Check child a
     "quest/host/src/git.ts",
     "quest/host/src/store.ts",
     "quest/host/src/run-check.mjs",
-    "quest/host/src/probes.mjs",
+    "quest/host/src/probes.ts",
     "quest/engine/src/probes.ts",
     "quest/engine/src/engine.ts",
     "quest/engine/src/course.ts",
@@ -130,7 +130,7 @@ const PLANTED_IN = [
   "quest/host/src/host.mjs",
   "quest/engine/src/engine.ts",
   "quest/host/src/check-child.ts",
-  "quest/host/src/probes.mjs",
+  "quest/host/src/probes.ts",
   "quest/engine/src/probes.ts",
 ];
 
@@ -149,11 +149,11 @@ test("a network call, a process and a write planted in each real file that runs 
   }
   // And through what the guard reads: one plant in one real entry.
   const sources = scope();
-  const i = sources.findIndex((s) => s.path === "quest/host/src/probes.mjs");
+  const i = sources.findIndex((s) => s.path === "quest/host/src/probes.ts");
   sources[i] = { ...sources[i], text: `${sources[i].text}\n${PLANTS.network}` };
   assert.ok(
     readOnlyFindings(sources).some((f) =>
-      f.startsWith("quest/host/src/probes.mjs:"),
+      f.startsWith("quest/host/src/probes.ts:"),
     ),
   );
 });

@@ -60,7 +60,7 @@ export function claudeWorktrees(records) {
 }
 
 // The worktrees git lists for the repository now.
-/** @param {Repo} repo */
+/** @param {Pick<Repo, 'git'>} repo */
 export function liveWorktrees(repo) {
   return parseWorktrees(repo.git('worktree', 'list', '--porcelain'));
 }

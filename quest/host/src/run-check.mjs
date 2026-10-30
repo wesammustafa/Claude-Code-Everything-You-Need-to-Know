@@ -7,7 +7,7 @@
 //
 //   node quest/host/src/run-check.mjs <lesson> <dir> [index ...]
 //
-// With --probe, it runs one git probe (probes.mjs, ticket 105) in
+// With --probe, it runs one git probe (probes.ts, ticket 105) in
 // the folder instead, and prints {"probe", "pass", "hint", "evidence",
 // "state"}:
 //
@@ -15,7 +15,7 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { lessons } from "../../../practice-template/checks/lessons/index.mjs";
-import { probeRepo } from "./probes.mjs";
+import { probeRepo } from "./probes.ts";
 import { openRepo } from "../../../practice-template/checks/repo.mjs";
 
 const fail = (error) => {

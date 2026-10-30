@@ -3,7 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { compileCourse, generateCheckIndex } from "../../engine/src/content.ts";
 import { lessons } from "../../../practice-template/checks/lessons/index.mjs";
-import { PROBES, probeError } from "../../host/src/probes.mjs";
+import { PROBES, probeError } from "../../host/src/probes.ts";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const manifest = JSON.parse(

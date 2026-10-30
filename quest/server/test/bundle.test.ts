@@ -145,7 +145,7 @@ describe("run-check.mjs", () => {
       "../checks/lessons/index.mjs",
     );
     expect(
-      checksSpecifier(join(repoRoot, "quest/host/src/probes.mjs")),
+      checksSpecifier(join(repoRoot, "quest/host/src/probes.ts")),
     ).toBeUndefined();
     expect(
       checksSpecifier(join(repoRoot, "practice-template/checks-extra/x.mjs")),

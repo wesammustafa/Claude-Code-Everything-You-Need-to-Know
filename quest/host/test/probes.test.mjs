@@ -8,7 +8,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { PROBES, probeError } from "../../engine/src/probes.ts";
-import { PROBES as HOST_PROBES, probeRepo, RUNS } from "../src/probes.mjs";
+import { PROBES as HOST_PROBES, probeRepo, RUNS } from "../src/probes.ts";
 import { openRepo } from "../../../practice-template/checks/repo.mjs";
 import {
   commit,
@@ -327,7 +327,7 @@ test("probes: the app runs one in its check child, which never fetches; a bad pr
   }
   // Every git call a probe makes is a local read.
   const src = readFileSync(
-    new URL("../src/probes.mjs", import.meta.url),
+    new URL("../src/probes.ts", import.meta.url),
     "utf8",
   );
   assert.doesNotMatch(src, /repo\.git\(/);
