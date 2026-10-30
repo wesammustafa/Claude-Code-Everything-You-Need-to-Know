@@ -4,7 +4,7 @@
 // real type and see each input it reduced, in order, with how deeply
 // reduces nested.
 import { initialState, reduce } from "../src/engine.ts";
-import { createHost } from "../src/host.mjs";
+import { createHost } from "../src/host.ts";
 import { fakeAdapters, fakeClock } from "../src/fake.ts";
 import { b1Only, FACTS } from "../../engine/test/drive.mjs";
 

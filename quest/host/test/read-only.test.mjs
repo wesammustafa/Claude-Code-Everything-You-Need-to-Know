@@ -26,7 +26,7 @@ const at = (path) => join(ROOT, path);
 const CHECKS = at("practice-template/checks") + "/";
 const ENGINE = at("quest/engine/src/engine.ts");
 const HOST_ROOTS = [
-  at("quest/host/src/index.mjs"),
+  at("quest/host/src/index.ts"),
   at("quest/host/src/fake.ts"),
 ];
 
@@ -59,7 +59,7 @@ test("the engine and the host make no network call, start only the Check child a
   const paths = sources.map((s) => s.path);
   // The scope can't shrink unseen: the files that run each kind of effect.
   for (const must of [
-    "quest/host/src/host.mjs",
+    "quest/host/src/host.ts",
     "quest/host/src/check-child.ts",
     "quest/host/src/git.ts",
     "quest/host/src/store.ts",
@@ -108,12 +108,12 @@ test("a planted network call, a planted process and a planted write each fail th
     [],
     "the store may write",
   );
-  const host = readFileSync(at("quest/host/src/host.mjs"), "utf8");
+  const host = readFileSync(at("quest/host/src/host.ts"), "utf8");
   const found = readOnlyFindings([
-    { path: "quest/host/src/host.mjs", text: `${host}\nfetch(url);\n` },
+    { path: "quest/host/src/host.ts", text: `${host}\nfetch(url);\n` },
   ]);
   assert.ok(
-    found.some((f) => f.startsWith("quest/host/src/host.mjs:")),
+    found.some((f) => f.startsWith("quest/host/src/host.ts:")),
     found.join("\n"),
   );
 });
@@ -127,7 +127,7 @@ const PLANTS = {
     'import { writeFile } from "node:fs/promises";\nawait writeFile("a", "b");\n',
 };
 const PLANTED_IN = [
-  "quest/host/src/host.mjs",
+  "quest/host/src/host.ts",
   "quest/engine/src/engine.ts",
   "quest/host/src/check-child.ts",
   "quest/host/src/probes.ts",

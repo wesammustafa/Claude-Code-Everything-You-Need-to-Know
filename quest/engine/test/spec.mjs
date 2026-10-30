@@ -95,7 +95,7 @@ export const SPEC = [
   engine("guards.7-baseline"),
   host(
     "guards.8-rerun",
-    "the host runs a check again when its evidence changed (host.mjs's check)",
+    "the host runs a check again when its evidence changed (host.ts's check)",
   ),
   host(
     "guards.9-single-flight",
