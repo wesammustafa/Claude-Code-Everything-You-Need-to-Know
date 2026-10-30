@@ -116,7 +116,7 @@ export {
 export { FORMAT, sanitize, snapshot } from "../../host/src/store.mjs";
 export { judge, stampFor } from "../src/holds.mjs";
 export { statusStamp } from "../src/status.mjs";
-export { mix, ruleTiers, TIERS } from "../src/tiers.mjs";
+export { mix, ruleTiers, TIERS } from "../src/tiers.ts";
 export {
   DEMO_B2,
   DEMO_I1,

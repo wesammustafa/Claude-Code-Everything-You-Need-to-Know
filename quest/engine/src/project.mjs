@@ -58,7 +58,7 @@ import {
   unmet,
   whileRunsOf,
 } from "./engine.mjs";
-import { mix, TIERS } from "./tiers.mjs";
+import { mix, TIERS } from "./tiers.ts";
 
 /** The snapshot of `s`, but its instance, revision and milestones. */
 export function project(s) {

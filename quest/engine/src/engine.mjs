@@ -18,7 +18,7 @@ import {
   needsChange,
   statusStamp,
 } from "./status.mjs";
-import { effectiveTier, ruleTiers, TIERS } from "./tiers.mjs";
+import { effectiveTier, ruleTiers, TIERS } from "./tiers.ts";
 export { ruleTiers };
 
 import { TYPED_MAX, WARMUPS } from "./rules.ts";

@@ -88,4 +88,4 @@ export {
   whileRunsOf,
   whileRunsOpen,
 } from "./engine.mjs";
-export { mix, TIERS } from "./tiers.mjs";
+export { mix, TIERS } from "./tiers.ts";
