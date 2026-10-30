@@ -11,6 +11,7 @@
   },
   "include": [
     "src/**/*.ts",
+    "../engine/src/**/*.ts",
     "../../course/manifest.json",
     "../../practice-template/checks/**/*.mjs"
   ],

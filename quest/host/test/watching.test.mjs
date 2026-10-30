@@ -15,7 +15,7 @@ import {
   opensWithCheck,
   reduce,
   workFolder,
-} from "../src/engine.mjs";
+} from "../src/engine.ts";
 import { fakeClock } from "../src/fake.mjs";
 import {
   AT_W3,

@@ -13,7 +13,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { isAbsolute, join } from "node:path";
-import { FOLDER_KEYS, HELP_USED, PATH_MAX, STEP_ID } from "./engine.mjs";
+import { FOLDER_KEYS, HELP_USED, PATH_MAX, STEP_ID } from "./engine.ts";
 
 export const FORMAT = 1;
 export const storePath = (root) => join(root, ".practice", "learn.json");

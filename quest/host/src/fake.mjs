@@ -3,7 +3,7 @@
 // memory. Each records what the host asked, and a test answers when it
 // says, or at once where it gives an answer.
 import { posix } from "node:path";
-import { globName, isGlob, stampFor } from "./engine.mjs";
+import { globName, isGlob, stampFor } from "./engine.ts";
 
 const turn = async () => {
   for (let i = 0; i < 3; i++) await new Promise((r) => setImmediate(r));

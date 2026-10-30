@@ -7,7 +7,7 @@ import {
   finishedBefore,
   threeLevels,
 } from "../../engine/test/drive.mjs";
-import { statusStamp } from "../src/engine.mjs";
+import { statusStamp } from "../src/engine.ts";
 import {
   AT_W3,
   fakeHost,

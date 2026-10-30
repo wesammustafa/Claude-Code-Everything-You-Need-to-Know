@@ -4,7 +4,7 @@
 // the tapped engine: the host gives a client only the snapshot.
 import { test } from "vitest";
 import assert from "node:assert/strict";
-import { ACTION_TYPES } from "../src/engine.mjs";
+import { ACTION_TYPES } from "../src/engine.ts";
 import { HOST_ACTION_TYPES } from "../src/host.mjs";
 import {
   AT_W3,

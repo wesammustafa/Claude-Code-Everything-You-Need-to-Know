@@ -2,7 +2,7 @@
 // process. The engine decides what the bytes mean.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, posix } from "node:path";
-import { globName, isGlob, stampFor } from "./engine.mjs";
+import { globName, isGlob, stampFor } from "./engine.ts";
 
 // The file a path names: itself, or for a glob the newest file that matches
 // it (the last one written, so the one Claude just made), null when none

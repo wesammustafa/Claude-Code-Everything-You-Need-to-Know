@@ -21,7 +21,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { loadState } from "../src/store.mjs";
-import { project } from "../src/engine.mjs";
+import { project } from "../src/engine.ts";
 import {
   driver,
   liveCourse,

@@ -5,7 +5,7 @@ import { execFile } from "node:child_process";
 import { statusEntries } from "../../../practice-template/checks/paths.mjs";
 import { childEnv } from "./check-child.mjs";
 import { shared } from "./children.ts";
-import { isStaged, listing } from "./engine.mjs";
+import { isStaged, listing } from "./engine.ts";
 
 // How long one git command may take.
 export const GIT_LIMIT = 30_000;

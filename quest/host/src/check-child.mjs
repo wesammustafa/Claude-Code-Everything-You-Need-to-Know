@@ -10,7 +10,7 @@ import { NPM_TEST_LIMIT } from "../../../practice-template/checks/lessons/b-3.mj
 import { lessons } from "../../../practice-template/checks/lessons/index.mjs";
 import { TIME_LIMIT } from "../../../practice-template/checks/stub-claude.mjs";
 import { shared } from "./children.ts";
-import { SLOW } from "./engine.mjs";
+import { SLOW } from "./engine.ts";
 
 const RUN_CHECK = join(
   dirname(fileURLToPath(import.meta.url)),
