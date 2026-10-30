@@ -1,9 +1,11 @@
 // The host's interface on fake adapters (ticket 209): what dispatch takes,
 // the clock's stamp, the listener, one input at a time, the effects it
-// runs, and opening, starting and closing.
+// runs, and opening, starting and closing. The raw state is read through
+// the tapped engine: the host gives a client only the snapshot.
 import { test } from "vitest";
 import assert from "node:assert/strict";
 import { ACTION_TYPES } from "../src/engine.mjs";
+import { HOST_ACTION_TYPES } from "../src/host.mjs";
 import {
   AT_W3,
   fakeHost,
@@ -25,7 +27,8 @@ const fine = (path) => ({
   practice: true,
 });
 
-test("dispatch takes exactly ACTION_TYPES; a key input is a TypeError", async () => {
+test("dispatch takes exactly HOST_ACTION_TYPES, the engine's actions and milestone.shown; a key input is a TypeError", async () => {
+  assert.deepEqual(HOST_ACTION_TYPES, [...ACTION_TYPES, "milestone.shown"]);
   const { host, heard } = fakeHost({ saved: AT_W3 });
   await host.open();
   for (const type of [
@@ -44,52 +47,61 @@ test("dispatch takes exactly ACTION_TYPES; a key input is a TypeError", async ()
   assert.equal(heard.length, 0, "nothing was reduced");
   // Each with the fields some action reads.
   const fields = { lesson: "b-1", option: 0, text: "x", help: "planned" };
-  for (const type of ACTION_TYPES) host.dispatch({ type, ...fields });
+  for (const type of HOST_ACTION_TYPES) host.dispatch({ type, ...fields });
+  // A milestone no tab has pending changes nothing, so no one hears it.
   assert.deepEqual(typesOf(heard), ACTION_TYPES);
 });
 
 test("the host's clock stamps every input: a client's own now is dropped, and an input the host makes keeps its own", async () => {
-  const { host, clock, heard, adapters } = fakeHost({
+  const { host, clock, heard, adapters, state, tapped } = fakeHost({
     saved: { ...AT_W3, folders: { intermediate: MINE } },
     folders: { [MINE]: { ...fine(MINE), now: 7 } },
   });
   await host.open();
   clock.spend(500);
-  host.dispatch({ type: "lesson.open", lesson: "b-1", now: 5 });
+  host.dispatch({ type: "lesson.open", lesson: "b-1", now: 5, revision: 1 });
   assert.equal("now" in heard[0].input, false);
-  assert.equal(host.snapshot().now, clock.now());
+  assert.equal("revision" in heard[0].input, false);
+  assert.equal(state().now, clock.now());
   host.start();
   await turn();
   assert.deepEqual(adapters.folders.looked, [MINE]);
-  const probed = heard.find((h) => h.input.type === "probed");
+  const probed = tapped.states.find((x) => x.input.type === "probed");
   assert.equal(probed.state.now, 7, "the look's own now");
 });
 
-test("snapshot is null before open, then the state the last input left", async () => {
+test("snapshot is null before open, then the snapshot of the state the last input left; dispatch gives the revision and snapshot after it", async () => {
   const { host } = fakeHost({ saved: AT_W3 });
   assert.equal(host.snapshot(), null);
-  assert.equal(
+  assert.deepEqual(
     host.dispatch({ type: "lesson.open", lesson: "b-1" }),
-    null,
+    { revision: 0, snapshot: null },
     "nothing to reduce before open",
   );
   const s = await host.open();
-  assert.equal(host.snapshot(), s);
+  assert.deepEqual(host.snapshot(), s);
+  assert.equal(s.revision, 1);
   const after = host.dispatch({ type: "lesson.open", lesson: "b-1" });
-  assert.equal(host.snapshot(), after);
-  assert.equal(after.phase, "playing");
+  assert.deepEqual(after, { revision: 2, snapshot: host.snapshot() });
+  assert.equal(after.snapshot.lesson.phase, "playing");
 });
 
-test("each listener hears each input once, with the state after it and its events, until it unsubscribes", async () => {
+test("each listener hears each input once, with the revision and snapshot after it and its events, never the state, until it unsubscribes", async () => {
   const { host } = fakeHost({ saved: AT_W3 });
   await host.open();
   const one = [];
   const off = host.subscribe((h) => one.push(h));
   host.dispatch({ type: "lesson.open", lesson: "b-1" });
   assert.equal(one.length, 1);
-  assert.deepEqual(Object.keys(one[0]).sort(), ["events", "input", "state"]);
+  assert.deepEqual(Object.keys(one[0]).sort(), [
+    "events",
+    "input",
+    "revision",
+    "snapshot",
+  ]);
   assert.deepEqual(one[0].input, { type: "lesson.open", lesson: "b-1" });
-  assert.equal(one[0].state, host.snapshot());
+  assert.deepEqual(one[0].snapshot, host.snapshot());
+  assert.equal(one[0].revision, host.revision());
   assert.deepEqual(one[0].events, []);
   off();
   host.dispatch({ type: "hint.next" });
@@ -144,7 +156,7 @@ test("an effect the host doesn't run is an error", async () => {
 });
 
 test("open: git's answers and the copy make the facts, and the client's facts go over the host's", async () => {
-  const { host, adapters } = fakeHost({
+  const { host, adapters, state } = fakeHost({
     saved: AT_W3,
     git: { ask: ["this folder is not a git repository", "Ana"] },
     env: { CODESPACES: "true" },
@@ -152,7 +164,8 @@ test("open: git's answers and the copy make the facts, and the client's facts go
   });
   const s = await host.open();
   assert.deepEqual(adapters.git.asked, [ROOT]);
-  assert.deepEqual(s.facts, {
+  assert.deepEqual([s.learner.name, s.learner.windows], ["Ana", true]);
+  assert.deepEqual(state().facts, {
     root: ROOT,
     name: "Ana",
     gitError: "this folder is not a git repository",
@@ -163,11 +176,12 @@ test("open: git's answers and the copy make the facts, and the client's facts go
     clipboard: true,
   });
   const none = fakeHost({ saved: AT_W3, tree: {} });
-  assert.equal((await none.host.open()).facts.practiceDir, false);
+  await none.host.open();
+  assert.equal(none.state().facts.practiceDir, false);
 });
 
 test("start arms the copy's watcher, then the tick, then the poll; saves the folder --dir gave and looks at every saved work folder", async () => {
-  const { host, adapters, clock, heard } = fakeHost({
+  const { host, adapters, clock, heard, state } = fakeHost({
     saved: { ...AT_W3, folders: { intermediate: MINE, advanced: OTHER } },
     ahead: fine(MINE),
     folders: { [OTHER]: fine(OTHER) },
@@ -196,7 +210,7 @@ test("start arms the copy's watcher, then the tick, then the poll; saves the fol
     heard.map((h) => h.input.path),
     [MINE, OTHER],
   );
-  assert.deepEqual(Object.keys(host.snapshot().probes).sort(), [MINE, OTHER]);
+  assert.deepEqual(Object.keys(state().probes).sort(), [MINE, OTHER]);
   host.start();
   assert.equal(clock.pending().length, 2, "a second start starts nothing more");
 });
@@ -248,7 +262,10 @@ test("close stops the clock, the watchers and the children, and nothing that ans
   adapters.fire(ROOT);
   await clock.advance(5_000);
   assert.equal(heard.length, n, "nothing after close");
-  assert.equal(host.dispatch({ type: "hint.next" }), host.snapshot());
+  assert.deepEqual(host.dispatch({ type: "hint.next" }), {
+    revision: host.revision(),
+    snapshot: host.snapshot(),
+  });
   assert.equal(heard.length, n);
 });
 

@@ -97,6 +97,29 @@ test(
 );
 
 test(
+  "an item whose check throws gets a fixed line, never the error it threw: a failed command's message carries what it printed (ticket 212)",
+  () => {
+    const dir = repo();
+    try {
+      // No repository: a-1's first item runs git, which fails.
+      rmSync(join(dir, ".git"), { recursive: true, force: true });
+      const { code, out } = child(["a-1", dir, "0"]);
+      assert.equal(code, 0);
+      assert.deepEqual(out.items[0], {
+        index: 0,
+        text: lessons["a-1"].items[0].text,
+        local: false,
+        pass: false,
+        hint: "The check could not run. To see why, run `npm run check -- a-1` in your practice copy, with `--dir` and the folder for a work folder.",
+      });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  },
+  SLOW_TEST,
+);
+
+test(
   'the check child writes {"running": n} to stderr before each item it runs, and stdout stays one line of JSON',
   () => {
     withRepo(

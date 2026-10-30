@@ -309,6 +309,7 @@ describe("the Playground's event buttons", () => {
       "check.passed": true,
       "check.notYet": true,
       "check.broken": true,
+      "check.ended": true,
       "answer.right": true,
       "answer.wrong": true,
       "hint.shown": true,

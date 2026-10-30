@@ -19,6 +19,9 @@ import { watchDirs } from "./watch.mjs";
 export const perf = () => Math.round(performance.now() * 1024) / 1024;
 export const realClock = {
   now: perf,
+  // The wall clock, in epoch milliseconds, for the server time an event and
+  // a heartbeat carry.
+  epoch: () => Date.now(),
   setInterval: (fn, ms) => setInterval(fn, ms),
   clearInterval: (id) => clearInterval(id),
   setTimeout: (fn, ms) => setTimeout(fn, ms),

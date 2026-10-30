@@ -48,6 +48,11 @@ export const EVENT_GROUPS: readonly {
         event: { type: "check.progress", n: 1, m: 3 },
         note: "changes nothing",
       },
+      {
+        id: "check.ended",
+        event: { type: "check.ended" },
+        note: "ends Thinking, no verdict",
+      },
     ],
   },
   {

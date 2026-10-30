@@ -1,15 +1,18 @@
-// The lesson engine's package entry (ticket 210): what the host and, from
-// ticket 212, the snapshot read. The step-file parser is "./content" and the
-// course loader "./course".
+// The lesson engine's package entry (ticket 210): what the host and the
+// snapshot read. The step-file parser is "./content" and the course loader
+// "./course".
 
-// The interface: one input in, the state, effects and events out.
+// The interface: one input in, the state, effects and events out; the
+// snapshot of a state (ticket 212), and the lesson a reduce starts playing.
 export {
   ACTION_TYPES,
   EFFECT_TYPES,
+  EVENT_TYPES,
   IDLE_MS,
   initialState,
   reduce,
 } from "./engine.mjs";
+export { project, startedLesson } from "./project.mjs";
 
 // What the host reads off the state: what to watch, what an overview asks
 // about, where the Learner is and works, and the evidence a check guards.
@@ -32,7 +35,7 @@ export {
 export { grewFrom, stampFor } from "./holds.mjs";
 export { isStaged, listing, statusStamp } from "./status.mjs";
 
-// The selectors 212's project(state) builds the snapshot from.
+// The selectors project(state) builds the snapshot from (project.mjs).
 export {
   answerKey,
   answersGit,
@@ -72,6 +75,7 @@ export {
   pinOf,
   recallOf,
   repoNeed,
+  ruleTiers,
   rungsOf,
   stepNote,
   tearDownLeft,

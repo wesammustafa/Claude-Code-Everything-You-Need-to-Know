@@ -11,6 +11,7 @@ const EVERY_EVENT: readonly QuestEvent[] = [
   { type: "check.passed", firstTime: true },
   { type: "check.notYet", evidence: "No commit yet" },
   { type: "check.broken" },
+  { type: "check.ended" },
   { type: "answer.right" },
   { type: "answer.wrong" },
   { type: "hint.shown", rung: 2 },

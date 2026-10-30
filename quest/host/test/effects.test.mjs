@@ -281,7 +281,7 @@ test("prerequisites of each kind, in the lesson's folder: a check item through t
   });
   adapters.files.write(`${MINE}/${skill}`, "---\nname: five-whys\n---\n");
   await host.open();
-  assert.equal(host.snapshot().lesson, "i-1");
+  assert.equal(host.snapshot().lesson.id, "i-1");
   host.firstLook();
   await turn();
   assert.deepEqual(

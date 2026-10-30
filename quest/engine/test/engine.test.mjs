@@ -1,6 +1,6 @@
-// The lesson engine on its own (tickets 207 and 210): Learner actions in,
-// effects out, with nothing outside quest/engine/src in reach but the
-// Checks and the compiled course, and none of the old terminal's state.
+// The lesson engine on its own (tickets 207, 210 and 212): Learner actions
+// in, effects and events out, with nothing outside quest/engine/src in
+// reach, no module that reads a file, and none of the old terminal's state.
 // The script plays lessons by actions through the action driver, and the
 // tests below read every state, effect and input it met.
 import { test } from "vitest";
@@ -12,6 +12,7 @@ import {
   ACTION_TYPES,
   EFFECT_TYPES,
   ENGINE_FIELDS,
+  EVENT_TYPES,
   FACTS,
   asksFolder,
   backOffered,
@@ -24,8 +25,12 @@ import {
   initialState,
   liveCourse,
   b1Only,
+  checkError,
+  checkItems,
+  checkResult,
   playUntil,
   reduce,
+  running,
   save,
   stateAt,
   stepOf,
@@ -38,13 +43,11 @@ const ROOT = resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
 const at = (path) => join(ROOT, path);
 const SRC = at("quest/engine/src");
 const ENGINE = join(SRC, "engine.mjs");
-// What the engine may reach besides its own folder: the Checks it parses
-// the course with, and the course files it reads.
-const OUTSIDE = [
-  at("practice-template/checks"),
-  at("course"),
-  at("quest/engine/dist"),
-];
+const MOMENTS = join(SRC, "moments.mjs");
+// The engine's modules that read files: the course loader reads the
+// manifest and the compiled course at load (ticket 212: the engine takes
+// its work levels from the course it is given instead).
+const READS_FILES = [join(SRC, "course.mjs")];
 
 // The fields the old terminal's translator owned, which no engine state
 // holds; `away` went with the translator in 210.
@@ -68,7 +71,7 @@ const REMOVED_INSIDE = ["typed", "lockUntil"];
 
 // ---- the script ------------------------------------------------------------------
 // Every state, effect and input type the script met.
-const seen = { states: [], effects: [], inputs: new Set() };
+const seen = { states: [], effects: [], inputs: new Set(), events: [] };
 const drivers = [];
 
 // The action driver, recording what each of its calls did.
@@ -110,12 +113,15 @@ function script() {
   assert.deepEqual([d.state.lesson, d.state.phase], ["b-2", "overview"]);
   d.start("planned");
   assert.equal(d.state.progress["b-2"].lessHelp, false);
-  // Restart: the lesson's place goes, and its overview shows.
+  // Restart: the lesson's place goes, and its overview shows. A finished
+  // lesson stays complete with its Badge: a replay never awards one again
+  // (spec, Rewards and Mastery).
   d.restart("b-1");
   assert.deepEqual(
     [d.state.lesson, d.state.phase, d.state.progress["b-1"].complete],
-    ["b-1", "overview", false],
+    ["b-1", "overview", true],
   );
+  assert.deepEqual(d.state.progress["b-1"].done, []);
 
   // The level's work folder: a folder that isn't there, then one that is;
   // an answer dropped before the host looked says nothing when it lands.
@@ -208,33 +214,52 @@ function script() {
   f.revisit();
   assert.equal(f.state.pos.step, back.at);
 
-  // A lesson with no lesson file: its check runs as it opens, and a run
-  // asked for carries its number where the lesson has a slow item.
+  // A lesson with no lesson file sits in the course and is never opened.
   const c = watched({
     course: b1Only,
     saved: save({ lessons: { "b-1": finished(b1Only[0]) } }),
   });
-  out = c.open("b-2").effects;
-  assert.deepEqual(
-    [c.state.phase, out.map((e) => e.type)],
-    ["overview", ["check"]],
+  c.refused("lesson.open", { lesson: "b-2" });
+  assert.equal(watching(c.state), null);
+
+  // A run the card says "Checking" for: its child starts and counts its
+  // items, and the first look ends it with no verdict; a changed look is
+  // the Learner's work changing, and so is a file change; r's run comes to
+  // a Check that could not run; a save fails.
+  const r = watched({
+    saved: save({ lessons: { "b-1": { step: "W3", beat: 0, done: [] } } }),
+  });
+  r.open("b-1");
+  const eff = r.last.effects.find((e) => e.type === "check");
+  r.send({ ...eff, type: "run-start", run: "check", asked: 0 });
+  r.send(running(eff, 1, 1));
+  r.send(checkResult(eff, checkItems(r.state, false)));
+  r.send(
+    checkResult(
+      eff,
+      checkItems(r.state, false).map((it) => ({ ...it, hint: "Other." })),
+    ),
   );
-  out = c.run().effects;
-  assert.deepEqual(out, [
-    { type: "check", lesson: "b-2", items: null, slow: true, dir: FACTS.root },
-  ]);
-  c.open("b-3");
-  out = c.run().effects;
-  assert.deepEqual(out, [
-    {
-      type: "check",
-      lesson: "b-3",
-      items: null,
-      slow: true,
-      asked: c.state.asks,
-      dir: FACTS.root,
-    },
-  ]);
+  r.activity();
+  r.run();
+  const again = r.last.effects.find((e) => e.type === "check");
+  r.send({ ...again, type: "run-start", run: "check" });
+  r.send(checkError(again, "it took too long"));
+  r.send({ type: "notice", kind: "save", message: "EACCES" });
+
+  // A warm-up on a missed skill: recalled, and missed.
+  for (const option of [1, 0]) {
+    const u = watched({
+      saved: save({
+        missed: ["start"],
+        lessons: { "b-1": finished(course.find((l) => l.id === "b-1")) },
+      }),
+    });
+    u.open("b-2");
+    u.start();
+    assert.equal(stepOf(u.state).id, "R1");
+    u.pick(option);
+  }
 
   // An optional step: skipped, it is not done.
   const optional = course.map((l) =>
@@ -277,7 +302,7 @@ function script() {
 
   for (const each of drivers) {
     seen.effects.push(...each.effects);
-    assert.deepEqual(each.events, [], "no moments yet (ticket 212)");
+    seen.events.push(...each.events);
   }
 }
 script();
@@ -311,13 +336,13 @@ test("the import walk sees every way a module reaches another", () => {
   ]);
 });
 
-test("the engine reaches nothing outside quest/engine/src but the Checks and the course, reaches the package's text module, and reads no clock and picks nothing at random", () => {
-  const files = reached(ENGINE);
-  for (const file of files)
-    assert.ok(
-      [SRC, ...OUTSIDE].some((dir) => inside(file, dir)),
-      `engine.mjs reaches ${relative(ROOT, file)}`,
-    );
+test("the engine and its snapshot reach nothing outside quest/engine/src and no module that reads a file, reach the package's text module, and read no clock and pick nothing at random", () => {
+  // The snapshot's module too (ticket 212), which the host imports.
+  const files = reached(join(SRC, "project.mjs"), reached(ENGINE));
+  for (const file of files) {
+    assert.ok(inside(file, SRC), `engine.mjs reaches ${relative(ROOT, file)}`);
+    assert.ok(!READS_FILES.includes(file), `engine.mjs reaches ${file}`);
+  }
   assert.ok(
     files.has(join(SRC, "text.mjs")),
     "holds.mjs reads text through text.mjs",
@@ -397,6 +422,33 @@ test("the engine asks for only its nine effects, and the script sends every acti
   );
 });
 
+test("the engine's events are its EVENT_TYPES, named in moments.mjs alone, and the script meets each but the Level's, the course's and the help offer", () => {
+  assert.equal(EVENT_TYPES.length, 19);
+  assert.ok(Object.isFrozen(EVENT_TYPES));
+  for (const e of seen.events)
+    assert.ok(EVENT_TYPES.includes(e.type), `an event ${e.type}`);
+  // help.offered is the client's (quest/client/src/pip/help.ts), and the
+  // Level's and the course's ends have their own tests (events.test.mjs).
+  const elsewhere = ["help.offered", "level.completed", "course.completed"];
+  const met = new Set(seen.events.map((e) => e.type));
+  assert.deepEqual(
+    EVENT_TYPES.filter((t) => !met.has(t) && !elsewhere.includes(t)),
+    [],
+    "every other event is met",
+  );
+  // Every type moments.mjs gives an event, a ternary's both sides too: each
+  // event but the help offer, and nothing else.
+  const named = new Set(
+    [...readFileSync(MOMENTS, "utf8").matchAll(/\btype:\s*([^,}\n]+)/g)]
+      .flatMap((m) => [...m[1].matchAll(/['"]([^'"]+)['"]/g)])
+      .map((m) => m[1]),
+  );
+  assert.deepEqual(
+    [...named].sort(),
+    EVENT_TYPES.filter((t) => t !== "help.offered").sort(),
+  );
+});
+
 test("an action whose guard fails changes nothing: on a fresh overview, nothing of a step acts", () => {
   const s = initialState({ course, saved: null, facts: FACTS, now: 0 });
   for (const type of [
@@ -446,6 +498,37 @@ test("an overview with its folder question open starts nothing: no check runs be
       const r = reduce(s, { type: "lesson.start", help });
       assert.deepEqual([r.state, r.effects], [s, []], `${id} ${help}`);
     }
+  }
+});
+
+test("a finished lesson restarted or played again keeps its Badge, and its play resumes where the Learner left it", () => {
+  const b1 = course.find((l) => l.id === "b-1");
+  for (const restart of [true, false]) {
+    const d = driver({
+      course,
+      saved: save({ lessons: { "b-1": finished(b1) } }),
+    });
+    d.open("b-1");
+    if (restart) d.restart("b-1");
+    assert.equal(d.state.phase, "overview");
+    d.start();
+    d.open("b-2");
+    const left = d.state.progress["b-1"].step;
+    assert.ok(left, "a step to come back to");
+    d.open("b-1");
+    assert.deepEqual(
+      [d.state.phase, stepOf(d.state).id, d.state.progress["b-1"].complete],
+      ["playing", left, true],
+      restart ? "restarted" : "played again",
+    );
+    // Saved and opened again: the app opens on b-2, and b-1 resumes there.
+    const saved = save({ lessons: d.state.progress });
+    const again = driver({ course, saved });
+    again.open("b-1");
+    assert.deepEqual(
+      [again.state.phase, stepOf(again.state).id],
+      ["playing", left],
+    );
   }
 });
 

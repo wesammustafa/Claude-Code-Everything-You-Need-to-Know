@@ -23,6 +23,7 @@ export function fakeClock(from = 1_000_000) {
   };
   return {
     now: () => time,
+    epoch: () => time,
     // Time passing inside a call, such as a slow write: no timer runs.
     spend: (ms) => {
       time += ms;

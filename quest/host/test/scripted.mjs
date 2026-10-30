@@ -56,8 +56,33 @@ export function scripted({ effects = {} } = {}) {
   return { engine, log };
 }
 
+// An engine, tapped: it reduces as `engine` does and keeps the last state,
+// and each input with the state after it (`states`), so a test can read the
+// raw state the host has no API for (ticket 212: a client sees only the
+// snapshot).
+export function tap(engine) {
+  engine ??= { initialState, reduce };
+  let state = null;
+  const states = [];
+  return {
+    initialState(args) {
+      state = engine.initialState(args);
+      return state;
+    },
+    reduce(prev, input) {
+      const r = engine.reduce(prev, input);
+      state = r.state;
+      states.push({ input, state });
+      return r;
+    },
+    state: () => state,
+    states,
+  };
+}
+
 // A host on fake adapters over the Beginner fixture course (b-1 alone has
-// content), in a fake practice copy that holds `.practice/`.
+// content), in a fake practice copy that holds `.practice/`, its engine
+// tapped.
 export function fakeHost({
   saved = null,
   tree = { [PRACTICE]: null },
@@ -68,9 +93,11 @@ export function fakeHost({
   ahead = null,
   env = {},
   platform = "linux",
+  instance = null,
   ...fakes
 } = {}) {
   const adapters = fakeAdapters({ root: ROOT, clock, tree, saved, ...fakes });
+  const tapped = tap(engine);
   const host = createHost({
     root: ROOT,
     course,
@@ -79,12 +106,14 @@ export function fakeHost({
     platform,
     adapters,
     facts,
-    engine,
+    engine: tapped,
     ahead,
+    ...(instance ? { instance } : {}),
   });
   const heard = [];
   host.subscribe((h) => heard.push(h));
-  return { host, adapters, clock, heard };
+  // `state()` is the engine's raw state, which only a test reads.
+  return { host, adapters, clock, heard, state: tapped.state, tapped };
 }
 
 // A few turns of the event loop, for microtasks and promise answers.

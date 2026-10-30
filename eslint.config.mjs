@@ -23,4 +23,29 @@ export default defineConfig([
       },
     },
   },
+  // The browser imports the contract's types and never any engine, host or
+  // server code (ticket 212's boundary test holds the compiled side).
+  {
+    files: ["quest/client/**/*.{ts,tsx,mts,cts}"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@quest/contract",
+              message: "The contract is types only: import type.",
+              allowTypeImports: true,
+            },
+          ],
+          patterns: [
+            {
+              group: ["@quest/engine*", "@quest/host*", "@quest/server*"],
+              message: "The browser never imports engine, host or server code.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]);

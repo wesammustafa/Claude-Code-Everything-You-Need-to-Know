@@ -7,7 +7,6 @@ import {
   b1Item,
   b1Only,
   beatOf,
-  checkOnly,
   course,
   courseWith,
   DEMO_B2,
@@ -381,25 +380,14 @@ test("resume: the saved step opens; unknown steps and lessons are ignored", () =
   assert.equal(start.state.welcomed, false);
 });
 
-// was learn-flow:263
-test("map and check-only mode: a lesson without a content file watches its check", () => {
+// was learn-flow:263. The check-only screen went in ticket 212: a lesson
+// without a content file sits in the course and is never opened.
+test("a lesson without a content file is never opened: lesson.open is refused, and nothing watches it", () => {
   const d = driver({ course: b1Only, saved: save() });
   // dropped: T-view the map opened with m, its cursor moved down
-  d.open("b-2");
-  assert.ok(checkOnly(d.state));
-  assert.equal(d.state.lesson, "b-2");
-  assert.deepEqual(watching(d.state), {
-    check: { lesson: "b-2", items: null },
-    dir: FACTS.root,
-  });
-  d.run();
-  assert.deepEqual(d.effects.at(-1), {
-    type: "check",
-    lesson: "b-2",
-    items: null,
-    slow: true,
-    dir: FACTS.root,
-  });
+  d.refused("lesson.open", { lesson: "b-2" });
+  assert.equal(d.state.lesson, "b-1");
+  assert.equal(watching(d.state), null);
 });
 
 // was learn-flow:276
@@ -444,11 +432,10 @@ test("review fixes: a finished lesson stays finished", () => {
   const done = save({
     lessons: { "b-1": { complete: true, done: ["W1", "W2"] } },
   });
-  const d = driver({ course: b1Only, saved: done });
+  const d = driver({ course, saved: done });
   // dropped: T-view the app opens on the map; the engine is at the next
-  // lesson's check-only overview
-  assert.equal(d.state.lesson, "b-2");
-  assert.ok(checkOnly(d.state));
+  // lesson's overview
+  assert.deepEqual([d.state.lesson, d.state.phase], ["b-2", "overview"]);
   // Playing it again from the map keeps the badge and the ticks.
   d.open("b-1");
   assert.equal(d.state.phase, "overview");

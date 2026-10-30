@@ -1,9 +1,13 @@
 // The lesson host (ticket 209): it runs the engine's effects through
 // injected adapters, owns the clock and takes inputs one at a time. A
-// client sends Learner actions with dispatch(), reads the state with
-// snapshot() and hears each input with subscribe(). Results, ticks, file
+// client sends Learner actions with dispatch(), reads the snapshot with
+// snapshot() and hears each change with subscribe(). Results, ticks, file
 // activity and folder looks come in through the host's own input(), never
-// from a client.
+// from a client. Since ticket 212 it also holds what live delivery needs:
+// a random instance ID, the revision, each event in its envelope with an
+// ID `<instance>.<sequence>`, the recent events for a reconnect, and the
+// pending milestones, all in memory only.
+import { randomUUID } from "node:crypto";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import {
@@ -13,8 +17,12 @@ import {
   initialState,
   introAsks,
   opensWithCheck,
+  project,
   reduce,
+  SLOW,
+  startedLesson,
   statusStamp,
+  stepOf,
   watching,
   workFolder,
 } from "./engine.mjs";
@@ -28,6 +36,30 @@ export const POLL_CHECK_MS = 2_000;
 export const POLL_GIT_MS = 2_000;
 // Watcher events this soon after a save are the save's own.
 export const SAVE_QUIET_MS = 400;
+// The events kept for a reconnect to replay: the last 256, for up to 15
+// minutes (spec, Live delivery).
+export const EVENT_LIMIT = 256;
+export const EVENT_KEEP_MS = 15 * 60_000;
+// The actions a client sends: the engine's, and milestone.shown, which the
+// host takes itself.
+export const HOST_ACTION_TYPES = [...ACTION_TYPES, "milestone.shown"];
+
+// The moments that stay pending until a tab shows them: a Lesson's first
+// completion, a Level complete and the course complete.
+const isMilestone = (e) =>
+  (e.type === "lesson.completed" && e.firstTime) ||
+  e.type === "level.completed" ||
+  e.type === "course.completed";
+// Where the Learner is, for an action based on an older place: the lesson,
+// its phase and the step on screen.
+const placeOf = (s) =>
+  JSON.stringify([
+    s.lesson,
+    s.phase,
+    (s.phase === "playing" && s.beat) || s.phase === "step-down"
+      ? stepOf(s).id
+      : null,
+  ]);
 
 /** @param {import("./types.mjs").HostOptions} options @returns {import("./types.mjs").Host} */
 export function createHost({
@@ -41,7 +73,11 @@ export function createHost({
   // The real engine; a test may pass one that wraps it.
   engine = { reduce, initialState },
   ahead = null,
+  // This process's instance: an event ID splits at its last ".".
+  instance = randomUUID(),
 }) {
+  if (typeof instance !== "string" || !instance || instance.includes("."))
+    throw new TypeError(`not an instance ID: ${instance}`);
   const { clock, checks, probes, git, folders, files, store, commands } =
     adapters;
   const home = env.HOME || env.USERPROFILE || homedir();
@@ -57,6 +93,84 @@ export function createHost({
   let work = { dir: root, watcher: null };
   const listeners = new Set();
 
+  // What live delivery reads (ticket 212), in memory only: the revision,
+  // which grows with each change; the last event's sequence number; the
+  // revision at which the Learner's place last changed; the recent events,
+  // each with when it happened on the host's clock; the pending
+  // milestones, each with the lesson it came in; and the snapshot's view,
+  // with its JSON to tell a change.
+  let revision = 0;
+  let seq = 0;
+  let placeRevision = 0;
+  let place = null;
+  const ring = [];
+  let milestones = [];
+  let view = null;
+  let viewJson = null;
+
+  const snapshot = () =>
+    view && {
+      ...view,
+      instance,
+      revision,
+      milestones: milestones.map((m) => m.envelope),
+    };
+  // The events older than 15 minutes, and any past the last 256, go.
+  function evict() {
+    const oldest = clock.now() - EVENT_KEEP_MS;
+    while (ring.length > EVENT_LIMIT || ring[0]?.at < oldest) ring.shift();
+  }
+  const notify = (events, item) => {
+    const heard = { revision, snapshot: snapshot(), events, input: item };
+    for (const l of [...listeners]) l(heard);
+  };
+
+  // After a reduce: a lesson that starts playing lapses the milestones of
+  // every other lesson; the revision grows where anything a tab sees
+  // changed; and each event goes out in its envelope, kept for a reconnect,
+  // a milestone pending too.
+  function publish(prev, item, events) {
+    const started = startedLesson(prev, state);
+    const before = milestones.length;
+    if (started !== null)
+      milestones = milestones.filter((m) => m.lesson === started);
+    const next = project(state);
+    const json = JSON.stringify(next);
+    if (events.length || milestones.length !== before || json !== viewJson)
+      revision += 1;
+    view = next;
+    viewJson = json;
+    const now = placeOf(state);
+    if (now !== place) {
+      place = now;
+      placeRevision = revision;
+    }
+    const serverTime = clock.epoch();
+    const at = clock.now();
+    const envelopes = events.map((e) => ({
+      id: `${instance}.${++seq}`,
+      revision,
+      serverTime,
+      ...e,
+    }));
+    for (const envelope of envelopes) {
+      ring.push({ at, envelope });
+      if (isMilestone(envelope))
+        milestones.push({ envelope, lesson: state.lesson });
+    }
+    evict();
+    notify(envelopes, item);
+  }
+
+  // A tab showed a pending milestone: it goes, once. Never reduced.
+  function shown(item) {
+    const before = milestones.length;
+    milestones = milestones.filter((m) => m.envelope.id !== item.id);
+    if (milestones.length === before) return;
+    revision += 1;
+    notify([], item);
+  }
+
   // One input at a time, in the order they came: an input sent while one
   // is reduced (a listener's, or an adapter that answers at once) waits.
   const queue = [];
@@ -70,23 +184,28 @@ export function createHost({
     try {
       while (queue.length && !closed) {
         const item = queue.shift();
+        if (item.type === "milestone.shown") {
+          shown(item);
+          continue;
+        }
+        const prev = state;
         const r = engine.reduce(state, { now: clock.now(), ...item });
         state = r.state;
         run(r.effects);
         if (!closed) watchWork();
-        if (!closed)
-          for (const l of [...listeners])
-            l({ state, input: item, events: r.events ?? [] });
+        if (!closed) publish(prev, item, r.events ?? []);
       }
     } finally {
       busy = false;
     }
   }
 
-  // When a check or git child really starts. Like every input an effect
-  // causes, it waits for the input that asked for the run to finish.
-  const runStart = () =>
-    queueMicrotask(() => !closed && input({ type: "run-start" }));
+  // When a check, git or probe child really starts: what it runs, the r
+  // number it carries then and its folder, for the engine to tell the run
+  // the card says "Checking" for. Like every input an effect causes, it
+  // waits for the input that asked for the run to finish.
+  const runStart = (run) =>
+    queueMicrotask(() => !closed && input({ type: "run-start", ...run }));
 
   // One Check child at a time, whatever asked for it: a check, a probe, a
   // stamp's probe or a prerequisite's. Only the call that starts the child
@@ -122,7 +241,7 @@ export function createHost({
     // The child starts when its turn in the lane comes, not when the run was
     // asked for.
     const r = await inLane(() => {
-      runStart();
+      runStart({ run: "check", lesson, items, asked: flags.asked ?? 0, dir });
       return checks.run(dir, lesson, items, { slow, onRunning });
     });
     if (closed) return;
@@ -155,7 +274,7 @@ export function createHost({
   // `listed`: git lists each untracked file, for a beat on part of the tree.
   // `head`: and where HEAD is, for a head-moved beat (ticket 105).
   const gitRun = owing(async ({ asked }, dir, listed, head) => {
-    runStart();
+    runStart({ run: "git", asked: asked ?? 0, dir });
     const r = await git.status(dir, { files: listed, head });
     if (closed) return;
     input(
@@ -175,7 +294,7 @@ export function createHost({
   // A git probe (ticket 105), in the check child.
   const probe = owing(async ({ asked }, dir, name, args) => {
     const r = await inLane(() => {
-      runStart();
+      runStart({ run: "probe", name, asked: asked ?? 0, dir });
       return probes.run(dir, name, args);
     });
     if (closed) return;
@@ -247,12 +366,16 @@ export function createHost({
               pass: r.error ? null : r.pass,
               hint: r.hint ?? "",
             }))
-          : inLane(() => checks.run(e.dir, req.lesson, [req.item])).then(
-              (r) => {
-                const item = r.items?.find((it) => it.index === req.item);
-                return { pass: item ? item.pass : null };
-              },
-            ));
+          : inLane(() =>
+              // A slow item runs as r runs it: a run without it would come
+              // back a placeholder.
+              (SLOW[req.lesson] ?? []).includes(req.item)
+                ? checks.run(e.dir, req.lesson, [req.item], { slow: true })
+                : checks.run(e.dir, req.lesson, [req.item]),
+            ).then((r) => {
+              const item = r.items?.find((it) => it.index === req.item);
+              return { pass: item ? item.pass : null };
+            }));
       if (closed) return;
       input({
         type: "prereq",
@@ -384,8 +507,12 @@ export function createHost({
 
   return {
     clock,
-    // Git's first answers, then the first state. Null where the host closed
-    // while git answered.
+    instance,
+    revision: () => revision,
+    // The server's time, in epoch milliseconds, for a heartbeat.
+    serverTime: () => clock.epoch(),
+    // Git's first answers, then the first snapshot. Null where the host
+    // closed while git answered.
     async open() {
       const [gitError, name] = await git.ask(root);
       if (closed) return null;
@@ -400,7 +527,12 @@ export function createHost({
         ...given,
       };
       state = engine.initialState({ course, saved, facts, now: clock.now() });
-      return state;
+      revision = 1;
+      placeRevision = 1;
+      place = placeOf(state);
+      view = project(state);
+      viewJson = JSON.stringify(view);
+      return snapshot();
     },
     // The watchers, the tick and the poll, then what --dir and the saved
     // folders need: the answer --dir gave is saved, and each saved work
@@ -443,16 +575,43 @@ export function createHost({
         check({}, state.lesson, null, null, folderOf(state));
       run(introAsks(state));
     },
-    dispatch(action) {
+    // An action, with the instance and revision the tab showed when it sent
+    // it. One based on an older place than the Learner's now (the lesson,
+    // phase or step changed since), or on another instance's (a revision
+    // this instance has not reached yet is one), applies nothing and comes
+    // back `stale`; a milestone shown is never stale. The revision and
+    // snapshot after it come back.
+    dispatch(action, { revision: seen, instance: from } = {}) {
       const type = action?.type;
-      if (!ACTION_TYPES.includes(type))
+      if (!HOST_ACTION_TYPES.includes(type))
         throw new TypeError(`not an action: ${type}`);
-      // The host's clock stamps every input: a client's own time is not one.
-      const { now, ...a } = action;
+      // The host's clock stamps every input: a client's own time is not one,
+      // nor is its revision.
+      const { now, revision: _, ...a } = action;
+      if (
+        state &&
+        type !== "milestone.shown" &&
+        ((from !== undefined && from !== instance) ||
+          (typeof seen === "number" &&
+            (seen < placeRevision || seen > revision)))
+      )
+        return { stale: true, revision, snapshot: snapshot() };
       input(a);
-      return state;
+      return { revision, snapshot: snapshot() };
     },
-    snapshot: () => state,
+    snapshot,
+    // The events after the one with this ID, oldest first ([] when it is the
+    // newest), or null when it is not one this instance still holds: then
+    // nothing is replayed.
+    eventsAfter(id) {
+      evict();
+      if (typeof id !== "string") return null;
+      const dot = id.lastIndexOf(".");
+      if (dot <= 0 || id.slice(0, dot) !== instance) return null;
+      if (!/^[1-9]\d*$/.test(id.slice(dot + 1))) return null;
+      const at = ring.findIndex((x) => x.envelope.id === id);
+      return at < 0 ? null : ring.slice(at + 1).map((x) => x.envelope);
+    },
     subscribe(fn) {
       listeners.add(fn);
       return () => listeners.delete(fn);

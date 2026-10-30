@@ -76,6 +76,18 @@ const some = (paths) => [
   Math.max(0, paths.length - 3),
 ];
 
+// The not-yet line of a git-clean beat that still finds `listed`: a scope
+// of one file that is the one change names it once; a folder scope, or the
+// whole tree, lists what changed.
+export function cleanLine(verify, listed) {
+  const scope = verify.paths?.join(", ");
+  if (scope && listed.length === 1 && listed[0] === scope)
+    return C.uncommitted(scope);
+  return scope
+    ? C.changedUnder(listed.length, scope, ...some(listed))
+    : C.dirty(listed.length, ...some(listed));
+}
+
 // Whether what git status lists passes a beat that needs something to
 // happen (git-changed, git-only, git-staged), with the evidence a pass shows
 // or the not-yet line a miss gets. `paths` lists each untracked file, and

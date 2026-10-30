@@ -7,6 +7,7 @@
 export {
   ACTION_TYPES,
   EFFECT_TYPES,
+  EVENT_TYPES,
   beatOf,
   contentOf,
   evidence,
@@ -18,8 +19,10 @@ export {
   listing,
   onCard,
   opensWithCheck,
+  project,
   reduce,
   stampFor,
+  startedLesson,
   statusStamp,
   stepOf,
   stepsOf,

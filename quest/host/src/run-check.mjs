@@ -57,10 +57,11 @@ function checkItems(lesson, dir, ...indexes) {
     let outcome;
     try {
       outcome = item.check(repo);
-    } catch (error) {
-      // Cut, as a failed command's message can carry all it printed: the
-      // host ends a child that prints more than 1 MB.
-      outcome = `The check could not run: ${error.message.slice(0, 4000)}`;
+    } catch {
+      // A fixed line, never the error: a failed command's message carries
+      // all it printed, and the hint goes to the browser (ticket 212).
+      // `npm run check` in the terminal prints the error itself.
+      outcome = `The check could not run. To see why, run \`npm run check -- ${lesson}\` in your practice copy, with \`--dir\` and the folder for a work folder.`;
     }
     return {
       index,

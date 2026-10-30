@@ -38,6 +38,7 @@ export {
   ACTION_TYPES,
   EFFECT_TYPES,
   ENGINE_FIELDS,
+  EVENT_TYPES,
   IDLE_MS,
   RESULTS,
   TYPED_MAX,
@@ -281,6 +282,7 @@ export function driver({
     act(type, fields);
     assert.equal(last.changed, false, `${type} changed the state`);
     assert.deepEqual(last.effects, [], `${type} asked for effects`);
+    assert.deepEqual(last.events, [], `${type} marked a moment`);
     return last;
   };
   return {
@@ -349,9 +351,9 @@ export function stateAt(
 }
 
 // ---- where the Learner is ----------------------------------------------------------
-// What the old views were: intro and check-only are `overview`, a step card
-// is `playing` with a beat, a resume `playing` with none, a level-up
-// `step-down`, the lesson's end and next screen `complete`.
+// What the old views were: an intro is `overview`, a step card is `playing`
+// with a beat, a resume `playing` with none, a level-up `step-down`, the
+// lesson's end and next screen `complete`.
 export const where = (s) => ({
   lesson: s.lesson,
   phase: s.phase,
@@ -359,7 +361,6 @@ export const where = (s) => ({
   beat: s.beat ? s.pos.beat : null,
   status: s.beat?.status ?? null,
 });
-export const checkOnly = (s) => s.phase === "overview" && !lessonOf(s).content;
 // The step a resume opens on, before the beat is open.
 const resumeStep = (s) =>
   stepsOf(s).find((x) => x.id === s.progress[s.lesson].step) ?? null;
@@ -799,16 +800,6 @@ export function playUntil(d, stop, { todo = new Set(), look } = {}) {
     look?.(s);
     if (!s.welcomed) {
       d.finishWelcome();
-      continue;
-    }
-    if (checkOnly(s)) {
-      // A lesson with no lesson file: its check, every item passing. It
-      // stays on its overview once complete, where nothing more is done.
-      if (s.progress[s.lesson].complete) break;
-      d.run();
-      const eff = d.last.effects.find((e) => e.type === "check");
-      if (!eff) break;
-      respond(d, eff, { pass: true });
       continue;
     }
     if (s.phase === "overview") {

@@ -36,6 +36,9 @@ export const PATH = coursePath(manifest).map((entry) => {
       ? { folder: "copy" }
       : {}),
     ...(entry.folder === "new-copy" ? { newCopy: true } : {}),
+    // A lesson of a level that practises in a work folder (the engine's
+    // levelKey reads it, so engine.mjs imports no file-reading module).
+    ...(entry.folder === "work" ? { work: true } : {}),
   };
 });
 export const LEVELS = manifest.levels.map((level) => level.id);

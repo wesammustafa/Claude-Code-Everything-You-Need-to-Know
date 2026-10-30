@@ -124,7 +124,10 @@ test("a change in the app's first 400 ms counts on a clock that starts at 0, as 
 
 // spec: watching
 test("a change says the copy's .practice/ appeared only when it did, then that the Learner is working, then asks again", async () => {
-  const { host, clock, adapters, heard } = fakeHost({ saved: AT_W3, tree: {} });
+  const { host, clock, adapters, heard, state } = fakeHost({
+    saved: AT_W3,
+    tree: {},
+  });
   await host.open();
   host.start();
   host.dispatch({ type: "lesson.open", lesson: "b-1" });
@@ -143,7 +146,7 @@ test("a change says the copy's .practice/ appeared only when it did, then that t
     heard.slice(next).map((h) => h.input),
     [{ type: "facts", facts: { practiceDir: true } }, { type: "activity" }],
   );
-  assert.equal(host.snapshot().facts.practiceDir, true);
+  assert.equal(state().facts.practiceDir, true);
   assert.equal(
     adapters.checks.calls.length,
     2,
@@ -153,12 +156,12 @@ test("a change says the copy's .practice/ appeared only when it did, then that t
 
 // spec: watching
 test("a work folder that was wrong is looked at again on a change and on the poll, one look at a time; a folder that was fine is left alone", async () => {
-  const { host, clock, adapters, heard } = atI1();
+  const { host, clock, adapters, heard, state } = atI1();
   await host.open();
   host.start();
   await turn();
   assert.deepEqual(adapters.folders.looked, [MINE]);
-  assert.equal(host.snapshot().probes[MINE].missing, true);
+  assert.equal(state().probes[MINE].missing, true);
   // From now each look waits for the test.
   const held = [];
   adapters.folders.look = (path) => {
@@ -172,7 +175,7 @@ test("a work folder that was wrong is looked at again on a change and on the pol
   assert.equal(adapters.folders.looked.length, 2, "the poll waits for it too");
   held[0](fine(MINE));
   await turn();
-  assert.equal(host.snapshot().probes[MINE].missing, false);
+  assert.equal(state().probes[MINE].missing, false);
   assert.ok(heard.some((h) => h.input.type === "probed" && !h.input.missing));
   adapters.fire(ROOT);
   await clock.advance(5_000);
@@ -213,7 +216,7 @@ test("the work folder has its own watcher, armed again as the Learner moves to a
   host.dispatch({ type: "lesson.start", help: "planned" });
   await turn();
   // A Worked example step that runs in the copy is watched there alone.
-  assert.equal(host.snapshot().phase, "playing");
+  assert.equal(host.snapshot().lesson.phase, "playing");
   assert.deepEqual(adapters.armed(), [ROOT]);
   assert.deepEqual(
     adapters.checks.calls.map((c) => c.dir),

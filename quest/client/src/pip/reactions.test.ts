@@ -51,6 +51,7 @@ const MAP: Record<QuestEventType, readonly Row[]> = {
       expected: { kind: "retry", intensity: 0.3, gaze: null },
     },
   ],
+  "check.ended": [{ event: { type: "check.ended" }, expected: null }],
   "answer.right": [
     {
       event: { type: "answer.right" },

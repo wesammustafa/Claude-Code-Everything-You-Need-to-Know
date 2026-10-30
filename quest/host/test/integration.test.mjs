@@ -28,7 +28,7 @@ import { b1Only, finishedBefore } from "../../engine/test/drive.mjs";
 import { createHost, realAdapters } from "../src/index.mjs";
 import { storePath } from "../src/store.mjs";
 import { reducerCheck, reducerRepo } from "./repo.mjs";
-import { AT_W3, scripted } from "./scripted.mjs";
+import { AT_W3, scripted, tap } from "./scripted.mjs";
 import { alive, holding, pidsOf, sweep } from "./tree.mjs";
 
 const until = async (fn, ms = 60_000) => {
@@ -50,8 +50,9 @@ const outside = (dir) =>
   );
 
 // Real adapters with every check run recorded, so a test can wait for each
-// to end.
+// to end, and the engine tapped, so a test can read the raw state.
 function realHost(dir, saved) {
+  const engine = tap();
   const runs = [];
   const adapters = realAdapters({
     root: dir,
@@ -69,10 +70,11 @@ function realHost(dir, saved) {
     env: process.env,
     platform: process.platform,
     adapters,
+    engine,
   });
   const heard = [];
   host.subscribe((h) => heard.push(h.input));
-  return { host, adapters, heard, runs };
+  return { host, adapters, heard, runs, state: engine.state };
 }
 
 // spec: never-runs-claude
@@ -83,28 +85,29 @@ test("a real copy: writing version.txt turns b-1's beat done, nothing changes ou
   rmSync(join(dir, ".practice"), { recursive: true, force: true });
   const before = outside(dir);
   mkdirSync(join(dir, ".practice"));
-  const { host, adapters, heard, runs } = realHost(dir, {
+  const { host, adapters, heard, runs, state } = realHost(dir, {
     format: 1,
     welcomed: true,
     lessons: { "b-1": { step: "W3", beat: 0, done: ["W1", "W2"] } },
   });
+  const status = () => host.snapshot().lesson.beat?.status;
   try {
-    const s = await host.open();
-    assert.equal(s.facts.gitError, null);
+    await host.open();
+    assert.equal(state().facts.gitError, null);
     host.start();
     host.firstLook();
     host.dispatch({ type: "lesson.open", lesson: "b-1" });
-    assert.equal(host.snapshot().beat.status, "opening");
+    assert.equal(status(), "checking");
     // Its first check finds no file yet.
     assert.ok(await until(() => heard.some((i) => i.type === "check")));
-    assert.notEqual(host.snapshot().beat.status, "done");
+    assert.notEqual(status(), "done");
     writeFileSync(
       join(dir, ".practice", "version.txt"),
       "2.1.285 (Claude Code)\n",
     );
     assert.ok(
-      await until(() => host.snapshot().beat.status === "done"),
-      JSON.stringify(host.snapshot().beat),
+      await until(() => status() === "done"),
+      JSON.stringify(host.snapshot().lesson.beat),
     );
     // The poll can answer before the first tick, and the save's quiet
     // window can hide the write from the watcher: wait for either.
@@ -140,7 +143,7 @@ test("an Intermediate folder in another repository gets the checks and git, and 
   rmSync(join(dir, ".practice"), { recursive: true, force: true });
   mkdirSync(join(dir, ".practice"));
   const course = loadCourse(dir);
-  const { host, adapters, heard, runs } = realHost(dir, {
+  const { host, adapters, heard, runs, state } = realHost(dir, {
     format: 1,
     welcomed: true,
     lessons: finishedBefore("i-1", course),
@@ -148,7 +151,7 @@ test("an Intermediate folder in another repository gets the checks and git, and 
   });
   try {
     const s = await host.open();
-    assert.equal(s.lesson, "i-1");
+    assert.equal(s.lesson.id, "i-1");
     host.start();
     host.firstLook();
     // git looks at the folder: a repository that ignores .practice/.
@@ -157,7 +160,7 @@ test("an Intermediate folder in another repository gets the checks and git, and 
         heard.some((i) => i.type === "probed" && i.path === mine),
       ),
     );
-    assert.deepEqual(host.snapshot().probes[mine], {
+    assert.deepEqual(state().probes[mine], {
       missing: false,
       git: true,
       gitBroken: null,

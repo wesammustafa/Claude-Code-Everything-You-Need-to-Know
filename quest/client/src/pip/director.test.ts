@@ -73,6 +73,7 @@ describe("modes", () => {
     ["check.passed", passed],
     ["check.notYet", notYet],
     ["check.broken", { type: "check.broken" } as const],
+    ["check.ended", { type: "check.ended" } as const],
   ])("Thinking from check.started until %s", (_name, result) => {
     const { director, send } = setup();
     expect(send({ type: "check.started" }).mode).toBe("thinking");
@@ -1052,6 +1053,22 @@ describe("the help offer", () => {
       intensity: OFFER_INTENSITY,
     });
     expect(director.helpShowing()).toBe(true);
+  });
+
+  test("a Check that ends with no verdict plays nothing, so the help offer waits for no Reaction", () => {
+    const { director, at, send } = onStep();
+    at(1000);
+    send({ type: "check.started" });
+    at(HINT_UNUSED_MS + 5000);
+    director.send({ type: "tick" });
+    expect(director.helpShowing()).toBe(false);
+    const model = send({ type: "check.ended" });
+    expect(model.mode).toBe("idle");
+    expect(director.helpShowing()).toBe(true);
+    expect(model.reaction).toMatchObject({
+      kind: "explaining",
+      intensity: OFFER_INTENSITY,
+    });
   });
 
   test("45 s running out during a Check never replaces a pass's Success, and the pass ends it", () => {

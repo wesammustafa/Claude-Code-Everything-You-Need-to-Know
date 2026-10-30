@@ -5,9 +5,11 @@
 /**
  * The host's one clock: monotonic milliseconds, the intervals of the tick
  * and the poll, and the Check child's per-item limit. The watcher's debounce
- * and git's own time limit do not go through it.
+ * and git's own time limit do not go through it. `epoch` is the wall clock
+ * in epoch milliseconds, for the server time events and heartbeats carry.
  * @typedef {object} Clock
  * @property {() => number} now
+ * @property {() => number} epoch
  * @property {(fn: () => void, ms: number) => unknown} setInterval
  * @property {(id: unknown) => void} clearInterval
  * @property {(fn: () => void, ms: number) => unknown} setTimeout
@@ -104,14 +106,16 @@
 /**
  * The lesson engine the host runs: the real one by default. It is an
  * option only so a test can wrap the real engine, to add effects to an
- * input or log what was reduced.
+ * input, log what was reduced or read the state (quest/host/test's tap).
+ * `events` are the contract's QuestEvent values, without their envelope.
  * @typedef {object} EngineSeam
- * @property {(state: object, input: object) => { state: object, effects: object[], events: object[] }} reduce
+ * @property {(state: object, input: object) => { state: object, effects: object[], events: import("@quest/contract").QuestEvent[] }} reduce
  * @property {(args: object) => object} initialState
  */
 
 /**
  * @typedef {object} HostOptions
+ * @property {string} [instance] this process's instance ID, random by default
  * @property {string} root the practice copy
  * @property {object[]} course
  * @property {object | null} [saved]
@@ -124,22 +128,41 @@
  */
 
 /**
+ * What a listener hears after each change: the revision and snapshot after
+ * it, its events in their envelopes, and the input. Never the raw state.
+ * `input` is the host's own, for its tests and its wiring, and never goes
+ * to a client: a host input carries file bytes, folders and messages.
  * @typedef {object} Heard
- * @property {object} state
- * @property {object} input
- * @property {object[]} events
+ * @property {number} revision
+ * @property {import("@quest/contract").Snapshot} snapshot
+ * @property {import("@quest/contract").EventEnvelope[]} events
+ * @property {object} input host-only, never sent to a client
+ */
+
+/**
+ * What dispatch returns: the revision and snapshot after the action, with
+ * `stale` where it was based on an older place, or on another instance's,
+ * and applied nothing.
+ * @typedef {object} Dispatched
+ * @property {number} revision
+ * @property {import("@quest/contract").Snapshot | null} snapshot
+ * @property {true} [stale]
  */
 
 /**
  * @typedef {object} Host
- * @property {() => Promise<object | null>} open
+ * @property {() => Promise<import("@quest/contract").Snapshot | null>} open
  * @property {() => void} start
  * @property {() => void} firstLook
- * @property {(action: object) => object} dispatch
- * @property {() => object | null} snapshot
+ * @property {(action: object, opts?: { revision?: number, instance?: string }) => Dispatched} dispatch
+ * @property {() => import("@quest/contract").Snapshot | null} snapshot
+ * @property {(id: string) => import("@quest/contract").EventEnvelope[] | null} eventsAfter
  * @property {(fn: (heard: Heard) => void) => () => void} subscribe
  * @property {() => void} close
  * @property {Clock} clock
+ * @property {string} instance
+ * @property {() => number} revision
+ * @property {() => number} serverTime
  */
 
 /**

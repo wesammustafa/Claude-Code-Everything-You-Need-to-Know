@@ -13,7 +13,7 @@ import {
   asksFolder,
   asksHere,
   beatOf,
-  checkOnly,
+  checkItems,
   course,
   DEMO_I1,
   driver,
@@ -48,16 +48,10 @@ import {
 
 const MINE = "/home/sam/code/my-app";
 const COPY = FACTS.root;
-// The course with DEMO_I1 as i-1, and i-5, i-capstone, a-1, a-5 and
-// a-capstone shown through their checks: every lesson has a file, and these
-// tests need a check-only lesson that practises in the level's folder, one
-// pinned to the copy, one in the Advanced folder and the two that run in a
-// new copy.
-const CHECK_ONLY = new Set(["i-5", "i-capstone", "a-1", "a-5", "a-capstone"]);
-const withI1 = () =>
-  threeLevels({ "i-1": DEMO_I1 }).map((l) =>
-    CHECK_ONLY.has(l.id) ? { ...l, content: null } : l,
-  );
+// The course with DEMO_I1 as i-1. i-5 practises in the level's folder,
+// i-capstone is pinned to the copy, a-1 is in the Advanced folder, and a-5
+// and a-capstone run in a new copy.
+const withI1 = () => threeLevels({ "i-1": DEMO_I1 });
 // A Learner past Beginner, on i-1's overview, with these folders saved.
 const atI1 = (folders, lessons = withI1()) =>
   driver({
@@ -71,6 +65,18 @@ const lastOf = (effects, type) => effects.filter((e) => e.type === type).at(-1);
 const stepIs = (id) => (s) => where(s).step === id;
 // Plays i-1 on to W1, its first check beat, as a Learner who needs no help.
 const toW1 = (d) => playUntil(d, stepIs("W1"));
+// From a lesson's overview, plays on to its first check beat outside a
+// Worked example (which may run in the copy) and returns that check's folder.
+const firstCheckDir = (d) => {
+  playUntil(
+    d,
+    (s) =>
+      Boolean(s.beat) &&
+      beatOf(s).verify.kind === "check" &&
+      stepOf(s).part !== "Worked example",
+  );
+  return lastOf(d.effects, "check").dir;
+};
 // The folder answer's ask goes out as an effect; the host answers with what
 // it found.
 const answer = (d, found = {}) =>
@@ -114,7 +120,7 @@ test("a saved work folder is where its level's checks run; Beginner stays in the
   });
   playUntil(b, (s) => Boolean(s.beat) && beatOf(s).verify.kind === "check");
   assert.equal(lastOf(b.effects, "check").dir, COPY);
-  // A check-only lesson of each later level: its own level's folder.
+  // Another lesson of each later level: its own level's folder.
   for (const [id, dir] of [
     ["i-5", MINE],
     ["a-1", "/home/sam/code/other"],
@@ -124,8 +130,9 @@ test("a saved work folder is where its level's checks run; Beginner stays in the
       saved: save({ lessons: {}, folders }),
     });
     c.open(id);
-    assert.ok(checkOnly(c.state), id);
-    assert.equal(lastOf(c.effects, "check").dir, dir, id);
+    assert.deepEqual([c.state.lesson, c.state.phase], [id, "overview"]);
+    assert.equal(folderOf(c.state), dir, id);
+    assert.equal(firstCheckDir(c), dir, id);
     assert.equal(watching(c.state).dir, dir, id);
   }
 });
@@ -356,15 +363,15 @@ test("when the work folder isn't the copy, the header names it on every lesson s
   });
   assert.equal(folderHere(b.state), COPY);
   assert.equal(folderHere(atI1({ intermediate: COPY }).state), COPY);
-  // A check-only lesson of the level names it too.
+  // Another lesson's overview in the level names it too.
   const c = atI1({ intermediate: MINE });
   c.open("i-5");
-  assert.ok(checkOnly(c.state));
+  assert.equal(c.state.phase, "overview");
   assert.equal(folderHere(c.state), MINE);
 });
 
 // spec: newcopy.i-capstone-pinned
-test("every line that sends the learner to another terminal says which folder: the card's place, the check-only card's and the stray-command note", () => {
+test("every line that sends the learner to another terminal says which folder: the card's place, an overview's and the stray-command note", () => {
   // was learn-folder:348
   // dropped: T-render each place line and run line; the folder each names is folderHere
   const d = atI1({ intermediate: MINE });
@@ -387,19 +394,15 @@ test("every line that sends the learner to another terminal says which folder: t
   const copy = atI1({ intermediate: COPY });
   playUntil(copy, stepIs("C"));
   assert.equal(folderHere(copy.state), COPY);
-  // A check-only card: its place is the work folder, or the copy for
+  // Another lesson's overview: its place is the work folder, or the copy for
   // i-capstone, pinned there.
   const c = atI1({ intermediate: MINE });
   c.open("i-5");
   assert.equal(folderHere(c.state), MINE);
   c.open("i-capstone");
   assert.equal(c.state.lesson, "i-capstone");
-  assert.equal(
-    lastOf(c.effects, "check").dir,
-    COPY,
-    "i-capstone checks in the copy",
-  );
   assert.equal(folderHere(c.state), COPY);
+  assert.equal(firstCheckDir(c), COPY, "i-capstone checks in the copy");
 });
 
 // ---- the map's folder rows: an answer given away from the overview -------------
@@ -429,19 +432,16 @@ test("the map shows each later level's work folder, and f there changes it; Begi
   // dropped: T-render fitsAll on the map at b-1, i-1 and a-1
 });
 
-test("f on a check-only card changes its level's folder; i-capstone, pinned to the copy, has no f", () => {
+test("f on another lesson's overview changes its level's folder; i-capstone, pinned to the copy, has no f", () => {
   // was learn-folder:480
   const d = atI1(null);
   d.open("i-5");
   // dropped: T-render "f folder" on the key bar
   assert.equal(folderKey(d.state), "intermediate", "f answers i-5's level");
   giveFolder(d, "intermediate", MINE);
-  assert.ok(checkOnly(d.state));
-  assert.equal(
-    pending(d, "check").dir,
-    MINE,
-    "the card checks the new folder at once",
-  );
+  assert.deepEqual([d.state.lesson, d.state.phase], ["i-5", "overview"]);
+  assert.equal(folderOf(d.state), MINE, "the overview is in the new folder");
+  assert.equal(firstCheckDir(d), MINE, "and its checks run there");
   d.open("i-capstone");
   assert.equal(folderKey(d.state), null);
   d.refused("folder.ask", { key: "i-capstone" });
@@ -449,20 +449,19 @@ test("f on a check-only card changes its level's folder; i-capstone, pinned to t
 
 // ---- pinned folders --------------------------------------------------------------
 const ACTIONS = "/home/sam/claude-actions-practice";
-const checkOnlyAt = (id, folders) => {
+const overviewAt = (id, folders) => {
   const d = atI1(folders);
   d.open(id);
-  assert.ok(checkOnly(d.state));
-  assert.equal(d.state.lesson, id);
+  assert.deepEqual([d.state.lesson, d.state.phase], [id, "overview"]);
   return d;
 };
 
 // spec: newcopy.by-lesson-id
 // spec: newcopy.no-check
 // spec: newcopy.copy-refused
-test("a-5's check-only view asks for its new copy and runs no check until it has one; then its check runs there, for a-5 only", () => {
+test("a-5's overview asks for its new copy and runs no check until it has one; then its checks run there, for a-5 only", () => {
   // was learn-folder:559
-  const d = checkOnlyAt("a-5");
+  const d = overviewAt("a-5");
   assert.equal(lastOf(d.effects, "check"), undefined);
   assert.equal(watching(d.state), null);
   assert.equal(folderKey(d.state), "a-5");
@@ -495,14 +494,9 @@ test("a-5's check-only view asks for its new copy and runs no check until it has
   answer(d);
   assert.deepEqual(d.state.folders, { "a-5": ACTIONS });
   assert.deepEqual(snapshot(d.state).folders, { "a-5": ACTIONS });
-  assert.deepEqual(lastOf(d.effects, "check"), {
-    type: "check",
-    lesson: "a-5",
-    items: null,
-    dir: ACTIONS,
-  });
-  assert.equal(watching(d.state).dir, ACTIONS);
   assert.equal(folderHere(d.state), ACTIONS);
+  assert.equal(firstCheckDir(d), ACTIONS);
+  assert.equal(watching(d.state).dir, ACTIONS);
   // dropped: T-render the header and "r check now" on the key bar
   // Its folder is a-5's alone: the Advanced capstone still asks, and a-1
   // runs in the copy.
@@ -517,20 +511,15 @@ test("a-5's check-only view asks for its new copy and runs no check until it has
   );
   // Given its new copy, the capstone's slow items wait for r there, as any
   // lesson's do (render's unchecked condition: a folder and slow items).
-  const cap = checkOnlyAt("a-capstone", {
+  const cap = overviewAt("a-capstone", {
     "a-capstone": "/home/sam/ci-review",
   });
   assert.equal(folderOf(cap.state), "/home/sam/ci-review");
   assert.ok(lessonOf(cap.state).slow.length > 0);
-  assert.deepEqual(lastOf(cap.effects, "check"), {
-    type: "check",
-    lesson: "a-capstone",
-    items: null,
-    dir: "/home/sam/ci-review",
-  });
+  assert.equal(firstCheckDir(cap), "/home/sam/ci-review");
   // dropped: T-render fitsAll with the new copy
   d.open("a-1");
-  assert.equal(lastOf(d.effects, "check").dir, COPY);
+  assert.equal(folderOf(d.state), COPY);
 });
 
 test("a lesson file can pin its folder in its front matter: copy, or new copy; anything else is an error", () => {
@@ -586,13 +575,17 @@ test("switching folders: what the old folder's check found goes, a run still out
   const OTHER = "/home/sam/code/other-app";
   const d = atI1({ intermediate: MINE });
   d.open("i-5");
+  // i-5's first check beat that compares no file with an earlier state.
+  playUntil(
+    d,
+    (s) =>
+      Boolean(s.beat) &&
+      beatOf(s).verify.kind === "check" &&
+      !beatOf(s).verify.fresh &&
+      stepOf(s).part === "Your turn",
+  );
   assert.equal(lastOf(d.effects, "check").dir, MINE);
-  const items = lessonOf(d.state).items.map((text, index) => ({
-    index,
-    text,
-    pass: true,
-    hint: "",
-  }));
+  const items = checkItems(d.state, true);
   d.folderAsk("intermediate");
   d.folderChoose("intermediate", { path: OTHER });
   // MINE's run lands while the host looks: it is still the folder.
@@ -605,14 +598,14 @@ test("switching folders: what the old folder's check found goes, a run still out
   assert.ok(d.state.checks["i-5"]);
   answer(d, { path: OTHER });
   assert.equal(d.state.checks["i-5"], undefined, "the old folder's marks go");
-  assert.equal(lastOf(d.effects, "check").dir, OTHER);
-  // A run of MINE that was still out lands now: it would complete the
-  // lesson there.
+  assert.equal(watching(d.state).dir, OTHER, "the next look is in OTHER");
+  // A run of MINE that was still out lands now: it would pass the step
+  // there.
   d.send({ type: "check", lesson: "i-5", items, dir: MINE });
-  assert.equal(d.state.progress["i-5"].complete, false);
+  assert.ok(!isDone(d.state.beat));
   assert.equal(d.state.checks["i-5"], undefined);
   d.send({ type: "check", lesson: "i-5", items, dir: OTHER });
-  assert.equal(d.state.progress["i-5"].complete, true);
+  assert.ok(isDone(d.state.beat));
   // dropped: T-render the header naming other-app
   assert.equal(folderHere(d.state), OTHER);
 });

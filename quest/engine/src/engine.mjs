@@ -1,14 +1,16 @@
 // The lesson engine (ticket 207): every transition of a lesson, as a pure
-// function: reduce(state, input) returns { state, effects, events }. Its
+// function: reduce(state, input) returns { state, effects, events }, the
+// events being the moments the input marked (moments.mjs). Its
 // inputs are Learner actions (ACTION_TYPES), the results of its own effects
 // and clock ticks; its effects (EFFECT_TYPES) ask the wiring to run a
 // check, read git status or a file, look at a folder or save progress, and
 // their results come back as inputs. Nothing here reads a file or a clock,
 // and nothing outside this package is imported but the Checks the course
-// is parsed with: what a screen shows is the client's.
+// is parsed with (no module that reads a file): what a screen shows is the
+// client's.
 import { GIT, isChoice, READS, SINCE_GIT } from "./content.mjs";
-import { WORK_LEVELS } from "./course.mjs";
 import { evidenceOf, grewFrom, judge } from "./holds.mjs";
+import { EVENT_TYPES, momentsOf } from "./moments.mjs";
 import {
   cleanListed,
   eachFile,
@@ -17,10 +19,11 @@ import {
   statusStamp,
 } from "./status.mjs";
 import { effectiveTier, ruleTiers, TIERS } from "./tiers.mjs";
+export { ruleTiers };
 
 import { TYPED_MAX, WARMUPS } from "./rules.mjs";
 
-export { TYPED_MAX, WARMUPS };
+export { EVENT_TYPES, TYPED_MAX, WARMUPS };
 
 export const IDLE_MS = 120_000;
 
@@ -67,6 +70,7 @@ export const ENGINE_FIELDS = [
   "prereqAsks",
   "folderAnswered",
   "folderAsk",
+  "firstCompletion",
 ];
 
 const clone = (x) => structuredClone(x);
@@ -156,7 +160,7 @@ export function initialState({ course, saved = null, facts, now = 0 }) {
     // 'playing' (a resume waits there with no beat open until the lesson
     // opens), 'step-down' or 'complete'.
     lesson: next.id,
-    phase: next.content && p.step && !p.complete ? "playing" : "overview",
+    phase: next.content && p.step ? "playing" : "overview",
     pos: { step: 0, beat: 0 },
     beat: null,
     checks: {},
@@ -183,15 +187,18 @@ export function initialState({ course, saved = null, facts, now = 0 }) {
     commands: {},
     prereqs: {},
     prereqAsks: 0,
+    // The lesson whose end on screen is its first completion, for Lesson
+    // complete's first time (ticket 212), in memory.
+    firstCompletion: null,
   };
 }
 
-// Where the Learner is (ticket 207): on a step card, on an overview, or on
-// a lesson with no lesson file. The engine watches the active step on
-// every screen the client shows.
+// Where the Learner is (ticket 207): on a step card or on an overview. The
+// engine watches the active step on every screen the client shows. A lesson
+// with no lesson file is never opened (ticket 212 removed its check-only
+// screen): it only sits in the course.
 export const onCard = (s) => s.phase === "playing" && Boolean(s.beat);
 const inOverview = (s) => s.phase === "overview" && Boolean(contentOf(s));
-const checkOnlyHere = (s) => !contentOf(s);
 
 // ---- lookups -----------------------------------------------------------------
 export const lessonOf = (s, id = s.lesson) => s.course.find((l) => l.id === id);
@@ -220,10 +227,14 @@ export function folderKey(s, id = s.lesson) {
   if (pinOf(l) === "new copy") return l.id;
   return pinOf(l) === "copy" ? null : levelKey(s, id);
 }
+// Whether a level practises in a work folder: Intermediate and Advanced,
+// whose lessons' PATH entries say so (course.mjs).
+const isWorkLevel = (s, level) =>
+  s.course.some((l) => l.level === level && l.work);
 // A lesson's level where that level practises in a work folder: Intermediate
 // or Advanced. Null for Beginner.
 export const levelKey = (s, id = s.lesson) =>
-  WORK_LEVELS.includes(levelOf(s, id)) ? levelOf(s, id) : null;
+  isWorkLevel(s, levelOf(s, id)) ? levelOf(s, id) : null;
 // A later level's work folder: the one saved for it, the practice copy by default.
 export const levelFolder = (s, level) => s.folders[level] ?? s.facts.root;
 // The folder a lesson's check, git status and file reads run in: its work
@@ -443,11 +454,6 @@ export const opensWithCheck = (s) =>
 // What the wiring should keep an eye on for the beat on screen.
 // `dir` is the folder it runs in.
 export function watching(s) {
-  // A lesson that runs in a new copy has no check to run until it has one.
-  if (checkOnlyHere(s))
-    return folderOf(s)
-      ? { check: { lesson: s.lesson, items: null }, dir: folderOf(s) }
-      : null;
   if (!onCard(s)) return null;
   const dir = folderOf(s, s.lesson, stepOf(s));
   if (["done", "already"].includes(s.beat.status)) return null;
@@ -540,8 +546,6 @@ function setFolder(s, key, path, effects) {
   if (s.folderAsk?.key === key) s.folderAsk = null;
   if (inOverview(s)) s.folderAnswered = s.lesson;
   effects.push({ type: "save" });
-  if (checkOnlyHere(s) && folderKey(s) === key)
-    effects.push({ type: "check", lesson: s.lesson, items: null, dir: path });
 }
 
 // ---- what a lesson needs (ticket 89) ----------------------------------------
@@ -846,6 +850,14 @@ function openBeat(s, effects) {
     ended: false,
     opened: s.now,
     eased: Boolean(p.easedSteps[step.id]),
+    // The run the card says "Checking" for, from the moment its child really
+    // starts (`run-start`) until the status leaves "opening": { asked }. And
+    // the last look at what the beat watches, as a digest, so a look that
+    // differs from the one before is a change (work.changed), unless a file
+    // change already said so since the last look. In memory.
+    run: null,
+    look: null,
+    touched: false,
   };
   const offer = beat.wait ? whileRunsPick(s) : null;
   if (offer) s.beat.whileRuns = { id: offer, answer: null };
@@ -1013,22 +1025,12 @@ export function asStarted(s) {
 
 function startLesson(s, id, effects) {
   s.lesson = id;
-  const l = lessonOf(s, id);
-  if (!l.content) {
-    s.phase = "overview";
-    if (folderOf(s, id))
-      effects.push({
-        type: "check",
-        lesson: id,
-        items: null,
-        dir: folderOf(s, id),
-      });
-    return;
-  }
   const p = s.progress[id];
   const steps = stepsOf(s, id);
+  // A lesson's end clears its step, so a step saved is a play to resume: a
+  // first play, or a replay of a lesson that keeps its Badge.
   const at = steps.findIndex((x) => x.id === p.step);
-  if (at !== -1 && !p.complete) {
+  if (at !== -1) {
     const beat = p.beat >= 0 && p.beat < steps[at].beats.length ? p.beat : 0;
     s.pos = {
       step: at,
@@ -1070,6 +1072,7 @@ function nextStep(s, effects) {
   const p = s.progress[s.lesson];
   const steps = stepsOf(s);
   if (s.pos.step + 1 >= steps.length) {
+    s.firstCompletion = p.complete ? null : s.lesson;
     p.complete = true;
     p.step = null;
     s.phase = "complete";
@@ -1278,11 +1281,10 @@ export const RESULTS = [
 function onCheck(s, ev, effects, rRuns) {
   ev = { ...ev, evidence: evidenceOf(ev.read) };
   s.checks[ev.lesson] = {
-    items: keptSlow(s, ev),
+    items: ev.items,
     evidence: ev.evidence,
     error: null,
   };
-  checkOnlyDone(s, ev, effects);
   if (rRuns || !onCard(s) || ev.lesson !== s.lesson) return;
   const beat = beatOf(s);
   if (beat.verify.kind !== "check") return;
@@ -1321,31 +1323,6 @@ function onCheck(s, ev, effects, rRuns) {
   }
   st.slowWait = false;
   decide(s, ev, effects, failing && { item: failing.text, hint: failing.hint });
-}
-
-// On a lesson with no lesson file, a slow item a run left out keeps what the
-// last run that had it found, so a poll changes no row of its card.
-function keptSlow(s, ev) {
-  if (lessonOf(s, ev.lesson)?.content) return ev.items;
-  const before = s.checks[ev.lesson]?.items ?? [];
-  return ev.items.map((it) =>
-    it.slow ? (before.find((b) => b.index === it.index && !b.slow) ?? it) : it,
-  );
-}
-
-// A lesson with no lesson file is complete once a full check passes: every
-// item passed, slow ones too (r runs those; a run that left one out marks it
-// not passing). It stays complete.
-function checkOnlyDone(s, ev, effects) {
-  const l = lessonOf(s, ev.lesson);
-  const p = s.progress[ev.lesson];
-  if (!l || l.content || p.complete) return;
-  if (
-    !l.items.every((_, i) => ev.items.some((it) => it.index === i && it.pass))
-  )
-    return;
-  p.complete = true;
-  effects.push({ type: "save" });
 }
 
 // Where a fresh beat's file `ev.read` starts being new (holds.mjs grewFrom):
@@ -1572,7 +1549,7 @@ const steppingDown = (s) => s.phase === "step-down";
 // What a folder answer can be for: a level with a work folder, or a lesson
 // that runs in a new copy.
 const answersFolder = (s, key) =>
-  WORK_LEVELS.includes(key) ||
+  isWorkLevel(s, key) ||
   (Boolean(lessonOf(s, key)) && folderKey(s, key) === key);
 
 // The step-down's accept: its tier joins the lesson's levels and the step
@@ -1604,9 +1581,10 @@ const ACTIONS = {
     s.phase = "overview";
     effects.push({ type: "save" });
   },
-  // Resumes the lesson's play, or shows its overview.
+  // Resumes the lesson's play, or shows its overview. A lesson with no
+  // lesson file has neither.
   "lesson.open"(s, { lesson }, effects) {
-    if (!lessonOf(s, lesson)) return false;
+    if (!lessonOf(s, lesson)?.content) return false;
     startLesson(s, lesson, effects);
   },
   // Not while the overview's folder question is open: no Check runs until
@@ -1623,17 +1601,21 @@ const ACTIONS = {
     openStep(s, 0, effects);
   },
   // The browser confirms first. It keeps the eases, the misses and the
-  // answers of this sitting.
+  // answers of this sitting, and a finished lesson keeps its Badge: a
+  // replay never awards one again (spec, Rewards and Mastery).
   "lesson.restart"(s, { lesson }, effects) {
     if (!lessonOf(s, lesson)) return false;
-    s.progress[lesson] = blankProgress();
+    s.progress[lesson] = {
+      ...blankProgress(),
+      complete: s.progress[lesson].complete,
+    };
     s.lesson = lesson;
     s.phase = "overview";
     effects.push({ type: "save" });
   },
   "lesson.next"(s, a, effects) {
     const next = s.phase === "complete" && nextLessonOf(s);
-    if (!next) return false;
+    if (!next?.content) return false;
     startLesson(s, next.id, effects);
   },
   // The Learner opens a folder answer, or edits the one open: the notes
@@ -1648,7 +1630,7 @@ const ACTIONS = {
   // to look at first (`probed` answers).
   "folder.choose"(s, { key, to }, effects) {
     if (to === "practice-copy") {
-      if (!WORK_LEVELS.includes(key)) return false;
+      if (!isWorkLevel(s, key)) return false;
       return setFolder(s, key, s.facts.root, effects);
     }
     const path = typeof to?.path === "string" ? to.path.trim() : "";
@@ -1741,32 +1723,7 @@ const ACTIONS = {
   },
   "check.run"(s, a, effects) {
     const w = watching(s);
-    if (!w) return false;
-    if (checkOnlyHere(s)) {
-      // Where the run takes a slow item, r's number goes out with it, so
-      // its own result says when it ended. Elsewhere the run takes a moment.
-      if (!lessonOf(s).slow.length) {
-        effects.push({
-          type: "check",
-          lesson: s.lesson,
-          items: null,
-          slow: true,
-          dir: folderOf(s),
-        });
-        return;
-      }
-      s.asks += 1;
-      effects.push({
-        type: "check",
-        lesson: s.lesson,
-        items: null,
-        slow: true,
-        asked: s.asks,
-        dir: folderOf(s),
-      });
-      return;
-    }
-    if (yesNo(s)) return false;
+    if (!w || yesNo(s)) return false;
     const beat = beatOf(s);
     const st = s.beat;
     st.explicit = true;
@@ -1861,6 +1818,33 @@ function resultFolder(s, ev) {
   );
 }
 
+// A look (moments.mjs's work.changed): a result about what the beat on
+// screen watches, as a digest of what it judges, or null. A result about
+// another lesson, or a git result the beat doesn't read, is none; a look at
+// part of the tree also differs when another path is staged.
+function lookAt(s, ev) {
+  const w = watching(s);
+  if (ev.type === "check" && w?.check?.lesson === ev.lesson)
+    return JSON.stringify([ev.items, evidenceOf(ev.read)]);
+  if (ev.type === "file" && w?.file === ev.path)
+    return JSON.stringify(judge(beatOf(s).verify, ev.read, readFrom(s, ev)));
+  if (ev.type === "git" && answersGit(w, ev))
+    return JSON.stringify(
+      "head" in ev
+        ? [ev.paths, ev.head]
+        : ev.files
+          ? [ev.paths, ev.staged]
+          : ev.paths,
+    );
+  if (
+    ev.type === "probe" &&
+    w?.probe?.name === ev.name &&
+    sameJson(ev.args, w.probe.args)
+  )
+    return JSON.stringify([ev.pass, ev.state]);
+  return null;
+}
+
 // Applies one input to `s` in place and returns the input it handled: a
 // result about another folder comes back as `stale`, and an action whose
 // guard failed as null.
@@ -1887,10 +1871,38 @@ function apply(s, input, effects) {
     ev.dir !== resultFolder(s, ev)
   )
     ev = { ...ev, type: "stale" };
+  const look = lookAt(s, ev);
   switch (ev.type) {
     case "check":
       onCheck(s, ev, effects, rRuns);
       break;
+    case "run-start": {
+      // A child really started (the host's run-start: what it runs, the r
+      // number it carries and its folder). Only the run the card says
+      // "Checking" for counts, as for `running`: what the beat watches, in
+      // its folder, asked by the latest r, or by the beat opening when no r
+      // is out. A later r's run keeps the one run going.
+      const w = watching(s);
+      const asked = ev.asked ?? 0;
+      const watched =
+        ev.run === "check"
+          ? Boolean(w?.check) &&
+            w.check.lesson === ev.lesson &&
+            sameJson(ev.items ?? null, w.check.items)
+          : ev.run === "git"
+            ? Boolean(w?.git)
+            : ev.run === "probe" && w?.probe?.name === ev.name;
+      if (
+        s.beat?.status !== "opening" ||
+        !watched ||
+        ev.dir !== w.dir ||
+        asked !== (s.beat.asked || 0)
+      )
+        break;
+      if (s.beat.run) s.beat.run.asked = asked;
+      else s.beat.run = { asked };
+      break;
+    }
     case "running": {
       // The check child starts its nth item of m. Only the run the card says
       // "Checking" for counts: this beat's check (its lesson and its items,
@@ -1998,6 +2010,13 @@ function apply(s, input, effects) {
       // A file changed or git moved: the learner is working, so no "stuck?" offer.
       s.lastActivity = s.now;
       if (s.beat) s.beat.idle = false;
+      // A change moments.mjs says (work.changed): the look it brings says
+      // nothing more.
+      if (watching(s) && !s.beat.run) s.beat.touched = true;
+      break;
+    // Something the Learner should read (a save that failed): no state
+    // changes, and moments.mjs says it.
+    case "notice":
       break;
     case "probed": {
       // What the host found at a folder: kept for the notes, and, for the ask
@@ -2012,7 +2031,7 @@ function apply(s, input, effects) {
       if (!ev.key || !a || a.key !== ev.key || a.asked !== ev.asked) break;
       if (ev.missing) Object.assign(a, { asked: 0, missing: ev.path });
       // A new copy is another folder than this practice copy.
-      else if (!WORK_LEVELS.includes(ev.key) && ev.path === s.facts.root)
+      else if (!isWorkLevel(s, ev.key) && ev.path === s.facts.root)
         Object.assign(a, { asked: 0, isCopy: true });
       else setFolder(s, ev.key, ev.path, effects);
       break;
@@ -2020,6 +2039,7 @@ function apply(s, input, effects) {
     default:
       break;
   }
+  if (look !== null && s.beat) Object.assign(s.beat, { look, touched: false });
   return ev;
 }
 
@@ -2043,13 +2063,15 @@ function settle(prev, s, effects) {
 }
 
 // The engine's interface: one input, the state after it, the effects it
-// asks for and the moments to react to once (none yet: ticket 212).
+// asks for and the moments to react to once (moments.mjs).
 export function reduce(prev, input) {
   const s = clone({ ...prev, course: null });
   s.course = prev.course;
   const effects = [];
   if (input.now !== undefined) s.now = input.now;
-  apply(s, input, effects);
+  const handled = apply(s, input, effects);
   settle(prev, s, effects);
-  return { state: s, effects, events: [] };
+  // A started run ends as the status leaves "opening".
+  if (s.beat?.run && s.beat.status !== "opening") s.beat.run = null;
+  return { state: s, effects, events: momentsOf(prev, s, handled) };
 }

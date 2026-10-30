@@ -42,6 +42,7 @@ const READERS: {
   "check.notYet": ({ evidence }) =>
     isText(evidence) ? { type: "check.notYet", evidence } : null,
   "check.broken": () => ({ type: "check.broken" }),
+  "check.ended": () => ({ type: "check.ended" }),
   "answer.right": () => ({ type: "answer.right" }),
   "answer.wrong": () => ({ type: "answer.wrong" }),
   "hint.shown": ({ rung }) =>

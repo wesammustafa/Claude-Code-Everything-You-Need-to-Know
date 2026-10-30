@@ -62,6 +62,13 @@ export const C = {
     `Staged: ${shown}${more ? ` and ${more} more` : ""}`,
   changedOutside: (n, under, shown) =>
     `${n} file${n === 1 ? "" : "s"} changed outside ${under}: ${shown}`,
+  // What a git-clean beat still finds (ticket 212): the one file it names,
+  // or what changed under its folder or in the whole tree.
+  uncommitted: (path) => `${path} has uncommitted changes.`,
+  changedUnder: (n, under, shown, more) =>
+    `${n} file${n === 1 ? "" : "s"} changed under ${under}: ${shown}${more ? ` and ${more} more` : ""}`,
+  dirty: (n, shown, more) =>
+    `git status lists ${n} change${n === 1 ? "" : "s"}: ${shown}${more ? ` and ${more} more` : ""}`,
   // Against how git was when step n opened (ticket 105).
   headSame: (n) =>
     `No new commit yet: HEAD is where it was when step ${n} opened.`,

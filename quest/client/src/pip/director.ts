@@ -478,7 +478,8 @@ function applyEvents(
     else if (
       event.type === "check.passed" ||
       event.type === "check.notYet" ||
-      event.type === "check.broken"
+      event.type === "check.broken" ||
+      event.type === "check.ended"
     ) {
       checking = false;
     }

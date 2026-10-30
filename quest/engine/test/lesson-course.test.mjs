@@ -1,18 +1,14 @@
 // Every lesson of the guide in the app (ticket 83), driven by actions (ticket
-// 208): the 23 lessons on PATH in course order, the ones with no lesson file
-// shown through their check, and a check-only lesson that can be completed.
-// The map, the card's rows, motion and plain output were the terminal's,
-// and went with it in ticket 210.
+// 208): the 23 lessons on PATH in course order. The map, the card's rows,
+// motion and plain output were the terminal's, and went with it in ticket
+// 210; the check-only screen for a lesson with no lesson file went in 212.
 import { test } from "vitest";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
-  FACTS,
-  NEW_COPY,
   PATH,
   SLOW,
-  checkOnly,
   course,
   driver,
   finishedBefore,
@@ -25,7 +21,6 @@ import {
   probed,
   pending,
   root,
-  sanitize,
   save,
   snapshot,
   toFinish,
@@ -33,20 +28,11 @@ import {
   where,
 } from "./drive.mjs";
 
-// The course with no lesson file at all, so every lesson shows its check.
-const noFiles = liveCourse.map((l) => ({ ...l, content: null }));
-// The course with every Advanced lesson shown through its check, as before
-// its lesson files: the tests that use it are about check-only lessons,
-// a-5's and a-capstone's new copy among them.
-const advancedCheckOnly = course.map((l) =>
-  l.level === "advanced" ? { ...l, content: null } : l,
-);
-// A lesson's check-only overview, opened by the Learner.
-const onCheckOnly = (id, lessons = noFiles, saved = {}) => {
-  const d = driver({ course: lessons, saved: save({ lessons: saved }) });
+// A lesson's overview, opened by the Learner.
+const onOverview = (id, saved = {}) => {
+  const d = driver({ course, saved: save({ lessons: saved }) });
   d.open(id);
-  assert.ok(checkOnly(d.state), id);
-  assert.equal(d.state.lesson, id);
+  assert.deepEqual([d.state.phase, d.state.lesson], ["overview", id]);
   return d;
 };
 // A lesson's check items, as text.
@@ -171,106 +157,12 @@ const throughIntermediate = () => ({
   ),
 });
 
-// was learn-course:144
-test("a check-only lesson is complete once a full check passes, slow items included: saved, counted, and the map's next marker moves on", () => {
-  const d = onCheckOnly("a-4", advancedCheckOnly, throughIntermediate());
-  const all = () => true;
-  // A poll leaves the slow items out: everything it ran passes, but that is no full check.
-  d.send(result("a-4", all));
-  assert.equal(
-    d.state.progress["a-4"].complete,
-    false,
-    "a poll without the slow items",
-  );
-  const out = d.run().effects;
-  assert.deepEqual(
-    out.find((e) => e.type === "check"),
-    {
-      type: "check",
-      lesson: "a-4",
-      items: null,
-      slow: true,
-      asked: 1,
-      dir: FACTS.root,
-    },
-  );
-  // r's run with a failing item: still not complete.
-  d.send(result("a-4", (i) => i !== 0, { slow: false }));
-  assert.equal(d.state.progress["a-4"].complete, false, "an item fails");
-  const effects = d.send(result("a-4", all, { slow: false }));
-  assert.equal(d.state.progress["a-4"].complete, true);
-  assert.ok(
-    effects.some((e) => e.type === "save"),
-    "saved",
-  );
-  // dropped: T-render the card's top border with its DONE pill at 60x20 and 80x24
-  assert.equal(
-    snapshot(d.state).lessons["a-4"].complete,
-    true,
-    "in learn.json",
-  );
-  assert.equal(
-    sanitize(JSON.parse(JSON.stringify(snapshot(d.state)))).lessons["a-4"]
-      .complete,
-    true,
-    "and read back",
-  );
-  // A later failing poll takes nothing back.
-  d.send(result("a-4"));
-  assert.equal(d.state.progress["a-4"].complete, true);
-  // dropped: T-render the map's and the welcome's "Advanced path 1 of 8
-  // done" and A4's "done" row; the engine facts behind them follow.
-  assert.equal(
-    levelLessons(d.state, "advanced").filter(
-      (l) => d.state.progress[l.id].complete,
-    ).length,
-    1,
-  );
-  assert.equal(toFinish(d.state, lessonOf(d.state, "a-4")), false);
-  const w = driver({
-    course: advancedCheckOnly,
-    saved: {
-      format: 1,
-      welcomed: false,
-      lessons: { ...throughIntermediate(), "a-1": { complete: true } },
-      // A saved new copy completes nothing, so it changes no count.
-      folders: { "a-5": NEW_COPY },
-    },
-  });
-  assert.equal(w.state.progress["a-5"].complete, false, "a-5's new copy");
-  assert.deepEqual(
-    levelLessons(w.state, "advanced")
-      .filter((l) => w.state.progress[l.id].complete)
-      .map((l) => l.id),
-    ["a-1"],
-  );
-});
-
-// was learn-course:173
-test("a check-only lesson with no slow item is complete on any result where every item passes, and the next marker moves to the lesson after it", () => {
-  const d = onCheckOnly("a-1", advancedCheckOnly, throughIntermediate());
-  // dropped: T-view the trip to the map and back; T-render A1's "next" row
-  assert.equal(nextMarked(d.state), "a-1");
-  d.send(result("a-1", () => true));
-  assert.equal(d.state.progress["a-1"].complete, true);
-  // dropped: T-render A1's "done" and A2's "next" rows on the map
-  assert.equal(nextMarked(d.state), "a-2");
-  // The app opens on the next lesson after a restart.
-  const again = driver({
-    course: advancedCheckOnly,
-    saved: snapshot(d.state),
-  });
-  // dropped: T-view the map view and its cursor
-  assert.equal(again.state.lesson, "a-2");
-  assert.ok(checkOnly(again.state));
-});
-
 // The Beginner capstone names i-1 as next. Help fades within a level, and
 // i-1 opens its level with more help than the capstone gives (ticket 85), so
-// the next screen shows neither i-1's bar nor "a notch harder", with i-1's
-// lesson file or without one.
+// the next screen shows neither i-1's bar nor "a notch harder". A next
+// lesson with no lesson file is none: the check-only screen went in 212.
 // was learn-course:218
-test('next may name the next level\'s first lesson: the next screen offers it, with no tier bar or "a notch harder", and enter opens it, or its check where it has no lesson file', () => {
+test("next may name the next level's first lesson: lesson.next opens its overview, and is refused where it has no lesson file", () => {
   assert.equal(
     parseLesson(
       readFileSync(join(root, "learn", "lessons", "b-capstone.md"), "utf8"),
@@ -293,21 +185,29 @@ test('next may name the next level\'s first lesson: the next screen offers it, w
     // dropped: T-render the next screen's key bar, "Next up" row, "a notch
     // harder" and tier bar at 60x20 and 80x24
     assert.equal(nextLessonOf(d.state).id, "i-1");
+    if (fileless) {
+      d.refused("lesson.next");
+      assert.deepEqual(
+        [d.state.lesson, d.state.phase],
+        ["b-capstone", "complete"],
+      );
+      d.refused("lesson.open", { lesson: "i-1" });
+      continue;
+    }
     d.next();
     assert.equal(d.state.lesson, "i-1");
     assert.equal(d.state.phase, "overview");
-    assert.equal(checkOnly(d.state), fileless);
   }
 });
 
 // was learn-course:238
-test("a-5 and a-capstone run in a new copy of the template: PATH says so, and in the practice copy their view says so and runs no check", () => {
+test("a-5 and a-capstone run in a new copy of the template: PATH says so, and in the practice copy their overview runs no check", () => {
   assert.deepEqual(
     PATH.filter((p) => p.newCopy).map((p) => p.id),
     ["a-5", "a-capstone"],
   );
   for (const id of ["a-5", "a-capstone"]) {
-    const d = onCheckOnly(id, advancedCheckOnly);
+    const d = onOverview(id);
     assert.ok(
       !d.effects.some((e) => e.type === "check" && e.lesson === id),
       `${id}: a check ran`,
@@ -318,8 +218,8 @@ test("a-5 and a-capstone run in a new copy of the template: PATH says so, and in
       `${id}: the polls and the watcher ask for nothing`,
     );
     d.refused("check.run");
-    // dropped: T-render the card's new-copy words in place of the
-    // check-only ones, and no "check now" on the key bar
+    // dropped: T-render the card's new-copy words, and no "check now" on
+    // the key bar
   }
   // dropped: T-plain main()'s plain output, which runs no check for them and says why
 });
@@ -334,135 +234,22 @@ test("a learner who starts at Intermediate or Advanced reaches its first lesson 
     assert.deepEqual([d.state.phase, d.state.lesson], ["overview", "b-1"]);
     // dropped: T-view T-cursor the map and its left and right; the Learner opens the lesson
     d.open(id);
-    assert.deepEqual(
-      [d.state.phase, d.state.lesson, checkOnly(d.state)],
-      ["overview", id, false],
-    );
+    assert.deepEqual([d.state.phase, d.state.lesson], ["overview", id]);
   }
   // Every Beginner lesson done: the app opens on the next level's first
   // lesson, on its overview since it has a lesson file.
   const done = driver({ course, saved: save({ lessons: beginnerDone() }) });
-  assert.deepEqual(
-    [done.state.phase, done.state.lesson, checkOnly(done.state)],
-    ["overview", "i-1", false],
-  );
+  assert.deepEqual([done.state.phase, done.state.lesson], ["overview", "i-1"]);
   // Every lesson before Advanced done: the app opens on a-1's overview, as
-  // it does on i-1's; with Advanced shown through its checks, at a-1, whose
-  // open shows its check.
+  // it does on i-1's.
   const advanced = driver({
     course,
     saved: save({ lessons: throughIntermediate() }),
   });
   assert.deepEqual(
-    [advanced.state.phase, advanced.state.lesson, checkOnly(advanced.state)],
-    ["overview", "a-1", false],
+    [advanced.state.phase, advanced.state.lesson],
+    ["overview", "a-1"],
   );
-  const checkOnlyA1 = driver({
-    course: advancedCheckOnly,
-    saved: save({ lessons: throughIntermediate() }),
-  });
-  // dropped: T-view the map view with its cursor at a-1
-  assert.equal(checkOnlyA1.state.lesson, "a-1");
-  checkOnlyA1.open("a-1");
-  assert.ok(checkOnly(checkOnlyA1.state));
-  assert.equal(checkOnlyA1.state.lesson, "a-1");
-  assert.deepEqual(pending(checkOnlyA1, "check"), {
-    type: "check",
-    lesson: "a-1",
-    items: null,
-    dir: FACTS.root,
-  });
-});
-
-// was learn-course:350
-test("a poll changes no row of the check-only card: only marks move, and once r has run the slow items, a poll keeps what r found", () => {
-  for (const id of ["i-5", "i-capstone", "a-4", "a-7"]) {
-    const d = onCheckOnly(id);
-    // dropped: T-render the card's slow-wait line, its rows before and after
-    // a poll (60x20, 80x24, full and ASCII) and Pip's face on the border
-    // dropped: T-motion Pip calm on an unrun slow item, flow.mjs's cardMood; the engine keeps each such item marked slow, as it was sent
-    // A poll that leaves the slow items out, with every item it ran passing:
-    // the slow items stay unrun, so nothing fails and nothing completes.
-    d.send(result(id, () => true));
-    const items = d.state.checks[id].items;
-    assert.deepEqual(
-      items.filter((it) => it.slow).map((it) => it.index),
-      SLOW[id],
-      id,
-    );
-    assert.ok(
-      items.every((it) => it.slow || it.pass),
-      `${id}: an unrun slow item is no failure`,
-    );
-    assert.equal(d.state.progress[id].complete, false, id);
-    // r's run passes every item; then a poll leaves the slow ones out again.
-    d.send(result(id, () => true, { slow: false }));
-    assert.ok(
-      d.state.checks[id].items.every((it) => !it.slow && it.pass),
-      `${id}: r ran them`,
-    );
-    d.tick(2_000);
-    d.send(result(id, () => true));
-    assert.ok(
-      SLOW[id].every((i) => d.state.checks[id].items[i].pass),
-      `${id}: the slow items keep r's result`,
-    );
-  }
-});
-
-// The lessons with a slow item that the app runs here, each with its lesson
-// file or check-only.
-const slowHere = Object.keys(SLOW).filter(
-  (id) => !course.find((l) => l.id === id).newCopy,
-);
-
-// was learn-course:407
-test("r on the check-only card says its run is going until its own result lands: the spinner and bounce, slower after 10 s, and the seconds from 3 s", () => {
-  const ids = slowHere.filter(
-    (id) => !advancedCheckOnly.find((l) => l.id === id).content,
-  );
-  assert.deepEqual(ids, ["a-4", "a-7"]);
-  for (const id of ids) {
-    const d = onCheckOnly(id);
-    d.send(result(id));
-    const asked = d.run().effects.find((e) => e.type === "check")?.asked;
-    assert.ok(asked > 0, `${id}: r's run carries r's number`);
-    // dropped: T-render T-motion the "Checking" row, Pip's checking face,
-    // the spinner, the bounce and the seconds; run-start and running are
-    // the translator's (checkOnlyRun), so neither is sent here
-    // A poll's result lands first: its slow items are unrun, so it
-    // completes nothing.
-    d.send(result(id, () => true, { slow: true }));
-    assert.equal(d.state.progress[id].complete, false, `${id}: a poll`);
-    // r's own result: every item passes, slow ones too.
-    d.send({ ...result(id, () => true, { slow: false }), asked });
-    assert.equal(d.state.progress[id].complete, true, `${id}: r's result`);
-  }
-});
-
-// was learn-course:442
-test("r on a check-only card with no slow item changes no row: its run takes a moment, and only its result shows", () => {
-  const ids = course.filter((l) => !l.newCopy && !SLOW[l.id]).map((l) => l.id);
-  assert.ok(ids.length >= 10, ids.join(" "));
-  for (const id of ids) {
-    const d = onCheckOnly(id);
-    d.send(result(id, () => true));
-    const asks = d.state.asks;
-    assert.deepEqual(
-      d.run().effects.find((e) => e.type === "check"),
-      {
-        type: "check",
-        lesson: id,
-        items: null,
-        slow: true,
-        dir: FACTS.root,
-      },
-      id,
-    );
-    // dropped: T-view checkOnlyRun stays null; T-render no row changes at
-    // 60x20 and 80x24. The engine fact: r's run takes no number.
-    assert.equal(d.state.asks, asks, id);
-  }
 });
 
 const done = (ids) =>
@@ -488,7 +275,10 @@ const throughA4 = () => ({
 });
 
 // was learn-course:554
-test("until a-5's and a-capstone's new copy folder is saved, the next lesson passes over them: the map marks a-6, and left, right and a restart land there", () => {
+// The app opens on the first unfinished lesson with a lesson file
+// (initialState), which since every lesson has one is a-5 here, on its
+// overview's folder question; the next marker and the map pass over it.
+test("until a-5's and a-capstone's new copy folder is saved, the next lesson passes over them: the map marks a-6, and left and right land there", () => {
   // The Advanced level's own folder, or a-capstone's new copy, is not a-5's.
   const ADVANCED = "/home/sam/advanced-work";
   for (const folders of [
@@ -498,11 +288,15 @@ test("until a-5's and a-capstone's new copy folder is saved, the next lesson pas
   ]) {
     const at = `saved: ${Object.keys(folders).join(", ") || "no folder"}`;
     const d = driver({
-      course: advancedCheckOnly,
+      course,
       saved: save({ lessons: throughA4(), folders }),
     });
-    // dropped: T-view the map view; the app opens on a-6
-    assert.equal(d.state.lesson, "a-6", `${at}: the app opens on a-6`);
+    // dropped: T-view the map view
+    assert.deepEqual(
+      [d.state.lesson, d.state.phase],
+      ["a-5", "overview"],
+      `${at}: the app opens on a-5's overview`,
+    );
     // dropped: T-render A6's "next" row and A5's row without it
     assert.equal(nextMarked(d.state), "a-6", at);
     assert.equal(toFinish(d.state, lessonOf(d.state, "a-5")), false, at);
@@ -511,7 +305,7 @@ test("until a-5's and a-capstone's new copy folder is saved, the next lesson pas
     if (folders["a-capstone"]) continue;
     // Only they are left: the app opens on a-5, which no marker names.
     const rest = driver({
-      course: advancedCheckOnly,
+      course,
       saved: save({
         lessons: { ...throughA4(), ...done(["a-6", "a-7"]) },
         folders,
@@ -525,7 +319,7 @@ test("until a-5's and a-capstone's new copy folder is saved, the next lesson pas
 // Ticket 172: since 86 a-5 and a-capstone run their check in the new copy
 // the learner gives, so once its folder is saved each is a lesson to finish.
 // was learn-course:577
-test("once a-5 or a-capstone has its new copy saved, it is the next lesson where it is the first unfinished one: the map marks it, and left, right and a restart land there", () => {
+test("once a-5 or a-capstone has its new copy saved, it is the next lesson where it is the first unfinished one: the map marks it, and left and right land there", () => {
   const cases = [
     {
       id: "a-5",
@@ -540,11 +334,12 @@ test("once a-5 or a-capstone has its new copy saved, it is the next lesson where
   ];
   for (const { id, lessons, folders } of cases) {
     const d = driver({
-      course: advancedCheckOnly,
+      course,
       saved: save({ lessons, folders }),
     });
-    // dropped: T-view the map view; the app opens on the lesson
-    assert.equal(d.state.lesson, id, `the app opens on ${id}`);
+    // dropped: T-view the map view; the app opens on the first unfinished
+    // lesson with a lesson file, a-5 (see the test above)
+    assert.equal(d.state.lesson, "a-5", `${id}: the app opens on a-5`);
     // dropped: T-render its "next" row, the row after it without one, and
     // the map fitting at 60x20 and 80x24, full and ASCII
     assert.equal(nextMarked(d.state), id);
@@ -561,13 +356,12 @@ test("once a-5 or a-capstone has its new copy saved, it is the next lesson where
 test("a-5's new copy given in the session makes it the next lesson at once, and after a restart", () => {
   const A5COPY = "/home/sam/claude-actions-practice";
   const d = driver({
-    course: advancedCheckOnly,
+    course,
     saved: save({ lessons: throughA4() }),
   });
   // dropped: T-cursor the map's cursor moved to a-5
   d.open("a-5");
-  assert.ok(checkOnly(d.state));
-  assert.equal(d.state.lesson, "a-5");
+  assert.deepEqual([d.state.lesson, d.state.phase], ["a-5", "overview"]);
   // dropped: T-input the path typed key by key; the Learner gives it whole
   d.folderAsk("a-5");
   d.folderChoose("a-5", { path: A5COPY });
@@ -583,7 +377,7 @@ test("a-5's new copy given in the session makes it the next lesson at once, and 
     "right onto Advanced lands at a-5",
   );
   const again = driver({
-    course: advancedCheckOnly,
+    course,
     saved: snapshot(d.state),
   });
   assert.equal(again.state.lesson, "a-5", "a restart opens at a-5");
