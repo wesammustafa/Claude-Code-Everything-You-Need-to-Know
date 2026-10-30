@@ -33,6 +33,26 @@ describe("start", () => {
     ]);
   });
 
+  // Loading moves an unreadable save aside (ticket 213), so a second load
+  // would find nothing and the Learner's notice would be lost.
+  test("loads the save once and hands an unreadable marker to the host", async () => {
+    let loads = 0;
+    const kit = await launch({
+      realAdapters: () => ({
+        store: {
+          load: () => {
+            loads++;
+            return { unreadable: "moved" };
+          },
+        },
+      }),
+    });
+    expect(loads).toBe(1);
+    expect(kit.hostOptions.map((o) => o.saved)).toEqual([
+      { unreadable: "moved" },
+    ]);
+  });
+
   test("listens, then opens the host, starts it and takes the first look", async () => {
     const kit = await launch();
     expect(kit.calls).toEqual([
