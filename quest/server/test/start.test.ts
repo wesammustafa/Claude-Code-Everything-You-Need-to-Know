@@ -1,4 +1,5 @@
 import type { Server } from "node:http";
+import type { Adapters } from "@quest/host";
 import { afterEach, describe, expect, test } from "vitest";
 import { tryListen } from "../src/listen.ts";
 import { startWith, stopAll, type Kit } from "./start-kit.ts";
@@ -38,14 +39,15 @@ describe("start", () => {
   test("loads the save once and hands an unreadable marker to the host", async () => {
     let loads = 0;
     const kit = await launch({
-      realAdapters: () => ({
-        store: {
-          load: () => {
-            loads++;
-            return { unreadable: "moved" };
+      realAdapters: () =>
+        ({
+          store: {
+            load: () => {
+              loads++;
+              return { unreadable: "moved" };
+            },
           },
-        },
-      }),
+        }) as unknown as Adapters,
     });
     expect(loads).toBe(1);
     expect(kit.hostOptions.map((o) => o.saved)).toEqual([

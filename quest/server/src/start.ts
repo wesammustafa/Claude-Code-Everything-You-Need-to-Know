@@ -2,6 +2,7 @@
 // the port, then the address, and a single shutdown on a signal.
 import type { Server } from "node:http";
 import { parseArgs } from "node:util";
+import type { CourseEntry } from "@quest/engine";
 import type { Adapters, Host, HostOptions, RealOptions } from "@quest/host";
 import { createApp } from "./app.ts";
 import { createStreams } from "./events.ts";
@@ -44,7 +45,7 @@ export interface StartOptions {
   openBrowser: (url: string) => void;
   createHost: (options: HostOptions) => Host;
   realAdapters: (options: RealOptions) => Adapters;
-  loadCourse: (root: string) => readonly object[];
+  loadCourse: (root: string) => readonly CourseEntry[];
   /** Replaces the real listen, for a test. */
   probe?: (server: Server) => TryListen;
 }
