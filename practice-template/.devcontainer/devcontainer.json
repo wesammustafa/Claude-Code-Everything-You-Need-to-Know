@@ -5,5 +5,9 @@
     "ghcr.io/devcontainers/features/node:1": { "version": "lts" },
     "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
   },
-  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y bubblewrap socat"
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y bubblewrap socat",
+  "forwardPorts": [4747],
+  "portsAttributes": {
+    "4747": { "label": "Claude Code Quest" }
+  }
 }

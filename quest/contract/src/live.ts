@@ -36,12 +36,54 @@ export interface ActionResponse {
   snapshot: Snapshot;
 }
 
+/**
+ * Why `folder.choose`'s path was turned down before the host saw it: no
+ * such folder, longer than 1,024 characters once resolved, outside the
+ * Learner's home folder, the Practice copy itself, a folder holding the
+ * copy, or not the root of a git working tree.
+ */
+export type FolderRefusal =
+  | "missing"
+  | "too-long"
+  | "outside-home"
+  | "is-copy"
+  | "contains-copy"
+  | "not-repo-root";
+
+/**
+ * The body of a refused action other than a stale one (`409`, an
+ * `ActionResponse`): `forbidden` (`403`, an untrusted request), `invalid`
+ * (`400`, not an action), `folder` (`400`, with the reason), `too large`
+ * (`413`), `busy` (`429`, the queue is full) and `starting` (`503`, no
+ * snapshot yet).
+ */
+export type ActionError =
+  | { error: "forbidden" | "invalid" | "too large" | "busy" | "starting" }
+  | { error: "folder"; reason: FolderRefusal };
+
+/** `GET /api/health`: the server is up, with this process's instance. */
+export interface HealthResponse {
+  ok: true;
+  instance: InstanceId;
+}
+
 /** Sent every 15 seconds on the stream, so an idle stream stays open. */
 export interface Heartbeat {
   /** The server's time, in epoch milliseconds. */
   serverTime: number;
   instance: InstanceId;
   revision: Revision;
+}
+
+/**
+ * What `GET /api/events` sends, keyed by each message's SSE event name. Only
+ * an `event` message carries an `id:`, the event's ID, for a reconnect's
+ * `Last-Event-ID`; the stream sends `retry: 1000` once.
+ */
+export interface StreamMessages {
+  snapshot: Snapshot;
+  event: EventEnvelope;
+  heartbeat: Heartbeat;
 }
 
 /**

@@ -47,6 +47,14 @@ jobs:
         run: npm run test:lessons
       - run: npm run test:checks
       - run: npm run test:starter
+      # The server bundle starts from a folder with no node_modules, on the
+      # .nvmrc line and on Node 22, the oldest the app supports.
+      - run: npm run build
+      - run: node quest/server/test/smoke.mjs
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: node quest/server/test/smoke.mjs
 
   # The build refuses any bundled module outside the shipped-package set,
   # Rive's WASM included, and the Pip contract test loads the committed pip.riv

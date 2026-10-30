@@ -450,9 +450,12 @@ describe("Claude Code Quest's bundled packages", () => {
   const shipped = shippedPackages(repoRoot);
   const names = shipped.map((p) => p.name);
 
-  test("include the client's runtime and fonts, and no dev tool", () => {
+  test("include the client's runtime and fonts, the server's, and no dev tool", () => {
     expect(names).toEqual(
       expect.arrayContaining([
+        "hono",
+        "@hono/node-server",
+        "zod",
         "react",
         "react-dom",
         "scheduler",

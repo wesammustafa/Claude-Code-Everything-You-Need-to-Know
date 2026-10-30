@@ -36,8 +36,8 @@ export const ALLOWED_LICENSES = [
   "MIT-0",
 ] as const;
 
-/** The workspaces whose production dependencies ship in a bundle. The server joins when it exists. */
-export const SHIPPING_WORKSPACES = ["quest/client"] as const;
+/** The workspaces whose production dependencies ship in a bundle. */
+export const SHIPPING_WORKSPACES = ["quest/client", "quest/server"] as const;
 
 /**
  * Bundlers whose own runtime helpers land in the bundle: Rolldown, under Vite,
