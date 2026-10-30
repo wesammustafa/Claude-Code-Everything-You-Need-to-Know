@@ -2,13 +2,8 @@
 // first paint from the app's own origin and takes over, the rig pauses when
 // Pip can't be seen, every way Rive can fail keeps the poster with the Lesson
 // usable, and a Reaction plays once per event ID, also across two tabs.
-import {
-  expect,
-  test,
-  type BrowserContext,
-  type Page,
-  type Route,
-} from "@playwright/test";
+import type { BrowserContext, Page, Route } from "@playwright/test";
+import { expect, sendEvents, test } from "./live.ts";
 import { changedShare, drawnBounds, type Rgba } from "../pip/png.ts";
 import { POSTER_SCALE } from "../pip/posters.ts";
 import { RIG, RUNTIME, STEP, WASM, lessonUsable, pip } from "./pip-page.ts";
@@ -38,19 +33,12 @@ interface TestEvent {
   [field: string]: unknown;
 }
 
-/** One revision's events, through the page's local event source. */
+/** One revision's events, on the page's stream. */
 async function send(page: Page, ...events: TestEvent[]) {
-  await page.evaluate((batch) => {
-    window.dispatchEvent(
-      new CustomEvent("quest:events", {
-        detail: batch.map((event) => ({
-          revision: 1,
-          serverTime: Date.now(),
-          ...event,
-        })),
-      }),
-    );
-  }, events);
+  await sendEvents(
+    page,
+    events.map((event) => ({ revision: 1, serverTime: Date.now(), ...event })),
+  );
 }
 
 /** The canvas's current frame, over white. */
@@ -590,15 +578,12 @@ test.describe("a Reaction plays once per event ID", () => {
           sent: new Promise<void>((resolve) => {
             channel.onmessage = () => {
               channel.close();
-              window.dispatchEvent(
-                new CustomEvent("quest:events", {
-                  detail: batch.map((event) => ({
-                    revision: 1,
-                    serverTime: Date.now(),
-                    ...event,
-                  })),
-                }),
-              );
+              for (const event of batch)
+                window.__questStream.event({
+                  revision: 1,
+                  serverTime: Date.now(),
+                  ...event,
+                });
               resolve();
             };
           }),

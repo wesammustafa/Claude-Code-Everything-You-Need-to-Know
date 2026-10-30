@@ -4,7 +4,8 @@
 // the content; never under reduced motion or for touch and pen; and at most
 // one gaze change per frame however fast the mouse moves. The gaze is read
 // back as the adapter writes it to the rig's view model.
-import { expect, test, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "./live.ts";
 import { STEP, WASM, pip } from "./pip-page.ts";
 import { watch } from "./watch.ts";
 

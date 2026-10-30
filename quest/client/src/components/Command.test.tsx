@@ -31,6 +31,21 @@ describe("Command", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Copied");
   });
 
+  test("copies its own text where it differs from the command shown", async () => {
+    const user = userEvent.setup();
+    const writeText = vi.spyOn(navigator.clipboard, "writeText");
+    const { container } = render(
+      <Command text="npm run check -- b-1" copy="npm run check -- b-1 --all" />,
+    );
+    expect(container.querySelector("code")).toHaveTextContent(
+      /^npm run check -- b-1$/,
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Copy npm run check -- b-1" }),
+    );
+    expect(writeText).toHaveBeenCalledWith("npm run check -- b-1 --all");
+  });
+
   test("reads Copy again after a moment", async () => {
     const user = userEvent.setup();
     render(<Command text="git status" />);

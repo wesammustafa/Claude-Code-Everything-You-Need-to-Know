@@ -321,7 +321,7 @@ export function initialDirectorState(
 /**
  * Pip can't be seen: a Reaction now would play to no one, so it is dropped,
  * not kept (the owner's reading, 2026-10-26). Pending milestones, which must
- * still show, are ticket 220's, through the snapshot.
+ * still show, come through the snapshot (useMilestone in live/LiveProvider).
  */
 const unseen = (s: DirectorState) => s.hidden || s.offScreen;
 

@@ -62,7 +62,7 @@
   --color-muted: #a9b3cc;
   --color-accent: #ff784e;
   --color-accent-hover: #ff9f73;
-  --color-accent-ink: #1a0f0a;
+  --color-accent-ink: #1e1e1e;
   --color-accent-text: #ff8f6b;
   --color-teal: #3cc8bc;
   --color-pass: #47c98a;
@@ -81,14 +81,12 @@
   --color-scrim: #060810;
   /* Pip's icon: the head and antenna caps, the shaded side and stalks, and
      the eyes. The head is a coral mark, so the light theme's deeper coral
-     keeps it at 3:1 on every surface. public/favicon.svg carries these values
+     keeps it at 3:1 on every surface. In the dark theme the icon is the
+     palette's own three colours (primary, dark and ink); the light theme
+     shades its deeper head with ink. public/favicon.svg carries these values
      as literals; src/pip/icon.test.ts holds the two together. */
   --color-pip: var(--color-accent-mark);
-  --color-pip-shade: color-mix(
-    in srgb,
-    var(--color-pip) 80%,
-    var(--color-accent-ink)
-  );
+  --color-pip-shade: #d95a3a;
   --color-pip-eye: var(--color-accent-ink);
 
   /* Derived, for both themes: pressed and soft fills, measured as sRGB mixes. */
@@ -224,8 +222,6 @@
 
   --animate-rise: rise var(--duration-slow) var(--ease-out) both;
   --animate-fade: fade var(--duration-base) var(--ease-out) both;
-  --animate-says: says var(--duration-base) var(--ease-out) var(--says-delay)
-    both;
   --animate-line: line var(--duration-base) var(--ease-out) both;
   --animate-sheet: sheet var(--duration-slow) var(--ease-out) both;
   --animate-drop: drop var(--duration-base) var(--ease-out) both;
@@ -241,12 +237,6 @@
   @keyframes fade {
     from {
       opacity: 0;
-    }
-  }
-  @keyframes says {
-    from {
-      opacity: 0;
-      transform: translateY(calc(var(--rise) / 3));
     }
   }
   @keyframes line {
@@ -289,6 +279,7 @@
   /* A turning mark, such as a disclosure's chevron: a rotation is travel, so reduced motion snaps it. */
   --duration-turn: 220ms;
   --stagger: 40ms;
+  /* The status words wait this long after Pip's Reaction starts (components/Says.tsx, through Motion). */
   --says-delay: 80ms;
 
   /* Travel: the screen rise, the press, a hovered node, the copy tick. */
@@ -298,6 +289,8 @@
   --hover-scale: 1.06;
   --nudge: 2px;
   --pop-from: 0.6;
+  /* A Switch's thumb, from off to on: the track's inside less the thumb and its two insets. */
+  --switch-travel: 16px;
 
   /* A contrast theme (forced colours) replaces every colour above with the
      user's own. The few marks that must keep a fill there take it from these
@@ -305,6 +298,16 @@
   --forced-mark: CanvasText;
   --forced-current: Highlight;
   --forced-current-ink: HighlightText;
+
+  /* Element defaults (app.css): the page's height, links' underlines, the
+     focus ring and the text selection's tint. */
+  --page-min-height: 100dvh;
+  --underline: 1px;
+  --underline-hover: 2px;
+  --underline-offset: 3px;
+  --focus-ring: 2px;
+  --focus-offset: 2px;
+  --selection: color-mix(in srgb, var(--color-accent) 35%, transparent);
 
   --topbar-height: 3.5rem;
   /* The heights of the sticky top and the fixed action bar, kept current by
@@ -335,7 +338,7 @@
     --color-line-2: #c9b8a1;
     --color-text: #141b33;
     --color-muted: #4f5872;
-    --color-accent-hover: #ff8d66;
+    --color-accent-hover: #ff9f73;
     --color-accent-text: #b13f1d;
     --color-teal: #0e776f;
     --color-pass: #127a4b;
@@ -343,8 +346,13 @@
     --color-broken: #b02e48;
     --color-code-bg: #141b33;
     --color-focus: #b13f1d;
-    --color-accent-mark: #d9592f;
+    --color-accent-mark: #d95a3a;
     --color-mark: #9a866c;
+    --color-pip-shade: color-mix(
+      in srgb,
+      var(--color-pip) 80%,
+      var(--color-accent-ink)
+    );
     --color-scrim: #141b33;
 
     --shadow-ink-sm: rgb(60 40 20 / 0.08);

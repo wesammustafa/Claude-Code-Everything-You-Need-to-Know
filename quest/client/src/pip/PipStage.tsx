@@ -9,13 +9,7 @@ import {
 } from "react";
 import { useLocation } from "react-router";
 import type { PipModel } from "../../pip/contract";
-import {
-  SHOWN_CHANNEL,
-  createLocalEventFeed,
-  createShownEvents,
-  onceAcrossTabs,
-  type EventFeed,
-} from "../live/events";
+import { useConnection, useLiveFeed } from "../live/LiveProvider";
 import { motionReduced, pageHidden, useReducedMotion } from "../lib/page";
 import type { DirectorInput, LookTarget } from "./director";
 import { followPointer } from "./pointer";
@@ -133,33 +127,9 @@ const ACTIVITY = ["pointerdown", "keydown", "wheel", "touchstart", "scroll"];
 const ACTIVITY_MS = 1000;
 
 /**
- * The event feed Pip's director hears, each event ID at most once across the
- * page's tabs. Until the connection layer (ticket 220) it is the page's local
- * source; 220 swaps in the stream here.
- */
-function openFeed(): { feed: EventFeed; close: () => void } {
-  const shown = createShownEvents(
-    typeof BroadcastChannel === "function"
-      ? new BroadcastChannel(SHOWN_CHANNEL)
-      : null,
-    "locks" in navigator ? navigator.locks : null,
-  );
-  return {
-    feed: onceAcrossTabs(
-      createLocalEventFeed(window),
-      shown,
-      () => !pageHidden(),
-    ),
-    close: () => {
-      shown.close();
-    },
-  };
-}
-
-/**
  * Pip's stage for the app: one director for the page, fed the screen, the
- * page's visibility, reduced motion, the Learner's activity and the events,
- * and read by every Pip on screen.
+ * page's visibility, reduced motion, the Learner's activity, the events and
+ * whether the connection is lost, and read by every Pip on screen.
  */
 export function PipStageProvider({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
@@ -206,21 +176,27 @@ export function PipStageProvider({ children }: { children: ReactNode }) {
     };
   }, [stage]);
 
+  // The stream's events, each ID at most once across the page's tabs.
+  const feed = useLiveFeed();
+  useEffect(
+    () =>
+      feed.subscribe((events) => {
+        // Where the hint and the other targets sit now, for Pip's gaze.
+        stage.send({
+          type: "gazeTargets",
+          targets: measureGazeTargets(document),
+        });
+        stage.send({ type: "events", events });
+      }),
+    [stage, feed],
+  );
+
+  // Pip rests while the connection is lost; waiting for the first snapshot is not lost.
+  const connection = useConnection();
+  const lost = connection === "reconnecting" || connection === "stopped";
   useEffect(() => {
-    const { feed, close } = openFeed();
-    const unsubscribe = feed.subscribe((events) => {
-      // Where the hint and the other targets sit now, for Pip's gaze.
-      stage.send({
-        type: "gazeTargets",
-        targets: measureGazeTargets(document),
-      });
-      stage.send({ type: "events", events });
-    });
-    return () => {
-      unsubscribe();
-      close();
-    };
-  }, [stage]);
+    stage.send({ type: "connection", lost });
+  }, [stage, lost]);
 
   return <StageContext value={stage}>{children}</StageContext>;
 }

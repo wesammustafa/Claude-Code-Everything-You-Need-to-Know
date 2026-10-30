@@ -1,11 +1,12 @@
-import { expect, test, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "./live.ts";
 import { watch } from "./watch.ts";
 
 const SCREENS: readonly (readonly [path: string, heading: string])[] = [
   ["/", "Learn Claude Code by using it."],
   ["/#/journey", "Learning journey"],
   ["/#/lesson/b-1", "Install, sign in and look around"],
-  ["/#/lesson/b-1/step", "First step"],
+  ["/#/lesson/b-1/step", "Check"],
   ["/#/lesson/b-1/complete", "Install, sign in and look around"],
   ["/#/progress", "Progress"],
 ];
@@ -193,7 +194,7 @@ test.describe("states from tokens", () => {
   test("hover and pressed change the primary button's fill, and pressing nudges it", async ({
     page,
   }) => {
-    const start = page.getByRole("link", { name: "Start the first lesson" });
+    const start = page.getByRole("button", { name: "Start the first lesson" });
     const fill = () =>
       start.evaluate((el) => getComputedStyle(el).backgroundColor);
     expect(await fill()).toBe("rgb(255, 120, 78)");
@@ -212,7 +213,7 @@ test.describe("states from tokens", () => {
   });
 
   test("keyboard focus draws the focus ring", async ({ page }) => {
-    const start = page.getByRole("link", { name: "Start the first lesson" });
+    const start = page.getByRole("button", { name: "Start the first lesson" });
     await page.keyboard.press("Tab");
     await expect(start).toBeFocused();
     const ring = await start.evaluate((el) => {
@@ -248,7 +249,7 @@ test.describe("motion", () => {
       "0.12s",
     );
 
-    const start = page.getByRole("link", { name: "Start the first lesson" });
+    const start = page.getByRole("button", { name: "Start the first lesson" });
     await start.hover();
     await page.mouse.down();
     await expect
@@ -260,38 +261,9 @@ test.describe("motion", () => {
     expect(await start.evaluate((el) => getComputedStyle(el).scale)).toBe("1");
   });
 
-  for (const [motion, duration] of [
-    ["no-preference", "0.22s"],
-    ["reduce", "0s"],
-  ] as const) {
-    test(`a disclosure's chevron turns only with full motion (${motion})`, async ({
-      page,
-    }) => {
-      await page.emulateMedia({ reducedMotion: motion });
-      await page.goto("/#/lesson/b-1");
-      const chevron = page.locator("summary svg");
-      expect(
-        await chevron.evaluate((el) => getComputedStyle(el).transitionDuration),
-      ).toBe(duration);
-      await page.getByText("What the check looks for").click();
-      if (motion === "reduce") {
-        // Snapped: already at its new angle on the next frame, never part way.
-        expect(
-          await chevron.evaluate(
-            (el) =>
-              new Promise<string>((done) =>
-                requestAnimationFrame(() => {
-                  done(getComputedStyle(el).rotate);
-                }),
-              ),
-          ),
-        ).toBe("90deg");
-      }
-      await expect
-        .poll(() => chevron.evaluate((el) => getComputedStyle(el).rotate))
-        .toBe("90deg");
-    });
-  }
+  // The disclosure's keyboard and chevron tests are in components.spec.ts:
+  // no screen shows a Disclosure until 245 brings back "What the check
+  // looks for".
 
   test("the Settings choice of full motion overrides the system's reduce", async ({
     page,
@@ -323,7 +295,9 @@ test("the action bar is fixed to the window through a portal, outside the animat
       return box ? Math.round(box.y + box.height) : -1;
     })
     .toBe(600);
-  await expect(bar.getByRole("link", { name: "Next step" })).toBeInViewport();
+  await expect(
+    bar.getByRole("button", { name: "Check again" }),
+  ).toBeInViewport();
 });
 
 test.describe("secondary buttons", () => {
@@ -585,7 +559,7 @@ test.describe("the reading sheet", () => {
       page,
     }) => {
       await page.setViewportSize({ width, height: 900 });
-      await page.goto("/#/lesson/b-3");
+      await page.goto("/#/lesson/b-1");
       await page.getByRole("button", { name: "Read the full lesson" }).click();
       const dialog = page.getByRole("dialog", { name: "Read the full lesson" });
       await expect(dialog).toBeVisible();
@@ -742,10 +716,12 @@ test.describe("in a contrast theme (forced colours)", () => {
       await page.emulateMedia({ forcedColors: "active", colorScheme: scheme });
       await page.goto("/#/lesson/b-1/step");
       const dots = page.locator("ol[aria-label=Steps] li");
-      // The workspace starts at the first step; show the second one as done.
-      await dots.nth(1).evaluate((li) => {
-        li.setAttribute("data-state", "done");
-      });
+      // The fixture sits on the last step: mark the first three now, done
+      // and to do.
+      for (const [i, state] of ["now", "done", "todo"].entries())
+        await dots.nth(i).evaluate((li, value) => {
+          li.setAttribute("data-state", value);
+        }, state);
       const look = (i: number) =>
         dots.nth(i).evaluate((li) => {
           const style = getComputedStyle(li);
@@ -755,7 +731,6 @@ test.describe("in a contrast theme (forced colours)", () => {
         await system(page, "CanvasText"),
         await system(page, "Highlight"),
       ];
-      // The dot just marked done eases into its fill.
       await expect.poll(() => look(0)).toBe(`${highlight} 1px ${highlight}`);
       await expect.poll(() => look(1)).toBe(`${ink} 1px ${ink}`);
       await expect.poll(() => look(2)).toBe(`rgba(0, 0, 0, 0) 1px ${ink}`);

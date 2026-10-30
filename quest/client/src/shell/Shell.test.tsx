@@ -2,6 +2,8 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { describe, expect, test } from "vitest";
+import { complete, overview, playing, snapshotOf } from "../../e2e/snapshots";
+import { renderConnected } from "../../test/connected";
 import { routes } from "../routes";
 
 function renderAt(path: string) {
@@ -12,7 +14,7 @@ function renderAt(path: string) {
 
 describe("the shell", () => {
   test("Welcome stands alone: Pip, one heading and one action, with no top bar", () => {
-    renderAt("/");
+    renderConnected("/", snapshotOf(overview));
     expect(screen.queryByRole("banner")).not.toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
@@ -21,8 +23,8 @@ describe("the shell", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "Start the first lesson" }),
-    ).toHaveAttribute("href", "/lesson/b-1");
+      screen.getByRole("button", { name: "Start the first lesson" }),
+    ).toBeInTheDocument();
   });
 
   test("the top bar names the current place among Journey and Progress", () => {
@@ -71,7 +73,7 @@ describe("the shell", () => {
   });
 
   test("the screen enters with the rise, and the action bar sits outside it, in <body>", () => {
-    renderAt("/lesson/b-1/step");
+    renderConnected("/lesson/b-1/step", snapshotOf(playing));
     const screenFrame = document.querySelector<HTMLElement>("[data-screen]");
     const bar = document.querySelector<HTMLElement>("[data-action-bar]");
     expect(screenFrame?.className).toContain("animate-rise");
@@ -114,19 +116,16 @@ describe("the shell", () => {
   );
 
   test.each([
-    ["/", "Learn Claude Code by using it."],
-    ["/journey", "Learning journey"],
-    [
-      "/lesson/i-capstone",
-      "Intermediate capstone: get a repository ready for a new teammate",
-    ],
-    ["/lesson/a-4/step", "First step"],
-    ["/lesson/b-1/complete", "Install, sign in and look around"],
-    ["/progress", "Progress"],
-    ["/lesson/unknown", "Nothing here"],
-    ["/somewhere", "Nothing here"],
-  ])("%s renders its screen", (path, heading) => {
-    renderAt(path);
+    ["/", "Learn Claude Code by using it.", overview],
+    ["/journey", "Learning journey", overview],
+    ["/lesson/b-1", "Install, sign in and look around", overview],
+    ["/lesson/b-1/step", "Check", playing],
+    ["/lesson/b-1/complete", "Install, sign in and look around", complete],
+    ["/progress", "Progress", overview],
+    ["/lesson/unknown", "Nothing here", overview],
+    ["/somewhere", "Nothing here", overview],
+  ])("%s renders its screen", (path, heading, lesson) => {
+    renderConnected(path, snapshotOf(lesson));
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
       heading,
     );
@@ -189,7 +188,7 @@ describe("the Learning journey", () => {
   });
 
   test("the step's actions are a named region, not the page's footer", () => {
-    renderAt("/lesson/b-1/step");
+    renderConnected("/lesson/b-1/step", snapshotOf(playing));
     expect(screen.queryByRole("contentinfo")).not.toBeInTheDocument();
     const actions = screen.getByRole("region", { name: "Step actions" });
     expect(

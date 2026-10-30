@@ -1,6 +1,13 @@
 import type { QuestEvent } from "@quest/contract";
 import { describe, expect, test } from "vitest";
-import { readEventEnvelope } from "./parse";
+import {
+  readActionError,
+  readActionResponse,
+  readEventEnvelope,
+  readHealth,
+  readHeartbeat,
+  readSnapshot,
+} from "./parse";
 
 const header = { id: "i.1", revision: 3, serverTime: 1000 };
 
@@ -86,5 +93,85 @@ describe("readEventEnvelope", () => {
     ],
   ])("refuses %s", (_name, value) => {
     expect(readEventEnvelope(value)).toBeNull();
+  });
+});
+
+const milestone = {
+  id: "i.4",
+  revision: 4,
+  serverTime: 10,
+  type: "level.completed",
+  level: "beginner",
+};
+const snapshot = { instance: "i", revision: 4, milestones: [milestone] };
+
+describe("readSnapshot", () => {
+  test("reads the header and keeps the rest", () => {
+    expect(readSnapshot({ ...snapshot, course: { next: null } })).toEqual({
+      ...snapshot,
+      course: { next: null },
+    });
+  });
+
+  test("keeps only well-formed milestones of a milestone type", () => {
+    expect(
+      readSnapshot({
+        ...snapshot,
+        milestones: [
+          milestone,
+          { ...header, type: "answer.right" },
+          { id: "x" },
+        ],
+      })?.milestones,
+    ).toEqual([milestone]);
+  });
+
+  test.each([
+    ["not an object", 1],
+    ["no instance", { revision: 1, milestones: [] }],
+    ["an empty instance", { ...snapshot, instance: "" }],
+    ["a negative revision", { ...snapshot, revision: -1 }],
+    ["a fractional revision", { ...snapshot, revision: 1.5 }],
+    ["no milestones", { instance: "i", revision: 1 }],
+  ])("refuses %s", (_name, value) => {
+    expect(readSnapshot(value)).toBeNull();
+  });
+});
+
+describe("the other answers", () => {
+  test("a heartbeat", () => {
+    const beat = { serverTime: 5, instance: "i", revision: 2 };
+    expect(readHeartbeat({ ...beat, extra: 1 })).toEqual(beat);
+    expect(readHeartbeat({ ...beat, serverTime: "5" })).toBeNull();
+    expect(readHeartbeat(null)).toBeNull();
+  });
+
+  test("an action response, whose revision is its snapshot's", () => {
+    expect(readActionResponse({ revision: 4, snapshot })).toEqual({
+      revision: 4,
+      snapshot,
+    });
+    expect(readActionResponse({ revision: 3, snapshot })).toBeNull();
+    expect(readActionResponse({ revision: 4 })).toBeNull();
+  });
+
+  test("an action error", () => {
+    expect(readActionError({ error: "busy" })).toEqual({ error: "busy" });
+    expect(readActionError({ error: "folder", reason: "is-copy" })).toEqual({
+      error: "folder",
+      reason: "is-copy",
+    });
+    expect(readActionError({ error: "folder", reason: "gone" })).toBeNull();
+    expect(readActionError({ error: "stale" })).toBeNull();
+    expect(readActionError("busy")).toBeNull();
+  });
+
+  test("a health answer", () => {
+    expect(readHealth({ ok: true, instance: "i" })).toEqual({
+      ok: true,
+      instance: "i",
+    });
+    expect(readHealth({ ok: false, instance: "i" })).toBeNull();
+    expect(readHealth({ ok: true })).toBeNull();
   });
 });
