@@ -275,4 +275,3 @@ export interface RealOptions {
   runCheck?: RunCheck;
   runProbe?: RunProbe;
 }
-
