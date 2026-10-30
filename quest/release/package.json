@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "compile:course": "node src/compile-course.mjs"
+    "compile:course": "node src/compile-course.mjs",
+    "build": "node src/render-pages.mjs",
+    "render:diagrams": "node src/render-diagrams.mjs"
   }
 }

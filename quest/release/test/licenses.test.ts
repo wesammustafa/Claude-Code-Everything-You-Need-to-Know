@@ -474,6 +474,9 @@ describe("Claude Code Quest's bundled packages", () => {
       "typescript",
       "@testing-library/react",
       "jsdom",
+      "markdown-it",
+      "sanitize-html",
+      "mermaid",
     ]) {
       expect(names).not.toContain(devTool);
     }

@@ -1,7 +1,9 @@
 import { brotliDecompressSync, gunzipSync } from "node:zlib";
-import { rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, expect, test } from "vitest";
+import { STATIC_SOURCES, staticTable } from "../build/statics.ts";
 import { createApp } from "../src/app.ts";
 import { encoded, loadStatics, pickEncoding } from "../src/statics.ts";
 import {
@@ -21,7 +23,29 @@ const app = createApp({
   statics,
   log: () => undefined,
 });
-afterAll(removeTrees);
+// A bundle folder holding two rendered pages files, listed the way the
+// build lists quest/release/dist/pages.
+const bundle = mkdtempSync(join(tmpdir(), "quest-pages-bundle-"));
+const pagesDir = join(bundle, "app/pages/intermediate");
+mkdirSync(pagesDir, { recursive: true });
+writeFileSync(join(pagesDir, "05-hooks.html"), "<h1>Hooks</h1>");
+writeFileSync(join(pagesDir, "05-hooks.d1.dark.svg"), "<svg/>");
+const pagesSource = STATIC_SOURCES.find((s) => s.at === "/pages/");
+if (!pagesSource) throw new Error("no pages source");
+const pagesApp = createApp({
+  health: () => ({ ok: true, instance: "i-1" }),
+  statics: loadStatics(
+    bundle,
+    staticTable([{ ...pagesSource, dir: join(bundle, "app/pages") }]).map(
+      (found) => found.entry,
+    ),
+  ),
+  log: () => undefined,
+});
+afterAll(() => {
+  removeTrees();
+  rmSync(bundle, { recursive: true, force: true });
+});
 
 const get = (path: string, accept?: string) =>
   app.request(
@@ -66,6 +90,24 @@ describe("types and caching", () => {
       (await get("/assets/app-abc123.js")).headers.get("Cache-Control"),
     ).toBe("public, max-age=31536000, immutable");
     expect((await get("/")).headers.get("Cache-Control")).toBe("no-cache");
+  });
+});
+
+describe("rendered pages", () => {
+  test.each([
+    ["/pages/intermediate/05-hooks.html", "text/html; charset=utf-8"],
+    ["/pages/intermediate/05-hooks.d1.dark.svg", "image/svg+xml"],
+  ])("%s is served by name, revalidated, as %s", async (path, type) => {
+    const response = await pagesApp.request(path);
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toBe(type);
+    expect(response.headers.get("Cache-Control")).toBe("no-cache");
+  });
+
+  test("a page the build did not list is 404", async () => {
+    expect(
+      (await pagesApp.request("/pages/intermediate/06-x.html")).status,
+    ).toBe(404);
   });
 });
 

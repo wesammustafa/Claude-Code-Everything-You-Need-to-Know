@@ -15,10 +15,12 @@ const clientRoot = join(repoRoot, "quest/client");
 
 export function serverBuild({
   clientDir = join(clientRoot, "dist/app"),
+  pagesDir = join(repoRoot, "quest/release/dist/pages"),
   outDir = join(serverRoot, "dist/learn"),
   checkFresh = true,
 }: {
   clientDir?: string;
+  pagesDir?: string;
   outDir?: string;
   checkFresh?: boolean;
 } = {}): UserConfig {
@@ -27,7 +29,13 @@ export function serverBuild({
     logLevel: "warn",
     plugins: [
       courseInline({ repoRoot }),
-      questStatics({ repoRoot, clientDir, clientRoot, checkFresh }),
+      questStatics({
+        repoRoot,
+        clientDir,
+        pagesDir,
+        clientRoot,
+        checkFresh,
+      }),
       // Only the server's production dependencies, and the bundler's
       // runtime, may land in the bundle.
       shippedPackagesOnly(() =>
