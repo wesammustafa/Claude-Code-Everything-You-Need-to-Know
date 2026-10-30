@@ -5,7 +5,7 @@
 // process.
 import { createHash } from "node:crypto";
 import { isGlob } from "./content.mjs";
-import { C } from "./copy.mjs";
+import { C } from "./copy.ts";
 import { cut, graphemes, isEmoji, strip } from "./text.ts";
 
 // A file's text: UTF-16 with a byte-order mark (Windows PowerShell 5.1

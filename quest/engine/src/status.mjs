@@ -3,7 +3,7 @@
 // means. Pure: nothing here reads the disk or starts a process.
 import { createHash } from "node:crypto";
 import { GIT } from "./content.mjs";
-import { C } from "./copy.mjs";
+import { C } from "./copy.ts";
 
 // A `git status --porcelain` entry (checks/paths.mjs statusEntries) is staged
 // where its index column, X, says the index changed it (modified, added,
