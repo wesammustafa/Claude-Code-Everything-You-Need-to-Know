@@ -5,7 +5,7 @@
 // Check modules and probe definitions.
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import { frontmatter } from "./frontmatter.mjs";
+import { frontmatter } from "./frontmatter.ts";
 import { inline } from "./text.ts";
 
 // `### <id> | <part> step N of M | <title>`, or `### C | Check | <title>`

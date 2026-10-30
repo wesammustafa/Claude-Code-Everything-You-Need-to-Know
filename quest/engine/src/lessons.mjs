@@ -17,7 +17,7 @@
 // line (none when everything matches), and how many step files, quotes,
 // code blocks and warm-ups from another page it compared.
 import { coursePath, parseLesson, parseManifest } from "./content.mjs";
-import { frontmatter } from "./frontmatter.mjs";
+import { frontmatter } from "./frontmatter.ts";
 
 const MANIFEST = "course/manifest.json";
 
