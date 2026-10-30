@@ -38,7 +38,7 @@ export const PATH: PathEntry[] = coursePath(manifest).map((entry) => ({
     : {}),
   ...(entry.folder === "new-copy" ? { newCopy: true as const } : {}),
   // A lesson of a level that practises in a work folder (the engine's
-  // levelKey reads it, so engine.mjs imports no file-reading module).
+  // levelKey reads it, so engine.ts imports no file-reading module).
   ...(entry.folder === "work" ? { work: true as const } : {}),
 }));
 export const LEVELS = manifest.levels.map((level) => level.id);

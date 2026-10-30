@@ -24,7 +24,7 @@ const ROOT = resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
 const at = (path) => join(ROOT, path);
 // The Checks' side: Guard B (learn-io) covers it, and the walk stops there.
 const CHECKS = at("practice-template/checks") + "/";
-const ENGINE = at("quest/engine/src/engine.mjs");
+const ENGINE = at("quest/engine/src/engine.ts");
 const HOST_ROOTS = [
   at("quest/host/src/index.mjs"),
   at("quest/host/src/fake.mjs"),
@@ -66,7 +66,7 @@ test("the engine and the host make no network call, start only the Check child a
     "quest/host/src/run-check.mjs",
     "quest/host/src/probes.mjs",
     "quest/engine/src/probes.ts",
-    "quest/engine/src/engine.mjs",
+    "quest/engine/src/engine.ts",
     "quest/engine/src/course.ts",
     "quest/engine/src/holds.ts",
     "quest/engine/src/status.ts",
@@ -122,7 +122,7 @@ const PLANTS = {
 };
 const PLANTED_IN = [
   "quest/host/src/host.mjs",
-  "quest/engine/src/engine.mjs",
+  "quest/engine/src/engine.ts",
   "quest/host/src/check-child.mjs",
   "quest/host/src/probes.mjs",
   "quest/engine/src/probes.ts",

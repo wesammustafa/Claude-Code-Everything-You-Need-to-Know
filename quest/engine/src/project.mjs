@@ -57,7 +57,7 @@ import {
   tryFirst,
   unmet,
   whileRunsOf,
-} from "./engine.mjs";
+} from "./engine.ts";
 import { mix, TIERS } from "./tiers.ts";
 
 /** The snapshot of `s`, but its instance, revision and milestones. */

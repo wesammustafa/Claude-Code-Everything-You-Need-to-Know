@@ -12,7 +12,7 @@ export {
   IDLE_MS,
   initialState,
   reduce,
-} from "./engine.mjs";
+} from "./engine.ts";
 export { project, startedLesson } from "./project.mjs";
 
 // What the host reads off the state: what to watch, what an overview asks
@@ -29,7 +29,7 @@ export {
   stepsOf,
   watching,
   workFolder,
-} from "./engine.mjs";
+} from "./engine.ts";
 
 // The verification helpers the host's adapters share: a file's stamp and
 // whether it only grew, and git status's listing and stamp.
@@ -87,5 +87,5 @@ export {
   unmet,
   whileRunsOf,
   whileRunsOpen,
-} from "./engine.mjs";
+} from "./engine.ts";
 export { mix, TIERS } from "./tiers.ts";

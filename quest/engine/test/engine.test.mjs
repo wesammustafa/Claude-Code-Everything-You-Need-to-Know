@@ -42,8 +42,8 @@ import {
 const ROOT = resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
 const at = (path) => join(ROOT, path);
 const SRC = at("quest/engine/src");
-const ENGINE = join(SRC, "engine.mjs");
-const MOMENTS = join(SRC, "moments.mjs");
+const ENGINE = join(SRC, "engine.ts");
+const MOMENTS = join(SRC, "moments.ts");
 // The engine's modules that read files: the course loader reads the
 // manifest and the compiled course at load (ticket 212: the engine takes
 // its work levels from the course it is given instead).
@@ -341,8 +341,8 @@ test("the engine and its snapshot reach nothing outside quest/engine/src and no 
   // The snapshot's module too (ticket 212), which the host imports.
   const files = reached(join(SRC, "project.mjs"), reached(ENGINE));
   for (const file of files) {
-    assert.ok(inside(file, SRC), `engine.mjs reaches ${relative(ROOT, file)}`);
-    assert.ok(!READS_FILES.includes(file), `engine.mjs reaches ${file}`);
+    assert.ok(inside(file, SRC), `engine.ts reaches ${relative(ROOT, file)}`);
+    assert.ok(!READS_FILES.includes(file), `engine.ts reaches ${file}`);
   }
   assert.ok(
     files.has(join(SRC, "text.ts")),
@@ -423,7 +423,7 @@ test("the engine asks for only its nine effects, and the script sends every acti
   );
 });
 
-test("the engine's events are its EVENT_TYPES, named in moments.mjs alone, and the script meets each but the Level's, the course's and the help offer", () => {
+test("the engine's events are its EVENT_TYPES, named in moments.ts alone, and the script meets each but the Level's, the course's and the help offer", () => {
   assert.equal(EVENT_TYPES.length, 19);
   assert.ok(Object.isFrozen(EVENT_TYPES));
   for (const e of seen.events)
@@ -437,7 +437,7 @@ test("the engine's events are its EVENT_TYPES, named in moments.mjs alone, and t
     [],
     "every other event is met",
   );
-  // Every type moments.mjs gives an event, a ternary's both sides too: each
+  // Every type moments.ts gives an event, a ternary's both sides too: each
   // event but the help offer, and nothing else.
   const named = new Set(
     [...readFileSync(MOMENTS, "utf8").matchAll(/\btype:\s*([^,}\n]+)/g)]

@@ -32,13 +32,14 @@ export interface CodeLine {
   point: number;
   win?: string;
   doneWhen?: undefined;
+  leadIn?: undefined;
 }
 export type Line = TextLine | CodeLine;
 // A bottom line: the exact command, its Windows line and its lead-in.
 export interface Bottom {
   key?: undefined;
   text: string;
-  win?: string;
+  win?: string | undefined;
   leadIn?: string;
 }
 export interface Option {
@@ -65,6 +66,7 @@ export interface When {
 // What a beat's verify line asks (parseVerify). The fields the engine
 // reads off any kind are optional on every kind, as they are absent there.
 interface VerifyFields {
+  all?: true;
   paths?: string[];
   fresh?: true;
   since?: string | null;
@@ -75,7 +77,7 @@ export type Verify = VerifyFields &
   (
     | Each<"answer" | "self" | "none" | "git-staged" | "git-clean", unknown>
     | { kind: "check"; all: true; items?: undefined }
-    | { kind: "check"; items: number[]; all?: undefined }
+    | { kind: "check"; items: number[] }
     | { kind: "file"; path: string }
     | { kind: "json"; path: string; key: string | null; value: string | null }
     | Each<"match" | "no-match", { path: string; regex: string }>

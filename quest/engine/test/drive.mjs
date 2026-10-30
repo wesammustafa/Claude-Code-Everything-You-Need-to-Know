@@ -23,7 +23,7 @@ import {
   reduce,
   stepOf,
   stepsOf,
-} from "../src/engine.mjs";
+} from "../src/engine.ts";
 import { loadCourse, parseLesson, WORK_LEVELS } from "../src/course.ts";
 import { versionSaved } from "./fixtures/saved-version.mjs";
 import { openRepo } from "../../../practice-template/checks/repo.mjs";
@@ -103,7 +103,7 @@ export {
   watching,
   whileRunsOf,
   whileRunsOpen,
-} from "../src/engine.mjs";
+} from "../src/engine.ts";
 export { GIT, OWN_PARTS, READS } from "../src/content.ts";
 export {
   loadCourse,
