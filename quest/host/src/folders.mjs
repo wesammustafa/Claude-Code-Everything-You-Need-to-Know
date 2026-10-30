@@ -4,7 +4,7 @@ import { statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { childEnv } from "./check-child.ts";
 import { shared } from "./children.ts";
-import { GIT_LIMIT, gitReady, NOT_A_REPO } from "./git.mjs";
+import { GIT_LIMIT, gitReady, NOT_A_REPO } from "./git.ts";
 
 // What a work folder is (ticket 86): whether it is a folder at all, whether
 // git says it is a repository, and whether git ignores the `.practice/`

@@ -61,7 +61,7 @@ test("the engine and the host make no network call, start only the Check child a
   for (const must of [
     "quest/host/src/host.mjs",
     "quest/host/src/check-child.ts",
-    "quest/host/src/git.mjs",
+    "quest/host/src/git.ts",
     "quest/host/src/store.ts",
     "quest/host/src/run-check.mjs",
     "quest/host/src/probes.mjs",

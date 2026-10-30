@@ -4,9 +4,9 @@
 import type { ChildProcess } from "node:child_process";
 
 export interface Children {
-  track<C extends ChildProcess>(child: C, kill?: () => void): C;
-  stop(): void;
-  size(): number;
+  track: <C extends ChildProcess>(child: C, kill?: () => void) => C;
+  stop: () => void;
+  size: () => number;
 }
 
 export function createChildren(): Children {

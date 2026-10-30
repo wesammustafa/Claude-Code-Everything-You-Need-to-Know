@@ -6,7 +6,7 @@ import { runCheck, runProbe } from "./check-child.ts";
 import { createChildren } from "./children.ts";
 import { bytesOf, matchOf, stampOf } from "./files.ts";
 import { probeFolder } from "./folders.mjs";
-import { gitFirstName, gitReady, gitStatus } from "./git.mjs";
+import { gitFirstName, gitReady, gitStatus } from "./git.ts";
 import { onPath } from "./path-lookup.ts";
 import { loadState, saveState } from "./store.ts";
 import { watchDirs } from "./watch.ts";
