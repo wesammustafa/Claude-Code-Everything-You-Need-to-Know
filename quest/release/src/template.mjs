@@ -6,10 +6,12 @@
 // timestamps, no absolute paths; and it is checked before it returns.
 //   npm run template -w @quest/release -- <out-dir>
 import {
+  chmodSync,
   existsSync,
   mkdirSync,
   readFileSync,
   readdirSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
@@ -294,6 +296,9 @@ function copyTree(from, to, skip = () => false) {
     if (dir || skip(path)) continue;
     mkdirSync(dirname(join(to, path)), { recursive: true });
     writeFileSync(join(to, path), readFileSync(join(from, path)));
+    // Keep the permission bits, so an executable such as project/src/cli.js
+    // ships as one (a Publish commit records 100755).
+    chmodSync(join(to, path), statSync(join(from, path)).mode & 0o777);
   }
 }
 
