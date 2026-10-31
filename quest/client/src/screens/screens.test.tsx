@@ -5,11 +5,13 @@ import type { OverviewLesson, Snapshot } from "@quest/contract";
 import {
   complete,
   completed,
+  courseDone,
   fullCourse,
   overview,
   overviewAt,
   playing,
   snapshotOf,
+  someMastery,
   stepDown,
   stepDownGuided,
 } from "../../e2e/snapshots";
@@ -72,6 +74,10 @@ const APP_WORDS: readonly RegExp[] = [
   /^ first$/,
   /^(Start over|Keep my place)$/,
   /^Start this lesson over\? Your Badge and the help you used are kept\.$/,
+  /^(Skills|Next goal|Badges|lessons done|levels done)$/,
+  /^The help you used shows here once you finish a step\.$/,
+  /^(Every lesson is complete|See the journey)$/,
+  /^Only what your checks verified counts here\.$/,
 ];
 
 /** Every string the snapshot carries, to match quotes against. */
@@ -594,6 +600,103 @@ describe("Learning journey", () => {
     renderConnected("/lesson/i-2", at);
     expect(screen.getByText("Intermediate · Lesson 2")).toBeInTheDocument();
     expect(unquoted(at)).toEqual([]);
+  });
+});
+
+describe("Progress", () => {
+  const at = (mastery = {}) =>
+    snapshotOf(overviewAt("b-4"), {
+      welcomed: true,
+      course: fullCourse,
+      mastery,
+    });
+  const skills = () => screen.getByRole("region", { name: "Skills" });
+
+  test("with no Mastery yet: completion at once, no skill rows", () => {
+    const snapshot = at();
+    renderConnected("/progress", snapshot);
+    expect(screen.getByText("3 of 23")).toBeInTheDocument();
+    expect(screen.getByText("0 of 3")).toBeInTheDocument();
+    expect(within(skills()).queryAllByRole("listitem")).toEqual([]);
+    expect(skills().querySelector("[data-tier]")).toBeNull();
+    expect(skills().textContent).not.toMatch(/On your own|\d/);
+    expect(
+      within(screen.getByRole("main")).queryByRole("progressbar"),
+    ).toBeNull();
+    expect(unquoted(snapshot)).toEqual([]);
+  });
+
+  test("each skill's row says the help last used, in course order", () => {
+    renderConnected("/progress", at(someMastery));
+    const rows = within(skills()).getAllByRole("listitem");
+    expect(rows.map((row) => row.textContent)).toEqual([
+      "installEvery command shown",
+      "askOn your own",
+      "exitWith hints",
+    ]);
+    expect(skills().textContent).not.toMatch(/\d/);
+    expect(screen.getByText("3 of 23")).toBeInTheDocument();
+    expect(screen.getByText("0 of 3")).toBeInTheDocument();
+  });
+
+  test("every Badge by Level, earned or not yet", () => {
+    renderConnected("/progress", at());
+    const box = screen.getByRole("region", { name: "Badges" });
+    const badges = within(box).getAllByRole("img");
+    expect(badges).toHaveLength(23);
+    const names = badges.map((b) => b.getAttribute("aria-label") ?? "");
+    expect(names.filter((n) => !n.endsWith(", not yet"))).toEqual([
+      "Explorer",
+      "Planner",
+      "Builder",
+    ]);
+    expect(names.filter((n) => n.endsWith(", not yet"))).toHaveLength(20);
+    expect(
+      within(box)
+        .getAllByRole("heading", { level: 3 })
+        .map((h) => h.textContent),
+    ).toEqual(["Beginner", "Intermediate", "Advanced"]);
+  });
+
+  test("the goal links to the open Lesson's path", () => {
+    renderConnected("/progress", at());
+    const goal = screen.getByRole("region", { name: "Next goal" });
+    expect(goal.textContent).toContain("Beginner, Lesson 4: ");
+    expect(within(goal).getByRole("link", { name: "Start" })).toHaveAttribute(
+      "href",
+      "/lesson/b-4",
+    );
+  });
+
+  test("the goal opens the course's next Lesson with lesson.open", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected(
+      "/progress",
+      snapshotOf(complete, { welcomed: true, course: fullCourse }),
+    );
+    const goal = screen.getByRole("region", { name: "Next goal" });
+    await user.click(within(goal).getByRole("button", { name: "Start" }));
+    expect(page.posts).toEqual([{ type: "lesson.open", lesson: "b-4" }]);
+  });
+
+  test("a finished course points to the journey and keeps Pip's target", () => {
+    renderConnected(
+      "/progress",
+      snapshotOf(complete, { welcomed: true, course: courseDone }),
+    );
+    const goal = screen.getByRole("region", { name: "Next goal" });
+    expect(goal).toHaveAttribute("data-pip-target", "goal");
+    expect(goal.textContent).toContain("Every lesson is complete");
+    expect(
+      within(goal).getByRole("link", { name: "See the journey" }),
+    ).toHaveAttribute("href", "/journey");
+  });
+
+  test("no score, rank, XP or streak", () => {
+    renderConnected("/progress", at(someMastery));
+    expect(screen.getByRole("main").textContent).not.toMatch(
+      /score|rank|\bXP\b|streak|points/i,
+    );
   });
 });
 

@@ -8,6 +8,7 @@ import type {
   CompleteLesson,
   CourseView,
   LearnerView,
+  Mastery,
   Milestone,
   OverviewLesson,
   PlayingLesson,
@@ -953,6 +954,23 @@ export function overviewAt(id: string): OverviewLesson {
   };
 }
 
+/** fullCourse with every Lesson and Level complete, and nothing next. */
+export const courseDone: CourseView = {
+  levels: fullCourse.levels.map((level) => ({
+    ...level,
+    complete: true,
+    lessons: level.lessons.map((lesson) => ({ ...lesson, complete: true })),
+  })),
+  next: null,
+};
+
+/** Three of b-1's skills with a step finished, in course order. */
+export const someMastery: Record<string, Mastery> = {
+  install: { used: "commands", at: 1793380000000 },
+  ask: { used: "own", at: 1793380060000 },
+  exit: { used: "hints", at: 1793380120000 },
+};
+
 /** A whole snapshot around one phase of b-1. */
 export function snapshotOf(
   lesson: ActiveLesson,
@@ -962,12 +980,14 @@ export function snapshotOf(
     milestones = [],
     name = learner.name,
     course: view = course,
+    mastery = {},
   }: {
     revision?: number;
     welcomed?: boolean;
     milestones?: Milestone[];
     name?: string | null;
     course?: CourseView;
+    mastery?: Record<string, Mastery>;
   } = {},
 ): Snapshot {
   return {
@@ -975,7 +995,7 @@ export function snapshotOf(
     revision,
     milestones,
     course: view,
-    learner: { ...learner, welcomed, name },
+    learner: { ...learner, welcomed, name, mastery },
     lesson,
   };
 }
