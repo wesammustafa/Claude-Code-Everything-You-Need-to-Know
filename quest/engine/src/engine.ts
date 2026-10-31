@@ -1041,9 +1041,9 @@ function whileRunsPick(s: EngineState) {
   );
 }
 // The box's warm-up step, its first beat and the answer picked (an option's
-// index, or null), while the long wait lasts; else null.
-export function whileRunsOf(s: EngineState) {
-  const box = longWait(s) ? s.beat?.whileRuns : undefined;
+// index, or null), until the step changes (286); else null.
+export function whileRunsBox(s: EngineState) {
+  const box = onCard(s) ? s.beat.whileRuns : undefined;
   if (!box) return null;
   const step = must(contentOf(s), `no content for ${s.lesson}`).warmup.find(
     (w) => w.id === box.id,
@@ -1056,6 +1056,9 @@ export function whileRunsOf(s: EngineState) {
       }
     : null;
 }
+// The box while the long wait lasts; else null.
+export const whileRunsOf = (s: EngineState) =>
+  longWait(s) ? whileRunsBox(s) : null;
 // A question still open in the box: rule 3 holds ambient motion beside it.
 export const whileRunsOpen = (s: EngineState) =>
   whileRunsOf(s)?.answer === null;
@@ -1103,9 +1106,14 @@ function openBeat(s: EngineState, effects: Effect[]) {
     touched: false,
     asksAtOpen: s.asks,
   };
+  const prev = s.beat?.whileRuns;
   s.beat = st;
-  const offer = beat.wait ? whileRunsPick(s) : null;
-  if (offer) st.whileRuns = { id: offer, answer: null };
+  // The box lasts until the step changes (ticket 286): any beat of the same
+  // step keeps it, a back onto its wait included, so one step asks one.
+  const at = `${s.lesson}.${step.id}`;
+  const offer = prev?.at !== at && beat.wait ? whileRunsPick(s) : null;
+  if (prev?.at === at) st.whileRuns = prev;
+  else if (offer) st.whileRuns = { id: offer, answer: null, at };
   s.lastActivity = s.now;
   if (beat.codespace && s.facts.codespace) {
     st.status = "already";
@@ -2164,10 +2172,16 @@ const ACTIONS: ActionHandlers = {
     effects.push({ type: "save" });
     return true;
   },
-  // The long wait's question: answered once, scored nothing.
+  // The long wait's question: answered once, during or after the wait, until
+  // the step changes; scored nothing.
   "waitQuestion.answer"(s, { option }) {
-    const box = whileRunsOpen(s) && !yesNo(s) && whileRunsOf(s);
-    if (!box || !inRange(option, box.beat.options.length)) return false;
+    const box = !yesNo(s) && whileRunsBox(s);
+    if (
+      !box ||
+      box.answer !== null ||
+      !inRange(option, box.beat.options.length)
+    )
+      return false;
     must(beatState(s).whileRuns, "a long wait has its question").answer =
       option;
     s.whileShown.push(`${s.lesson}.${box.step.id}`);

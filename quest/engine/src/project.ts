@@ -95,7 +95,7 @@ import {
   toFinish,
   tryFirst,
   unmet,
-  whileRunsOf,
+  whileRunsBox,
 } from "./engine.ts";
 import { mix, TIERS } from "./tiers.ts";
 import type { CourseEntry, EngineState, HintRung } from "./types.ts";
@@ -708,7 +708,7 @@ function hintsView(s: EngineState): HintsView {
 }
 
 function waitQuestionOf(s: EngineState): PlayingLesson["waitQuestion"] {
-  const box = whileRunsOf(s);
+  const box = whileRunsBox(s);
   if (!box) return null;
   const { beat, answer } = box;
   const picked =

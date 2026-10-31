@@ -102,6 +102,7 @@ export {
   tryFirst,
   unmet,
   watching,
+  whileRunsBox,
   whileRunsOf,
   whileRunsOpen,
 } from "../src/engine.ts";
