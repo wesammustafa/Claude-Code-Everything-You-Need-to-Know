@@ -1742,7 +1742,10 @@ describe("Lesson workspace, questions and hints (247)", () => {
     expect(section()).toHaveTextContent("Yes: CLAUDE.md holds them.");
     page.send(snapshotOf(waitQuestionEnded, { revision: 3 }));
     expect(section()).toHaveTextContent("Your result is in.");
-    expect(section()?.querySelector("fieldset")).toBeDisabled();
+    expect(section()?.querySelector("fieldset")).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
     cleanup();
     renderConnected("/lesson/b-1/step", snapshotOf(waitQuestionOpen));
     await user.click(screen.getByRole("button", { name: "Not now" }));

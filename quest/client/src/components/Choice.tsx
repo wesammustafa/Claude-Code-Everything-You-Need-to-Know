@@ -41,7 +41,7 @@ const OPTION =
   "flex w-full items-start gap-3 rounded-lg border px-4 py-3 " +
   "transition-[background-color,border-color] duration-(--duration-fast) ease-out " +
   "has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus " +
-  "has-disabled:cursor-not-allowed has-disabled:opacity-disabled";
+  "in-data-disabled:cursor-not-allowed in-data-disabled:opacity-disabled";
 
 // A contrast theme draws every border in one colour and drops the fills, so
 // there the picked or marked answer shows by a thicker edge (its padding
@@ -92,7 +92,13 @@ export function Choice({
   const marks: readonly ChoiceResult[] =
     result === undefined ? [] : "id" in result ? [result] : result;
   const fieldset = (
-    <fieldset disabled={disabled} className="grid gap-2.5">
+    // Not the native disabled: that would drop a focused answer's focus to
+    // the page when the connection goes, so the answers stay focusable and
+    // take no change while disabled.
+    <fieldset
+      {...(disabled ? { "aria-disabled": true, "data-disabled": "" } : {})}
+      className="grid gap-2.5"
+    >
       <legend className="mb-2.5 font-semibold">{legend}</legend>
       {options.map((option, i) => {
         const marked = marks.find((mark) => mark.id === option.id)?.state;
@@ -105,8 +111,9 @@ export function Choice({
                 name={name}
                 value={option.id}
                 checked={value === option.id}
+                {...(disabled ? { "aria-disabled": true } : {})}
                 onChange={() => {
-                  onChange(option.id);
+                  if (!disabled) onChange(option.id);
                 }}
                 className="sr-only"
               />

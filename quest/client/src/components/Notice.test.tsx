@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { expect, test } from "vitest";
 import { Notice } from "./Notice";
 
@@ -33,4 +34,14 @@ test("when stopped, shows how to start again with Copy, the command at its own w
   const sentence = screen.getByText(/Claude Code Quest stopped/);
   expect(sentence.parentElement?.querySelector("svg")).not.toBeNull();
   expect(container.querySelector("[data-notice=stopped]")).not.toBeNull();
+});
+
+test("when stopped, Copy is said by the notice's own region alone", async () => {
+  const user = userEvent.setup();
+  render(<Notice kind="stopped" />);
+  const region = screen.getByRole("status");
+  await user.click(screen.getByRole("button", { name: "Copy npm run learn" }));
+  await screen.findByRole("button", { name: "Copied" });
+  expect(screen.getAllByRole("status")).toEqual([region]);
+  expect(region).toHaveTextContent("Copied");
 });

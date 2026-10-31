@@ -70,10 +70,12 @@ function Electives({ level }: { level: LevelId }) {
         ) : (
           <ul className="grid justify-items-start gap-1">
             {list.pages.map((page) => (
-              <li key={page.path}>
+              <li key={page.path} className="max-w-full">
+                {/* A long title wraps rather than overflowing a narrow page. */}
                 <Button
                   variant="ghost"
                   size="sm"
+                  className="h-auto! min-h-8 py-1 text-left whitespace-normal! break-words"
                   aria-haspopup="dialog"
                   onClick={() => {
                     open(page.path);
@@ -88,6 +90,20 @@ function Electives({ level }: { level: LevelId }) {
     </Disclosure>
   );
 }
+
+// Where each Level's tab and footer go: a row of tabs over a row of
+// footers, or stacked below md, each footer under its own tab (the gap
+// between cards stays gap-3.5).
+const TAB_PLACE = [
+  "md:col-start-1 max-md:order-1",
+  "md:col-start-2 max-md:order-3 max-md:mt-1.5",
+  "md:col-start-3 max-md:order-5 max-md:mt-1.5",
+];
+const FOOTER_PLACE = [
+  "md:col-start-1 max-md:order-2",
+  "md:col-start-2 max-md:order-4",
+  "md:col-start-3 max-md:order-6",
+];
 
 const INTRO =
   "Three levels. Each lesson ends with a check you can also run yourself.";
@@ -169,19 +185,22 @@ function Course({ snapshot }: { snapshot: Snapshot }) {
     <main className={WIDE}>
       <JourneyHeader />
 
-      <div
-        role="tablist"
-        aria-label="Levels"
-        aria-orientation={stacked ? "vertical" : "horizontal"}
-        className="grid grid-cols-3 gap-3.5 max-md:grid-cols-1"
-      >
-        {levels.map((l, i) => {
-          const done = l.lessons.filter((s) => s.complete).length;
-          const name = LEVEL_NAMES[l.id];
-          return (
-            // The card's footer, outside the tab, holds the Level's Electives.
-            <div key={l.id} className="grid content-start gap-2">
+      {/* The tabs sit in one row and their footers in the next; stacked,
+          each footer follows its own card. The tablist holds only the tabs,
+          so it lays out as contents of the grid. */}
+      <div className="grid grid-cols-3 gap-x-3.5 gap-y-2 max-md:grid-cols-1">
+        <div
+          role="tablist"
+          aria-label="Levels"
+          aria-orientation={stacked ? "vertical" : "horizontal"}
+          className="contents"
+        >
+          {levels.map((l, i) => {
+            const done = l.lessons.filter((s) => s.complete).length;
+            const name = LEVEL_NAMES[l.id];
+            return (
               <button
+                key={l.id}
                 ref={(node) => {
                   tabs.current[i] = node;
                 }}
@@ -196,7 +215,8 @@ function Course({ snapshot }: { snapshot: Snapshot }) {
                 }}
                 onKeyDown={onKeyDown}
                 className={cx(
-                  "grid cursor-pointer content-start gap-2.5 rounded-lg border bg-surface p-4.5 text-left shadow-sm",
+                  "grid cursor-pointer content-start gap-2.5 self-start rounded-lg border bg-surface p-4.5 text-left shadow-sm",
+                  TAB_PLACE[i],
                   "transition-[border-color,box-shadow,translate] duration-(--duration-base) ease-out",
                   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
                   // A contrast theme draws every border in one colour and drops
@@ -226,12 +246,19 @@ function Course({ snapshot }: { snapshot: Snapshot }) {
                   />
                 </span>
               </button>
-              <div data-level-footer="" className="empty:hidden">
-                <Electives level={l.id} />
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+        {/* The card's footer, outside the tab, holds the Level's Electives. */}
+        {levels.map((l, i) => (
+          <div
+            key={l.id}
+            data-level-footer=""
+            className={cx("empty:hidden md:row-start-2", FOOTER_PLACE[i])}
+          >
+            <Electives level={l.id} />
+          </div>
+        ))}
       </div>
 
       <section

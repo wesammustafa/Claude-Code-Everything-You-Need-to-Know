@@ -185,7 +185,7 @@ test("the waiting question answers or puts away, and stays read only once the wa
   await show(page, waitQuestionEnded);
   await expect(question).toContainText("Your result is in.");
   for (const radio of await question.getByRole("radio").all())
-    await expect(radio).toBeDisabled();
+    await expect(radio).toHaveAttribute("aria-disabled", "true");
 
   await show(page, waitQuestionOpen);
   await question.getByRole("button", { name: "Not now" }).click();
