@@ -105,9 +105,11 @@ test("disabled, takes no answer", async () => {
   expect(
     screen.getByRole("radio", { name: "It reads nothing" }),
   ).not.toBeChecked();
+  // Still focusable, so a disconnect never drops focus (255).
   expect(
     screen.getByRole("radio", { name: "It reads nothing" }),
-  ).toBeDisabled();
+  ).toHaveAttribute("aria-disabled", "true");
+  expect(screen.getByRole("group")).toHaveAttribute("aria-disabled", "true");
 });
 
 test("its reason opens through its height, or under reduced motion only fades", async () => {

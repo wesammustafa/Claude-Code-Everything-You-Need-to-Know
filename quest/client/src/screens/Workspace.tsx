@@ -650,11 +650,13 @@ function TypedAnswer({ beat }: { beat: BeatView }) {
         maxLength={200}
         autoComplete="off"
         spellCheck={false}
-        disabled={done || busy}
+        // Read-only, not disabled: a disabled box drops its focus (255).
+        readOnly={done || busy}
+        {...(done || busy ? { "aria-disabled": true } : {})}
         onChange={(event) => {
           setText(event.target.value);
         }}
-        className="h-10 w-full rounded-md border border-line-2 bg-surface px-3 font-mono text-control focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-disabled"
+        className="h-10 w-full rounded-md border border-line-2 bg-surface px-3 font-mono text-control focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus aria-disabled:cursor-not-allowed aria-disabled:opacity-disabled"
       />
       {!done && (
         <Button

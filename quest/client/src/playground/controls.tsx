@@ -155,9 +155,14 @@ export function Slider({
   const id = useId();
   const list = `${id}-marks`;
   return (
-    <div className={cx("grid gap-1", disabled === true && "opacity-disabled")}>
+    <div className="grid gap-1">
       <span className="flex items-baseline justify-between text-sm">
-        <label htmlFor={id} className="text-muted">
+        {/* The label and the range dim while disabled; the readout keeps its
+            contrast, since it still tells the value. */}
+        <label
+          htmlFor={id}
+          className={cx("text-muted", disabled === true && "opacity-disabled")}
+        >
           {label}
         </label>
         {/* The range already tells assistive technology its value: this
@@ -181,7 +186,10 @@ export function Slider({
         onChange={(event) => {
           onChange(Number(event.currentTarget.value));
         }}
-        className={cx("w-full cursor-pointer accent-accent", FOCUS)}
+        className={cx(
+          "w-full cursor-pointer accent-accent disabled:cursor-not-allowed disabled:opacity-disabled",
+          FOCUS,
+        )}
       />
       {marks !== undefined && (
         <datalist id={list}>
