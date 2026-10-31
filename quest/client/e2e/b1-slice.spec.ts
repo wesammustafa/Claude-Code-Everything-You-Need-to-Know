@@ -126,8 +126,23 @@ async function failThenPass(page: Page, copy: PracticeCopy, note: string) {
     /is missing|still says|has no/,
   );
 
-  copy.write(note, CORRECTED);
+  // Check again is pressed before the note changes, and its action held until
+  // the note is written: the host polls the copy every 2 seconds, and a poll
+  // that passes the Check first turns this same button into Next step, so a
+  // press after the write could go on to Y4 instead.
+  const written = Promise.withResolvers<undefined>();
+  await page.route("**/api/actions", async (route) => {
+    await written.promise;
+    await route.continue();
+  });
+  const asked = sent.length;
   await check.click();
+  await expect(check).toHaveAttribute("data-pending", "");
+  copy.write(note, CORRECTED);
+  const answered = page.waitForResponse("**/api/actions");
+  written.resolve(undefined);
+  await answered;
+  await page.unroute("**/api/actions");
   try {
     await expect(
       bar(page).getByRole("button", { name: "Next step" }),
@@ -144,6 +159,10 @@ async function failThenPass(page: Page, copy: PracticeCopy, note: string) {
       { cause: error },
     );
   }
+  // The press posted the Check, never Next step.
+  const pressed = sent.slice(asked).map((a) => a.type);
+  expect(pressed).toContain("check.run");
+  expect(pressed).not.toContain("step.continue");
 
   await playTo(page, "Install, sign in and look around");
   await expect(page.getByText("Lesson 1 complete")).toBeVisible();
