@@ -2,6 +2,7 @@
 // copy (practice-copy.ts), driven from Welcome to Lesson complete on the real
 // engine, host and server. One copy per test, each on its own free port.
 import { expect, test as base, type Page } from "@playwright/test";
+import { actionsOf, bar, heading, playTo } from "./play.ts";
 import { practiceCopy, type PracticeCopy } from "./practice-copy.ts";
 import { watch } from "./watch.ts";
 
@@ -28,69 +29,11 @@ test.use({ viewport: { width: 1280, height: 900 } });
 const CORRECTED =
   "- linkcheck exits with code 1 when it finds broken links, so it can fail a CI job.\n";
 
-const heading = (page: Page) => page.getByRole("heading", { level: 1 });
-const bar = (page: Page) => page.locator("[data-action-bar]");
-
-/** Every action the page POSTs, in order. */
-function actionsOf(page: Page): { type: string; [field: string]: unknown }[] {
-  const sent: { type: string }[] = [];
-  page.on("request", (request) => {
-    if (request.method() !== "POST" || !request.url().endsWith("/api/actions"))
-      return;
-    const body = request.postDataJSON() as { action: { type: string } };
-    sent.push(body.action);
-  });
-  return sent;
-}
-
 /** From Welcome to the b-1 overview. */
 async function openB1(page: Page, copy: PracticeCopy) {
   await page.goto(copy.url);
   await page.getByRole("button", { name: "Start the first lesson" }).click();
   await expect(heading(page)).toHaveText("Install, sign in and look around");
-}
-
-/**
- * One move on the workspace, as a Learner makes it: go on from a done beat,
- * take a Step-down, answer a question (trying each answer in turn), run the
- * Check, or say a self beat is done. Resolves once the page shows the
- * engine's answer.
- */
-async function move(page: Page) {
-  const before = await page.locator("main").innerText();
-  const next = bar(page).getByRole("button", { name: "Next step" });
-  const check = bar(page).getByRole("button", { name: "Check again" });
-  // The answers not tried yet: a wrong one stays marked, the next is tried.
-  const untried = page.locator(
-    "main fieldset:not([disabled]) label[data-state=idle]",
-  );
-  if ((await heading(page).innerText()) === "Less help from here") {
-    await page.getByRole("button", { name: /^Go on/ }).click();
-  } else if (await next.isVisible()) {
-    await next.click();
-  } else if ((await untried.count()) > 0) {
-    await untried.first().click();
-  } else if (await check.isVisible()) {
-    await check.click();
-    await expect(next.or(page.locator("[data-state=not-yet]"))).toBeVisible({
-      timeout: 30_000,
-    });
-    return;
-  } else {
-    await bar(page).getByRole("button").last().click();
-  }
-  await expect
-    .poll(() => page.locator("main").innerText(), { timeout: 15_000 })
-    .not.toBe(before);
-}
-
-/** Moves on until the step's heading is `title`. */
-async function playTo(page: Page, title: string) {
-  for (let moves = 0; moves < 60; moves += 1) {
-    if ((await heading(page).innerText()) === title) return;
-    await move(page);
-  }
-  throw new Error(`Never reached ${title}`);
 }
 
 /** From Welcome to the Check step that reads the note: Y3, "Correct one claim". */

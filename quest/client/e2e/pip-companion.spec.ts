@@ -245,7 +245,10 @@ test.describe("the help offer", () => {
     });
     await page.getByRole("button", { name: "Not now" }).click();
     await expect(page.locator("[data-help-offer]")).toHaveCount(0);
-    await expect(bubble(page)).toHaveText("Watching your Practice copy.");
+    // b-1's Check waits on its slow item, which the bubble names (246 D4).
+    await expect(bubble(page)).toHaveText(
+      "Everything else passes. Check again runs the slow part.",
+    );
     const added = await page.evaluate(
       () => (window as unknown as { added: string[] }).added,
     );

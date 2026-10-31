@@ -4,7 +4,8 @@
 // Learner", under a HOME of its own, so the developer's global git config
 // never reaches it. A stub `claude` on the server's PATH prints a version, as
 // checks/test/ladders/b-1.mjs does, unless QUEST_E2E_REAL_CLAUDE=1 asks for
-// the installed one.
+// the installed one. With `through`, the Reference solutions are replayed
+// into it (quest/release/src/replay.mjs), Lesson by Lesson, through that one.
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import {
   chmodSync,
@@ -20,8 +21,11 @@ import {
 import { tmpdir } from "node:os";
 import { delimiter, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { applyLesson, lessonOrder } from "../../release/src/replay.mjs";
 
 const repo = fileURLToPath(new URL("../../../", import.meta.url));
+/** The repository's root: course/, practice-template/ and solutions/. */
+export const repoRoot = repo;
 const TEMPLATE = join(repo, "practice-template");
 const BUNDLE = join(repo, "quest/server/dist/learn");
 
@@ -58,6 +62,10 @@ export interface PracticeCopy {
   repo: (name: string, options?: { ignorePractice?: boolean }) => string;
   /** A new copy of the template at `<home>/<name>`, as a repository; returns its path. */
   templateCopy: (name: string) => string;
+  /** Replays Lesson `id`'s Reference solution into the copy's project/. */
+  apply: (id: string) => void;
+  /** Runs git in the copy's project/ as the Learner; returns its stdout. */
+  git: (...args: string[]) => string;
   /** Stops the app if it runs and removes the folder. */
   dispose: () => Promise<void>;
 }
@@ -67,17 +75,24 @@ export interface PracticeCopyOptions {
   inHome?: boolean;
   /** Arguments after `learn/app.mjs`, as `npm run learn -- ...` passes them. */
   argv?: string[];
+  /**
+   * Replays the Reference solutions in course order through this Lesson,
+   * inclusive, after the first commit. The save is left to the caller.
+   */
+  through?: string;
 }
 
 function git(dir: string, env: NodeJS.ProcessEnv, ...args: string[]) {
   const run = spawnSync("git", args, { cwd: dir, env, encoding: "utf8" });
   if (run.status !== 0)
     throw new Error(`git ${args.join(" ")} failed: ${run.stderr}`);
+  return run.stdout;
 }
 
 export function practiceCopy({
   inHome = false,
   argv = [],
+  through,
 }: PracticeCopyOptions = {}): PracticeCopy {
   if (!existsSync(join(BUNDLE, "app.mjs")))
     throw new Error(
@@ -118,6 +133,15 @@ export function practiceCopy({
   writeFileSync(join(dir, ".git/info/exclude"), ".practice/\n");
   git(dir, env, "add", "-A");
   git(dir, env, "commit", "-q", "-m", "Practice copy");
+  if (through !== undefined) {
+    const order = lessonOrder(repo);
+    const last = order.indexOf(through);
+    if (last < 0) throw new Error(`no lesson "${through}" in the course`);
+    // applyLesson runs git under its own environment (replay.mjs gitEnv):
+    // no global or system config, a fixed author.
+    for (const id of order.slice(0, last + 1))
+      applyLesson({ repoRoot: repo, copy: dir, id });
+  }
 
   let child: ChildProcess | null = null;
   let exited: Promise<number | null> = Promise.resolve(null);
@@ -231,6 +255,10 @@ export function practiceCopy({
       writeFileSync(join(path, ".gitignore"), ".practice/\n");
       return commitAll(path, "New copy");
     },
+    apply(id) {
+      applyLesson({ repoRoot: repo, copy: dir, id });
+    },
+    git: (...args) => git(join(dir, "project"), env, ...args),
     async dispose() {
       if (child !== null) {
         child.kill("SIGKILL");

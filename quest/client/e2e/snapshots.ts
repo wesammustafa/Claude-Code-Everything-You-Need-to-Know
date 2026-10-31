@@ -1124,3 +1124,223 @@ export const indexWarmupI1 = playingAt("i-1", {
   from: "beginner-index",
   explainer: false,
 });
+
+/**
+ * `playing` with its step, beat and Lesson fields changed (246). The beat
+ * starts from `playing`'s Check beat; a fixture that is not a Check passes
+ * the fields that make it so, and every fixture says what decides it.
+ */
+export function playingWith({
+  step = {},
+  beat,
+  lesson = {},
+}: {
+  step?: Partial<NonNullable<PlayingLesson["step"]>>;
+  beat: Partial<NonNullable<PlayingLesson["beat"]>> &
+    Pick<NonNullable<PlayingLesson["beat"]>, "decidedBy">;
+  lesson?: Partial<PlayingLesson>;
+}): PlayingLesson {
+  if (!playing.step || !playing.beat) throw new Error("playing has a beat");
+  return {
+    ...playing,
+    ...lesson,
+    step: { ...playing.step, ...step },
+    beat: { ...playing.beat, ...beat },
+  };
+}
+
+/** A watched file beat (b-2 Y4's shape): its Done when line, before a look. */
+const fileBeat = {
+  decidedBy: "watch" as const,
+  verification: [],
+  fail: null,
+  lines: [
+    { kind: "do" as const, text: "Save the notes as `notes.md`." },
+    {
+      kind: "do" as const,
+      text: "Done when `notes.md` exists.",
+      doneWhen: true,
+    },
+  ],
+};
+
+export const watchWaiting = playingWith({
+  beat: { ...fileBeat, status: "waiting" },
+});
+export const watchChecking = playingWith({
+  beat: { ...fileBeat, status: "checking", checking: "notes.md" },
+});
+export const watchNotYet = playingWith({
+  beat: { ...fileBeat, status: "fail", fail: "`notes.md` is not there yet." },
+});
+export const watchPassed = playingWith({
+  beat: {
+    ...fileBeat,
+    status: "done",
+    found: "notes.md",
+    evidence: "# Notes",
+  },
+});
+export const checkBroken = playingWith({
+  beat: {
+    decidedBy: "check",
+    status: "broken",
+    broken: "timeout",
+    fail: null,
+  },
+});
+export const checkSame = playingWith({
+  beat: { decidedBy: "check", same: true },
+});
+export const checkStale = playingWith({
+  beat: { decidedBy: "check", stale: true },
+});
+export const checkRunning = playingWith({
+  beat: {
+    decidedBy: "check",
+    status: "checking",
+    running: { n: 2, m: 5 },
+    fail: null,
+  },
+});
+export const alreadyCodespace = playingWith({
+  beat: {
+    decidedBy: "check",
+    status: "already",
+    fail: null,
+    codespace: "In a Codespace **Claude Code** is already installed.",
+  },
+});
+/** A self-check beat with its own done-label. */
+export const learnerBeat = playingWith({
+  beat: {
+    decidedBy: "learner",
+    kind: "self",
+    status: "waiting",
+    verification: [],
+    fail: null,
+    lines: [],
+    self: "Self-check: you can say which model it was.",
+    doneLabel: "I've said it",
+  },
+});
+/** A git-clean beat with a done-label: session.ended. */
+export const sessionBeat = playingWith({
+  beat: {
+    status: "waiting",
+    verification: [],
+    fail: null,
+    lines: [],
+    doneLabel: "The session has ended",
+    decidedBy: "session",
+  },
+});
+/** A code beat on lines 9 to 11 of a longer block, explaining line 10. */
+export const codeWindow = playingWith({
+  beat: {
+    decidedBy: "learner",
+    status: "waiting",
+    verification: [],
+    fail: null,
+    lines: [{ kind: "say", text: "Read the loop." }],
+    code: {
+      lines: [
+        { n: 9, text: "for (const url of urls) {" },
+        { n: 10, text: "  const res = await fetch(url);" },
+        { n: 11, text: "}" },
+      ],
+      point: 10,
+      copy: "const urls = [];\nfor (const url of urls) {\n  const res = await fetch(url);\n}\n",
+    },
+  },
+});
+/** An optional step that offers Skip, and Back with a long done-label. */
+export const offersBoth = playingWith({
+  beat: {
+    decidedBy: "learner",
+    kind: "self",
+    status: "waiting",
+    verification: [],
+    fail: null,
+    lines: [],
+    self: "Read the **settings** page.",
+    doneLabel: "I've read the settings page and tried it",
+  },
+  lesson: {
+    offers: {
+      back: playing.offers.back,
+      skip: { when: "Skip it if you have no second machine." },
+    },
+  },
+});
+/** The first Tear down step, after the Check passed. */
+export const tearDown = playingWith({
+  step: { id: "D1", part: "Tear down", title: "Remove the hook" },
+  beat: {
+    decidedBy: "learner",
+    kind: "self",
+    status: "waiting",
+    verification: [],
+    fail: null,
+    lines: [],
+    self: "Delete the hook file.",
+  },
+  lesson: {
+    steps: [
+      ...playing.steps.map((s) => ({ ...s, state: "done" as const })),
+      {
+        id: "D1",
+        part: "Tear down",
+        title: "Remove the hook",
+        tier: "guided",
+        state: "current",
+        optional: false,
+      },
+      {
+        id: "D2",
+        part: "Tear down",
+        title: "Check the tree",
+        tier: "guided",
+        state: "todo",
+        optional: false,
+      },
+    ],
+  },
+});
+/** i-1's Check in its Work folder: the run line keeps --dir. */
+export const workFolderCheck = {
+  ...playingWith({
+    step: {
+      where: { kind: "terminal", terminal: null, folder: "your Practice copy" },
+    },
+    beat: {
+      decidedBy: "check",
+      lines: [
+        {
+          kind: "run",
+          text: "npm run check -- i-1 --dir ../work",
+          watched: false,
+        },
+      ],
+    },
+  }),
+  id: "i-1",
+  level: "intermediate" as const,
+};
+/** A say and a why with bold and a link, through InlineText. */
+export const richCopy = playingWith({
+  beat: {
+    decidedBy: "check",
+    lines: [
+      {
+        kind: "say",
+        text: "See **the settings** in [the page](beginner/02-first-session.md).",
+      },
+      { kind: "run", text: "npm run check -- b-1", watched: true },
+    ],
+    why: {
+      onCard: "It is **faster** than [asking](https://code.claude.com/docs).",
+      all: [],
+    },
+  },
+});

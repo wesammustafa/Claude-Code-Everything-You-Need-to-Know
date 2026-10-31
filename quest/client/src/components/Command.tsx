@@ -1,12 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { cx } from "../lib/cx";
-import { usePipLook } from "../pip/PipStage";
 import { Icon } from "./Icon";
-
-/** How long "Copied" shows before the button reads "Copy" again. */
-const CONFIRM_FOR_MS = 1600;
-
-type CopyState = "idle" | "copied" | "selected";
+import { useCopy } from "./useCopy";
 
 // The command split at its spaces, each space kept, so a line wraps only
 // between arguments: a break inside one ("b-" over "1") would mislead a
@@ -22,6 +17,8 @@ export interface CommandProps {
   copy?: string;
   /** Sit at the command's own width, inline with text, rather than fill the line. */
   fit?: boolean;
+  /** The app saw the Learner run it: a tick shows after the command. */
+  watched?: boolean;
   className?: string;
 }
 
@@ -34,54 +31,11 @@ export function Command({
   text,
   copy: copied,
   fit = false,
+  watched = false,
   className,
 }: CommandProps) {
-  const [state, setState] = useState<CopyState>("idle");
-  // Counts every Copy, so each one restarts the confirmation and is announced again.
-  const [copies, setCopies] = useState(0);
   const code = useRef<HTMLElement>(null);
-  const look = usePipLook();
-
-  useEffect(() => {
-    if (state === "idle") return;
-    const timer = window.setTimeout(() => {
-      setState("idle");
-    }, CONFIRM_FOR_MS);
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [state, copies]);
-
-  const confirm = (next: Exclude<CopyState, "idle">) => {
-    setState(next);
-    setCopies((n) => n + 1);
-  };
-
-  const selectCommand = () => {
-    const node = code.current;
-    const selection = window.getSelection();
-    if (!node || !selection) return;
-    const range = document.createRange();
-    range.selectNodeContents(node);
-    selection.removeAllRanges();
-    selection.addRange(range);
-    confirm("selected");
-  };
-
-  const copy = async () => {
-    look("command", code.current);
-    try {
-      // The Clipboard API is missing outside a secure context.
-      if (!("clipboard" in navigator)) throw new Error("no clipboard");
-      await navigator.clipboard.writeText(copied ?? text);
-      confirm("copied");
-    } catch {
-      selectCommand();
-    }
-  };
-
-  const label =
-    state === "copied" ? "Copied" : state === "selected" ? "Selected" : "Copy";
+  const { state, copies, label, copy } = useCopy(code);
 
   return (
     <div
@@ -117,9 +71,15 @@ export function Command({
           ),
         )}
       </code>
+      {watched && (
+        <span data-watched="" className="shrink-0 text-pass">
+          <Icon name="check" size="sm" />
+          <span className="sr-only">You ran this</span>
+        </span>
+      )}
       <button
         type="button"
-        onClick={() => void copy()}
+        onClick={() => void copy(copied ?? text)}
         aria-label={state === "idle" ? `Copy ${text}` : label}
         className={cx(
           "inline-flex h-7.5 shrink-0 cursor-pointer items-center gap-1.5 rounded-sm border border-transparent bg-code-control px-2.5 font-sans text-xs font-semibold text-code-text",

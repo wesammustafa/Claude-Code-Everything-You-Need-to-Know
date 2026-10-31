@@ -1,18 +1,21 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { cx } from "../lib/cx";
 import { Icon } from "./Icon";
 
-/** Where a line of the Check stands: still being checked, met, or not met yet. */
-export type CheckLineState = "waiting" | "pass" | "notYet";
+/**
+ * Where a line of the Check stands: still being checked, met, not met yet,
+ * or not known because the Check could not run (rose, never a judgement).
+ */
+export type CheckLineState = "waiting" | "pass" | "notYet" | "broken";
 
 export interface CheckLine {
   /** The Check's line, in the engine's words. */
-  text: string;
+  text: ReactNode;
   ok: boolean;
   /** Where the line stands, when it is more than met or not: by default `ok` says. */
   state?: CheckLineState;
   /** What the Check saw, shown under the line. */
-  evidence?: string;
+  evidence?: ReactNode;
 }
 
 export interface CheckLinesProps {
@@ -59,6 +62,14 @@ const LOOKS: Record<
     text: "text-text",
     evidence: "border-wait",
   },
+  broken: {
+    data: "broken",
+    said: "Could not check: ",
+    mark: "bg-broken-soft text-broken",
+    icon: "circle",
+    text: "text-text",
+    evidence: "border-broken",
+  },
 };
 
 /**
@@ -89,7 +100,9 @@ export function CheckLines({ lines }: CheckLinesProps) {
               <span className="sr-only">{look.said}</span>
               <span className={look.text}>{line.text}</span>
               {line.evidence !== undefined && (
-                <p className={cx(EVIDENCE, look.evidence)}>{line.evidence}</p>
+                <div className={cx(EVIDENCE, look.evidence)}>
+                  {line.evidence}
+                </div>
               )}
             </div>
           </li>
