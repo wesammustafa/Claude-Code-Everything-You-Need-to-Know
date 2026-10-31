@@ -15,7 +15,7 @@ By the end of this lesson you can do one thing, worded so an onlooker could tell
 
 ## You need
 
-- Your copy of the practice template, cloned, with no uncommitted changes. To practice in your own repository instead, keep the template copy for the check.
+- Your Practice copy, with Claude Code Quest running and no uncommitted changes. To practice in your own repository instead, keep the Practice copy for the Check.
 - Usage: light.
 
 ## The idea
@@ -43,7 +43,7 @@ You are done when all of these are true:
 - [ ] A state a script can read, with the command that shows it.
 - [ ] Self-check (not tested): one thing only a live session can show.
 
-Run `npm run check -- b-1` in your practice copy. In your own repository, run `npm run check -- b-1 --dir <your repo>` from your practice copy instead.
+Press Check in Claude Code Quest, or run `npm run check -- b-1` in your Practice copy's `project/` folder. In your own repository, run `npm run check -- b-1 --dir <your repo>` from there instead.
 
 If the first item fails, the one most likely cause and how to fix it.
 

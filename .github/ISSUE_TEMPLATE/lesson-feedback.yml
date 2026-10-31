@@ -7,6 +7,8 @@ body:
       value: |
         Thanks for telling us where a lesson lost you. Every report is read and gets a first answer within 7 days.
 
+        This form covers a Lesson in Claude Code Quest or its guide page.
+
         For a problem with Claude Code itself, rather than with this guide, use the [Claude Code issue tracker](https://github.com/anthropics/claude-code/issues).
   - type: input
     id: lesson
@@ -26,14 +28,22 @@ body:
         - Worked example
         - Your turn
         - Check
+        - Claude Code Quest itself
         - Something else
     validations:
       required: true
+  - type: input
+    id: step
+    attributes:
+      label: Step
+      description: The Step Claude Code Quest showed when it went wrong, such as Step 3 of 11. Leave it empty if you were reading the page.
+    validations:
+      required: false
   - type: textarea
     id: what-happened
     attributes:
       label: What happened
-      description: The step you were on, what you did, what you expected and what you saw. If you ran `npm run check`, paste its output.
+      description: The step you were on, what you did, what you expected and what you saw. If a Check failed, paste what Claude Code Quest showed, or the output of `npm run check`.
     validations:
       required: true
   - type: input
@@ -42,6 +52,14 @@ body:
       label: Claude Code version
       description: The output of `claude --version`.
       placeholder: "2.1.285 (Claude Code)"
+    validations:
+      required: false
+  - type: input
+    id: release
+    attributes:
+      label: Claude Code Quest release
+      description: "Copy the line Settings shows: Release <tag>, or Built from commit <id>."
+      placeholder: "v2026.11"
     validations:
       required: false
   - type: dropdown
