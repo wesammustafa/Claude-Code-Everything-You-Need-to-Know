@@ -85,6 +85,7 @@ export {
   offered,
   pickWarmups,
   pinOf,
+  projectDir,
   readFrom,
   recallOf,
   reduce,
@@ -172,6 +173,10 @@ export const FACTS = {
   codespace: false,
   win32: false,
 };
+// The Work folders a check runs in by default (ticket 277): the copy's
+// project/, and a new copy's.
+export const PROJECT = FACTS.root + "/project";
+export const NEW_PROJECT = NEW_COPY + "/project";
 
 // The b-1 item's real result for a version.txt holding `text` (null: no file).
 export function b1Item(text) {
@@ -184,7 +189,7 @@ export function b1Item(text) {
         index: 0,
         text: versionSaved.text,
         pass: outcome === true,
-        hint: outcome === true ? "" : outcome.replace(dir, FACTS.root),
+        hint: outcome === true ? "" : outcome.replace(dir, PROJECT),
       };
     },
   );

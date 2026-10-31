@@ -17,6 +17,7 @@ import {
   typesOf,
   VERSION,
   w3,
+  WORK,
 } from "./scripted.mjs";
 
 const MINE = "/home/sam/mine";
@@ -35,7 +36,7 @@ async function asking(effects, opts = {}) {
 
 test("a check: run-start when the child really starts, a run asked during another waits for it, and the result carries the folder and the evidence", async () => {
   const { host, adapters, heard } = fakeHost({ saved: AT_W3 });
-  adapters.files.write(`${ROOT}/${VERSION}`, "2.1.285 (Claude Code)\n");
+  adapters.files.write(`${WORK}/${VERSION}`, "2.1.285 (Claude Code)\n");
   await host.open();
   host.dispatch({ type: "lesson.open", lesson: "b-1" });
   await turn();
@@ -43,7 +44,7 @@ test("a check: run-start when the child really starts, a run asked during anothe
   const [first] = adapters.checks.calls;
   assert.deepEqual(
     [first.dir, first.lesson, first.items, first.slow],
-    [ROOT, "b-1", [0], false],
+    [WORK, "b-1", [0], false],
   );
   // r while the first runs: it waits, and starts no child yet.
   host.dispatch({ type: "check.run" });
@@ -64,9 +65,9 @@ test("a check: run-start when the child really starts, a run asked during anothe
       read: "2.1.285 (Claude Code)\n",
       path: ".practice/version.txt",
       found: ".practice/version.txt",
-      stamp: adapters.files.stamp(ROOT, VERSION),
+      stamp: adapters.files.stamp(WORK, VERSION),
       asked: 0,
-      dir: ROOT,
+      dir: WORK,
     },
   );
   // r's run: its slow items and number, on its report and its result.
@@ -89,7 +90,7 @@ test("a check: run-start when the child really starts, a run asked during anothe
       lesson: "b-1",
       message: "it took too long",
       asked: 1,
-      dir: ROOT,
+      dir: WORK,
     },
   ]);
 });

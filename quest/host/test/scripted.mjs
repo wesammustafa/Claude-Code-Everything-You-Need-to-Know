@@ -10,6 +10,8 @@ import { b1Only, FACTS } from "../../engine/test/drive.mjs";
 
 export const ROOT = FACTS.root;
 export const PRACTICE = `${ROOT}/.practice`;
+// The copy's project/, where its checks run (ticket 277).
+export const WORK = `${ROOT}/project`;
 export const VERSION = ".practice/version.txt";
 // Saved at b-1's W3, the check beat that waits for .practice/version.txt.
 export const AT_W3 = {
