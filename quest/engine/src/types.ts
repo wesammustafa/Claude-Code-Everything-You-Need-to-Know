@@ -152,7 +152,7 @@ export interface BeatState {
   run: { asked: number } | null;
   look: string | null;
   touched: boolean;
-  whileRuns?: { id: StepId; answer: number | null };
+  whileRuns?: { id: StepId; answer: number | null; at: string };
   codespace?: boolean;
   // The first answer the beat started from: undefined until there is one.
   baseline?: string | null | undefined;

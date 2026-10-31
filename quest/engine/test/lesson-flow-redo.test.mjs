@@ -38,9 +38,11 @@ import {
   tierOf,
   tryNow,
   watching,
+  whileRunsBox,
   whileRunsOf,
   whileRunsOpen,
 } from "./drive.mjs";
+import { project } from "../src/index.ts";
 // The app's words a beat's fail hint or evidence is built from (status.ts
 // and holds.ts pick them), and the text measures E2 and E14 test.
 import { at, atStep, b1Done, missing, reopen } from "./flow-places.mjs";
@@ -1518,7 +1520,7 @@ test("recall while a long run works: one unshown warm-up, missed skills first, t
 });
 
 // spec: warmups.while-runs
-test("recall while a long run works: never scored, still, and dropped when the result lands (150)", () => {
+test("recall while a long run works: never scored, still, and answerable after the result lands until the step changes (150, 286)", () => {
   // was learn-flow:3188
   const d = onWaitWith({ missed: ["exit"] });
   d.send({ type: "file", path: ".practice/run.txt", read: null, stamp: "A" });
@@ -1576,9 +1578,66 @@ test("recall while a long run works: never scored, still, and dropped when the r
   assert.equal(whileRunsOpen(open.state), false);
   // dropped: T-render no C.whileItRuns line; T-toast no toast
   assert.deepEqual([open.state.missed, open.state.eased], [["exit"], []]);
-  // An answer after the result is no answer.
+  // The question stays on the card after the result (286), unanswered.
+  const asked = () => project(open.state).lesson.waitQuestion;
+  assert.notEqual(whileRunsBox(open.state), null);
+  assert.equal(asked().answered, null);
+  // An answer after the result applies, shows its words and scores nothing.
+  const after = scored(open.state);
+  open.waitAnswer(1);
+  assert.equal(open.state.beat.whileRuns.answer, 1);
+  const wrong = whileRunsBox(open.state).beat.options[1];
+  assert.notEqual(wrong.kind, "right");
+  assert.deepEqual([asked().answered, asked().words], [1, wrong.because]);
+  assert.equal(scored(open.state), after);
+  // Answered once.
   open.refused("waitQuestion.answer", { option: 0 });
-  assert.equal(open.state.beat.whileRuns.answer, null);
+  assert.equal(open.state.beat.whileRuns.answer, 1);
+});
+
+// spec: warmups.while-runs
+test("the waiting question lasts until the step changes: a later beat and a back keep it, the next step drops it (286)", () => {
+  const LATER = WAIT_B2.replace(
+    '- goal: "Wait for the run to finish."\n',
+    '- goal: "Wait for the run to finish."\n- beat: do\n- where: browser\n- verify: self\n- do: "Look at the result."\n',
+  );
+  assert.notEqual(LATER, WAIT_B2);
+  const d = onWaitWith({}, LATER);
+  const id = whileRunsBox(d.state).step.id;
+  // A view off the card carries no waitQuestion field.
+  const asked = () => project(d.state).lesson?.waitQuestion ?? null;
+  d.send({ type: "file", path: ".practice/run.txt", read: null, stamp: "A" });
+  d.send({
+    type: "file",
+    path: ".practice/run.txt",
+    read: Buffer.from("ok"),
+    stamp: "B",
+  });
+  assert.equal(d.state.beat.status, "done");
+  d.cont();
+  assert.deepEqual([stepOf(d.state).id, d.state.pos.beat], ["Y2", 2]);
+  assert.equal(whileRunsBox(d.state).step.id, id);
+  assert.equal(whileRunsOf(d.state), null, "no long wait on this beat");
+  assert.notEqual(asked(), null);
+  d.waitAnswer(0);
+  assert.equal(asked().answered, 0);
+  // A back within the step keeps it, answered.
+  d.back();
+  assert.deepEqual([stepOf(d.state).id, d.state.pos.beat], ["Y2", 1]);
+  assert.equal(asked()?.answered, 0);
+  // The next step drops it, and an answer there is refused.
+  d.send({
+    type: "file",
+    path: ".practice/run.txt",
+    read: Buffer.from("ok"),
+    stamp: "C",
+  });
+  d.cont();
+  d.markDone();
+  d.cont();
+  assert.notEqual(stepOf(d.state).id, "Y2");
+  assert.equal(asked(), null);
+  d.refused("waitQuestion.answer", { option: 0 });
 });
 
 // ---- r27 engine fixes (findings/r27/TRIAGE.md section 3) ---------------------
