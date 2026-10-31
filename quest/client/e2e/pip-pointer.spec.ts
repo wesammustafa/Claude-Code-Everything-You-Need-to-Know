@@ -579,9 +579,13 @@ test.describe("under reduced motion Pip holds still", () => {
     await expect(pip(page)).toHaveAttribute("data-pip-gaze", REST);
 
     // The Settings override for full motion: he follows again.
-    await page.evaluate(() => {
-      document.documentElement.dataset.motion = "full";
-    });
+    await page.getByRole("button", { name: "Settings" }).click();
+    await page
+      .getByRole("dialog", { name: "Settings" })
+      .getByText("Full", { exact: true })
+      .click();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog", { name: "Settings" })).toBeHidden();
     await pointTo(page, -120, 0, LEFT);
   });
 });
