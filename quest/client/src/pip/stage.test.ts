@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 import { envelope } from "../../test/events";
-import { GAZE_HOLD_MS, IDLE_SLEEP_MS } from "./director";
+import { GAZE_HOLD_MS, IDLE_REST_MS } from "./director";
 import { HINT_UNUSED_MS } from "./help";
 import {
   createPipStage,
@@ -111,14 +111,14 @@ describe("Pip's stage", () => {
     expect(heard).toHaveBeenCalledTimes(1);
   });
 
-  test("ticks the director when its model is due to change: the 5-minute sleep", () => {
+  test("ticks the director when its model is due to change: the 5-minute rest", () => {
     const clock = fakeClock();
     const stage = createPipStage(clock, { screen: "step" });
     stage.subscribe(() => undefined);
-    clock.advance(IDLE_SLEEP_MS - 1);
+    clock.advance(IDLE_REST_MS - 1);
     expect(stage.model().mode).toBe("idle");
     clock.advance(1);
-    expect(stage.model().mode).toBe("sleep");
+    expect(stage.model().mode).toBe("rest");
   });
 
   test("keeps no timer while no one listens", () => {

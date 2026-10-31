@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "types": ["node"],
+    "tsBuildInfoFile": "dist/.tsbuildinfo",
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "resolveJsonModule": true,
+    "allowJs": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "../../course/manifest.json",
+    "../../practice-template/checks/**/*.mjs"
+  ],
+  "exclude": ["../../practice-template/checks/test"]
+}

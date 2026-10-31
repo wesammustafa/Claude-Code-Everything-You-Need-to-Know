@@ -6,12 +6,13 @@ let sequence = 0;
 export function envelope<E extends QuestEvent>(
   event: E,
   revision = 1,
+  serverTime = 0,
 ): EventHeader & E {
   sequence += 1;
   const header: EventHeader = {
     id: `test.${String(sequence)}`,
     revision,
-    serverTime: 0,
+    serverTime,
   };
   return { ...header, ...event };
 }

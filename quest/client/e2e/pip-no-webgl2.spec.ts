@@ -1,7 +1,7 @@
 // Pip in a browser without WebGL2: Chromium started with WebGL2 turned off,
 // so the runtime's renderer could never start. Its own file, since a browser
 // launched with other flags needs a worker of its own.
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./live.ts";
 import { ONLY_LOOPBACK } from "../playwright.config.ts";
 import { RIG, RUNTIME, STEP, WASM, lessonUsable, pip } from "./pip-page.ts";
 import { watch } from "./watch.ts";

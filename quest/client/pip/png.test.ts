@@ -7,7 +7,6 @@ import {
   colourBounds,
   decodePng,
   drawnBounds,
-  headTop,
   encodePng,
   eyes,
   largestDifference,
@@ -138,20 +137,6 @@ describe("drawnBounds", () => {
       right: 8,
     });
     expect(drawnBounds(image(4, 4, () => [255, 255, 255, 255]))).toBeNull();
-  });
-});
-
-describe("headTop", () => {
-  test("finds the first row with a run a quarter of the width, past narrow parts above it", () => {
-    const drawn = image(12, 8, (x, y) =>
-      (y === 1 && x === 5) ||
-      (y === 2 && x >= 1 && x <= 2) ||
-      (y >= 4 && x >= 2 && x <= 8)
-        ? [200, 120, 40, 255]
-        : [255, 255, 255, 255],
-    );
-    expect(headTop(drawn)).toBe(4);
-    expect(headTop(image(4, 4, () => [255, 255, 255, 255]))).toBeNull();
   });
 });
 

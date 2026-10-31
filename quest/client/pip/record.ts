@@ -5,7 +5,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
-import { decodePng, encodePng, pngSize } from "./png.ts";
+import { pngSize } from "./png.ts";
 import { allPosters, posterSpec, type PosterSpec } from "./posters.ts";
 
 /** quest/client/pip/, where the rig, its outputs and the record live. */
@@ -13,49 +13,6 @@ export const PIP_DIR = import.meta.dirname;
 
 /** The Rive CLI version the rig is built with. A different one refuses to build until this changes on purpose. */
 export const RIVE_CLI_VERSION = "1.7.0";
-
-/** The repository's .nvmrc, which pins the Node major the maintainer builds with. */
-export const NVMRC = join(PIP_DIR, "..", "..", "..", ".nvmrc");
-
-/**
- * Why `node` (a version such as `v26.13.0`) must not run pip:build under an
- * .nvmrc holding `nvmrc`, or null when it may. The maintainer builds on the
- * Node major CI uses, which .nvmrc pins.
- */
-export function nodeMismatch(node: string, nvmrc: string): string | null {
-  const pinned = /^v?(\d+)(?:\.\d+){0,2}$/.exec(nvmrc.trim())?.[1];
-  if (!pinned)
-    return `.nvmrc pins no Node version pip:build can read ("${nvmrc.trim()}")`;
-  const running = /^v?(\d+)\./.exec(node)?.[1];
-  if (running === pinned) return null;
-  return (
-    `this build needs Node ${pinned}, the major .nvmrc pins, and this is Node ${node}. ` +
-    "pip:build runs on the Node .nvmrc pins, as CI does. " +
-    "Switch with `nvm use`, then build again."
-  );
-}
-
-/**
- * Why this machine must not write the posters, given a committed `poster` and
- * the `encode` pip:build writes posters with, or null when it may. The posters
- * are deflated by the zlib this Node links, and two zlib builds can deflate
- * the same pixels to different bytes, within one Node major as well as across
- * majors (a Node linked to the system's zlib, for one). Re-encoding a
- * committed poster's own pixels shows whether this machine writes the bytes
- * the committed build wrote.
- */
-export function encoderMismatch(
-  poster: Uint8Array,
-  encode: (image: ReturnType<typeof decodePng>) => Uint8Array = encodePng,
-): string | null {
-  if (Buffer.from(encode(decodePng(poster))).equals(Buffer.from(poster)))
-    return null;
-  return (
-    `this Node's zlib (${process.versions.zlib}) deflates the posters to other bytes than the committed build, ` +
-    "so a build here would rewrite every poster though the rig is unchanged. " +
-    "Build with a Node that links the zlib CI's Node does (an nvm or official build of the major .nvmrc pins)."
-  );
-}
 
 /** The rig's sources (the CLI project), relative to quest/client/pip/. */
 export const RIG = "rig";

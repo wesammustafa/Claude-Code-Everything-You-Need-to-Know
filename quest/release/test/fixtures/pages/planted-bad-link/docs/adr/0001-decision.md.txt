@@ -1,0 +1,3 @@
+# A decision
+
+Maintainer material, not bundled.

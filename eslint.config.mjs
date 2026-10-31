@@ -23,4 +23,67 @@ export default defineConfig([
       },
     },
   },
+  // The browser imports the contract's types and never any engine, host or
+  // server code (ticket 212's boundary test holds the compiled side).
+  {
+    files: ["quest/client/**/*.{ts,tsx,mts,cts}"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@quest/contract",
+              message: "The contract is types only: import type.",
+              allowTypeImports: true,
+            },
+          ],
+          patterns: [
+            {
+              group: ["@quest/engine*", "@quest/host*", "@quest/server*"],
+              message: "The browser never imports engine, host or server code.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // The engine is pure: it runs inside the host and never reaches back into
+  // the host, the server or the browser (ticket 214).
+  {
+    files: ["quest/engine/**/*.{ts,tsx,mts,cts}"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@quest/host*", "@quest/server*", "@quest/client*"],
+              message:
+                "The engine is pure: it never imports the host, the server or the client.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // The host runs the engine and never reaches up into the server or the
+  // browser (ticket 215).
+  {
+    files: ["quest/host/**/*.{ts,tsx,mts,cts}"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@quest/server*", "@quest/client*"],
+              message:
+                "The host never imports the server or the client.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]);

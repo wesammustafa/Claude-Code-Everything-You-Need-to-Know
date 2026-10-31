@@ -214,6 +214,7 @@ export function Panel({
               move; the trap above finds it through its tabindex. */}
           <div
             ref={body}
+            data-panel-body=""
             tabIndex={scrolls ? 0 : undefined}
             role={scrolls ? "region" : undefined}
             aria-labelledby={scrolls ? titleId : undefined}

@@ -85,7 +85,7 @@ vi.mock("@rive-app/react-webgl2", () => {
     useViewModel: () => ({}),
     useViewModelInstance: () => ({}),
     useViewModelInstanceEnum: (name: string) => ({
-      values: rive.bound ? ["idle", "thinking", "rest", "sleep"] : [],
+      values: rive.bound ? ["idle", "thinking", "rest"] : [],
       ...property(name),
     }),
     useViewModelInstanceNumber: property,

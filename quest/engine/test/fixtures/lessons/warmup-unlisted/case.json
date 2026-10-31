@@ -1,0 +1,9 @@
+{
+  "origin": "lesson-quotes-warmup-unlisted",
+  "was": "fail",
+  "expect": "fail",
+  "about": "A warm-up's from line names a Lesson the manifest doesn't list.",
+  "problems": [
+    "course/steps/b-2\\.md:11: a warm-up from b-9, which course/manifest\\.json doesn't list as a Lesson or Level index"
+  ]
+}

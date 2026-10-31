@@ -1,0 +1,9 @@
+{
+  "origin": "lesson-quotes-teardown-step-added",
+  "was": "fail",
+  "expect": "fail",
+  "about": "The capstone gained a Tear down step, so the step file's Tear down count is wrong.",
+  "problems": [
+    "course/steps/a-capstone\\.md:21: counts 2 steps in Tear down, but docs/advanced/capstone\\.md has 3\\."
+  ]
+}

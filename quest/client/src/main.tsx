@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createHashRouter } from "react-router";
 import { RouterProvider } from "react-router/dom";
+import { QuestMotion } from "./components/QuestMotion";
 import { routes } from "./routes";
 import "./styles/app.css";
 
@@ -12,6 +13,8 @@ const router = createHashRouter(routes);
 
 createRoot(root).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <QuestMotion>
+      <RouterProvider router={router} />
+    </QuestMotion>
   </StrictMode>,
 );

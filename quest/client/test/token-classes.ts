@@ -22,7 +22,13 @@ const OPACITIES = new Set(
 );
 const KEYWORDS = new Set(["transparent", "inherit", "current"]);
 
-export type State = "hover" | "active" | "focus-visible" | "disabled";
+export type State =
+  | "hover"
+  | "active"
+  | "focus-visible"
+  | "disabled"
+  // A control drawn around a hidden native input (a radio) rings when the input has keyboard focus.
+  | "has-focus-visible";
 
 /** The utilities a class list applies in one state, with their variants stripped. */
 export function stateUtilities(className: string, state: State): string[] {
@@ -87,4 +93,19 @@ export function expectStylesFromTokens(className: string): void {
     if (KEYWORDS.has(color.name)) continue;
     expect(COLORS, `${utility} names no colour token`).toContain(color.name);
   }
+}
+
+// A hover or press that moves a control takes its travel from a motion token
+// (--press-y, --press-scale, --hover-scale, --nudge), which reduced motion
+// sets to none. A literal such as hover:scale-106 would still move.
+export function literalMoves(text: string): string[] {
+  return text.split(/[\s"'`]+/).filter((utility) => {
+    const variants = utility.split(":");
+    const base = variants.pop() ?? "";
+    if (!variants.some((v) => /(^|-)(hover|active)$/.test(v))) return false;
+    const value = /^-?(?:scale|rotate|skew|translate)(?:-[xyz])?-(.+)$/.exec(
+      base,
+    )?.[1];
+    return value !== undefined && value !== "0" && !value.startsWith("(--");
+  });
 }

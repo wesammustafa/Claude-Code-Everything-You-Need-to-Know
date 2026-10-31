@@ -1,13 +1,13 @@
 // What the Pip Playground plays through the director: every engine event, one
 // at a time, and event sequences that show the director's rules at work
 // (ranking, interruptions, the Celebration's first second, the nod, the
-// glance throttle, sleep). Times are in milliseconds from a scenario's start.
+// glance throttle, rest). Times are in milliseconds from a scenario's start.
 import type { QuestEvent } from "@quest/contract";
 import type { PipReactionKind } from "../../pip/contract";
 import {
   CELEBRATION_FLOOR_MS,
   GLANCE_INTERVAL_MS,
-  IDLE_SLEEP_MS,
+  IDLE_REST_MS,
   NOD_WINDOW_MS,
   type DirectorInput,
   type PipScreen,
@@ -47,6 +47,11 @@ export const EVENT_GROUPS: readonly {
         id: "check.progress",
         event: { type: "check.progress", n: 1, m: 3 },
         note: "changes nothing",
+      },
+      {
+        id: "check.ended",
+        event: { type: "check.ended" },
+        note: "ends Thinking, no verdict",
       },
     ],
   },
@@ -312,12 +317,12 @@ export const SCENARIOS: readonly Scenario[] = [
     ],
   },
   {
-    id: "sleep",
-    name: "Sleep after 5 minutes",
+    id: "rest",
+    name: "Rest after 5 minutes",
     summary:
-      "With no event or input for 5 minutes Pip lies down and sleeps; the Learner's input wakes him.",
+      "With no event or input for 5 minutes Pip rests; the Learner's input wakes him.",
     steps: [
-      { at: 0, jump: IDLE_SLEEP_MS },
+      { at: 0, jump: IDLE_REST_MS },
       { at: 2000, input: { type: "activity" }, label: "The Learner types" },
     ],
   },

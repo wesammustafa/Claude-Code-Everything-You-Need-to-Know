@@ -2,7 +2,7 @@
   Pip's view model: the contract the app drives Pip through, by name. The app's
   Rive adapter maps PipModel onto it (quest/client/pip/contract.ts holds the
   same names, and the contract test checks the built file against them).
-  - mode: the mode Pip holds (idle, thinking, rest, sleep);
+  - mode: the mode Pip holds (idle, thinking, rest);
   - greeting, curious, explaining, success, retry, celebration: one trigger per
     Reaction, each fired from the Any state;
   - intensity (0 to 1): blends Success, Retry and Celebration between their
@@ -15,7 +15,6 @@
         <DataEnumValue key="idle" value="idle" id="0:61"/>
         <DataEnumValue key="thinking" value="thinking" id="0:62"/>
         <DataEnumValue key="rest" value="rest" id="0:63"/>
-        <DataEnumValue key="sleep" value="sleep" id="0:66"/>
     </DataEnumCustom>
 
     <ViewModel defaultInstanceId="0:42" name="Pip" id="0:40">
@@ -92,28 +91,6 @@
     </DataConverterInterpolator>
     <DataConverterInterpolator interpolationType="cubic" duration="0.15" name="HeadTiltEase" id="0:79">
         <CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/>
-    </DataConverterInterpolator>
-
-    <!-- Which side Curious cocks the head toward (Curious Side in pip.rml): -20
-         for a target on the left, 20 for one on the right. gazeX is eased first,
-         on the same 150 ms curve as the head turn (EyesX), so the side follows
-         the head's own turn and never leads it. Straight ahead counts as the
-         right, the content's side, and the side passes level within 0.02 of
-         centre, where the head has not visibly turned, so the cock always agrees
-         with the turn. The settle eases that change over 100 ms, so a gaze that
-         crosses the centre swings the cock over instead of flipping it. 20, not
-         the Cock joystick's full 24, leaves room for Curious's overshoot. -->
-    <DataConverterGroup name="CuriousSide" id="0:58">
-        <DataConverterGroupItem converterId="0:64"/>
-        <DataConverterGroupItem converterId="0:59"/>
-        <DataConverterGroupItem converterId="0:65"/>
-    </DataConverterGroup>
-    <DataConverterInterpolator interpolationType="cubic" duration="0.15" name="CuriousSideEase" id="0:64">
-        <CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/>
-    </DataConverterInterpolator>
-    <DataConverterRangeMapper minInput="-0.02" maxInput="0" minOutput="-20" maxOutput="20" clampLower="true" clampUpper="true" name="CuriousSideRange" id="0:59"/>
-    <DataConverterInterpolator interpolationType="cubic" duration="0.1" name="CuriousSideSettle" id="0:65">
-        <CubicEaseInterpolator x1="0.42" y1="0" x2="0.58" y2="1"/>
     </DataConverterInterpolator>
 
     <!-- intensity 0 to 1 onto a blend state's 0 to 100 axis, eased over 150 ms:

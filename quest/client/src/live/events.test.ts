@@ -1,58 +1,16 @@
 import type { EventEnvelope } from "@quest/contract";
 import { describe, expect, test, vi } from "vitest";
 import { envelope } from "../../test/events";
+import { channelPair, sharedLocks } from "../../test/live";
 import {
   EVENT_LOCK_PREFIX,
-  LOCAL_EVENTS,
+  REACTION_KEEP_MS,
   SHOWN_LIMIT,
-  createLocalEventFeed,
   createShownEvents,
   onceAcrossTabs,
   type EventFeed,
   type EventLocks,
-  type ShownChannel,
 } from "./events";
-
-/** Two tabs' channels, joined: what one posts, the other hears, asynchronously as a BroadcastChannel does. */
-function channelPair() {
-  const make = () => {
-    const listeners = new Set<(event: MessageEvent) => void>();
-    let peer: { deliver: (data: unknown) => void } | undefined;
-    const channel = {
-      /** What a message from the other tab does on arrival. */
-      deliver(data: unknown) {
-        for (const listener of listeners)
-          listener(new MessageEvent("message", { data }));
-      },
-      postMessage(data: unknown) {
-        const target = peer;
-        queueMicrotask(() => target?.deliver(structuredClone(data)));
-      },
-      addEventListener(
-        _type: "message",
-        listener: (event: MessageEvent) => void,
-      ) {
-        listeners.add(listener);
-      },
-      removeEventListener(
-        _type: "message",
-        listener: (event: MessageEvent) => void,
-      ) {
-        listeners.delete(listener);
-      },
-      close: vi.fn(),
-      link(other: { deliver: (data: unknown) => void }) {
-        peer = other;
-      },
-    };
-    return channel;
-  };
-  const a = make();
-  const b = make();
-  a.link(b);
-  b.link(a);
-  return [a, b] satisfies [ShownChannel, ShownChannel];
-}
 
 /** A feed the test pushes batches into. */
 function manualFeed() {
@@ -74,28 +32,6 @@ function manualFeed() {
 }
 
 /**
- * The page's tabs' shared Web Locks: a request is answered asynchronously, as
- * the browser answers it (here on a microtask, so a test can wait for every
- * answer), and a lock is held until its callback's promise settles.
- */
-function sharedLocks() {
-  const held = new Set<string>();
-  const locks: EventLocks = {
-    async request(name, _options, callback) {
-      await Promise.resolve();
-      if (held.has(name)) return callback(null);
-      held.add(name);
-      try {
-        await callback({ name, mode: "exclusive" });
-      } finally {
-        held.delete(name);
-      }
-    },
-  };
-  return { locks, held };
-}
-
-/**
  * Lets every queued lock request, message and delivery run: all of them are
  * microtasks, which run before the next task.
  */
@@ -103,38 +39,6 @@ const settled = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 const ids = (batches: (readonly EventEnvelope[])[]) =>
   batches.map((batch) => batch.map((event) => event.id));
-
-describe("the page's local event source", () => {
-  test("delivers each dispatch as one batch of well-formed envelopes", () => {
-    const target = new EventTarget();
-    const heard: (readonly EventEnvelope[])[] = [];
-    const stop = createLocalEventFeed(target).subscribe((batch) =>
-      heard.push(batch),
-    );
-    const passed = envelope({ type: "check.passed", firstTime: true });
-    const progress = envelope({ type: "check.progress", n: 1, m: 2 });
-    target.dispatchEvent(
-      new CustomEvent(LOCAL_EVENTS, {
-        detail: [passed, { id: "x", type: "nonsense" }, progress],
-      }),
-    );
-    expect(heard).toEqual([[passed, progress]]);
-
-    stop();
-    target.dispatchEvent(new CustomEvent(LOCAL_EVENTS, { detail: [passed] }));
-    expect(heard).toHaveLength(1);
-  });
-
-  test("ignores a dispatch with no envelope in it", () => {
-    const target = new EventTarget();
-    const listener = vi.fn();
-    createLocalEventFeed(target).subscribe(listener);
-    target.dispatchEvent(new CustomEvent(LOCAL_EVENTS, { detail: "nope" }));
-    target.dispatchEvent(new CustomEvent(LOCAL_EVENTS, { detail: [{}] }));
-    target.dispatchEvent(new Event(LOCAL_EVENTS));
-    expect(listener).not.toHaveBeenCalled();
-  });
-});
 
 describe("each event ID at most once", () => {
   test("in one tab: a repeat, within a batch or later, is dropped, and batches keep their order", async () => {
@@ -279,33 +183,112 @@ describe("each event ID at most once", () => {
     expect(ids(heard)).toEqual([[event.id]]);
   });
 
-  test("a hidden tab keeps what it heard to itself, and claims nothing", async () => {
+  test("a hidden tab delivers nothing and claims nothing, keeping its IDs to itself", async () => {
     const [one, two] = channelPair();
     const { locks, held } = sharedLocks();
     const hidden = manualFeed();
     const visible = manualFeed();
     const heardHidden: (readonly EventEnvelope[])[] = [];
     const heardVisible: (readonly EventEnvelope[])[] = [];
-    onceAcrossTabs(
-      hidden.feed,
-      createShownEvents(one, locks),
-      () => false,
-    ).subscribe((batch) => heardHidden.push(batch));
+    const shownHidden = createShownEvents(one, locks);
+    onceAcrossTabs(hidden.feed, shownHidden, () => false).subscribe((batch) =>
+      heardHidden.push(batch),
+    );
     onceAcrossTabs(
       visible.feed,
       createShownEvents(two, locks),
       () => true,
     ).subscribe((batch) => heardVisible.push(batch));
 
-    const event = envelope({ type: "answer.right" });
-    hidden.push(event);
+    const first = envelope({ type: "answer.right" });
+    const second = envelope({ type: "answer.wrong" });
+    hidden.push(first);
+    hidden.push(second);
     await settled();
     expect(held.size).toBe(0);
-    visible.push(event);
-    hidden.push(event);
+    expect(heardHidden).toEqual([]);
+    // The replaced batch is recorded, to itself; the held one is not yet.
+    expect(shownHidden.has(first.id)).toBe(true);
+    expect(shownHidden.has(second.id)).toBe(false);
+    visible.push(first);
     await settled();
-    expect(ids(heardHidden)).toEqual([[event.id]]);
-    expect(ids(heardVisible)).toEqual([[event.id]]);
+    expect(ids(heardVisible)).toEqual([[first.id]]);
+  });
+
+  describe("a hidden tab's waiting Reaction", () => {
+    /** A hidden tab with a switch for its visibility and a server clock. */
+    function hiddenTab(serverNow?: () => number) {
+      const { feed, push } = manualFeed();
+      const shown = createShownEvents(null, sharedLocks().locks);
+      let hidden = true;
+      let show: () => void = () => undefined;
+      const heard: (readonly EventEnvelope[])[] = [];
+      onceAcrossTabs(feed, shown, () => !hidden, {
+        onVisible: (visible) => {
+          show = visible;
+          return () => undefined;
+        },
+        ...(serverNow ? { serverNow } : {}),
+      }).subscribe((batch) => heard.push(batch));
+      return {
+        push,
+        shown,
+        heard,
+        reveal: () => {
+          hidden = false;
+          show();
+        },
+      };
+    }
+
+    test("only the newest plays on return, alone, and the ones it replaced are recorded", async () => {
+      const tab = hiddenTab(() => 1000);
+      const old = envelope({ type: "answer.wrong" }, 1, 900);
+      const newest = envelope(
+        { type: "check.passed", firstTime: true },
+        2,
+        950,
+      );
+      tab.push(old);
+      tab.push(newest);
+      tab.reveal();
+      await settled();
+      expect(ids(tab.heard)).toEqual([[newest.id]]);
+      expect(tab.shown.has(old.id)).toBe(true);
+      // Heard again later, neither plays.
+      tab.push(old, newest);
+      await settled();
+      expect(tab.heard).toHaveLength(1);
+    });
+
+    test("is dropped when older than REACTION_KEEP_MS by server time", async () => {
+      const tab = hiddenTab(() => 10 + REACTION_KEEP_MS + 1);
+      const event = envelope({ type: "answer.right" }, 1, 10);
+      tab.push(event);
+      tab.reveal();
+      await settled();
+      expect(tab.heard).toEqual([]);
+      expect(tab.shown.has(event.id)).toBe(true);
+    });
+
+    test("plays at exactly REACTION_KEEP_MS old", async () => {
+      const tab = hiddenTab(() => 10 + REACTION_KEEP_MS);
+      const event = envelope({ type: "answer.right" }, 1, 10);
+      tab.push(event);
+      tab.reveal();
+      await settled();
+      expect(ids(tab.heard)).toEqual([[event.id]]);
+    });
+
+    test("is dropped when another tab showed it meanwhile", async () => {
+      const tab = hiddenTab(() => 0);
+      const event = envelope({ type: "answer.right" });
+      tab.push(event);
+      tab.shown.record([event.id]);
+      tab.reveal();
+      await settled();
+      expect(tab.heard).toEqual([]);
+    });
   });
 
   test("a listener that throws never stops the batches after it", async () => {

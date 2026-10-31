@@ -34,10 +34,12 @@ export const ALLOWED_LICENSES = [
   "OFL-1.1",
   "MIT-Modern-Variant",
   "MIT-0",
+  // 0BSD (tslib, via motion; OSI-approved, more permissive than MIT; added 2026-10-30 for owner review)
+  "0BSD",
 ] as const;
 
-/** The workspaces whose production dependencies ship in a bundle. The server joins when it exists. */
-export const SHIPPING_WORKSPACES = ["quest/client"] as const;
+/** The workspaces whose production dependencies ship in a bundle. */
+export const SHIPPING_WORKSPACES = ["quest/client", "quest/server"] as const;
 
 /**
  * Bundlers whose own runtime helpers land in the bundle: Rolldown, under Vite,
@@ -483,10 +485,11 @@ export function licenseAllowed(license: string | undefined): boolean {
 
 // A package's own license files, and the files that carry the notices of the
 // code it copied in (Rolldown's THIRD-PARTY-LICENSE holds the Rollup and
-// esbuild notices for the runtime helpers it injects): each one must travel
+// esbuild notices for the runtime helpers it injects; tslib's
+// CopyrightNotice.txt is the banner its helpers carry): each one must travel
 // with the bundle.
 const LICENSE_FILE =
-  /^(third[-_.]?party[-_.]?)?(licen[cs]es?|copying|notices?)(\.(md|txt|markdown))?$|^(licen[cs]e|copying)[-_.]/i;
+  /^(third[-_.]?party[-_.]?|copyright[-_.]?)?(licen[cs]es?|copying|notices?)(\.(md|txt|markdown))?$|^(licen[cs]e|copying)[-_.]/i;
 
 function licenseFiles(dir: string): string[] {
   if (!existsSync(dir)) return [];

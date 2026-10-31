@@ -1,0 +1,10 @@
+{
+  "origin": "lesson-quotes-index-gone",
+  "was": "fail",
+  "expect": "fail",
+  "about": "The Level index reworded a line and a code block that a warm-up quotes from it, though the warm-up's own Lesson still has the old line.",
+  "problems": [
+    "course/steps/i-1\\.md:19: quotes \"\\*\\*Hooks:\\*\\* something must happen every time at a set point in a session\\.\" \\(R1 \\| Warm-up \\| Which one, when\\), which is not in docs/intermediate/README\\.md",
+    "course/steps/i-1\\.md:28: shows a code block starting \"git fetch https://github\\.com/wesammustafa/claude-code-practice main\" \\(R2 \\| Warm-up \\| Bring the checks in\\), which is not in docs/intermediate/README\\.md"
+  ]
+}

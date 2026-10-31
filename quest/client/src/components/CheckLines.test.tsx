@@ -13,24 +13,51 @@ const LINES = [
   {
     text: "your last commit changes a test file",
     ok: true,
-    evidence: "never shown for a met line",
+    evidence: "Your last commit changes test/app.test.js",
   },
 ];
 
-test("reads each line with its result, and shows evidence under a line not met yet", () => {
+test("reads each line with its result, and shows evidence under a line in any state", () => {
   render(<CheckLines lines={LINES} />);
   const items = screen.getAllByRole("listitem");
   expect(items.map((li) => li.textContent)).toEqual([
     "Passes: the tests pass",
     "Not yet: nothing is left uncommittedThese changes are uncommitted: test/external.test.js",
-    "Passes: your last commit changes a test file",
+    "Passes: your last commit changes a test fileYour last commit changes test/app.test.js",
   ]);
   expect(
     within(items[1] as HTMLElement).getByText(/These changes are uncommitted/),
   ).toBeInTheDocument();
-  expect(
-    screen.queryByText("never shown for a met line"),
-  ).not.toBeInTheDocument();
+});
+
+test("a line's own state wins over ok: still being checked, in teal", () => {
+  const { container, rerender } = render(
+    <CheckLines
+      lines={[
+        { text: "the tests pass", ok: false, state: "waiting" },
+        { text: "the build runs", ok: false },
+      ]}
+    />,
+  );
+  const [first, second] = screen.getAllByRole("listitem");
+  expect(first).toHaveAttribute("data-state", "waiting");
+  expect(first).toHaveTextContent("Checking: the tests pass");
+  expect(first?.innerHTML).toContain("text-teal");
+  expect(second).toHaveAttribute("data-state", "not-yet");
+
+  // The same line, now met, keeps its place: keyed by position, not words.
+  rerender(
+    <CheckLines
+      lines={[
+        { text: "the tests pass", ok: true, state: "pass" },
+        { text: "the build runs", ok: false },
+      ]}
+    />,
+  );
+  expect(screen.getAllByRole("listitem")[0]).toBe(first);
+  expect(first).toHaveAttribute("data-state", "ok");
+  for (const node of container.querySelectorAll("[class]"))
+    expectStylesFromTokens(node.getAttribute("class") ?? "");
 });
 
 test("marks Not yet in amber, never red, from tokens, and staggers the lines", () => {
@@ -48,4 +75,22 @@ test("marks Not yet in amber, never red, from tokens, and staggers the lines", (
   expect(container.innerHTML).not.toMatch(/broken/);
   for (const node of container.querySelectorAll("[class]"))
     expectStylesFromTokens(node.getAttribute("class") ?? "");
+});
+
+test("a line keeps its place as it changes; a new key for a new run staggers the lines in again", () => {
+  const { container, rerender } = render(
+    <CheckLines key="run-1" lines={LINES} />,
+  );
+  const first = container.querySelector("li");
+  rerender(
+    <CheckLines
+      key="run-1"
+      lines={LINES.map((line) => ({ ...line, text: `${line.text}!` }))}
+    />,
+  );
+  expect(container.querySelector("li")).toBe(first);
+  rerender(<CheckLines key="run-2" lines={LINES} />);
+  const arrived = container.querySelector("li");
+  expect(arrived).not.toBe(first);
+  expect(arrived?.className).toContain("animate-line");
 });

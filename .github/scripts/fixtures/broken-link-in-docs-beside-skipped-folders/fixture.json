@@ -1,7 +1,7 @@
 {
   "rule": "internal-links",
   "expect": "fail",
-  "about": "Skipping course/steps/ and practice-template/samples/ leaves every other folder checked: a broken relative link in docs/ still fails.",
+  "about": "Skipping course/steps/ and practice-template/project/samples/ leaves every other folder checked: a broken relative link in docs/ still fails.",
   "output": [
     "docs/guide\\.md:3: .*docs/missing\\.md"
   ]
