@@ -164,6 +164,15 @@ describe("Command", () => {
     );
   });
 
+  test("ticks a command the app saw run, and only then", () => {
+    const { container, rerender } = render(<Command text="git status" />);
+    expect(container.querySelector("[data-watched]")).toBeNull();
+    rerender(<Command text="git status" watched />);
+    expect(container.querySelector("[data-watched]")).toHaveTextContent(
+      "You ran this",
+    );
+  });
+
   test("fills the line, or with fit sits at its own width, never both", () => {
     const { container, rerender } = render(<Command text="npm test" />);
     const block = () => (container.firstElementChild as HTMLElement).classList;

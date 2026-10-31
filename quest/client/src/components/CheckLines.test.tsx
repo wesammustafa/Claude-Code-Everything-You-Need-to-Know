@@ -94,3 +94,21 @@ test("a line keeps its place as it changes; a new key for a new run staggers the
   expect(arrived).not.toBe(first);
   expect(arrived?.className).toContain("animate-line");
 });
+
+test("a line the Check could not run reads in rose, from tokens, with its own words", () => {
+  const { container } = render(
+    <CheckLines
+      lines={[
+        { text: "the tests pass", ok: true },
+        { text: "the build runs", ok: false, state: "broken" },
+      ]}
+    />,
+  );
+  const broken = screen.getAllByRole("listitem")[1] as HTMLElement;
+  expect(broken).toHaveAttribute("data-state", "broken");
+  expect(broken).toHaveTextContent("Could not check: the build runs");
+  expect(broken.innerHTML).toContain("text-broken");
+  expect(broken.innerHTML).not.toContain("text-wait");
+  for (const node of container.querySelectorAll("[class]"))
+    expectStylesFromTokens(node.getAttribute("class") ?? "");
+});

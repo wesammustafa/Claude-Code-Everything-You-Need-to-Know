@@ -1,4 +1,4 @@
-import { act, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, test } from "vitest";
 import type { OverviewLesson, Snapshot } from "@quest/contract";
@@ -14,6 +14,23 @@ import {
   someMastery,
   stepDown,
   stepDownGuided,
+  alreadyCodespace,
+  checkBroken,
+  checkRunning,
+  checkSame,
+  checkStale,
+  codeWindow,
+  course,
+  learnerBeat,
+  offersBoth,
+  richCopy,
+  sessionBeat,
+  tearDown,
+  watchChecking,
+  watchNotYet,
+  watchPassed,
+  watchWaiting,
+  workFolderCheck,
 } from "../../e2e/snapshots";
 import { renderConnected } from "../../test/connected";
 import { WAITING_LINE } from "./Welcome";
@@ -35,7 +52,7 @@ const APP_WORDS: readonly RegExp[] = [
   /^Continue$/,
   /^Step \d+ of \d+$/,
   /^Step \d+, .+: (done|current|to do)$/,
-  /^Beginner · (Lesson \d+|Capstone)( · Step \d+ of \d+)?$/,
+  /^(Beginner|Intermediate|Advanced) · (Lesson \d+|Capstone)( · (Step|Tear down, step) \d+ of \d+)?$/,
   /^After this lesson you can$/,
   /^Help by part of the lesson$/,
   /^(Guided|Hinted|Challenge|Every command shown|With hints|On your own)$/,
@@ -86,6 +103,20 @@ const APP_WORDS: readonly RegExp[] = [
   /^The help you used shows here once you finish a step\.$/,
   /^(Every lesson is complete|See the journey)$/,
   /^Only what your checks verified counts here\.$/,
+  // The workspace (246).
+  /^(Passes|Not yet|Checking|Could not check): $/,
+  /^(The check took too long this time\.|The check's answer could not be read this time\.|The check stopped before it finished\.|The check could not run this time\.)$/,
+  /^The check saw the same as last time\. The cause may be in an earlier step\.$/,
+  /^Nothing has changed there since this step opened\.$/,
+  /^Everything else passes\. Check again runs the slow part\.$/,
+  /^Checking( item \d+ of \d+| .+)?…$/,
+  /^(Waiting for the session to end\.|Already done, so this step counts\.)$/,
+  /^What the step asks for$/,
+  /^(Back to |: |Why: |You should see |Found |\.)$/,
+  /^(The commands are in the hints\.|More help on this step\.|You ran this|Copy the code|explained line: )$/,
+  /^The Check passed\. These steps put things back as they were\.$/,
+  /^Run it in your practice copy too: you will see the same result\.$/,
+  /^(No commands this time\.|You've done each part before\.|You've done this before\.)( You've done each part before\.)?$/,
 ];
 
 /** Every string the snapshot carries, to match quotes against. */
@@ -542,6 +573,7 @@ describe("Lesson workspace", () => {
       beat: {
         ...beat,
         kind: "self" as const,
+        decidedBy: "learner" as const,
         status: "waiting" as const,
         verification: [],
         fail: null,
@@ -924,5 +956,274 @@ describe("the engine owns the place", () => {
       milestones: [],
     } as unknown as Snapshot);
     expect(document.querySelector("[data-lesson-waiting]")).not.toBeNull();
+  });
+});
+
+/** Key names: no workspace string may name one (246). */
+const KEY_NAMES =
+  /\b(press|key|keys|Enter|Esc(ape)?|Ctrl|Cmd|Tab|Space(bar)?|Return)\b/i;
+
+const bubbleText = () =>
+  document.querySelector("[data-says-words]")?.textContent ?? "";
+
+describe("Lesson workspace, every step (246)", () => {
+  const variants = [
+    ["a timeout", checkBroken, "The check took too long this time."],
+    ["the same again", checkSame, "The check saw the same as last time."],
+    [
+      "nothing changed",
+      checkStale,
+      "Nothing has changed there since this step opened.",
+    ],
+    ["items running", checkRunning, "Checking item 2 of 5…"],
+    ["a watched path", watchChecking, "Checking notes.md…"],
+    ["watching", watchWaiting, "Watching your Practice copy."],
+    ["a session", sessionBeat, "Waiting for the session to end."],
+    ["already done", alreadyCodespace, "Already done, so this step counts."],
+  ] as const;
+
+  test.each(variants)(
+    "the bubble says %s in the app's words",
+    (_name, lesson, words) => {
+      renderConnected("/lesson/b-1/step", snapshotOf(lesson));
+      expect(bubbleText()).toContain(words);
+      expect(unquoted(snapshotOf(lesson))).toEqual([]);
+    },
+  );
+
+  test("a watched beat offers Check again before its first look, and sends check.run once", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected("/lesson/b-1/step", snapshotOf(watchWaiting));
+    expect(screen.queryByRole("button", { name: "I've done it" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Check again" }));
+    expect(page.posts).toEqual([{ type: "check.run" }]);
+  });
+
+  test("the Learner's beat sends step.markDone with its label; a session sends session.ended", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected("/lesson/b-1/step", snapshotOf(learnerBeat));
+    await user.click(screen.getByRole("button", { name: "I've said it" }));
+    page.send(snapshotOf(sessionBeat, { revision: 2 }));
+    await user.click(
+      await screen.findByRole("button", { name: "The session has ended" }),
+    );
+    expect(page.posts).toEqual([
+      { type: "step.markDone" },
+      { type: "session.ended" },
+    ]);
+  });
+
+  test("Back and Skip point to the lines that say why", () => {
+    renderConnected("/lesson/b-1/step", snapshotOf(offersBoth));
+    const back = screen.getByRole("button", { name: "Back" });
+    expect(back).toHaveAccessibleDescription(
+      "Back to Read the cited lines: Reopen the cited source line and compare the claim with it.",
+    );
+    const skip = screen.getByRole("button", { name: "Skip" });
+    expect(skip).toHaveAccessibleDescription(
+      "Skip it if you have no second machine.",
+    );
+    expect(unquoted(snapshotOf(offersBoth))).toEqual([]);
+  });
+
+  test("a watched beat's Done when line becomes its Check line, then shows what was found", () => {
+    const page = renderConnected("/lesson/b-1/step", snapshotOf(watchWaiting));
+    const lines = () => [
+      ...document.querySelectorAll("[data-pip-target='lines'] li"),
+    ];
+    expect(lines()).toHaveLength(1);
+    expect(lines()[0]).toHaveAttribute("data-state", "waiting");
+    expect(lines()[0]).toHaveTextContent("Done when notes.md exists.");
+    // The Done when words show once, as the line, not again as a paragraph.
+    expect(screen.getAllByText(/Done when/)).toHaveLength(1);
+    page.send(snapshotOf(watchNotYet, { revision: 2 }));
+    expect(lines()[0]).toHaveAttribute("data-state", "not-yet");
+    expect(document.querySelector("[data-not-yet]")).toHaveTextContent(
+      "notes.md is not there yet.",
+    );
+    page.send(snapshotOf(watchPassed, { revision: 3 }));
+    expect(lines()[0]).toHaveAttribute("data-state", "ok");
+    expect(lines()[0]).toHaveTextContent("Found notes.md.");
+    expect(lines()[0]?.querySelector("pre")).toHaveTextContent("# Notes");
+    expect(unquoted(snapshotOf(watchPassed))).toEqual([]);
+  });
+
+  test("an already-done step in a Codespace shows the page's words", () => {
+    renderConnected("/lesson/b-1/step", snapshotOf(alreadyCodespace));
+    expect(document.querySelector("[data-codespace] strong")).toHaveTextContent(
+      "Claude Code",
+    );
+  });
+
+  test("a code beat shows its window, its explained line and one Copy", () => {
+    renderConnected("/lesson/b-1/step", snapshotOf(codeWindow));
+    const block = document.querySelector("[data-code-block]");
+    expect(
+      [...(block?.querySelectorAll("[data-line]") ?? [])].map((l) =>
+        l.getAttribute("data-line"),
+      ),
+    ).toEqual(["9", "10", "11"]);
+    expect(block?.querySelector("[data-point]")).toHaveAttribute(
+      "data-line",
+      "10",
+    );
+    expect(screen.getAllByRole("button", { name: /^Copy/ })).toHaveLength(1);
+  });
+
+  test("a Tear down step says where it is, and the first says why", () => {
+    const view = {
+      ...course,
+      levels: course.levels.map((level) => ({
+        ...level,
+        lessons: level.lessons.map((lesson) =>
+          lesson.id === "b-1" ? { ...lesson, tearDownLeft: true } : lesson,
+        ),
+      })),
+    };
+    renderConnected("/lesson/b-1/step", snapshotOf(tearDown, { course: view }));
+    expect(screen.getByText(/Tear down, step 1 of 2$/)).toBeInTheDocument();
+    expect(document.querySelector("[data-tear-down]")).toHaveTextContent(
+      "The Check passed. These steps put things back as they were.",
+    );
+    expect(unquoted(snapshotOf(tearDown, { course: view }))).toEqual([]);
+  });
+
+  test("row A: the Where line names the folder", () => {
+    renderConnected(
+      "/lesson/i-1/step",
+      snapshotOf(workFolderCheck, { course: fullCourse }),
+    );
+    expect(document.querySelector("[data-where]")).toHaveTextContent(
+      /Your terminal\s*in your Practice copy/,
+    );
+  });
+
+  test("row B: an i-1 Check keeps --dir on its run line and works in the Practice copy", () => {
+    renderConnected(
+      "/lesson/i-1/step",
+      snapshotOf(workFolderCheck, { course: fullCourse }),
+    );
+    expect(document.querySelector("main code")).toHaveTextContent(
+      "npm run check -- i-1 --dir ../work",
+    );
+    expect(document.querySelector("[data-where]")).toHaveTextContent(
+      "Practice copy",
+    );
+  });
+
+  test('row D: no workspace string says "your other terminal"', () => {
+    for (const lesson of [playing, workFolderCheck, watchWaiting, tearDown]) {
+      renderConnected("/lesson/b-1/step", snapshotOf(lesson));
+      expect(document.body.textContent).not.toMatch(/your other terminal/i);
+      cleanup();
+    }
+  });
+
+  const ranInWork = (lesson: typeof watchPassed, ranIn: string | null) => ({
+    ...lesson,
+    beat: lesson.beat && { ...lesson.beat, ranIn },
+  });
+  const RUN_IT_TOO =
+    "Run it in your practice copy too: you will see the same result.";
+
+  test("row C: a passed Check that ran in a Work folder says to run it in the Practice copy too", () => {
+    renderConnected(
+      "/lesson/b-1/step",
+      snapshotOf(ranInWork(watchPassed, "/home/sam/work")),
+    );
+    expect(document.querySelector("[data-ran-in]")).toHaveTextContent(
+      RUN_IT_TOO,
+    );
+  });
+
+  test("row C: no run-it-too line when the Check ran in the Practice copy", () => {
+    renderConnected(
+      "/lesson/b-1/step",
+      snapshotOf(ranInWork(watchPassed, null)),
+    );
+    expect(document.querySelector("[data-ran-in]")).toBeNull();
+  });
+
+  test("row C: no run-it-too line before the Check passes", () => {
+    renderConnected(
+      "/lesson/b-1/step",
+      snapshotOf(ranInWork(watchNotYet, "/home/sam/work")),
+    );
+    expect(document.querySelector("[data-ran-in]")).toBeNull();
+    expect(document.body.textContent).not.toContain(RUN_IT_TOO);
+  });
+
+  test("a session beat shows its done-label and one click sends one session.ended", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected("/lesson/b-1/step", snapshotOf(sessionBeat));
+    const bar = document.querySelector("[data-action-bar]");
+    expect(bar).toHaveTextContent("The session has ended");
+    await user.click(
+      screen.getByRole("button", { name: "The session has ended" }),
+    );
+    expect(page.posts).toEqual([{ type: "session.ended" }]);
+    expect(page.posts).not.toContainEqual({ type: "step.markDone" });
+  });
+
+  test("bold and links in a say and a why render through InlineText; a watched command ticks", () => {
+    renderConnected("/lesson/b-1/step", snapshotOf(richCopy));
+    const say = document.querySelector("[data-line-kind=say]");
+    expect(say?.querySelector("strong")).toHaveTextContent("the settings");
+    expect(say?.querySelector("a")).toHaveTextContent("the page");
+    const why = document.querySelector("[data-why]");
+    expect(why?.querySelector("strong")).toHaveTextContent("faster");
+    expect(why?.querySelector("a")).toHaveAttribute(
+      "href",
+      "https://code.claude.com/docs",
+    );
+    expect(why?.firstElementChild).toHaveClass("text-accent-text");
+    expect(document.querySelector("[data-watched]")).not.toBeNull();
+  });
+
+  test("no app word on the workspace names a key", () => {
+    for (const word of APP_WORDS)
+      expect(word.source, word.source).not.toMatch(KEY_NAMES);
+  });
+
+  test("no unquoted workspace text names a key, in any fixture", () => {
+    const fixtures = [
+      playing,
+      watchWaiting,
+      watchChecking,
+      watchNotYet,
+      watchPassed,
+      checkBroken,
+      checkSame,
+      checkStale,
+      checkRunning,
+      alreadyCodespace,
+      learnerBeat,
+      sessionBeat,
+      codeWindow,
+      offersBoth,
+      tearDown,
+      workFolderCheck,
+      richCopy,
+    ];
+    for (const lesson of fixtures) {
+      renderConnected("/lesson/b-1/step", snapshotOf(lesson));
+      const quoted = quotes(snapshotOf(lesson));
+      const roots = [
+        document.querySelector("[data-screen]"),
+        document.querySelector("[data-action-bar]"),
+      ];
+      for (const root of roots) {
+        const walker = document.createTreeWalker(
+          root ?? document.body,
+          NodeFilter.SHOW_TEXT,
+        );
+        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+          const text = node.textContent?.trim() ?? "";
+          if (text === "" || quoted.some((q) => q.includes(text))) continue;
+          expect(text).not.toMatch(KEY_NAMES);
+        }
+      }
+      cleanup();
+    }
   });
 });

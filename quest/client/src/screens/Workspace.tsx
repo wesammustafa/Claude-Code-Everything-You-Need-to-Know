@@ -8,13 +8,14 @@ import type {
   StepView,
 } from "@quest/contract";
 import { Button } from "../components/Button";
-import { CheckLines, type CheckLine } from "../components/CheckLines";
+import { CheckLines } from "../components/CheckLines";
 import { Choice } from "../components/Choice";
+import { CodeBlock } from "../components/CodeBlock";
 import { Command } from "../components/Command";
 import { HelpOffer } from "../components/HelpOffer";
 import { Hints } from "../components/Hints";
-import { InlineText } from "../components/InlineText";
-import { Says, type SaysTone } from "../components/Says";
+import { CODE, InlineText } from "../components/InlineText";
+import { Says } from "../components/Says";
 import { StepDots } from "../components/StepDots";
 import { Tier } from "../components/Tier";
 import { Where } from "../components/Where";
@@ -32,24 +33,21 @@ import { ActionBar } from "../shell/ActionBar";
 import { Pip } from "../pip/Pip";
 import { PageTitle } from "../shell/PageTitle";
 import { LessonGate } from "./LessonGate";
-import { COLUMN, EYEBROW, MOMENT } from "./layout";
+import { EYEBROW, MOMENT, WORKSPACE_COLUMN } from "./layout";
+import {
+  checkLines,
+  decidedByOf,
+  isDone,
+  isTearDown,
+  primaryAction,
+  ranInOf,
+  statusOf,
+  type BeatCheckLine,
+} from "./beat";
 import { useActiveLesson } from "./lesson";
+import { useCheckClock } from "./useCheckClock";
 
 type Status = BeatView["status"];
-
-// The status bubble's tone and words, in the app's words: what it saw,
-// never a judgement.
-const STATUS: Record<Status, { tone: SaysTone; words: string }> = {
-  waiting: { tone: "watching", words: "Watching your Practice copy." },
-  checking: { tone: "checking", words: "Checking your work." },
-  fail: {
-    tone: "notYet",
-    words: "Not yet. The lines below say what the check saw.",
-  },
-  done: { tone: "passed", words: "That step is done." },
-  already: { tone: "passed", words: "That was already done." },
-  broken: { tone: "broken", words: "The check could not run this time." },
-};
 
 const WHERE: Record<NonNullable<StepView["where"]>["kind"], string> = {
   terminal: "Your terminal",
@@ -59,6 +57,14 @@ const WHERE: Record<NonNullable<StepView["where"]>["kind"], string> = {
   editor: "Your editor",
   browser: "Your browser",
 };
+
+/** The Tear down steps' opening line, while they are still to do. */
+const TEAR_DOWN_LINE =
+  "The Check passed. These steps put things back as they were.";
+
+/** The line under passed Check lines once the Practice copy ran it too. */
+const RUN_IT_TOO =
+  "Run it in your practice copy too: you will see the same result.";
 
 /** A hint rung as one line of text. */
 function hintText(hint: HintView): string {
@@ -70,28 +76,6 @@ function hintText(hint: HintView): string {
         : `\`${command.text}\``,
     )
     .join(" ");
-}
-
-/**
- * Whether the beat waits on its Check, not on the Learner saying it is done.
- * The snapshot has no field for it yet (a gap for 246): a beat with check
- * lines, a slow item waiting, or a Check under way is checked.
- */
-function checked(beat: BeatView): boolean {
-  return (
-    beat.verification.length > 0 ||
-    beat.slowWait ||
-    ["checking", "fail", "broken"].includes(beat.status)
-  );
-}
-
-/** A question still open on the beat: its answers wait for a pick. */
-function asking(beat: BeatView): boolean {
-  return (
-    beat.options.length > 0 &&
-    beat.status !== "done" &&
-    beat.status !== "already"
-  );
 }
 
 /** A new key for each Check run, so its lines stagger in again (241 D13). */
@@ -128,6 +112,7 @@ export function Workspace() {
       step={lesson.step}
       beat={lesson.beat}
       number={number}
+      tearDownLeft={active.summary?.tearDownLeft ?? false}
     />
   );
 }
@@ -137,11 +122,13 @@ function Play({
   step,
   beat,
   number,
+  tearDownLeft,
 }: {
   lesson: PlayingLesson;
   step: StepView;
   beat: BeatView;
   number: number | null;
+  tearDownLeft: boolean;
 }) {
   const main = useRef<HTMLElement>(null);
   const newestHint = useRef<HTMLDivElement>(null);
@@ -179,21 +166,48 @@ function Play({
   };
 
   const runKey = useRunKey(beat.status);
-  const status = STATUS[beat.status];
+  const seconds = useCheckClock(beat.status);
+  const status = statusOf(beat);
   const at = lesson.steps.findIndex((s) => s.id === step.id);
   const hints = lesson.hints.shown.map(hintText);
+  const tearDown = isTearDown(step);
+  const tearDowns = lesson.steps.filter(isTearDown);
+  const firstTearDown = tearDown && tearDowns[0]?.id === step.id;
+  const lines = checkLines(beat);
+  const ranIn = ranInOf(beat);
+  const where = step.where;
+  const passed = lines.length > 0 && lines.every((l) => l.state === "pass");
+  const eyebrow = tearDown
+    ? `Tear down, step ${String(tearDowns.findIndex((s) => s.id === step.id) + 1)} of ${String(tearDowns.length)}`
+    : `Step ${String(at + 1)} of ${String(lesson.steps.length)}`;
+  const priorNote = cardNote(step, lesson.capstone);
 
   return (
     <>
-      <main ref={main} className={`${COLUMN} gap-4.5 pt-5.5 pb-44`}>
+      <main ref={main} className={WORKSPACE_COLUMN}>
         <StepDots
           steps={lesson.steps.map((s) => s.title)}
           at={Math.max(at, 0)}
           states={lesson.steps.map((s) => s.state)}
         />
         {/* The status words stay keyed as they are while the offer comes
-            and goes, so the live region never says them twice. */}
-        <Says tone={offering ? "offer" : status.tone} textKey={beat.status}>
+            and goes, so the live region never says them twice. The seconds
+            sit beside the live region, so their ticks are never said. */}
+        <Says
+          tone={offering ? "offer" : status.tone}
+          textKey={status.key}
+          aside={
+            seconds !== null && (
+              <span
+                data-check-clock=""
+                className="shrink-0 text-sm text-muted"
+                aria-hidden="true"
+              >
+                {`${String(seconds)} s`}
+              </span>
+            )
+          }
+        >
           <span>
             {beat.status === "waiting" && (
               <span
@@ -209,10 +223,13 @@ function Play({
             onDismiss={dismissOffer}
           />
         </Says>
-        <article className="grid gap-5 rounded-xl border border-line bg-surface p-6.5 shadow-md max-sm:p-5 [&>*]:min-w-0">
+        <article
+          data-step-card=""
+          className="grid gap-5 rounded-xl border border-line bg-surface p-6.5 shadow-md max-sm:p-5 [&>*]:min-w-0"
+        >
           <header className="grid gap-1.5">
             <span className={EYEBROW}>
-              {`${lessonEyebrow(lesson.level, number, lesson.capstone)} · Step ${String(at + 1)} of ${String(lesson.steps.length)}`}
+              {`${lessonEyebrow(lesson.level, number, lesson.capstone)} · ${eyebrow}`}
             </span>
             <PageTitle
               title={`${step.title}: ${lesson.title}`}
@@ -223,30 +240,61 @@ function Play({
             <div className="flex flex-wrap items-center gap-3">
               <span className="text-sm text-muted">{step.part}</span>
               <Tier tier={step.tier} />
-              {step.where && (
+              {where && (
                 <Where
-                  kind={step.where.kind}
-                  label={WHERE[step.where.kind]}
-                  {...(step.where.terminal !== null
-                    ? { number: step.where.terminal }
-                    : step.where.kind === "claude-2"
+                  kind={where.kind}
+                  label={WHERE[where.kind]}
+                  // The terminal's number where the page numbers them; a
+                  // second Claude Code session is 2 by the client's default.
+                  {...(where.terminal !== null
+                    ? { number: where.terminal }
+                    : where.kind === "claude-2"
                       ? { number: 2 }
                       : {})}
-                  {...(step.where.folder
-                    ? { note: `in ${step.where.folder}` }
-                    : {})}
+                  {...(where.folder ? { note: `in ${where.folder}` } : {})}
                 />
               )}
               <ReadLesson size="sm" className="ml-auto" />
             </div>
+            {priorNote && (
+              <p data-step-note="" className="text-sm text-muted">
+                {priorNote}
+              </p>
+            )}
           </header>
-          <BeatBody beat={beat} />
-          {beat.verification.length > 0 && (
-            <CheckLines key={runKey} lines={checkLines(beat)} />
+          {firstTearDown && tearDownLeft && (
+            <p data-tear-down="">{TEAR_DOWN_LINE}</p>
           )}
-          {beat.fail !== null && beat.verification.length === 0 && (
-            <p data-not-yet="" className="text-sm text-wait">
-              <InlineText text={beat.fail} />
+          {step.extraHelp && !isDone(beat) && (
+            <aside data-extra-help="" className="text-sm text-muted">
+              More help on this step.
+            </aside>
+          )}
+          {beat.status === "already" && beat.codespace && (
+            <p data-codespace="">
+              <InlineText text={beat.codespace} />
+            </p>
+          )}
+          <BeatBody beat={beat} />
+          {lines.length > 0 && (
+            <CheckLines
+              key={runKey}
+              lines={lines.map((line) => ({
+                text: <InlineText text={line.text} />,
+                ok: line.state === "pass",
+                state: line.state,
+                ...(line.fail !== undefined ||
+                line.found !== undefined ||
+                line.evidence !== undefined
+                  ? { evidence: <Evidence line={line} /> }
+                  : {}),
+              }))}
+            />
+          )}
+          {passed && ranIn !== null && <p data-ran-in="">{RUN_IT_TOO}</p>}
+          {beat.winNote && (
+            <p data-win-note="">
+              <InlineText text={beat.winNote} />
             </p>
           )}
         </article>
@@ -260,41 +308,92 @@ function Play({
             newestRef={newestHint}
           />
         )}
+        <Offers lesson={lesson} />
       </main>
       <Actions lesson={lesson} beat={beat} />
     </>
   );
 }
 
-/** The check's lines: waiting while it runs, each line's state after. */
-function checkLines(beat: BeatView): CheckLine[] {
-  const running = beat.status === "checking";
-  let failShown = false;
-  return beat.verification.map((line) => {
-    // The Not yet line goes under the first line that is not met.
-    const evidence =
-      !line.pass && !failShown && beat.fail !== null ? beat.fail : undefined;
-    if (evidence !== undefined) failShown = true;
-    return {
-      text: line.text,
-      ok: line.pass,
-      state: running ? "waiting" : line.pass ? "pass" : "notYet",
-      ...(evidence !== undefined && !running ? { evidence } : {}),
-    };
-  });
+/** The step's note on help: a harder step, or a skill done before (row 49). */
+function cardNote(step: StepView, capstone: boolean): string | null {
+  const parts: string[] = [];
+  if (step.note !== null && capstone) parts.push("No commands this time.");
+  if (step.doneBefore)
+    parts.push(
+      capstone ? "You've done each part before." : "You've done this before.",
+    );
+  return parts.length > 0 ? parts.join(" ") : null;
 }
+
+/** Under a Check line: the Not yet words, the file found, what it holds. */
+function Evidence({ line }: { line: BeatCheckLine }) {
+  return (
+    <>
+      {line.fail !== undefined && (
+        <span data-not-yet="" className="block">
+          <InlineText text={line.fail} />
+        </span>
+      )}
+      {line.found !== undefined && (
+        <span className="block">
+          Found <code className={CODE}>{line.found}</code>.
+        </span>
+      )}
+      {line.evidence !== undefined && (
+        <pre className="font-mono text-code whitespace-pre-wrap wrap-anywhere">
+          {line.evidence}
+        </pre>
+      )}
+    </>
+  );
+}
+
+const BACK_NOTE = "workspace-back-note";
+const SKIP_NOTE = "workspace-skip-note";
+
+/** Why Back and Skip are offered, the line the bar's buttons point to. */
+function Offers({ lesson }: { lesson: PlayingLesson }) {
+  const { back, skip } = lesson.offers;
+  if (!back && !skip) return null;
+  return (
+    <div data-offers="" className="grid gap-1 text-sm text-muted">
+      {back && (
+        <p id={BACK_NOTE}>
+          {"Back to "}
+          <InlineText text={back.title} />
+          {": "}
+          <InlineText text={back.why} />
+        </p>
+      )}
+      {skip && (
+        <p id={SKIP_NOTE}>
+          <InlineText text={skip.when} />
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** A beat line's look, by its kind. */
+const LINE_CLASS: Partial<Record<BeatLine["kind"], string>> = {
+  goal: "text-lg font-semibold tracking-tight",
+  say: "text-muted",
+};
 
 /** One line of the beat, by its kind. */
 function Line({ line }: { line: BeatLine }): ReactNode {
-  if (line.kind === "run") return <Command text={line.text} />;
-  if (line.kind === "goal")
+  if (line.kind === "run")
+    return <Command text={line.text} watched={line.watched === true} />;
+  if (line.kind === "expect")
     return (
-      <p className="text-lg font-semibold tracking-tight">
+      <p>
+        <span className="font-semibold">You should see </span>
         <InlineText text={line.text} />
       </p>
     );
   return (
-    <p className={line.kind === "say" ? "text-muted" : undefined}>
+    <p className={LINE_CLASS[line.kind]} data-line-kind={line.kind}>
       <InlineText text={line.text} />
     </p>
   );
@@ -303,15 +402,31 @@ function Line({ line }: { line: BeatLine }): ReactNode {
 /**
  * The beat's body. `do` and `self` beats show their lines, the code with
  * Copy, and why. The question kinds (predict, ask, type) get a plain
- * fallback here, their lines and choices, until 247 builds them.
+ * fallback here, their lines and choices, until 247 builds them. A watched
+ * beat's "Done when" line is its Check line instead, and a done beat with
+ * evidence hides it.
  */
 function BeatBody({ beat }: { beat: BeatView }) {
+  const watched = decidedByOf(beat) === "watch";
+  const shown = beat.lines.filter(
+    (line) =>
+      !(
+        line.doneWhen === true &&
+        (watched || (isDone(beat) && beat.evidence !== null))
+      ),
+  );
+  const after = shown.filter((line) => line.kind === "after");
   const lines = (
     <>
-      {beat.lines.map((line, i) => (
-        <Line key={i} line={line} />
-      ))}
-      {beat.code && <Command text={beat.code.copy} />}
+      {shown
+        .filter((line) => line.kind !== "after")
+        .map((line, i) => (
+          <Line key={i} line={line} />
+        ))}
+      {beat.code && <CodeBlock code={beat.code} />}
+      {beat.commandsInHints && (
+        <p className="text-muted">The commands are in the hints.</p>
+      )}
       {beat.self && (
         <p>
           <InlineText text={beat.self} />
@@ -319,6 +434,9 @@ function BeatBody({ beat }: { beat: BeatView }) {
       )}
     </>
   );
+  const closing = after.map((line, i) => (
+    <Line key={`after-${String(i)}`} line={line} />
+  ));
   switch (beat.kind) {
     case "do":
     case "self":
@@ -326,10 +444,12 @@ function BeatBody({ beat }: { beat: BeatView }) {
         <div className="grid justify-items-start gap-3.5 [&>*]:max-w-full">
           {lines}
           {beat.why.onCard && (
-            <p className="text-sm text-muted">
+            <p data-why="">
+              <span className="font-semibold text-accent-text">Why: </span>
               <InlineText text={beat.why.onCard} />
             </p>
           )}
+          {closing}
         </div>
       );
     default:
@@ -342,6 +462,7 @@ function BeatBody({ beat }: { beat: BeatView }) {
               <InlineText text={beat.answer.reveal} />
             </p>
           )}
+          {closing}
         </div>
       );
   }
@@ -388,52 +509,56 @@ function Question({ beat }: { beat: BeatView }) {
   );
 }
 
-/** The sticky action bar: what the moment needs, the main action last. */
+/**
+ * The sticky action bar: what the moment needs, the main action last. Back
+ * and Skip show only where the snapshot offers them, each pointing to the
+ * line that says why. Each press sends exactly one action.
+ */
 function Actions({ lesson, beat }: { lesson: PlayingLesson; beat: BeatView }) {
   const revisit = useActionProps("step.revisit", { type: "step.revisit" });
   const skip = useActionProps("step.skip", { type: "step.skip" });
   const check = useActionProps("check.run", { type: "check.run" });
   const markDone = useActionProps("step.markDone", { type: "step.markDone" });
+  const ended = useActionProps("session.ended", { type: "session.ended" });
   const next = useActionProps("step.continue", { type: "step.continue" });
-  const done = beat.status === "done" || beat.status === "already";
-
-  let main: ReactNode = null;
-  if (done)
-    main = (
-      <Button variant="primary" iconEnd="arrow" {...next}>
-        Next step
-      </Button>
-    );
-  else if (asking(beat)) main = null;
-  else if (checked(beat))
-    main = (
-      <Button icon="refresh" {...check}>
-        Check again
-      </Button>
-    );
-  else
-    main = (
-      <Button variant="primary" iconEnd="arrow" {...markDone}>
-        {beat.doneLabel ?? "I've done it"}
-      </Button>
-    );
+  const props = {
+    "step.continue": next,
+    "check.run": check,
+    "step.markDone": markDone,
+    "session.ended": ended,
+  };
+  const action = primaryAction(beat);
 
   return (
     <ActionBar
       start={
         lesson.offers.back && (
-          <Button variant="ghost" icon="back" {...revisit}>
+          <Button
+            variant="ghost"
+            icon="back"
+            aria-describedby={BACK_NOTE}
+            {...revisit}
+          >
             Back
           </Button>
         )
       }
     >
       {lesson.offers.skip && (
-        <Button variant="ghost" {...skip}>
+        <Button variant="ghost" aria-describedby={SKIP_NOTE} {...skip}>
           Skip
         </Button>
       )}
-      {main}
+      {action &&
+        (action.type === "check.run" ? (
+          <Button icon="refresh" {...props[action.type]}>
+            {action.label}
+          </Button>
+        ) : (
+          <Button variant="primary" iconEnd="arrow" {...props[action.type]}>
+            {action.label}
+          </Button>
+        ))}
     </ActionBar>
   );
 }
