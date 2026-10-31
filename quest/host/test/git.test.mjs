@@ -123,6 +123,27 @@ test("git status on part of the tree: a work folder inside a repository sees onl
   }
 });
 
+test("git status from the copy's project/: a whole-tree look lists only project/'s paths, named from there (ticket 277)", async () => {
+  const top = repo({ "project/practice/b-1/onboarding.md": "x\n" });
+  try {
+    commit(top, "start");
+    write(top, {
+      "project/practice/b-1/onboarding.md": "y\n",
+      "project/notes/n.md": "n\n",
+      "README.md": "r\n",
+    });
+    execFileSync("git", ["add", "project/notes/n.md"], { cwd: top });
+    const r = await gitStatus(join(top, "project"));
+    assert.deepEqual([...r.paths].sort(), [
+      "notes/n.md",
+      "practice/b-1/onboarding.md",
+    ]);
+    assert.deepEqual(r.staged, ["notes/n.md"]);
+  } finally {
+    rmSync(top, { recursive: true, force: true });
+  }
+});
+
 test("probeFolder says why git could not look, apart from a folder that is no repository", async () => {
   const mine = repo();
   const PATH = process.env.PATH;

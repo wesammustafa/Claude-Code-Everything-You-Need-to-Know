@@ -38,7 +38,7 @@ const TEST_COMMANDS = ['npm', 'npx', 'pnpm', 'yarn', 'bun', 'node', 'deno', 'pyt
 function committedSettings(repo) {
   let text;
   try {
-    text = repo.git('show', `HEAD:${SETTINGS}`);
+    text = repo.git('show', `HEAD:./${SETTINGS}`);
   } catch {
     return { missing: true };
   }
@@ -55,7 +55,7 @@ function committedSettings(repo) {
  */
 function committedText(repo, path) {
   try {
-    return repo.git('show', `HEAD:${path}`);
+    return repo.git('show', `HEAD:./${path}`);
   } catch {
     return null;
   }

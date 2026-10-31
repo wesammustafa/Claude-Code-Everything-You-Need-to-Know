@@ -127,7 +127,8 @@ function heldRuns<A extends unknown[], C extends object, R>(
 }
 
 // An in-memory tree: absolute paths to { bytes, mtimeMs }, or to a folder.
-// A read of a path `fail` names throws its code.
+// A read of a path `fail` names throws its code, and a folder there can't
+// be made.
 type Entry =
   { folder: true } | { folder?: undefined; bytes: Buffer; mtimeMs: number };
 
@@ -136,6 +137,7 @@ export interface FakeFiles {
   folder(abs: string): void;
   remove(abs: string): void;
   fail(abs: string, code?: string | null): void;
+  failing(abs: string): boolean;
   exists(abs: string): boolean;
   isFolder(abs: string): boolean;
   match(dir: string, path: string): string | null;
@@ -168,6 +170,7 @@ function fakeFiles(tree: Record<string, string | null> = {}): FakeFiles {
       if (code) failing.set(abs, code);
       else failing.delete(abs);
     },
+    failing: (abs) => failing.has(abs),
     exists: (abs) => entries.has(abs),
     isFolder: (abs) => entries.get(abs)?.folder === true,
     match(dir, path) {
@@ -391,6 +394,13 @@ export function fakeAdapters({
           throw Object.assign(new Error("not a folder"), { code: "ENOTDIR" });
         adapters.store.saves.push(data);
         return true;
+      },
+      // Root .practice/ made where it is missing, unless files.fail names
+      // it, as on a read-only copy.
+      prepare() {
+        const practice = posix.join(root, ".practice");
+        if (!files.exists(practice) && !files.failing(practice))
+          files.folder(practice);
       },
       // Every save from now throws an error with this code (null: none).
       fail(code) {

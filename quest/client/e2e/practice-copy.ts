@@ -70,9 +70,7 @@ export function practiceCopy(): PracticeCopy {
   const bin = join(tmp, "bin");
   cpSync(TEMPLATE, dir, { recursive: true });
   cpSync(BUNDLE, join(dir, "learn"), { recursive: true });
-  // The app saves progress only once root .practice/ exists (D10 asks who
-  // makes it).
-  mkdirSync(join(dir, ".practice"));
+  // Root .practice/ is the host's to make on its first start (ticket 277).
   mkdirSync(home);
   writeFileSync(
     join(home, ".gitconfig"),
@@ -96,6 +94,8 @@ export function practiceCopy(): PracticeCopy {
   };
   delete env.GIT_CONFIG_GLOBAL;
   git(dir, env, "init", "-q");
+  // Stands in for the release's root .gitignore, which carries the line
+  // (ticket 225 D4; the template itself has none).
   writeFileSync(join(dir, ".git/info/exclude"), ".practice/\n");
   git(dir, env, "add", "-A");
   git(dir, env, "commit", "-q", "-m", "Practice copy");

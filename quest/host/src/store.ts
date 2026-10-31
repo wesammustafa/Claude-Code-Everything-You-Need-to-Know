@@ -6,6 +6,7 @@ import {
   copyFileSync,
   existsSync,
   linkSync,
+  mkdirSync,
   readFileSync,
   renameSync,
   rmSync,
@@ -228,6 +229,16 @@ export const snapshot = (state: EngineState) =>
     lessons: state.progress,
     folders: state.folders,
   });
+
+// Makes root `.practice/` on the first start (ticket 277): the template
+// ships no empty folder. A copy where it can't be made saves nothing.
+export function preparePractice(root: string) {
+  try {
+    mkdirSync(join(root, ".practice"), { recursive: true });
+  } catch {
+    // Read-only or not ours: the snapshot's saving says so.
+  }
+}
 
 // Writes atomically. Returns false, writing nothing, while `.practice/` is missing.
 export function saveState(root: string, data: object): boolean {

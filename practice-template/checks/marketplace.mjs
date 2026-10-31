@@ -85,7 +85,7 @@ const manifestJson = (/** @type {string} */ text) => parseJson(text, { bom: true
  */
 export function headText(repo, path) {
   try {
-    return repo.git('show', `HEAD:${path}`);
+    return repo.git('show', `HEAD:./${path}`);
   } catch {
     return null;
   }

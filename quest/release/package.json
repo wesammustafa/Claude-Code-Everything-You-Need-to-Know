@@ -6,6 +6,9 @@
   "scripts": {
     "compile:course": "node src/compile-course.mjs",
     "build": "node src/render-pages.mjs",
-    "render:diagrams": "node src/render-diagrams.mjs"
+    "render:diagrams": "node src/render-diagrams.mjs",
+    "template": "node src/template.mjs",
+    "replay": "node src/replay.mjs",
+    "budgets": "node src/budgets.mjs"
   }
 }

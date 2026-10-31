@@ -21,10 +21,19 @@ const gitOptions = (dir: string) => ({
   timeout: GIT_LIMIT,
 });
 
+// The whole tree's listing as git status shows it, each path by its
+// current name, kept to what is under `prefix` and named from there.
+function whole(entries: ReturnType<typeof statusEntries>, prefix: string) {
+  const here = entries.filter((e) => e.path.startsWith(prefix));
+  const from = (e: (typeof here)[number]) => e.path.slice(prefix.length);
+  return { paths: here.map(from), staged: here.filter(isStaged).map(from) };
+}
+
 // What git status lists in `dir`, and which of those paths are staged. With
 // `files`, a look at part of the tree: each untracked file on its own line,
-// where git status lists a new folder whole, and only what is in `dir`,
-// named from there, where `dir` is a folder inside a repository. With
+// where git status lists a new folder whole. Either way only what is in
+// `dir`, named from there, where `dir` is a folder inside a repository, as
+// the copy's project/ is (ticket 277). With
 // `head`, also the commit HEAD is at (ticket 105), null before the first.
 export function gitStatus(
   dir: string,
@@ -65,38 +74,27 @@ export function gitStatus(
     const failed = (error: Error) => {
       resolve({ error: error.message.split("\n")[0] ?? "" });
     };
-    if (!files) {
-      track(
-        execFile("git", ["status", "--porcelain"], opts, (error, stdout) => {
-          if (error) {
-            failed(error);
-            return;
-          }
-          const entries = statusEntries(stdout);
-          resolve({
-            paths: entries.map((e) => e.path),
-            staged: entries.filter(isStaged).map((e) => e.path),
-          });
-        }),
-      );
-      return;
-    }
     track(
       execFile("git", ["rev-parse", "--show-prefix"], opts, (error, prefix) => {
         if (error) {
           failed(error);
           return;
         }
+        const here = prefix.trim();
+        const done = (again: Error | null, stdout: string) => {
+          if (again) failed(again);
+          else if (files) resolve(listing(statusEntries(stdout), here));
+          else resolve(whole(statusEntries(stdout), here));
+        };
         track(
-          execFile(
-            "git",
-            ["status", "--porcelain", "--untracked-files=all", "--", "."],
-            opts,
-            (again, stdout) => {
-              if (again) failed(again);
-              else resolve(listing(statusEntries(stdout), prefix.trim()));
-            },
-          ),
+          files
+            ? execFile(
+                "git",
+                ["status", "--porcelain", "--untracked-files=all", "--", "."],
+                opts,
+                done,
+              )
+            : execFile("git", ["status", "--porcelain"], opts, done),
         );
       }),
     );

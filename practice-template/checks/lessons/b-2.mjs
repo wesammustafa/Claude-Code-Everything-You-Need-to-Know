@@ -55,7 +55,7 @@ export const items = [
     check(repo) {
       const before = repo.read('.practice/b-2-before.txt');
       if (before === null) return SAVE_BEFORE;
-      const changed = statusPaths(before);
+      const changed = statusPaths(before, repo.prefix);
       if (changed.length) return `Files had changed before you approved the plan: ${changed.join(', ')}. Start from a clean tree (commit them, or set them aside with \`git stash push --include-untracked\`) and stay in plan mode until you approve.`;
       return true;
     },
@@ -73,9 +73,9 @@ export const items = [
       // keeps step 7's "or No" so it never says to approve every request,
       // and stays five lines in a 60x20 hint box so the card keeps its Goal
       // and border.
-      if (!statusPaths(after).length) return '`.practice/b-2-after.txt` lists no changed file yet. Approve the plan you reviewed; if Claude Code asks, read each request: plain Yes, or No if it does more than the plan needs. Once `git status` lists changes, save it again.';
+      if (!statusPaths(after, repo.prefix).length) return '`.practice/b-2-after.txt` lists no changed file yet. Approve the plan you reviewed; if Claude Code asks, read each request: plain Yes, or No if it does more than the plan needs. Once `git status` lists changes, save it again.';
       const planned = planPaths(plan, repo.dir);
-      const extra = statusPaths(after).filter((path) => !inPlan(planned, path));
+      const extra = statusPaths(after, repo.prefix).filter((path) => !inPlan(planned, path));
       if (extra.length) return `Changed but not in the plan: ${extra.join(', ')}. Compare the plan you approved with what Claude changed.`;
       return true;
     },

@@ -181,27 +181,16 @@ test.describe("a clean first launch", () => {
 });
 
 test.describe("b-1 verified failure, then success", () => {
-  // G3 (ticket 208): the engine still uses the copy root as the Work folder,
-  // so the note the Check reads is <copy>/practice/b-1/onboarding.md, not the
-  // template's project/practice/b-1/onboarding.md. Lifted by the G3 ticket.
-  test.fixme("after the work in the copy's project/ (waits for G3 ticket 277)", async ({
-    page,
-    copy,
-  }) => {
-    test.setTimeout(120_000);
-    await failThenPass(page, copy, "project/practice/b-1/onboarding.md");
-  });
-
-  // G3: interim, at the copy root, where the engine looks today. Delete
-  // this test when G3 lands and the fixme above is lifted.
+  // The Check reads the template's project/practice/b-1/onboarding.md: the
+  // default Work folder is the copy's project/ (ticket 277).
   for (const width of [1280, 720]) {
-    test(`b-1 fail then pass (interim, copy root), ${String(width)} px`, async ({
+    test(`after the work in the copy's project/, ${String(width)} px`, async ({
       page,
       copy,
     }) => {
       test.setTimeout(120_000);
       await page.setViewportSize({ width, height: 900 });
-      await failThenPass(page, copy, "practice/b-1/onboarding.md");
+      await failThenPass(page, copy, "project/practice/b-1/onboarding.md");
     });
   }
 });
@@ -281,7 +270,7 @@ test("no duplicate moment on reload or in a second tab", async ({
     };
     if (action.type === "milestone.shown") shown.push(action.id ?? "");
   });
-  await failThenPass(page, copy, "practice/b-1/onboarding.md");
+  await failThenPass(page, copy, "project/practice/b-1/onboarding.md");
   await expect.poll(() => shown.length).toBe(1);
 
   await page.reload();

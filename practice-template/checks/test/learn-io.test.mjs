@@ -151,9 +151,7 @@ test('package.json: one new script, no dependencies', () => {
   assert.equal(pkg.dependencies, undefined);
   assert.equal(pkg.devDependencies, undefined);
   assert.equal(pkg.engines.node, '>=22');
-  // Since ticket 210, learn/ holds only lessons/, so this scan reads nothing
-  // and the `learn` script dangles; both have a subject again once 216 and
-  // 225 put the bundled server at learn/app.mjs.
-  const src = readdirSync(join(root, 'learn'), { recursive: true }).filter((f) => f.endsWith('.mjs')).map((f) => readFileSync(join(root, 'learn', f), 'utf8')).join('\n');
-  assert.doesNotMatch(src, /import\.meta\.main|styleText|from '(?!node:|\.)/, 'needs a newer Node or a package');
+  // This is the development manifest. The copy's root package.json, with
+  // only `learn`, is checked by quest/release/test/template.test.ts, and the
+  // bundle's node:-only imports by quest/server/test/bundle.test.ts.
 });

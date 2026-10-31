@@ -1,9 +1,9 @@
 // Shared by the checks' tests: a throwaway git repository to point a check at,
 // and the check command run the way a Learner runs it.
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, rmdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const runner = join(dirname(fileURLToPath(import.meta.url)), '..', 'run.mjs');
@@ -11,11 +11,15 @@ const runner = join(dirname(fileURLToPath(import.meta.url)), '..', 'run.mjs');
 // A git repository in a temporary folder, holding `files` (path to text),
 // with `.practice/` ignored as a Learner's own repository would have it. It
 // ignores the machine's global excludes file, which may list `.claude`.
-export function repo(files = {}) {
-  const dir = mkdtempSync(join(tmpdir(), 'practice-'));
-  execFileSync('git', ['init', '-q'], { cwd: dir });
-  execFileSync('git', ['config', 'core.excludesFile', '/dev/null'], { cwd: dir });
-  writeFileSync(join(dir, '.git', 'info', 'exclude'), '.practice/\n');
+// `nested` lays it out as a copy is: the git root holds `project/`, where
+// the files go, and the project folder is returned.
+export function repo(files = {}, { nested = false } = {}) {
+  const root = mkdtempSync(join(tmpdir(), 'practice-'));
+  execFileSync('git', ['init', '-q'], { cwd: root });
+  execFileSync('git', ['config', 'core.excludesFile', '/dev/null'], { cwd: root });
+  writeFileSync(join(root, '.git', 'info', 'exclude'), '.practice/\n');
+  const dir = nested ? join(root, 'project') : root;
+  mkdirSync(dir, { recursive: true });
   write(dir, files);
   return dir;
 }
@@ -70,9 +74,10 @@ export function check(args, env = {}) {
 // Runs `fn` with a repository built by `make`, then deletes it.
 export function withRepo(make, fn) {
   const dir = make();
+  const nested = basename(dir) === 'project' && existsSync(join(dirname(dir), '.git'));
   try {
     return fn(dir);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(nested ? dirname(dir) : dir, { recursive: true, force: true });
   }
 }

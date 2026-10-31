@@ -26,6 +26,7 @@ import {
   typesOf,
   VERSION,
   w3,
+  WORK,
 } from "./scripted.mjs";
 
 const MINE = "/home/sam/mine";
@@ -128,6 +129,8 @@ test("a change says the copy's .practice/ appeared only when it did, then that t
     saved: AT_W3,
     tree: {},
   });
+  // A copy where root .practice/ can't be made at first.
+  adapters.files.fail(PRACTICE, "EACCES");
   await host.open();
   host.start();
   host.dispatch({ type: "lesson.open", lesson: "b-1" });
@@ -138,8 +141,9 @@ test("a change says the copy's .practice/ appeared only when it did, then that t
   const from = heard.length;
   adapters.fire(ROOT);
   assert.deepEqual(typesOf(heard.slice(from)), ["activity"]);
+  adapters.files.fail(PRACTICE, null);
   adapters.files.folder(PRACTICE);
-  adapters.files.write(`${ROOT}/${VERSION}`, "2.1.285 (Claude Code)\n");
+  adapters.files.write(`${WORK}/${VERSION}`, "2.1.285 (Claude Code)\n");
   const next = heard.length;
   adapters.fire(ROOT);
   assert.deepEqual(
@@ -217,10 +221,10 @@ test("the work folder has its own watcher, armed again as the Learner moves to a
   await turn();
   // A Worked example step that runs in the copy is watched there alone.
   assert.equal(host.snapshot().lesson.phase, "playing");
-  assert.deepEqual(adapters.armed(), [ROOT]);
+  assert.deepEqual(adapters.armed(), [ROOT, WORK]);
   assert.deepEqual(
     adapters.checks.calls.map((c) => c.dir),
-    [ROOT],
+    [WORK],
     "its check runs in the copy",
   );
   // Back to another lesson in the copy and to i-1's overview again.
@@ -264,7 +268,7 @@ test("the host's selectors: evidence only on a card, the work folder of the step
   assert.equal(workFolder(s), MINE, "an overview: the lesson's folder");
   assert.equal(opensWithCheck(s), true);
   s = reduce(s, { type: "lesson.start", help: "planned", now: 1 }).state;
-  assert.equal(workFolder(s), ROOT, "a Worked example in the copy");
+  assert.equal(workFolder(s), WORK, "a Worked example in the copy");
   assert.equal(evidence(s), null, "W1 names no evidence file");
   const b1 = initialState({ course, saved: AT_W3, facts, now: 0 });
   assert.equal(evidence(b1), null, "a resume with no beat open: no card");

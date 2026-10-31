@@ -31,6 +31,7 @@ import {
   PATH,
   pending,
   prereq,
+  projectDir,
   repoNeed,
   save,
   snapshot,
@@ -125,6 +126,8 @@ test("a needs item the app can't read, or one with no need line to quote, is an 
 const MINE = "/home/sam/code/my-app";
 // The practice copy: the driver's FACTS.root.
 const COPY = "/home/sam/claude-code-practice";
+// Its project/, where the checks run (ticket 277).
+const PROJECT = `${COPY}/project`;
 // At i-1's overview, Beginner finished and Intermediate's folder answered,
 // with `opts` in its lesson file; `facts` as main found them.
 const atIntro = (opts, facts = {}, folders = { intermediate: MINE }) => {
@@ -453,7 +456,7 @@ const answer = (dir, at, found) => prereq({ lesson: "i-1", dir }, at, found);
 test("the intro looks for its prerequisites in the work folder; one that fails says so, and is offered where that lesson is practised in the same folder", () => {
   const d = atIntro(REQUIRES, {}, { intermediate: COPY });
   assert.deepEqual(introAsks(d.state), [
-    { type: "prereqs", lesson: "i-1", dir: COPY, requires: ASKED },
+    { type: "prereqs", lesson: "i-1", dir: PROJECT, requires: ASKED },
   ]);
   // Until main answers, nothing is said and the two starts are offered.
   assert.deepEqual(unmet(d.state), []);
@@ -462,8 +465,8 @@ test("the intro looks for its prerequisites in the work folder; one that fails s
   d.send(answer(MINE, 0, { pass: false }));
   assert.deepEqual(unmet(d.state), []);
   assert.equal(d.state.prereqs["i-1"], undefined);
-  d.send(answer(COPY, 0, { pass: false }));
-  d.send(answer(COPY, 1, { read: null }));
+  d.send(answer(PROJECT, 0, { pass: false }));
+  d.send(answer(PROJECT, 1, { read: null }));
   // Each says what isn't there; the offer says whose work it is.
   // dropped: T-render the 60x20 row that hands the notes to n
   assert.deepEqual(unmet(d.state), [
@@ -479,17 +482,17 @@ test("the intro looks for its prerequisites in the work folder; one that fails s
   assert.deepEqual([d.state.phase, d.state.lesson], ["overview", "b-5"]);
   // Back at i-1 the overview looks again; what passes now says nothing.
   const again = atIntro(REQUIRES, {}, { intermediate: COPY });
-  again.send(answer(COPY, 0, { pass: true }));
-  again.send(answer(COPY, 1, { read: "---\nname: five-whys\n---\n" }));
+  again.send(answer(PROJECT, 0, { pass: true }));
+  again.send(answer(PROJECT, 1, { read: "---\nname: five-whys\n---\n" }));
   assert.deepEqual(unmet(again.state), []);
   assert.equal(offered(again.state), null);
   // An item the check could not decide (an error) says nothing.
-  again.send(answer(COPY, 0, { pass: null }));
+  again.send(answer(PROJECT, 0, { pass: null }));
   assert.deepEqual(unmet(again.state), []);
   // The file's lesson is offered too, and with nothing to offer there is no
   // third option.
   const three = atIntro(REQUIRES, {}, { intermediate: COPY });
-  three.send(answer(COPY, 1, { read: "" }));
+  three.send(answer(PROJECT, 1, { read: "" }));
   assert.equal(offered(three.state), "b-4");
   three.open(offered(three.state));
   assert.deepEqual(
@@ -529,7 +532,7 @@ test("while the folder question waits for an answer the prerequisites wait too; 
   assert.deepEqual(pending(d, "prereqs"), {
     type: "prereqs",
     lesson: "i-1",
-    dir: COPY,
+    dir: PROJECT,
     requires: ASKED,
     asked: 1,
   });
@@ -554,12 +557,12 @@ test("each ask for the prerequisites has its number: an answer to an older ask t
   assert.ok(older >= 1 && newer > older, `${older} then ${newer}`);
   // The newer ask's answer: it passes. The older one's, landing late, says
   // nothing.
-  d.send(answer(COPY, 0, { pass: true, asked: newer }));
-  d.send(answer(COPY, 0, { pass: false, asked: older }));
+  d.send(answer(PROJECT, 0, { pass: true, asked: newer }));
+  d.send(answer(PROJECT, 0, { pass: false, asked: older }));
   assert.deepEqual(unmet(d.state), []);
   // In order, each answer counts.
-  d.send(answer(COPY, 1, { read: "x\n", asked: older }));
-  d.send(answer(COPY, 1, { read: null, asked: newer }));
+  d.send(answer(PROJECT, 1, { read: "x\n", asked: older }));
+  d.send(answer(PROJECT, 1, { read: null, asked: newer }));
   assert.deepEqual(unmet(d.state), [
     { lesson: "b-4", path: SKILL, hint: NO_SKILL, offer: true },
   ]);
@@ -568,9 +571,9 @@ test("each ask for the prerequisites has its number: an answer to an older ask t
 // was learn-needs:347
 test("an offer that goes once its prerequisite passes leaves the cursor on the start option", () => {
   const d = atIntro(REQUIRES, {}, { intermediate: COPY });
-  d.send(answer(COPY, 0, { pass: false }));
+  d.send(answer(PROJECT, 0, { pass: false }));
   assert.deepEqual(introOptions(d.state), ["start", "less", "first"]);
-  d.send(answer(COPY, 0, { pass: true }));
+  d.send(answer(PROJECT, 0, { pass: true }));
   // dropped: T-cursor the cursor moved from the offer back to the start option
   assert.deepEqual(introOptions(d.state), ["start", "less"]);
   assert.equal(offered(d.state), null);
@@ -617,7 +620,7 @@ function crowded(id, opts, { mode = "saved", probe = null } = {}) {
   });
   assert.equal(d.state.lesson, id);
   if (mode === "answered") d.folderChoose(level, "practice-copy");
-  const dir = mode === "saved" ? MINE : COPY;
+  const dir = mode === "saved" ? MINE : projectDir(d.state);
   if (probe) d.send({ type: "probed", path: dir, ...probe });
   const { content } = d.state.course.find((l) => l.id === id);
   d.send({
@@ -808,8 +811,8 @@ test("what main finds, on the PATH and in the work folder, is never saved", () =
   );
   const before = JSON.stringify(snapshot(d.state));
   d.send({ type: "commands", found: { jq: false } });
-  d.send(answer(COPY, 0, { pass: false }));
-  d.send(answer(COPY, 1, { read: null }));
+  d.send(answer(PROJECT, 0, { pass: false }));
+  d.send(answer(PROJECT, 1, { read: null }));
   assert.equal(offered(d.state), "b-5");
   assert.equal(JSON.stringify(snapshot(d.state)), before);
 });
@@ -824,19 +827,19 @@ test("a prerequisite can be the work folder's own: probe todos <n>, run as a pro
     {
       type: "prereqs",
       lesson: "i-1",
-      dir: COPY,
+      dir: PROJECT,
       requires: [{ probe: "todos", args: ["2"] }],
     },
   ]);
   const hint =
     "git grep finds TODO or FIXME in 1 top-level folder (src/) here; this needs 2.";
-  d.send(answer(COPY, 0, { pass: false, hint }));
+  d.send(answer(PROJECT, 0, { pass: false, hint }));
   // dropped: T-render the line drawn within the width at 60x20 and 80x24
   assert.deepEqual(unmet(d.state), [
     { probe: "todos", args: ["2"], hint, offer: false },
   ]);
   assert.equal(offered(d.state), null);
-  d.send(answer(COPY, 0, { pass: true, hint: "" }));
+  d.send(answer(PROJECT, 0, { pass: true, hint: "" }));
   assert.deepEqual(unmet(d.state), []);
   assert.deepEqual(introNotes(d.state), []);
 });

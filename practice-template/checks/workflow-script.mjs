@@ -68,7 +68,7 @@ export function findWorkflows(repo) {
     .filter((p) => IN_WORKFLOWS.test(p) && !SKIPPED.test(p));
   const scripts = committed.filter((p) => WORKFLOW.test(p)).map((path) => ({
     path,
-    text: repo.git('show', `HEAD:${path}`),
+    text: repo.git('show', `HEAD:./${path}`),
     changed: changedSinceHead(repo, path),
   }));
   const misplaced = committed.filter((p) => !WORKFLOW.test(p) && SCRIPT_LIKE.test(p));

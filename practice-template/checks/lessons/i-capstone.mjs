@@ -46,7 +46,7 @@ function committedFiles(repo, dir, suffix) {
  */
 function committedFile(repo, path) {
   try {
-    return frontmatter(repo.git('show', `HEAD:${path}`));
+    return frontmatter(repo.git('show', `HEAD:./${path}`));
   } catch {
     return null;
   }
@@ -106,7 +106,7 @@ const delegated = {
 /** @param {Repo} repo */
 function committedSettings(repo) {
   try {
-    return JSON.parse(repo.git('show', 'HEAD:.claude/settings.json'));
+    return JSON.parse(repo.git('show', 'HEAD:./.claude/settings.json'));
   } catch {
     return null;
   }
@@ -158,7 +158,7 @@ const bugFix = {
     try {
       const paths = repo.gitLocal('ls-tree', '-r', '--name-only', 'HEAD', '--', 'src').split('\n').filter(path => path.endsWith('.js'));
       if (!paths.includes('src/cli.js')) throw new Error('missing CLI');
-      sources = paths.map(path => [path, repo.gitLocal('show', `HEAD:${path}`)]);
+      sources = paths.map(path => [path, repo.gitLocal('show', `HEAD:./${path}`)]);
     } catch {
       return 'Commit the CLI source for the malformed percent fix. See capstone/intermediate-bug.md.';
     }

@@ -17,6 +17,7 @@ import {
   turn,
   VERSION,
   w3,
+  WORK,
 } from "./scripted.mjs";
 
 const results = (heard) =>
@@ -31,7 +32,7 @@ test("a check whose evidence changed while it ran runs again, and only the secon
   const [first] = adapters.checks.calls;
   assert.equal(first.items[0], 0);
   // The Learner writes the file while the check reads the folder.
-  adapters.files.write(`${ROOT}/${VERSION}`, "2.1.285 (Claude Code)\n");
+  adapters.files.write(`${WORK}/${VERSION}`, "2.1.285 (Claude Code)\n");
   first.resolve(w3(false));
   await turn();
   assert.deepEqual(results(heard), [], "the first run's result is dropped");
@@ -39,7 +40,7 @@ test("a check whose evidence changed while it ran runs again, and only the secon
   adapters.checks.calls[1].resolve(w3(true));
   await turn();
   const [only] = results(heard);
-  assert.equal(only.stamp, adapters.files.stamp(ROOT, VERSION));
+  assert.equal(only.stamp, adapters.files.stamp(WORK, VERSION));
   assert.notEqual(only.stamp, "");
   assert.equal(only.items[0].pass, true);
 });
@@ -55,7 +56,7 @@ test("r's check whose evidence changed while it ran runs again, and that run car
   host.dispatch({ type: "check.run" });
   await turn();
   assert.equal(adapters.checks.calls.length, 2, "r's run");
-  adapters.files.write(`${ROOT}/${VERSION}`, "2.1.285 (Claude Code)\n");
+  adapters.files.write(`${WORK}/${VERSION}`, "2.1.285 (Claude Code)\n");
   adapters.checks.calls[1].resolve(w3(false));
   await turn();
   assert.equal(
@@ -75,7 +76,7 @@ test("r's check whose evidence changed while it ran runs again, and that run car
 // spec: guards.8-rerun
 test("a check whose evidence did not change runs once", async () => {
   const { host, adapters, heard } = fakeHost({ saved: AT_W3 });
-  adapters.files.write(`${ROOT}/${VERSION}`, "2.1.285 (Claude Code)\n");
+  adapters.files.write(`${WORK}/${VERSION}`, "2.1.285 (Claude Code)\n");
   await host.open();
   host.dispatch({ type: "lesson.open", lesson: "b-1" });
   await turn();

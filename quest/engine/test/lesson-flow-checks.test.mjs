@@ -13,7 +13,6 @@ import {
   DEMO_I1,
   DEMO_I1_INDEX,
   driver,
-  FACTS,
   finished,
   finishedBefore,
   GIT,
@@ -21,6 +20,7 @@ import {
   normalize,
   parseLesson,
   pending,
+  PROJECT,
   READS,
   rungsOf,
   save,
@@ -72,7 +72,7 @@ test('a check step waits, says "not yet" only when something changed, and turns 
     lesson: "b-1",
     items: [0],
     evidence: ".practice/version.txt",
-    dir: FACTS.root,
+    dir: PROJECT,
   });
   d.send({ type: "check", lesson: "b-1", items: [missing] });
   assert.equal(d.state.beat.status, "waiting");
@@ -283,7 +283,7 @@ test("a git step with a done-label decides only after the learner says the sessi
   assert.equal(d.state.beat.status, "waiting");
   d.ended();
   // git runs in the lesson's folder, as every other look does.
-  assert.deepEqual(d.effects.at(-1), { type: "git", dir: FACTS.root });
+  assert.deepEqual(d.effects.at(-1), { type: "git", dir: PROJECT });
   d.send({ type: "git", paths: [] });
   assert.equal(d.state.beat.status, "done");
   const w7 = at("W7", { beat: 2 });
@@ -1085,7 +1085,7 @@ test("a file check is done once its file holds a line, and a fresh one once it c
       type: "stamp",
       key: "Y1.0",
       path: ".practice/b-2-plan.txt",
-      dir: FACTS.root,
+      dir: PROJECT,
     },
   );
   assert.equal(d.state.phase, "step-down");
@@ -1168,7 +1168,7 @@ test("fresh since: the file is compared with how it was when an earlier step ope
       type: "stamp",
       key: "Y1.0",
       path: ".practice/b-2-before.txt",
-      dir: FACTS.root,
+      dir: PROJECT,
     },
   );
 });
@@ -1626,7 +1626,7 @@ test("h at CHALLENGE: on a stale fresh beat, r is the try", () => {
     type: "file",
     path,
     asked: d.state.asks,
-    dir: FACTS.root,
+    dir: PROJECT,
   });
   d.send({
     type: "file",

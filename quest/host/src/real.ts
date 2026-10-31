@@ -8,7 +8,7 @@ import { bytesOf, matchOf, stampOf } from "./files.ts";
 import { probeFolder } from "./folders.ts";
 import { gitFirstName, gitReady, gitStatus } from "./git.ts";
 import { onPath } from "./path-lookup.ts";
-import { loadState, saveState } from "./store.ts";
+import { loadState, preparePractice, saveState } from "./store.ts";
 import type { Adapters, Clock, RealOptions } from "./types.ts";
 import { watchDirs } from "./watch.ts";
 
@@ -88,6 +88,9 @@ export function realAdapters({
         return saved;
       },
       save: (data) => !keep && saveState(root, data),
+      prepare: () => {
+        preparePractice(root);
+      },
     },
     commands: { has: (name) => onPath(name, env, platform) },
     stop: () => {

@@ -66,3 +66,5 @@ To bring an older practice copy up to this release, follow [Already have a pract
 ## License
 
 The project in `project/` is under the MIT License: see [project/LICENSE](project/LICENSE). `learn/` holds the license notice of every package it bundles.
+
+`checks/` and `capstone/` are under the same MIT License: see [project/LICENSE](project/LICENSE). The app in `learn/` is under the [guide repository's license](quest-release:LICENSE) at this release.

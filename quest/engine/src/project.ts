@@ -79,6 +79,7 @@ import {
   pickWarmups,
   pinOf,
   progressOf,
+  projectDir,
   repoNeed,
   ruleTiers,
   rungsOf,
@@ -157,9 +158,9 @@ function summary(s: EngineState, l: CourseEntry): LessonSummary {
   };
 }
 
-// Where a lesson runs: Beginner's practice copy, its level's work folder,
-// its own new copy of the template, or the copy where its level has a work
-// folder (i-capstone).
+// Where a lesson runs: Beginner's practice copy (its project/), its level's
+// work folder, its own new copy of the template (that copy's project/), or
+// the copy's project/ where its level has a work folder (i-capstone).
 function folderNeed(s: EngineState, l: CourseEntry): FolderNeed {
   if (pinOf(l) === "new copy")
     return { kind: "new-copy", lesson: l.id, set: Boolean(s.folders[l.id]) };
@@ -432,9 +433,10 @@ function stepView(s: EngineState): StepView {
 
 // Where the beat's work happens, with the terminal's number where the page
 // numbers them, and the folder a terminal runs in where the lesson has a
-// work folder: that folder, or the practice copy for a step that runs
+// work folder: that folder, or the copy's project/ for a step that runs
 // there (a Worked example, ticket 183, or a command that names <your
-// repo>, run from the copy). Null where everything is in the copy.
+// repo>, run from the copy). Null where everything is in the copy's
+// project/ (ticket 277).
 function whereOf(s: EngineState, step: Step, beat: Beat): StepView["where"] {
   const kind = beat.where ?? step.where ?? null;
   if (!isWhere(kind)) return null;
@@ -448,7 +450,7 @@ function whereOf(s: EngineState, step: Step, beat: Beat): StepView["where"] {
 function placeOf(s: EngineState, step: Step, beat: Beat) {
   const dir = folderOf(s, s.lesson, step);
   if (!dir) return null;
-  const root = s.facts.root;
+  const root = projectDir(s);
   const level = levelKey(s);
   const levelDir = level ? levelFolder(s, level) : root;
   const fromCopy = [...beat.lines, ...beat.bottom].some((l) =>

@@ -19,6 +19,7 @@ import {
   opensWithCheck,
   project,
   reduce,
+  savedProbe,
   SLOW,
   startedLesson,
   statusStamp,
@@ -627,8 +628,8 @@ export function createHost({
   let lastProbe = -Infinity;
   function reprobe() {
     const s = state as EngineState;
-    const dir = folderOf(s);
-    const found = dir && dir !== root ? s.probes[dir] : null;
+    const saved = savedProbe(s);
+    const found = saved?.found;
     if (
       closed ||
       probing ||
@@ -638,7 +639,7 @@ export function createHost({
       return;
     probing = true;
     lastProbe = clock.now();
-    void folders.look(dir as string).then((f) => {
+    void folders.look((saved as { dir: string }).dir).then((f) => {
       probing = false;
       if (!closed) input(probed(f));
     });
@@ -662,6 +663,7 @@ export function createHost({
     async open() {
       const [gitError, name] = await git.ask(root);
       if (closed) return null;
+      store.prepare();
       const known = {
         root,
         name,

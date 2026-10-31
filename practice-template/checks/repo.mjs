@@ -18,7 +18,11 @@ function decode(buffer) {
 
 /** @param {string} dir */
 export function openRepo(dir) {
-  return {
+  /** @type {string | undefined} */
+  let prefix;
+  /** @type {string | undefined} */
+  let top;
+  const repo = {
     dir,
     exists: (/** @type {string} */ path) => existsSync(join(dir, path)),
     read: (/** @type {string} */ path) => (existsSync(join(dir, path)) ? decode(readFileSync(join(dir, path))) : null),
@@ -28,5 +32,31 @@ export function openRepo(dir) {
     // object the clone lacks from the remote; this never does, and the call
     // fails as if the object didn't exist.
     gitLocal: (/** @type {string[]} */ ...args) => execFileSync('git', args, { cwd: dir, env: { ...process.env, GIT_NO_LAZY_FETCH: '1' }, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).replace(/\s+$/, ''),
+    // A copy's git root sits above project/, where the checks run: `prefix`
+    // is the folder's path from that root ('' at the root), `top` the root.
+    get prefix() {
+      prefix ??= execFileSync('git', ['rev-parse', '--show-prefix'], { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+      return prefix;
+    },
+    get top() {
+      top ??= execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+      return top;
+    },
+    // A path git prints from the root (status, diff and log names), made
+    // relative to this folder; a path outside it keeps its `../` steps.
+    local: (/** @type {string} */ path) => localPath(path, repo.prefix),
   };
+  return repo;
+}
+
+// `path`, relative to the git root, made relative to `prefix`, a folder under
+// that root such as `project/`.
+/**
+ * @param {string} path
+ * @param {string} [prefix]
+ */
+export function localPath(path, prefix = '') {
+  if (!prefix || path.startsWith(prefix)) return path.slice(prefix.length);
+  const up = prefix.split('/').filter(Boolean).map(() => '..');
+  return [...up, path].join('/');
 }

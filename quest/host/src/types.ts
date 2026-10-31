@@ -125,6 +125,8 @@ export type StoreLoad = SavedProgress | null | { unreadable: "moved" | "kept" };
 export interface Store {
   load(): StoreLoad;
   save(data: object): boolean;
+  /** Makes root `.practice/` where it is missing; one it can't make stays missing. */
+  prepare(): void;
 }
 
 /** The PATH lookup, bound to the environment: no process starts. */

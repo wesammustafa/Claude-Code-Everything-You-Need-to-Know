@@ -69,7 +69,7 @@ export const items = [
     check(repo) {
       const before = repo.read('.practice/b-4-before-rewind.txt');
       if (before === null) return `After Claude runs the rename script and updates its callers, run ${SAVE_BEFORE}.`;
-      const paths = statusPaths(before);
+      const paths = statusPaths(before, repo.prefix);
       const missing = [LINKS, CHECK].filter((p) => !paths.includes(p));
       if (!missing.length) return true;
       return `It doesn't list ${missing.map((p) => `\`${p}\``).join(' or ')}. Save it once the script has renamed \`findLinks\` and Claude has updated \`src/check-links.js\`, before you rewind.`;
@@ -81,7 +81,7 @@ export const items = [
     check(repo) {
       const after = repo.read('.practice/b-4-after-rewind.txt');
       if (after === null) return `Right after rewinding with Restore code, run ${SAVE_AFTER}.`;
-      const paths = statusPaths(after).filter(inScope);
+      const paths = statusPaths(after, repo.prefix).filter(inScope);
       const others = paths.filter((p) => p !== LINKS);
       if (others.length) {
         const list = others.map((p) => `\`${p}\``).join(', ');
@@ -94,7 +94,7 @@ export const items = [
   {
     text: '`src/` and `test/` have no uncommitted changes, your last commit\'s `src/links.js` still exports `findLinks`, and `npm run linkcheck -- samples` runs without an error',
     check(repo) {
-      const entries = statusEntries(repo.git('status', '--porcelain', '--', 'src', 'test')).filter((e) => inScope(e.path));
+      const entries = statusEntries(repo.git('status', '--porcelain', '--', 'src', 'test'), repo.prefix).filter((e) => inScope(e.path));
       if (entries.length) {
         const left = entries.map((e) => e.path);
         const tracked = entries.filter((e) => e.xy !== '??').map((e) => e.path);

@@ -369,14 +369,31 @@ const isWorkLevel = (s: EngineState, level: string | undefined) =>
 // or Advanced. Null for Beginner.
 export const levelKey = (s: EngineState, id: LessonId = s.lesson) =>
   isWorkLevel(s, levelOf(s, id)) ? (levelOf(s, id) ?? null) : null;
-// A later level's work folder: the one saved for it, the practice copy by default.
+// The practice copy's project/, where the Starter project lives: the
+// default Work folder (ticket 277).
+const sepOf = (s: EngineState) => (s.facts.win32 ? "\\" : "/");
+const projectOf = (s: EngineState, base: string) => base + sepOf(s) + "project";
+export const projectDir = (s: EngineState) => projectOf(s, s.facts.root);
+// Whether a path is the practice copy or a folder inside it.
+export const inCopy = (s: EngineState, p: string) =>
+  p === s.facts.root || p.startsWith(s.facts.root + sepOf(s));
+// The folder work runs in for a saved folder: the copy's project/ for the
+// copy, a new copy's project/ for its root, another folder as given.
+function workOf(s: EngineState, saved: string | undefined, newCopy = false) {
+  if (!saved) return null;
+  if (saved === s.facts.root) return projectDir(s);
+  return newCopy ? projectOf(s, saved) : saved;
+}
+// A later level's work folder: the one saved for it, the copy's project/
+// by default.
 export const levelFolder = (s: EngineState, level: string) =>
-  s.folders[level] ?? s.facts.root;
+  workOf(s, s.folders[level]) ?? projectDir(s);
 // The folder a lesson's check, git status and file reads run in: its work
-// folder, the practice copy by default. A lesson that runs in a new copy has
-// none (null) until the learner gives it, and no check runs for it before.
+// folder, the copy's project/ by default (ticket 277). A lesson that runs in
+// a new copy runs in that copy's project/, and has none (null) until the
+// learner gives it, and no check runs for it before.
 // With `step`, the folder that step runs in: a Worked example step of a
-// lesson whose front matter says `worked: copy` runs in the practice copy,
+// lesson whose front matter says `worked: copy` runs in the copy's project/,
 // every other step in its lesson's folder (ticket 183). Every choice of a
 // folder for a step comes through here: its verifies, its fresh stamps, the
 // watcher and the header. Without a step, the lesson's own folder, where
@@ -387,11 +404,11 @@ export function folderOf(
   step: Step | null = null,
 ): string | null {
   const l = lessonIn(s, id);
-  if (pinOf(l) === "new copy") return s.folders[l.id] ?? null;
+  if (pinOf(l) === "new copy") return workOf(s, s.folders[l.id], true);
   if (step?.part === "Worked example" && l.content?.worked === "copy")
-    return s.facts.root;
+    return projectDir(s);
   const k = folderKey(s, id);
-  return (k && s.folders[k]) || s.facts.root;
+  return (k && workOf(s, s.folders[k])) || projectDir(s);
 }
 // A lesson whose Check passed with its Tear down still to do (ticket 102):
 // it completes only after its last Tear down step.
@@ -807,9 +824,16 @@ export const missingNeeds = (s: EngineState) =>
 // What the host found wrong with the lesson's work folder, where it isn't the
 // copy (ticket 86): 'missing', 'gitBroken', 'notGit' or 'noPractice'. Null
 // until the host has looked, and where all is well.
+// The lesson's saved folder outside the practice copy and what the host
+// found there, or null: what the notes and the host's second look read.
+export function savedProbe(s: EngineState) {
+  const k = folderKey(s);
+  const dir = k ? s.folders[k] : null;
+  const found = dir && !inCopy(s, dir) ? s.probes[dir] : null;
+  return found ? { dir: dir as string, found } : null;
+}
 export function folderProblem(s: EngineState) {
-  const dir = folderOf(s);
-  const found = dir && dir !== s.facts.root ? s.probes[dir] : null;
+  const found = savedProbe(s)?.found;
   if (!found) return null;
   return found.missing
     ? "missing"
@@ -828,7 +852,7 @@ export function folderProblem(s: EngineState) {
 export function repoNeed(s: EngineState) {
   const k = folderKey(s);
   const dir = k && k === levelKey(s) ? s.folders[k] : null;
-  return dir && dir !== s.facts.root
+  return dir && !inCopy(s, dir)
     ? (contentOf(s)?.intro["need-repo"] ?? null)
     : null;
 }
@@ -2396,19 +2420,29 @@ function apply(
     case "probed": {
       // What the host found at a folder: kept for the notes, and, for the ask
       // the answer is waiting on, the answer.
-      s.probes[ev.path] = {
+      const found = {
         missing: ev.missing,
         git: ev.git,
         gitBroken: ev.gitBroken ?? null,
         practice: ev.practice,
       };
+      s.probes[ev.path] = found;
       const a = s.folderAsk;
       if (!ev.key || !a || a.key !== ev.key || a.asked !== ev.asked) break;
+      const newCopy = !isWorkLevel(s, ev.key);
+      // A new copy's project/ given for the copy saves the copy itself.
+      const tail = projectOf(s, "");
+      const parent = ev.path.slice(0, -tail.length);
+      const path =
+        newCopy && ev.path.endsWith(tail) && !inCopy(s, parent)
+          ? parent
+          : ev.path;
+      if (path !== ev.path) s.probes[path] = found;
       if (ev.missing) Object.assign(a, { asked: 0, missing: ev.path });
-      // A new copy is another folder than this practice copy.
-      else if (!isWorkLevel(s, ev.key) && ev.path === s.facts.root)
+      // A new copy is another folder than this practice copy, or its project/.
+      else if (newCopy && inCopy(s, path))
         Object.assign(a, { asked: 0, isCopy: true });
-      else setFolder(s, ev.key, ev.path, effects);
+      else setFolder(s, ev.key, path, effects);
       break;
     }
     default:

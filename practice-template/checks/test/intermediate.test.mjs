@@ -101,6 +101,22 @@ test('i-1 fails when the saved commit changes only tests, or only code', () => {
   }
 });
 
+test('nested: i-1 reads the saved commit\'s files from project/, so a .claude/ file is not code', () => {
+  for (const [path, expected] of [['.claude/notes.md.js', 1], ['src/slug.js', 0]]) {
+    withRepo(() => {
+      const dir = repo({ '.claude/skills/tdd/SKILL.md': FINISHED_TDD }, { nested: true });
+      commit(dir, 'Add the tdd skill');
+      write(dir, { 'test/slug.test.js': '// test\n', [path]: 'export {}\n' });
+      const sha = commit(dir, 'Add slugify', ['test/slug.test.js', path]);
+      write(dir, { '.practice/i-1-commit.txt': `${sha}\n` });
+      return dir;
+    }, (dir) => {
+      const { code, out } = check(['i-1', '--dir', dir]);
+      assert.equal(code, expected, out);
+    });
+  }
+});
+
 test('i-1 says how to save the commit when none is saved', () => {
   withRepo(() => {
     const dir = repo({ '.claude/skills/tdd/SKILL.md': FINISHED_TDD });

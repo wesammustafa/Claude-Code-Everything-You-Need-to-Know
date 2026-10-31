@@ -32,7 +32,7 @@ export const items = [
     check(repo) {
       let text;
       try {
-        text = repo.git('show', 'HEAD:.mcp.json');
+        text = repo.git('show', 'HEAD:./.mcp.json');
       } catch {
         return repo.exists('.mcp.json') ? '.mcp.json is not committed. Run `git add .mcp.json` and commit it: project-scope servers are shared through it.' : 'There is no .mcp.json at the repository root. Save the partial file from the lesson\'s Your turn there.';
       }
