@@ -166,7 +166,11 @@ async function failThenPass(page: Page, copy: PracticeCopy, note: string) {
 
   await playTo(page, "Install, sign in and look around");
   await expect(page.getByText("Lesson 1 complete")).toBeVisible();
-  await expect(page.getByText("New badge")).toBeVisible();
+  await expect(page.getByText("New badge", { exact: true })).toBeVisible();
+  await expect(page.getByText("New badge: Explorer")).toHaveAttribute(
+    "role",
+    "status",
+  );
 }
 
 test.describe("a clean first launch", () => {
@@ -287,7 +291,7 @@ test("the disconnected notice when the server stops", async ({
   await expect(notice).toContainText("npm run learn");
 });
 
-test("no duplicate moment on reload or in a second tab", async ({
+test("no duplicate moment on reload, in a second tab or after a server restart", async ({
   page,
   copy,
   context,
@@ -318,4 +322,17 @@ test("no duplicate moment on reload or in a second tab", async ({
   expect(shown).toHaveLength(1);
   // Pending milestones live in the server's memory only, never in the save.
   expect(JSON.stringify(copy.saved())).not.toContain("milestone");
+
+  // A server restart, then a fresh page: the moment is gone with the old
+  // instance, so nothing reveals or claims it again. The restored place is
+  // not b-1's complete phase, so the route shows b-1 as a preview.
+  await copy.restart();
+  const fresh = await context.newPage();
+  await fresh.goto(`${copy.url}/#/lesson/b-1/complete`);
+  await expect(fresh.getByRole("figure", { name: "Explorer" })).toBeVisible({
+    timeout: 20_000,
+  });
+  await fresh.waitForTimeout(1_000);
+  await expect(fresh.getByText("New badge")).toHaveCount(0);
+  expect(shown).toHaveLength(1);
 });

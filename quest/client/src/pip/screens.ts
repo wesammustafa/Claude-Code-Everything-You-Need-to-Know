@@ -15,5 +15,7 @@ export function screenFor(pathname: string, phase?: string): PipScreen {
   if (/^\/lesson\/[^/]+\/step\/?$/.test(pathname))
     return phase === "step-down" ? "levelup" : "step";
   if (/^\/lesson\/[^/]+\/complete\/?$/.test(pathname)) return "complete";
+  if (/^\/level\/[^/]+\/complete\/?$/.test(pathname)) return "levelComplete";
+  if (/^\/course\/complete\/?$/.test(pathname)) return "courseComplete";
   return "other";
 }

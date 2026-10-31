@@ -48,7 +48,10 @@ export interface LiveState {
   pending: ReadonlySet<string>;
   /** Actions may be sent: a snapshot is held and the stream is up. */
   actionsEnabled: boolean;
-  /** The oldest pending milestone no tab has shown, or null. */
+  /**
+   * The oldest pending milestone no tab has shown, or null. A notice is
+   * never it: notices stay in the snapshot's list for their own screen.
+   */
   milestone: Milestone | null;
 }
 
@@ -131,7 +134,8 @@ export function createLiveStore(deps: LiveDeps): LiveStore {
   // Milestones whose milestone.shown failed: sent once more while listed.
   let unsent = new Set<string>();
   const nextMilestone = (snapshot: Snapshot | null) =>
-    snapshot?.milestones.find((m) => !shown.has(m.id)) ?? null;
+    snapshot?.milestones.find((m) => m.type !== "notice" && !shown.has(m.id)) ??
+    null;
 
   const apply = (snapshot: Snapshot) => {
     // Any snapshot that still lists a failed milestone.shown sends it once
