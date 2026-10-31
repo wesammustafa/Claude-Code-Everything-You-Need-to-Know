@@ -13,7 +13,7 @@ export interface PageEntry {
   /** Where the fragment is served, such as /pages/beginner/01-....html. */
   url: string;
   title: string;
-  kind: "lesson" | "capstone" | "elective" | "reference" | "topic";
+  kind: "lesson" | "capstone" | "elective" | "reference" | "topic" | "index";
   level?: "beginner" | "intermediate" | "advanced";
 }
 
