@@ -2,9 +2,23 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { describe, expect, test } from "vitest";
-import { complete, overview, playing, snapshotOf } from "../../e2e/snapshots";
+import type { Snapshot } from "@quest/contract";
+import {
+  complete,
+  fullCourse,
+  overview,
+  overviewAt,
+  playing,
+  snapshotOf,
+} from "../../e2e/snapshots";
 import { renderConnected } from "../../test/connected";
 import { routes } from "../routes";
+
+/** The whole course, with b-4 open on its overview. */
+const atB4 = snapshotOf(overviewAt("b-4"), {
+  welcomed: true,
+  course: fullCourse,
+});
 
 function renderAt(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
@@ -48,16 +62,37 @@ describe("the shell", () => {
 
   test("in a Lesson, the top bar shows the Level, the Lesson and Steps, which opens the outline", async () => {
     const user = userEvent.setup();
-    renderAt("/lesson/b-3");
+    renderConnected("/lesson/b-4", atB4);
     const where = screen.getByRole("navigation", { name: "Where you are" });
     expect(
       within(where).getByRole("link", { name: "Beginner" }),
     ).toHaveAttribute("href", "/journey");
     expect(
-      within(where).getByRole("link", { name: "Lesson 3" }),
-    ).toHaveAttribute("href", "/lesson/b-3");
+      within(where).getByRole("link", { name: "Lesson 4" }),
+    ).toHaveAttribute("href", "/lesson/b-4");
     await user.click(within(where).getByRole("button", { name: "Steps" }));
     expect(screen.getByRole("dialog", { name: "Steps" })).toBeInTheDocument();
+  });
+
+  test("a Lesson only browsed shows its crumbs, with no Steps", () => {
+    renderConnected("/lesson/i-capstone", atB4);
+    const where = screen.getByRole("navigation", { name: "Where you are" });
+    expect(
+      within(where).getByRole("link", { name: "Intermediate" }),
+    ).toHaveAttribute("href", "/journey");
+    expect(
+      within(where).getByRole("link", { name: "Capstone" }),
+    ).toHaveAttribute("href", "/lesson/i-capstone");
+    expect(
+      within(where).queryByRole("button", { name: "Steps" }),
+    ).not.toBeInTheDocument();
+  });
+
+  test("with no snapshot, or for an id the course lacks, the top bar has no crumbs", () => {
+    renderAt("/lesson/b-3");
+    expect(
+      screen.queryByRole("navigation", { name: "Where you are" }),
+    ).not.toBeInTheDocument();
   });
 
   test("a route change moves focus to the new screen's heading", async () => {
@@ -135,10 +170,10 @@ describe("the shell", () => {
 describe("the Learning journey", () => {
   test("Level cards are tabs that arrow keys move between", async () => {
     const user = userEvent.setup();
-    renderAt("/journey");
+    const page = renderConnected("/journey", atB4);
     const tabs = screen.getAllByRole("tab");
     expect(tabs.map((t) => t.textContent)).toEqual([
-      "Beginner0 of 6",
+      "Beginner3 of 6",
       "Intermediate0 of 9",
       "Advanced0 of 8",
     ]);
@@ -151,7 +186,7 @@ describe("the Learning journey", () => {
     expect(screen.getByRole("tabpanel")).toHaveAccessibleName("Intermediate");
     expect(
       screen.getByRole("link", {
-        name: "Lesson 1: Turn a repeated workflow into a skill",
+        name: "Lesson 1: Turn a repeated workflow into a skill, to do",
       }),
     ).toBeInTheDocument();
 
@@ -166,13 +201,16 @@ describe("the Learning journey", () => {
     expect(tabs[1]).toHaveAttribute("aria-selected", "true");
     await user.keyboard("{ArrowUp}{ArrowUp}");
     expect(tabs[2]).toHaveFocus();
+    await user.keyboard("{Home}");
+    await user.click(tabs[1] as HTMLElement);
+    expect(page.posts).toEqual([]);
   });
 
   test("the current Lesson's crumb marks the page it names, and only there", () => {
-    renderAt("/lesson/b-3");
+    renderConnected("/lesson/b-4", atB4);
     const where = screen.getByRole("navigation", { name: "Where you are" });
     expect(
-      within(where).getByRole("link", { name: "Lesson 3" }),
+      within(where).getByRole("link", { name: "Lesson 4" }),
     ).toHaveAttribute("aria-current", "page");
     expect(
       within(where).getByRole("link", { name: "Beginner" }),
@@ -180,10 +218,13 @@ describe("the Learning journey", () => {
   });
 
   test("in the workspace, the Lesson's crumb is a way back, not the current page", () => {
-    renderAt("/lesson/b-3/step");
+    renderConnected(
+      "/lesson/b-1/step",
+      snapshotOf(playing, { course: fullCourse }),
+    );
     const where = screen.getByRole("navigation", { name: "Where you are" });
     expect(
-      within(where).getByRole("link", { name: "Lesson 3" }),
+      within(where).getByRole("link", { name: "Lesson 1" }),
     ).not.toHaveAttribute("aria-current");
   });
 
@@ -194,5 +235,145 @@ describe("the Learning journey", () => {
     expect(
       within(actions).getByRole("button", { name: "Check again" }),
     ).toBeInTheDocument();
+  });
+});
+
+describe("the Learning journey on the whole course", () => {
+  const nodes = () =>
+    within(screen.getByRole("tabpanel"))
+      .getAllByRole("link")
+      .map((link) => link.getAttribute("aria-label"));
+
+  test("every Level and Lesson shows, each with its state, capstone and Badge", async () => {
+    const user = userEvent.setup();
+    renderConnected("/journey", atB4);
+    const seen: (string | null)[] = [];
+    for (const tab of screen.getAllByRole("tab")) {
+      await user.click(tab);
+      seen.push(...nodes());
+    }
+    expect(seen).toHaveLength(23);
+    const lessons = fullCourse.levels.flatMap((level) => level.lessons);
+    expect(seen).toEqual(
+      lessons.map((lesson) => {
+        const label = lesson.capstone
+          ? "Capstone"
+          : `Lesson ${String(lesson.number)}`;
+        const state =
+          lesson.id === "b-4" ? "current" : lesson.complete ? "done" : "to do";
+        return `${label}: ${lesson.title}, ${state}`;
+      }),
+    );
+    expect(seen.filter((name) => name?.startsWith("Capstone"))).toHaveLength(3);
+    await user.click(screen.getAllByRole("tab")[0] as HTMLElement);
+    const badges = within(screen.getByRole("tabpanel"))
+      .getAllByRole("img")
+      .map((img) => img.getAttribute("aria-label"));
+    expect(badges).toEqual([
+      "Explorer",
+      "Planner",
+      "Builder",
+      "Navigator, not yet",
+      "Keeper, not yet",
+      "Beginner, not yet",
+    ]);
+  });
+
+  test("the first tab is the current Lesson's Level", () => {
+    const at = snapshotOf(overviewAt("i-3"), {
+      welcomed: true,
+      course: { ...fullCourse, next: "i-3" },
+    });
+    renderConnected("/journey", at);
+    expect(screen.getByRole("tab", { selected: true })).toHaveTextContent(
+      /^Intermediate/,
+    );
+  });
+
+  test("a new snapshot keeps the Learner's chosen Level", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected("/journey", atB4);
+    await user.click(screen.getByRole("tab", { name: /^Advanced/ }));
+    page.send({ ...atB4, revision: 2 });
+    expect(screen.getByRole("tab", { selected: true })).toHaveTextContent(
+      /^Advanced/,
+    );
+  });
+
+  test("Tab walks from the Level tabs through every Lesson to the Next band", async () => {
+    const user = userEvent.setup();
+    renderConnected("/journey", atB4);
+    screen.getByRole("tab", { selected: true }).focus();
+    const order: string[] = [];
+    for (let i = 0; i < 7; i++) {
+      await user.tab();
+      const el = document.activeElement as HTMLElement;
+      order.push(el.getAttribute("aria-label") ?? el.textContent);
+    }
+    expect(order.slice(0, 6).map((name) => name.split(":")[0])).toEqual([
+      "Lesson 1",
+      "Lesson 2",
+      "Lesson 3",
+      "Lesson 4",
+      "Lesson 5",
+      "Capstone",
+    ]);
+    expect(order[6]).toBe("Start");
+  });
+
+  test("Enter on a Lesson to do goes to its preview and posts nothing", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected("/journey", atB4);
+    screen.getByRole("link", { name: /^Lesson 5: .*, to do$/ }).focus();
+    await user.keyboard("{Enter}");
+    expect(page.router.state.location.pathname).toBe("/lesson/b-5");
+    expect(
+      await screen.findByRole("button", { name: "Open this lesson" }),
+    ).toBeInTheDocument();
+    expect(page.posts).toEqual([]);
+  });
+
+  test("the Next band goes to the active Lesson's route", () => {
+    renderConnected("/journey", atB4);
+    expect(
+      screen.getByText("Beginner, Lesson 4:", { exact: false }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Start" })).toHaveAttribute(
+      "href",
+      "/lesson/b-4",
+    );
+  });
+
+  test("after a complete Lesson, the band's Start opens the course's next", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected(
+      "/journey",
+      snapshotOf(complete, { course: fullCourse }),
+    );
+    await user.click(screen.getByRole("button", { name: "Start" }));
+    expect(page.posts).toEqual([{ type: "lesson.open", lesson: "b-4" }]);
+  });
+
+  test("with every Lesson complete, the band says so", () => {
+    renderConnected(
+      "/journey",
+      snapshotOf(complete, { course: { ...fullCourse, next: null } }),
+    );
+    expect(screen.getByText("Every lesson is complete")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "See your progress" }),
+    ).toHaveAttribute("href", "/progress");
+  });
+
+  test("a snapshot with only its header shows only the title", () => {
+    renderConnected("/journey", {
+      instance: "e2e",
+      revision: 1,
+      milestones: [],
+    } as unknown as Snapshot);
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Learning journey" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
   });
 });

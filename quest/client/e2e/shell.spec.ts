@@ -768,3 +768,81 @@ test.describe("in a contrast theme (forced colours)", () => {
     expect(await fill(/^Lesson 2\b/)).toBe(await system(page, "Canvas"));
   });
 });
+
+test.describe("the Learning journey at every width", () => {
+  for (const width of [720, 1920, 390]) {
+    test(`fits ${String(width)} px with no sideways scroll, the Next band in view`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/#/journey");
+      await fontsSettled(page);
+      await expect(page.getByRole("tab")).toHaveCount(3);
+      const fit = await page.evaluate(() => ({
+        page: document.documentElement.scrollWidth - window.innerWidth,
+        bar: (() => {
+          const bar = document.querySelector("[data-top] > header");
+          return bar ? bar.scrollWidth - bar.clientWidth : -1;
+        })(),
+      }));
+      expect(fit.page).toBeLessThanOrEqual(0);
+      expect(fit.bar).toBe(0);
+      const band = page.getByText("Next", { exact: true }).locator("../..");
+      const box = await band.boundingBox();
+      expect(box).not.toBeNull();
+      expect((box?.x ?? -1) >= 0).toBe(true);
+      expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(width);
+    });
+  }
+
+  for (const width of [1440, 390]) {
+    test(`at ${String(width)} px the keyboard reaches every Lesson with a visible ring, never under the top bar, and Enter previews one`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 700 });
+      await page.goto("/#/journey");
+      await fontsSettled(page);
+      await page.getByRole("tab", { selected: true }).focus();
+      const top = await page
+        .locator("[data-top]")
+        .evaluate((el) => el.getBoundingClientRect().bottom);
+      for (let i = 0; i < 6; i++) {
+        await page.keyboard.press("Tab");
+        const seen = await page.evaluate(() => {
+          const el = document.activeElement as HTMLElement;
+          const box = el.getBoundingClientRect();
+          return {
+            name: el.getAttribute("aria-label") ?? "",
+            ring: getComputedStyle(el).outlineStyle,
+            top: box.top,
+          };
+        });
+        expect(seen.name).toMatch(
+          /^(Lesson \d+|Capstone): .*, (done|current|to do)$/,
+        );
+        expect(seen.ring).toBe("solid");
+        expect(seen.top).toBeGreaterThanOrEqual(top);
+      }
+      await page.keyboard.press("Shift+Tab");
+      await page.keyboard.press("Enter");
+      await expect(page).toHaveURL(/#\/lesson\/b-5$/);
+      await expect(
+        page.getByRole("button", { name: "Open this lesson" }),
+      ).toBeVisible();
+    });
+  }
+
+  test("Enter and Space on a Level card select it", async ({ page }) => {
+    await page.goto("/#/journey");
+    const intermediate = page.getByRole("tab", { name: /^Intermediate/ });
+    const advanced = page.getByRole("tab", { name: /^Advanced/ });
+    // A card out of the tab order is still a button the pointer or a
+    // screen reader can press.
+    await intermediate.focus();
+    await page.keyboard.press("Enter");
+    await expect(intermediate).toHaveAttribute("aria-selected", "true");
+    await advanced.focus();
+    await page.keyboard.press("Space");
+    await expect(advanced).toHaveAttribute("aria-selected", "true");
+  });
+});

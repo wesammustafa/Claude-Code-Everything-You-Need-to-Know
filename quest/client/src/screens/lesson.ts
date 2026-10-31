@@ -1,6 +1,7 @@
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import type { ActiveLesson, LessonSummary, Snapshot } from "@quest/contract";
 import { useSnapshot } from "../live/LiveProvider";
+import { useActionProps, type ActionProps } from "../live/useAction";
 
 type Phase = ActiveLesson["phase"];
 
@@ -68,4 +69,22 @@ export function useUnknownLesson(): boolean {
   const { lessonId } = useParams();
   if (!snapshot) return false;
   return summaryOf(snapshot, lessonId) === null;
+}
+
+/**
+ * The props of a control that opens Lesson `id`: it sends `lesson.open`,
+ * then, once applied, goes to the Lesson's route, which follows its phase
+ * from there; a refusal leaves the page where it is. The only way a screen
+ * moves the Learner's place to another Lesson: browsing one only shows its
+ * preview.
+ */
+export function useOpenLesson(id: string): ActionProps {
+  const navigate = useNavigate();
+  return useActionProps(
+    "lesson.open",
+    { type: "lesson.open", lesson: id },
+    () => {
+      void navigate(`/lesson/${id}`);
+    },
+  );
 }

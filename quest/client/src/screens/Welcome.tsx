@@ -63,7 +63,8 @@ function FirstRun({ snapshot }: { snapshot: Snapshot | null }) {
   const navigate = useNavigate();
   const first = snapshot?.course.next ?? null;
   const welcomed = snapshot?.learner.welcomed === true;
-  // Welcome is read once; the Lesson's route then opens it (useLessonRoute).
+  // Welcome is read once, before any Lesson is opened, so course.next is
+  // still the active Lesson and its route shows it without a lesson.open.
   const open = () => {
     if (first !== null) void navigate(`/lesson/${first}`);
   };

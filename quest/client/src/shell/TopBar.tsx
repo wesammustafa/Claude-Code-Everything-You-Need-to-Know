@@ -5,7 +5,8 @@ import { Icon, type IconName } from "../components/Icon";
 import { IconButton } from "../components/IconButton";
 import { InlineText } from "../components/InlineText";
 import { Panel } from "../components/Panel";
-import { findLesson, lessonLabel, levelOf } from "../course/placeholder";
+import { LEVEL_NAMES, lessonLabel } from "../course/labels";
+import { summaryOf, useCourseSnapshot } from "../screens/lesson";
 import { BrandMark } from "./BrandMark";
 
 const NAV_LINK =
@@ -40,7 +41,17 @@ type OpenPanel = "steps" | "settings" | null;
 /** The slim top bar, which the shell holds at the top of the window: the brand, where the Learner is in a Lesson, and the main places. */
 export function TopBar() {
   const match = useMatch("/lesson/:lessonId/*");
-  const lesson = findLesson(match?.params.lessonId);
+  const snapshot = useCourseSnapshot();
+  const routeId = match?.params.lessonId;
+  const lesson = summaryOf(snapshot, routeId);
+  const level = snapshot?.course.levels.find((l) =>
+    l.lessons.some((summary) => summary.id === routeId),
+  );
+  const levelName = level ? LEVEL_NAMES[level.id] : "";
+  const label = lesson ? lessonLabel(lesson.number, lesson.capstone) : "";
+  // Steps outlines the active Lesson; a Lesson the Learner only browses
+  // shows its crumbs alone.
+  const active = lesson !== null && snapshot?.lesson.id === lesson.id;
   const [panel, setPanel] = useState<OpenPanel>(null);
   const closePanel = () => {
     setPanel(null);
@@ -62,7 +73,7 @@ export function TopBar() {
         >
           {/* The crumbs need the room of a wide window, and Steps shows its label from md: narrower, either would crowd the brand or the main nav and push this cluster off centre. */}
           <Link to="/journey" className={`${CRUMB} max-lg:hidden`}>
-            {levelOf(lesson).name}
+            {levelName}
           </Link>
           <Icon name="chevron" size="sm" className="text-muted max-lg:hidden" />
           {/* On the Lesson's overview this crumb is the current page, which NavLink marks. */}
@@ -71,20 +82,22 @@ export function TopBar() {
             end
             className={`${CRUMB} max-lg:hidden`}
           >
-            {lessonLabel(lesson)}
+            {label}
           </NavLink>
-          <Button
-            variant="secondary"
-            size="sm"
-            icon="steps"
-            className="max-md:gap-0 max-md:px-1.75 lg:ml-2"
-            aria-haspopup="dialog"
-            onClick={() => {
-              setPanel("steps");
-            }}
-          >
-            <span className="max-md:sr-only">Steps</span>
-          </Button>
+          {active && (
+            <Button
+              variant="secondary"
+              size="sm"
+              icon="steps"
+              className="max-md:gap-0 max-md:px-1.75 lg:ml-2"
+              aria-haspopup="dialog"
+              onClick={() => {
+                setPanel("steps");
+              }}
+            >
+              <span className="max-md:sr-only">Steps</span>
+            </Button>
+          )}
         </nav>
       ) : (
         <span />
@@ -110,11 +123,14 @@ export function TopBar() {
         />
       </nav>
 
-      <Panel title="Steps" open={panel === "steps"} onClose={closePanel}>
+      <Panel
+        title="Steps"
+        open={active && panel === "steps"}
+        onClose={closePanel}
+      >
         {lesson && (
           <p className="text-sm text-muted">
-            {levelOf(lesson).name} · {lessonLabel(lesson)} ·{" "}
-            <InlineText text={lesson.title} />
+            {levelName} · {label} · <InlineText text={lesson.title} />
           </p>
         )}
         <p className="text-sm text-muted">
