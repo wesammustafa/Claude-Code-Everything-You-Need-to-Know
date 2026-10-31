@@ -1,7 +1,7 @@
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, test } from "vitest";
-import type { Snapshot } from "@quest/contract";
+import type { OverviewLesson, Snapshot } from "@quest/contract";
 import {
   complete,
   completed,
@@ -64,6 +64,13 @@ const APP_WORDS: readonly RegExp[] = [
   /^Next$/,
   /^(Beginner|Intermediate|Advanced), (Lesson \d+|Capstone): $/,
   /^(Lesson \d+|Capstone)$/,
+  /^What the check looks for$/,
+  /^, (1 check|\d+ checks)$/,
+  /^Not found on your PATH:$/,
+  /^Open $/,
+  /^ first$/,
+  /^(Start over|Keep my place)$/,
+  /^Start this lesson over\? Your Badge and the help you used are kept\.$/,
 ];
 
 /** Every string the snapshot carries, to match quotes against. */
@@ -162,6 +169,11 @@ describe("Welcome", () => {
   });
 });
 
+/** An overview with ticket 283's check items. */
+function withCheck(lesson: OverviewLesson, check: string[]): OverviewLesson {
+  return { ...lesson, check } as OverviewLesson;
+}
+
 describe("Lesson overview", () => {
   test("quotes the Lesson and starts it as planned or with less help", async () => {
     const user = userEvent.setup();
@@ -175,6 +187,7 @@ describe("Lesson overview", () => {
     expect(
       screen.getByRole("img", { name: "Explorer, not yet" }),
     ).toBeInTheDocument();
+    // b-1's fixture carries no check items, so no Disclosure.
     expect(
       screen.queryByText("What the check looks for"),
     ).not.toBeInTheDocument();
@@ -199,6 +212,145 @@ describe("Lesson overview", () => {
     ).not.toBeInTheDocument();
     page.send(snapshotOf({ ...overview, resumable: true }, { revision: 2 }));
     expect(screen.getByRole("button", { name: "Resume" })).toBeInTheDocument();
+  });
+
+  test("what the check looks for shows closed, with the course's items", async () => {
+    const user = userEvent.setup();
+    const check = ["`notes.md` names the model", "the claim is corrected"];
+    renderConnected("/lesson/b-1", snapshotOf(withCheck(overview, check)));
+    const details = document.querySelector("main details");
+    expect(details).not.toHaveAttribute("open");
+    await user.click(screen.getByText("What the check looks for"));
+    expect(details).toHaveAttribute("open");
+    expect(details?.querySelectorAll("li")).toHaveLength(2);
+  });
+
+  test("a missing command names itself, and an unmet note offers its Lesson first", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected(
+      "/lesson/b-1",
+      snapshotOf({
+        ...overview,
+        notes: [
+          { kind: "need", quote: "You need `jq` installed.", missing: ["jq"] },
+          { kind: "unmet", line: "", lesson: null },
+          {
+            kind: "unmet",
+            line: "Lesson 2's plan is not there.",
+            lesson: "b-2",
+          },
+        ],
+        start: { planned: true, less: true, first: "b-2" },
+      }),
+    );
+    const notes = document.querySelectorAll("[data-overview-notes] > li");
+    expect(notes).toHaveLength(2);
+    expect(notes[0]).toHaveTextContent("Not found on your PATH: jq");
+    const offer = within(notes[1] as HTMLElement).getByRole("button", {
+      name: "Open Permission modes and plan mode first",
+    });
+    await user.click(offer);
+    expect(page.posts).toEqual([{ type: "lesson.open", lesson: "b-2" }]);
+  });
+
+  test("Start over is only for a saved place, and asks first", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected("/lesson/b-1", snapshotOf(overview));
+    expect(
+      screen.queryByRole("button", { name: "Start over" }),
+    ).not.toBeInTheDocument();
+    page.send(snapshotOf({ ...overview, resumable: true }, { revision: 2 }));
+    const trigger = screen.getByRole("button", { name: "Start over" });
+    await user.click(trigger);
+    const ask = screen.getByRole("group", { name: "Start over" });
+    expect(
+      within(ask).getByRole("button", { name: "Keep my place" }),
+    ).toHaveFocus();
+    await user.click(
+      within(ask).getByRole("button", { name: "Keep my place" }),
+    );
+    expect(page.posts).toEqual([]);
+    expect(screen.queryByRole("group")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Start over" }));
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("group")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start over" })).toHaveFocus();
+    expect(page.posts).toEqual([]);
+
+    await user.click(screen.getByRole("button", { name: "Start over" }));
+    await user.click(
+      within(screen.getByRole("group", { name: "Start over" })).getByRole(
+        "button",
+        { name: "Start over" },
+      ),
+    );
+    expect(page.posts).toEqual([{ type: "lesson.restart", lesson: "b-1" }]);
+    // The restart lands: Start over goes, and focus moves to Start.
+    page.send(snapshotOf(overview, { revision: 3 }));
+    expect(screen.queryByRole("group")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start" })).toHaveFocus();
+  });
+
+  test("the Work folder slot shows only while the folder question asks", () => {
+    const page = renderConnected("/lesson/b-1", snapshotOf(overview));
+    expect(document.querySelector("[data-folder-question]")).toBeNull();
+    page.send(
+      snapshotOf(
+        {
+          ...overview,
+          folderQuestion: {
+            key: "beginner",
+            asks: "work",
+            current: null,
+            problem: null,
+            open: true,
+            checking: false,
+          },
+          start: null,
+        },
+        { revision: 2 },
+      ),
+    );
+    expect(document.querySelector("[data-folder-question]")).not.toBeNull();
+    expect(
+      screen.queryByRole("region", { name: "Work folder" }),
+    ).not.toBeInTheDocument();
+  });
+
+  test("a rich overview uses only course fields for its Claude Code words", async () => {
+    const user = userEvent.setup();
+    const rich = withCheck(
+      {
+        ...overview,
+        intro: overview.intro && {
+          ...overview.intro,
+          can: [
+            ...overview.intro.can,
+            "read **every** line of [the docs](https://code.claude.com/docs/en/overview)",
+          ],
+        },
+        notes: [
+          { kind: "need", quote: "You need `jq` installed.", missing: ["jq"] },
+          { kind: "win-note", text: "" },
+          {
+            kind: "unmet",
+            line: "Lesson 2's plan is not there.",
+            lesson: "b-2",
+          },
+        ],
+        start: { planned: true, less: true, first: "b-2" },
+        resumable: true,
+      },
+      ["`notes.md` names the model"],
+    );
+    renderConnected("/lesson/b-1", snapshotOf(rich));
+    await user.click(screen.getByText("What the check looks for"));
+    await user.click(screen.getByRole("button", { name: "Start over" }));
+    expect(
+      screen.getByRole("group", { name: "Start over" }),
+    ).toBeInTheDocument();
+    expect(unquoted(snapshotOf(rich))).toEqual([]);
   });
 });
 
