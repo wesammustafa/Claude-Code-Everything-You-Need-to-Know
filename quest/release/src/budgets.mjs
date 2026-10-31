@@ -59,15 +59,15 @@ export const BUDGETS = Object.freeze(
       unit: "bytes",
       on: true,
     },
-    /** Item 4: Pip's .riv; switched on by ticket 240. */
-    { id: "riv", label: "Pip .riv", limit: 64 * KIB, unit: "bytes", on: false },
-    /** Item 4: all posters together; switched on by ticket 240. */
+    /** Item 4: Pip's .riv, at most 64 KiB (owner 2026-10-29). */
+    { id: "riv", label: "Pip .riv", limit: 64 * KIB, unit: "bytes", on: true },
+    /** Item 4: all posters together (every .png under learn/app/assets). */
     {
       id: "posters",
       label: "Posters",
       limit: 300 * KIB,
       unit: "bytes",
-      on: false,
+      on: true,
     },
     /** Item 5: the server bundle, learn/app.mjs. */
     {
@@ -107,7 +107,7 @@ const format = (value, unit) =>
 
 /**
  * One row per budget. A budget that cannot be measured gets `error` and no
- * `value`; `on` overrides a budget's switch (tests switch on riv and posters).
+ * `value`; `on` overrides a budget's switch.
  */
 export function measureTree(dir, { manifestFile, on = {} } = {}) {
   const learn = join(dir, "learn");
@@ -393,8 +393,8 @@ export function budgetProblems(rows) {
 }
 
 const result = (row) => {
-  if (row.error !== undefined) return row.on ? "FAIL" : "off (ticket 240)";
-  if (!row.on) return "off (ticket 240)";
+  if (row.error !== undefined) return row.on ? "FAIL" : "off";
+  if (!row.on) return "off";
   return row.value > row.limit ? "FAIL" : "ok";
 };
 
