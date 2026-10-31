@@ -16,13 +16,18 @@ export interface StaticSource {
   immutable: (name: string) => boolean;
 }
 
-/** The client's built app. Ticket 223 adds the rendered pages here. */
+const CLIENT = "quest/client/dist/app";
+const PAGES = "quest/release/dist/pages";
+
+/** The client's built app and the rendered Guide pages with their diagrams. */
 export const STATIC_SOURCES: readonly StaticSource[] = [
   {
-    from: "quest/client/dist/app",
+    from: CLIENT,
     at: "/",
     immutable: (name) => name.startsWith("assets/"),
   },
+  // Named by page, not hashed: a page is revalidated like index.html.
+  { from: PAGES, at: "/pages/", immutable: () => false },
 ];
 
 export const CONTENT_TYPES: Readonly<Record<string, string>> = {
@@ -108,15 +113,26 @@ export function checkClientFresh(clientRoot: string): void {
     );
 }
 
+/** Refuses a build with no rendered pages. */
+export function checkPagesBuilt(pagesDir: string): void {
+  if (!existsSync(join(pagesDir, "index.json")))
+    throw new Error(
+      `${pagesDir} has no rendered pages. Run \`npm run build -w @quest/release\`, or \`npm run build\` from the repo root, which builds the release before the server.`,
+    );
+}
+
 export function questStatics({
   repoRoot,
   clientDir,
+  pagesDir,
   clientRoot,
   checkFresh,
 }: {
   repoRoot: string;
   /** The client's built app folder: quest/client/dist/app, or a test's fixture. */
   clientDir: string;
+  /** The rendered pages folder: quest/release/dist/pages, or a test's fixture. */
+  pagesDir: string;
   clientRoot: string;
   checkFresh: boolean;
 }): Plugin {
@@ -126,10 +142,15 @@ export function questStatics({
     apply: "build",
     buildStart() {
       if (checkFresh) checkClientFresh(clientRoot);
+      checkPagesBuilt(pagesDir);
+      const dirs: Record<string, string> = {
+        [CLIENT]: clientDir,
+        [PAGES]: pagesDir,
+      };
       found = staticTable(
-        STATIC_SOURCES.map((source, i) => ({
+        STATIC_SOURCES.map((source) => ({
           ...source,
-          dir: i === 0 ? clientDir : join(repoRoot, source.from),
+          dir: dirs[source.from] ?? join(repoRoot, source.from),
         })),
       );
     },

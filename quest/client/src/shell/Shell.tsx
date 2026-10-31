@@ -10,6 +10,7 @@ import { Notice, type NoticeKind } from "../components/Notice";
 import { useHeightProperty } from "../lib/height-property";
 import { LiveProvider, useConnection } from "../live/LiveProvider";
 import type { Connection } from "../live/store";
+import { PagePanelProvider } from "../pages/PagePanel";
 import { PipStageProvider } from "../pip/PipStage";
 import { useCourseSnapshot } from "../screens/lesson";
 import { useLessonRoute } from "../screens/useLessonRoute";
@@ -96,7 +97,9 @@ export function Shell() {
   return (
     <LiveProvider>
       <PipStageProvider>
-        <Frame />
+        <PagePanelProvider>
+          <Frame />
+        </PagePanelProvider>
       </PipStageProvider>
     </LiveProvider>
   );

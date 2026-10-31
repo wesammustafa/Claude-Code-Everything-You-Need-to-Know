@@ -21,6 +21,7 @@ import { Where } from "../components/Where";
 import { lessonEyebrow } from "../course/labels";
 import { useAct, useActionsEnabled } from "../live/LiveProvider";
 import { useActionProps, useSend } from "../live/useAction";
+import { ReadLesson } from "../pages/ReadLesson";
 import {
   useHelpShowing,
   usePipInput,
@@ -236,6 +237,7 @@ function Play({
                     : {})}
                 />
               )}
+              <ReadLesson size="sm" className="ml-auto" />
             </div>
           </header>
           <BeatBody beat={beat} />

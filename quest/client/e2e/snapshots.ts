@@ -971,3 +971,42 @@ export function snapshotOf(
     lesson,
   };
 }
+
+/** b-1's skills card, as the engine words it once its steps are done (244). */
+export const cardEntries: LearnerView["card"] = [
+  { skill: "esc", show: "Esc", does: "Stops Claude mid-turn.", lesson: "b-1" },
+  {
+    skill: "version",
+    show: "claude --version",
+    does: "Prints the installed `claude` version.",
+    lesson: "b-1",
+  },
+];
+
+/** `playing`'s Check step, moved to Lesson `id`, with `warmup` on its step. */
+function playingAt(
+  id: string,
+  warmup: { from: string; explainer: boolean } | null,
+): PlayingLesson {
+  const summary = fullCourse.levels
+    .flatMap((level) => level.lessons.map((lesson) => ({ level, lesson })))
+    .find(({ lesson }) => lesson.id === id);
+  if (!summary || !playing.step) throw new Error(`No Lesson ${id}`);
+  return {
+    ...playing,
+    id,
+    title: summary.lesson.title,
+    level: summary.level.id,
+    step: { ...playing.step, warmup },
+  };
+}
+
+/** b-2 on its warm-up from b-1 (244: Read the full lesson opens b-1's page). */
+export const warmupB2 = playingAt("b-2", { from: "b-1", explainer: true });
+/** A step of b-3. */
+export const playingB3 = playingAt("b-3", null);
+/** i-1 on a warm-up from the Beginner index (the Level README, on GitHub). */
+export const indexWarmupI1 = playingAt("i-1", {
+  from: "beginner-index",
+  explainer: false,
+});

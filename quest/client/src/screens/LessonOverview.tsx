@@ -1,14 +1,12 @@
-import { useEffect, useState } from "react";
 import type { OverviewNote, StairStep } from "@quest/contract";
 import { Button } from "../components/Button";
 import { InlineText } from "../components/InlineText";
-import { Panel } from "../components/Panel";
 import { Says } from "../components/Says";
 import { Tier } from "../components/Tier";
 import { LessonBadge } from "../components/badges";
 import { lessonEyebrow } from "../course/labels";
 import { useActionProps } from "../live/useAction";
-import { usePipInput } from "../pip/PipStage";
+import { ReadLesson } from "../pages/ReadLesson";
 import { PageTitle } from "../shell/PageTitle";
 import { LessonGate } from "./LessonGate";
 import { COLUMN, EYEBROW } from "./layout";
@@ -53,18 +51,6 @@ function noteText(note: OverviewNote): string | null {
  */
 export function LessonOverview() {
   const active = useActiveLesson("overview");
-  const [reading, setReading] = useState(false);
-  // Pip rests while the lesson page is open beside it.
-  const tellPip = usePipInput();
-  useEffect(() => {
-    tellPip({ type: "pagePanel", open: reading });
-  }, [tellPip, reading]);
-  useEffect(
-    () => () => {
-      tellPip({ type: "pagePanel", open: false });
-    },
-    [tellPip],
-  );
   const start = useActionProps("lesson.start", {
     type: "lesson.start",
     help: "planned",
@@ -164,37 +150,8 @@ export function LessonOverview() {
           </Button>
         )}
         <span className="grow" />
-        <Button
-          variant="ghost"
-          icon="book"
-          aria-haspopup="dialog"
-          onClick={() => {
-            setReading(true);
-          }}
-        >
-          Read the full lesson
-        </Button>
+        <ReadLesson />
       </div>
-
-      <Panel
-        title="Read the full lesson"
-        wide
-        open={reading}
-        onClose={() => {
-          setReading(false);
-        }}
-      >
-        <article className="grid max-w-measure gap-3">
-          <h3 className="text-2xl">
-            <InlineText text={lesson.title} />
-          </h3>
-          {intro?.read && (
-            <p>
-              <InlineText text={intro.read} />
-            </p>
-          )}
-        </article>
-      </Panel>
     </main>
   );
 }

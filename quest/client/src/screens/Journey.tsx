@@ -1,7 +1,8 @@
-import { useRef, useState, type KeyboardEvent } from "react";
+import { useCallback, useRef, useState, type KeyboardEvent } from "react";
 import { Link } from "react-router";
-import type { LessonSummary, Snapshot } from "@quest/contract";
+import type { LessonSummary, LevelId, Snapshot } from "@quest/contract";
 import { Button, ButtonLink } from "../components/Button";
+import { Disclosure } from "../components/Disclosure";
 import { Icon } from "../components/Icon";
 import { InlineText } from "../components/InlineText";
 import { ProgressBar } from "../components/ProgressBar";
@@ -9,11 +10,83 @@ import { LessonBadge } from "../components/badges";
 import { LEVEL_NAMES, lessonLabel } from "../course/labels";
 import { cx } from "../lib/cx";
 import { useBelow } from "../lib/media";
+import { pageIndex, type PageEntry } from "../pages/fetch";
+import { usePagePanel } from "../pages/PagePanel";
 import { Pip } from "../pip/Pip";
 import { PageTitle } from "../shell/PageTitle";
 import { EYEBROW, WIDE } from "./layout";
 import { pathOf, useCourseSnapshot, useOpenLesson } from "./lesson";
 import { journeyPlace, nodeState, type JourneyPlace } from "./place";
+
+type ElectiveList =
+  | { state: "closed" | "loading" | "failed" }
+  | { state: "ready"; pages: PageEntry[] };
+
+/**
+ * A Level's Electives by title, behind a quiet disclosure on its card. The
+ * page index loads the first time one opens; each opens in the page panel.
+ * No marks and nothing saved: an Elective is extra reading.
+ */
+function Electives({ level }: { level: LevelId }) {
+  const [list, setList] = useState<ElectiveList>({ state: "closed" });
+  const { open } = usePagePanel();
+  const load = useCallback(() => {
+    setList({ state: "loading" });
+    pageIndex().then(
+      (index) => {
+        setList({
+          state: "ready",
+          pages: index.pages.filter(
+            (p) => p.kind === "elective" && p.level === level,
+          ),
+        });
+      },
+      () => {
+        setList({ state: "failed" });
+      },
+    );
+  }, [level]);
+  return (
+    <Disclosure
+      variant="quiet"
+      summary="Electives"
+      onToggle={(event) => {
+        if (event.currentTarget.open && list.state === "closed") load();
+      }}
+    >
+      {list.state === "loading" && <p>Loading the Electives.</p>}
+      {list.state === "failed" && (
+        <p className="flex flex-wrap items-center gap-2">
+          <span>The Electives did not load.</span>
+          <Button size="sm" onClick={load}>
+            Retry
+          </Button>
+        </p>
+      )}
+      {list.state === "ready" &&
+        (list.pages.length === 0 ? (
+          <p>No Electives in this Level yet.</p>
+        ) : (
+          <ul className="grid justify-items-start gap-1">
+            {list.pages.map((page) => (
+              <li key={page.path}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-haspopup="dialog"
+                  onClick={() => {
+                    open(page.path);
+                  }}
+                >
+                  {page.title}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        ))}
+    </Disclosure>
+  );
+}
 
 const INTRO =
   "Three levels. Each lesson ends with a check you can also run yourself.";
@@ -105,7 +178,7 @@ function Course({ snapshot }: { snapshot: Snapshot }) {
           const done = l.lessons.filter((s) => s.complete).length;
           const name = LEVEL_NAMES[l.id];
           return (
-            // The card's footer, outside the tab, is left for 244's Electives.
+            // The card's footer, outside the tab, holds the Level's Electives.
             <div key={l.id} className="grid content-start gap-2">
               <button
                 ref={(node) => {
@@ -152,7 +225,9 @@ function Course({ snapshot }: { snapshot: Snapshot }) {
                   />
                 </span>
               </button>
-              <div data-level-footer="" className="empty:hidden" />
+              <div data-level-footer="" className="empty:hidden">
+                <Electives level={l.id} />
+              </div>
             </div>
           );
         })}

@@ -1,6 +1,10 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "./live.ts";
+import { servePages } from "./pages.ts";
 import { watch } from "./watch.ts";
+
+/** b-1's page title, from the rendered index. */
+const B1_PAGE = "Install, sign in and look around";
 
 const SCREENS: readonly (readonly [path: string, heading: string])[] = [
   ["/", "Learn Claude Code by using it."],
@@ -560,11 +564,13 @@ test.describe("the reading sheet", () => {
   ] as const) {
     test(`is ${String(expected)} px wide in a ${String(width)} px window`, async ({
       page,
+      context,
     }) => {
+      await servePages(context);
       await page.setViewportSize({ width, height: 900 });
       await page.goto("/#/lesson/b-1");
       await page.getByRole("button", { name: "Read the full lesson" }).click();
-      const dialog = page.getByRole("dialog", { name: "Read the full lesson" });
+      const dialog = page.getByRole("dialog", { name: B1_PAGE });
       await expect(dialog).toBeVisible();
       const box = await dialog.boundingBox();
       expect(Math.round(box?.width ?? 0)).toBe(expected);
@@ -636,7 +642,8 @@ test.describe("keyboard focus is never hidden behind the fixed bars", () => {
       await page.setViewportSize({ width, height });
       await page.goto("/#/lesson/b-1/step");
       await fontsSettled(page);
-      await page.getByRole("button", { name: "Settings" }).focus();
+      // The step header's Read the full lesson comes just before the command.
+      await page.getByRole("button", { name: "Read the full lesson" }).focus();
       await page.keyboard.press("Tab");
       const copy = page.getByRole("button", { name: /^Copy/ });
       await expect(copy).toBeFocused();
@@ -661,19 +668,24 @@ test.describe("keyboard focus is never hidden behind the fixed bars", () => {
 
 test("a Panel whose body overflows lets the keyboard reach and scroll it", async ({
   page,
+  context,
 }) => {
+  // A short page, which grows once shown, as a page does while its
+  // diagrams load.
+  await servePages(context, {
+    "/pages/beginner/01-install-and-look-around.html": `<h1 id="i">${B1_PAGE}</h1><p>Short.</p>`,
+  });
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto("/#/lesson/b-1");
   await page.getByRole("button", { name: "Read the full lesson" }).click();
-  const dialog = page.getByRole("dialog", { name: "Read the full lesson" });
-  await expect(dialog).toBeVisible();
-  const body = dialog.getByRole("region", { name: "Read the full lesson" });
+  const dialog = page.getByRole("dialog", { name: B1_PAGE });
+  await expect(dialog.getByRole("heading", { level: 1 })).toBeVisible();
+  const body = dialog.getByRole("region", { name: B1_PAGE });
   // A body that fits is no tab stop.
   await expect(body).toHaveCount(0);
 
-  // A long page, as the rendered lesson will be.
   await dialog.evaluate((el) => {
-    const content = el.querySelector(":scope > div");
+    const content = el.querySelector(".page-prose");
     for (let i = 0; i < 80; i++) {
       const line = document.createElement("p");
       line.textContent = `Line ${String(i + 1)}`;
@@ -685,6 +697,11 @@ test("a Panel whose body overflows lets the keyboard reach and scroll it", async
   await expect(dialog.getByRole("button", { name: "Close" })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(body).toBeFocused();
+  // The body's one link, the lesson feedback line, then round to Close.
+  await page.keyboard.press("Tab");
+  await expect(
+    dialog.getByRole("link", { name: "Stuck on this lesson? Tell us" }),
+  ).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(dialog.getByRole("button", { name: "Close" })).toBeFocused();
   await page.keyboard.press("Tab");
@@ -802,7 +819,8 @@ test.describe("the Learning journey at every width", () => {
       await page.setViewportSize({ width, height: 700 });
       await page.goto("/#/journey");
       await fontsSettled(page);
-      await page.getByRole("tab", { selected: true }).focus();
+      // Each Level card's Electives summary comes after the tabs (244).
+      await page.locator("[data-level-footer] summary").last().focus();
       const top = await page
         .locator("[data-top]")
         .evaluate((el) => el.getBoundingClientRect().bottom);

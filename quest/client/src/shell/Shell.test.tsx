@@ -300,17 +300,20 @@ describe("the Learning journey on the whole course", () => {
     );
   });
 
-  test("Tab walks from the Level tabs through every Lesson to the Next band", async () => {
+  test("Tab walks from the Level tabs through each card's Electives and every Lesson to the Next band", async () => {
     const user = userEvent.setup();
     renderConnected("/journey", atB4);
     screen.getByRole("tab", { selected: true }).focus();
     const order: string[] = [];
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 10; i++) {
       await user.tab();
       const el = document.activeElement as HTMLElement;
       order.push(el.getAttribute("aria-label") ?? el.textContent);
     }
-    expect(order.slice(0, 6).map((name) => name.split(":")[0])).toEqual([
+    expect(order.slice(0, 9).map((name) => name.split(":")[0])).toEqual([
+      "Electives",
+      "Electives",
+      "Electives",
       "Lesson 1",
       "Lesson 2",
       "Lesson 3",
@@ -318,7 +321,7 @@ describe("the Learning journey on the whole course", () => {
       "Lesson 5",
       "Capstone",
     ]);
-    expect(order[6]).toBe("Start");
+    expect(order[9]).toBe("Start");
   });
 
   test("Enter on a Lesson to do goes to its preview and posts nothing", async () => {
@@ -375,5 +378,127 @@ describe("the Learning journey on the whole course", () => {
       screen.getByRole("heading", { level: 1, name: "Learning journey" }),
     ).toBeInTheDocument();
     expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
+  });
+});
+
+describe("the Steps outline", () => {
+  test("while playing, every step with its part and state, the current one marked", async () => {
+    const user = userEvent.setup();
+    renderConnected("/lesson/b-1/play", snapshotOf(playing));
+    await user.click(screen.getByRole("button", { name: "Steps" }));
+    const dialog = screen.getByRole("dialog", { name: "Steps" });
+    const items = within(dialog).getAllByRole("listitem");
+    expect(items).toHaveLength(playing.steps.length);
+    expect(items[0]).toHaveTextContent("Run the installer");
+    expect(items[0]).toHaveTextContent("Worked exampledone");
+    const current = items.filter(
+      (item) => item.getAttribute("aria-current") === "step",
+    );
+    expect(current).toHaveLength(1);
+    expect(current[0]).toHaveTextContent(/^Check.*current$/);
+  });
+
+  test("before the Lesson starts, the outline says when it shows", async () => {
+    const user = userEvent.setup();
+    renderConnected("/lesson/b-4", atB4);
+    await user.click(screen.getByRole("button", { name: "Steps" }));
+    expect(
+      within(screen.getByRole("dialog", { name: "Steps" })).getByText(
+        "The step outline shows once the Lesson starts.",
+      ),
+    ).toBeInTheDocument();
+  });
+});
+
+describe("Your card", () => {
+  const card = [
+    {
+      skill: "esc",
+      show: "Esc",
+      does: "Stops Claude mid-turn.",
+      lesson: "b-1",
+    },
+    {
+      skill: "version",
+      show: "claude --version",
+      does: "Prints the installed `claude` version.",
+      lesson: "b-1",
+    },
+  ];
+  const withCard = (): Snapshot => {
+    const snapshot = snapshotOf(playing);
+    return { ...snapshot, learner: { ...snapshot.learner, card } };
+  };
+
+  test("is absent while the card is empty", () => {
+    renderConnected("/lesson/b-1/play", snapshotOf(playing));
+    expect(
+      screen.queryByRole("button", { name: "Your card" }),
+    ).not.toBeInTheDocument();
+  });
+
+  test("lists the entries in order, then Commands by level, which opens the page panel; focus returns to Your card", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected("/lesson/b-1/play", withCard());
+    await user.click(screen.getByRole("button", { name: "Your card" }));
+    expect(page.pageFetches).toEqual([]);
+    const dialog = screen.getByRole("dialog", { name: "Your card" });
+    const items = within(dialog).getAllByRole("listitem");
+    expect(items.map((item) => item.textContent)).toEqual([
+      expect.stringContaining("Stops Claude mid-turn."),
+      expect.stringContaining("Prints the installed claude version."),
+    ]);
+    expect(items[0]).toHaveTextContent("Beginner · Lesson 1");
+    expect(
+      [...dialog.querySelectorAll("code")].map((code) => code.textContent),
+    ).toEqual(["Esc", "claude --version", "claude"]);
+    await user.click(
+      within(dialog).getByRole("button", { name: "Commands by level" }),
+    );
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Commands by level",
+      }),
+    ).toBeInTheDocument();
+    expect(page.pageFetches).toEqual([
+      "/pages/index.json",
+      "/pages/reference/commands.html",
+    ]);
+    await user.keyboard("{Escape}");
+    expect(screen.getByRole("button", { name: "Your card" })).toHaveFocus();
+    expect(page.posts).toEqual([]);
+  });
+});
+
+describe("Electives", () => {
+  test("list the Level's Electives only once opened, fetch nothing before and post nothing", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected("/journey", atB4);
+    expect(page.pageFetches).toEqual([]);
+    const summaries = screen.getAllByText("Electives");
+    expect(summaries).toHaveLength(3);
+    expect(
+      screen.queryByRole("button", { name: "Keep notes with Claude" }),
+    ).not.toBeInTheDocument();
+    await user.click(summaries[0] as HTMLElement);
+    await user.click(
+      await screen.findByRole("button", { name: "Keep notes with Claude" }),
+    );
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Keep notes with Claude",
+      }),
+    ).toBeInTheDocument();
+    expect(page.pageFetches).toEqual([
+      "/pages/index.json",
+      "/pages/beginner/electives/notes.html",
+    ]);
+    expect(page.posts).toEqual([]);
+    // The Level tabs keep their names.
+    expect(screen.getByRole("tab", { name: /^Beginner/ })).toHaveAccessibleName(
+      expect.stringMatching(/^Beginner\d+ of \d+$/),
+    );
   });
 });

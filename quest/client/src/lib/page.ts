@@ -54,3 +54,41 @@ function onMotionChange(changed: () => void): () => void {
 export function useReducedMotion(): boolean {
   return useSyncExternalStore(onMotionChange, motionReduced, () => false);
 }
+
+export type Theme = "light" | "dark";
+
+const DARK = "(prefers-color-scheme: dark)";
+
+/**
+ * The theme the page shows: the Settings choice on <html> (`data-theme`,
+ * "light" or "dark") wins; otherwise the system setting.
+ */
+export function resolvedTheme(): Theme {
+  const picked = document.documentElement.dataset.theme;
+  if (picked === "light" || picked === "dark") return picked;
+  return typeof window.matchMedia === "function" &&
+    window.matchMedia(DARK).matches
+    ? "dark"
+    : "light";
+}
+
+function onThemeChange(changed: () => void): () => void {
+  const list =
+    typeof window.matchMedia === "function"
+      ? window.matchMedia(DARK)
+      : undefined;
+  list?.addEventListener("change", changed);
+  const observer = new MutationObserver(changed);
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme"],
+  });
+  return () => {
+    list?.removeEventListener("change", changed);
+    observer.disconnect();
+  };
+}
+
+export function useResolvedTheme(): Theme {
+  return useSyncExternalStore(onThemeChange, resolvedTheme, () => "light");
+}
