@@ -83,6 +83,17 @@ export function walk(dir, at = "") {
     });
 }
 
+// A Lesson's steps or a Reference solution: a steps/ or solutions/ folder, a
+// steps.sh, or Markdown that opens with a lesson's front matter.
+function isStepFile(dir, path, name, isDir) {
+  if (isDir) return name === "steps" || name === "solutions";
+  if (name === "steps.sh") return true;
+  return (
+    name.endsWith(".md") &&
+    readFileSync(join(dir, path), "utf8").startsWith("---\nlesson:")
+  );
+}
+
 /** What the tree holds that a Learner's copy must not: config, tests, step files, the Terminal app. */
 export function templateProblems(dir) {
   const problems = [];
@@ -94,6 +105,8 @@ export function templateProblems(dir) {
     else if (isDir && path === "checks/test")
       problems.push(`${path}: the checks' tests`);
     else if (isDir && name === "ladders") problems.push(`${path}: ladders`);
+    else if (isStepFile(dir, path, name, isDir))
+      problems.push(`${path}: step file`);
     else if (name === "probes.mjs") problems.push(`${path}: probes`);
     else if (isDir && path === "learn/lessons")
       problems.push(`${path}: the Terminal app's lessons`);
