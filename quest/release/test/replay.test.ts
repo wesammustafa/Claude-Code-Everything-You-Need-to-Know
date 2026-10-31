@@ -1,7 +1,7 @@
 // The Reference solutions' replay: its contract on fixture solutions (the
 // names it restores, where and how steps.sh runs, which Lessons it applies),
-// the CLIs' path resolution, the real Beginner and Intermediate solutions
-// on an assembled copy, and that no solution file names a commit SHA.
+// the CLIs' path resolution, the real Beginner, Intermediate and Advanced
+// solutions on an assembled copy, and that no solution file names a commit SHA.
 import { execFileSync, spawnSync } from "node:child_process";
 import {
   chmodSync,
@@ -267,6 +267,84 @@ describe("the Intermediate solutions on an assembled copy", () => {
       expect(run.status, `${id} at the end:\n${run.stdout}`).toBe(0);
     }
   }, 600_000);
+});
+
+/**
+ * A bin folder of stand-ins for the tools that reach the network. Each logs
+ * its name and fails, so a solution that calls one fails and the log shows it.
+ */
+function guardedPath(): { bin: string; log: string } {
+  const bin = tempDir("quest-guard-");
+  const log = join(bin, "calls.log");
+  for (const name of ["claude", "gh", "npx", "npm", "curl", "wget"]) {
+    writeFileSync(
+      join(bin, name),
+      `#!/bin/sh\necho ${name} >> '${log}'\nexit 1\n`,
+    );
+    chmodSync(join(bin, name), 0o755);
+  }
+  return { bin, log };
+}
+
+// The PATH guard misses a tool called by its full path, or one whose failure
+// `|| true` hides, so the scripts are also read for one in command position
+// (comments and single-quoted text, such as saved JSON, left out).
+test("no Advanced git-step script runs a network tool by any path", () => {
+  const tool =
+    /(^|[;&|(`]\s*|\$\(\s*)(\S*\/)?(claude|gh|npx|npm|curl|wget)(\s|$)/m;
+  const ids = readdirSync(join(repoRoot, "solutions")).filter((id) =>
+    id.startsWith("a-"),
+  );
+  expect(ids.length).toBeGreaterThan(0);
+  for (const id of ids) {
+    const code = readFileSync(
+      join(repoRoot, "solutions", id, "steps.sh"),
+      "utf8",
+    )
+      .split("\n")
+      .filter((line) => !/^\s*#/.test(line))
+      .join("\n")
+      .replace(/'[^']*'/g, "''");
+    expect(tool.test(code), id).toBe(false);
+  }
+});
+
+describe("the Advanced solutions on an assembled copy", () => {
+  const first = order.indexOf("a-1");
+  const done = order.slice(0, first);
+  const advanced = order.slice(first);
+
+  // The Advanced solutions run with the network tools shadowed (b-3's runs
+  // `npm test`, so the earlier levels run as before); the Checks keep their
+  // own `claude` stand-in.
+  test("each Check fails before its Lesson's solution and passes after it, with every earlier one, and no solution reaches the network", async () => {
+    const { bin, log } = guardedPath();
+    const apply = (copy: string, id: string) => {
+      const path = process.env.PATH;
+      process.env.PATH = `${bin}${delimiter}${path ?? ""}`;
+      try {
+        applyLesson({ repoRoot, copy, id });
+      } finally {
+        if (path === undefined) delete process.env.PATH;
+        else process.env.PATH = path;
+      }
+    };
+    const copy = await assembledCopy();
+    for (const id of done) applyLesson({ repoRoot, copy, id });
+    for (const [i, id] of advanced.entries()) {
+      expect(check(copy, id).status, `${id} before its solution`).toBe(1);
+      apply(copy, id);
+      for (const earlier of advanced.slice(0, i + 1)) {
+        const run = check(copy, earlier);
+        expect(run.status, `${earlier} after ${id}:\n${run.stdout}`).toBe(0);
+      }
+    }
+    for (const id of order) {
+      const run = check(copy, id);
+      expect(run.status, `${id} at the end:\n${run.stdout}`).toBe(0);
+    }
+    expect(existsSync(log) ? readFileSync(log, "utf8") : "").toBe("");
+  }, 900_000);
 });
 
 /** Every file under `dir`, relative to it. */

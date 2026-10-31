@@ -3245,6 +3245,26 @@ test('the Advanced capstone takes worktrees anywhere, and wants the ones inside 
   });
 });
 
+test('the Advanced capstone reads the listed worktrees from the git root when it sits above the project folder, as in a copy', () => {
+  const nested = (gitignore) => () => {
+    const dir = repo({ '.gitignore': gitignore, 'README.md': '# demo\n' }, { nested: true });
+    commit(dir, 'Start');
+    for (const name of ['a', 'b']) {
+      git(dir, 'worktree', 'add', '-q', '-b', `side-${name}`, `.claude/worktrees/${name}`);
+      write(join(dir, '.claude', 'worktrees', name, 'project'), { [`${name}.txt`]: `${name}\n` });
+      commit(join(dir, '.claude', 'worktrees', name), `Work ${name}`);
+    }
+    write(dir, { [CAPSTONE_LISTING]: `${git(dir, 'worktree', 'list', '--porcelain')}\n` });
+    return dir;
+  };
+  withRepo(nested(IGNORE), (dir) => {
+    assert.equal(capstoneHint(dir, /keeps the worktrees/), true);
+  });
+  withRepo(nested('.practice/\n'), (dir) => {
+    assert.match(String(capstoneHint(dir, /keeps the worktrees/)), /No committed `\.gitignore` ignores `\.claude\/worktrees\/(a|b)\/`/);
+  });
+});
+
 test('the Advanced capstone wants the worktrees ignored in a committed .gitignore, whatever a global excludes file says', () => {
   const globalIgnore = (dir) => {
     write(dir, { '.git/global-ignore': '.claude/\n' });

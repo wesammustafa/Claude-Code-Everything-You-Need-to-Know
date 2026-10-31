@@ -1,0 +1,23 @@
+name: Link check report
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: anthropics/claude-code-action@v1.0.258
+        with:
+          prompt: |
+            Read the Markdown files in this repository and report each relative
+            link whose target file is missing, as file:line and the target.
+            Change no file.
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ github.token }}
+          claude_args: --max-turns 5 --allowedTools "Read,Grep,Glob"

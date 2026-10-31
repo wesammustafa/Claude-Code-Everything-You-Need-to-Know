@@ -146,7 +146,8 @@ export const ignoredWorktrees = {
     if (!records.length) return ignoresWorktrees.check(repo);
     const main = records[0].path.replace(/\/+$/, '');
     const inside = [...new Set(records.slice(1).filter((r) => !r.bare && r.path.startsWith(`${main}/`)).map((r) => r.path.slice(main.length + 1)))];
-    for (const path of inside) {
+    // git prints paths from the root, which may sit above repo.dir.
+    for (const path of inside.map((p) => repo.local(p))) {
       const found = committedIgnore(repo, `${path}/a-capstone-probe`);
       if (found.problem) return ignoreHint(found, `${path}/`);
     }
