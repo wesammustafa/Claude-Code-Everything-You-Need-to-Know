@@ -786,6 +786,51 @@ test.describe("in a contrast theme (forced colours)", () => {
   });
 });
 
+test("Progress fits 390 px: the counts stack, the Badges and skill rows stay in their boxes", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("/#/progress");
+  await fontsSettled(page);
+  const skills = page.getByRole("region", { name: "Skills" });
+  await expect(skills.getByRole("listitem")).toHaveCount(3);
+  const fit = await page.evaluate(() => {
+    const rect = (el: Element) => el.getBoundingClientRect();
+    const inside = (el: Element, box: DOMRect) => {
+      const r = rect(el);
+      return r.left >= box.left - 0.5 && r.right <= box.right + 0.5;
+    };
+    const main = document.querySelector("main");
+    const column = main ? rect(main) : null;
+    const counts = [...document.querySelectorAll("main > ul > li")];
+    const skills = document.querySelector("[aria-labelledby=progress-skills]");
+    const badges = document.querySelector("[aria-labelledby=progress-badges]");
+    return {
+      sideways:
+        document.documentElement.scrollWidth -
+        document.documentElement.clientWidth,
+      countXs: [...new Set(counts.map((li) => Math.round(rect(li).x)))],
+      counts: counts.length,
+      badgesInside:
+        column !== null &&
+        badges !== null &&
+        [...badges.querySelectorAll("li")].every((li) =>
+          inside(li, rect(badges)),
+        ),
+      skillsInside:
+        skills !== null &&
+        [...skills.querySelectorAll("li")].every((li) =>
+          inside(li, rect(skills)),
+        ),
+    };
+  });
+  expect(fit.sideways).toBeLessThanOrEqual(0);
+  expect(fit.counts).toBe(2);
+  expect(fit.countXs).toHaveLength(1);
+  expect(fit.badgesInside).toBe(true);
+  expect(fit.skillsInside).toBe(true);
+});
+
 test.describe("the Learning journey at every width", () => {
   for (const width of [720, 1920, 390]) {
     test(`fits ${String(width)} px with no sideways scroll, the Next band in view`, async ({
