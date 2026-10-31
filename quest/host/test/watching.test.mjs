@@ -249,6 +249,56 @@ test("the work folder has its own watcher, armed again as the Learner moves to a
   );
 });
 
+// spec: watching
+// spec: folders.worked-copy
+test("a worked: copy fresh json beat with the Work folder in another repository decides on the copy's file, never on the Work folder's", async () => {
+  const settings = ".claude/settings.json";
+  const rules = (deny) =>
+    `{ "permissions": { "deny": ${JSON.stringify(deny)} } }\n`;
+  const freshJson = workedInCopy.replace(
+    "- verify: check 0\n- watching: .claude/skills/tdd/SKILL.md\n",
+    `- verify: json ${settings} permissions.deny.0 fresh\n`,
+  );
+  const course = threeLevels({ "i-1": freshJson });
+  const { host, adapters, clock, heard } = atI1({
+    course,
+    folders: { [MINE]: fine(MINE) },
+    checks: () => ({ items: [] }),
+  });
+  adapters.files.write(`${MINE}/${settings}`, rules([]));
+  adapters.files.write(`${WORK}/${settings}`, rules([]));
+  await host.open();
+  host.start();
+  host.dispatch({ type: "lesson.start", help: "planned" });
+  await turn();
+  const status = () => host.snapshot().lesson.beat?.status;
+  assert.equal(host.snapshot().lesson.step.id, "W1");
+  assert.deepEqual(
+    heard
+      .filter((h) => h.input.type === "stamp")
+      .map((h) => h.input.dir ?? null),
+    [WORK],
+    "the fresh stamp is the copy's file",
+  );
+  assert.deepEqual(adapters.armed(), [ROOT, WORK], "watched in the copy");
+  // The Work folder's file changes: nothing to decide on.
+  clock.spend(400);
+  adapters.files.write(`${MINE}/${settings}`, rules(["Read(./.env)"]));
+  adapters.fire(MINE);
+  clock.spend(2_000);
+  await turn();
+  assert.notEqual(status(), "done", "the Work folder's file is not the beat's");
+  // The copy's file changes: the beat passes with no Check again.
+  const checked = adapters.checks.calls.length;
+  adapters.files.write(`${WORK}/${settings}`, rules(["Read(./.env)"]));
+  adapters.fire(WORK);
+  clock.spend(2_000);
+  await turn();
+  assert.equal(host.snapshot().lesson.step.id, "W1");
+  assert.equal(status(), "done", JSON.stringify(host.snapshot().lesson.beat));
+  assert.equal(adapters.checks.calls.length, checked, "no Check ran");
+});
+
 // The selectors the host reads off the engine's state alone (209's, lifted
 // into the engine in 210).
 test("the host's selectors: evidence only on a card, the work folder of the step", () => {
