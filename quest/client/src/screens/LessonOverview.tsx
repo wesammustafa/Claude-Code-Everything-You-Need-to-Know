@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { OverviewLesson, OverviewNote, StairStep } from "@quest/contract";
+import type { OverviewNote, StairStep } from "@quest/contract";
 import { Button } from "../components/Button";
 import { CODE, InlineText } from "../components/InlineText";
 import { Says } from "../components/Says";
@@ -35,20 +35,9 @@ function partsOf(
   return parts;
 }
 
-/**
- * The check's items. Ticket 283 adds `check` to OverviewLesson; until it
- * lands a snapshot may carry it or not, and none reads as no items. After
- * 283 this is `lesson.check`.
- */
-function checkOf(lesson: OverviewLesson): readonly string[] {
-  return (lesson as OverviewLesson & { check?: string[] }).check ?? [];
-}
-
 /** A note's words: the page's own where it has them, the app's otherwise. */
 function noteText(note: OverviewNote): string | null {
   switch (note.kind) {
-    case "need":
-      return note.quote;
     case "need-repo":
     case "win-note":
       return note.text;
@@ -58,6 +47,9 @@ function noteText(note: OverviewNote): string | null {
       return "This lesson changed since you started it, so it starts again here.";
     case "folder-problem":
       return problemText(note.problem);
+    case "need":
+      // The needs list says these, each line once with its state.
+      return null;
   }
 }
 
@@ -108,7 +100,7 @@ export function LessonOverview() {
     const text = noteText(note);
     const offer = at === offerAt && first !== null;
     if (text === null || (text.trim() === "" && !offer)) return [];
-    return [{ note, text, offer, key: `${String(at)} ${note.kind}` }];
+    return [{ text, offer, key: `${String(at)} ${note.kind}` }];
   });
 
   return (
@@ -172,26 +164,49 @@ export function LessonOverview() {
         </ul>
       </section>
 
-      <CheckLooksFor items={checkOf(lesson)} />
+      <CheckLooksFor items={lesson.check} />
+
+      {lesson.needs.length > 0 && (
+        <section
+          aria-label="What you need"
+          className="grid gap-2"
+          data-overview-needs=""
+        >
+          <h2 className="text-sm text-muted">What you need</h2>
+          <ul className="grid gap-1.5 text-sm">
+            {lesson.needs.map(({ quote, missing }, i) => (
+              <li key={i} className="grid justify-items-start gap-0.5">
+                <span>
+                  <InlineText text={quote} />
+                </span>
+                {missing === null ? (
+                  <span className="text-muted">Looking on your PATH...</span>
+                ) : missing.length === 0 ? (
+                  <span>Found on your PATH.</span>
+                ) : (
+                  <span>
+                    Not found on your PATH:
+                    {missing.map((name, k) => (
+                      <span key={k}>
+                        {" "}
+                        <code className={CODE}>{name}</code>
+                      </span>
+                    ))}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {notes.length > 0 && (
         <ul className="grid gap-1 text-sm" data-overview-notes="">
-          {notes.map(({ note, text, offer, key }) => (
+          {notes.map(({ text, offer, key }) => (
             <li key={key} className="grid justify-items-start gap-1.5">
               {text.trim() !== "" && (
                 <span>
                   <InlineText text={text} />
-                </span>
-              )}
-              {note.kind === "need" && note.missing.length > 0 && (
-                <span>
-                  Not found on your PATH:
-                  {note.missing.map((name, i) => (
-                    <span key={i}>
-                      {" "}
-                      <code className={CODE}>{name}</code>
-                    </span>
-                  ))}
                 </span>
               )}
               {offer && first !== null && <OpenFirst lesson={first} />}
