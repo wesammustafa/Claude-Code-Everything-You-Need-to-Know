@@ -167,6 +167,7 @@ export interface EngineSeam {
     facts: Facts;
     now?: number;
     epoch?: number;
+    dir?: string | undefined;
   }): EngineState;
 }
 
@@ -184,7 +185,10 @@ export interface HostOptions {
   facts?: Partial<Facts> | undefined;
   /** The real engine unless a test wraps it. */
   engine?: EngineSeam | undefined;
-  /** The folder --dir gave, looked at. */
+  /**
+   * The folder --dir gave, looked at: the opening level's work folder, saved
+   * on start; ignored where the app opens on Beginner.
+   */
   ahead?: FolderLook | null | undefined;
 }
 

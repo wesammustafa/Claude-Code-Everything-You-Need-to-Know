@@ -22,6 +22,8 @@ export interface Connected {
   hold: () => { release: () => Promise<void> };
   /** The snapshot the next answers carry. */
   answer: (snapshot: Snapshot) => void;
+  /** The next answer is this refusal (a 400's body, say) instead. */
+  refuse: (status: number, body: unknown) => void;
   /** Every GET under /pages/, oldest first. */
   pageFetches: string[];
 }
@@ -87,6 +89,7 @@ export function renderConnected(
   let shown = snapshot;
   let next: Snapshot | null = null;
   let gate: Promise<void> | null = null;
+  let refusal: { status: number; body: unknown } | null = null;
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string, init?: RequestInit) => {
@@ -102,6 +105,11 @@ export function renderConnected(
       const body = JSON.parse(init?.body as string) as { action: QuestAction };
       posts.push(body.action);
       if (gate) await gate;
+      if (refusal) {
+        const { status, body: refused } = refusal;
+        refusal = null;
+        return Response.json(refused, { status });
+      }
       const reply = next ?? shown;
       return Response.json({ revision: reply?.revision, snapshot: reply });
     }),
@@ -135,6 +143,9 @@ export function renderConnected(
     },
     answer(data) {
       next = data;
+    },
+    refuse(status, body) {
+      refusal = { status, body };
     },
   };
 }

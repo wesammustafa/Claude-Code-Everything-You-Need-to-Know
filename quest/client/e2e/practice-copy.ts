@@ -35,6 +35,8 @@ const STOP_MS = 10_000;
 export interface PracticeCopy {
   /** The copy's folder. */
   dir: string;
+  /** The HOME the app runs under. */
+  home: string;
   /** The app's address, once started. */
   url: string;
   port: number;
@@ -49,8 +51,22 @@ export interface PracticeCopy {
   saved: () => unknown;
   /** Writes a file in the copy, by its path relative to the copy. */
   write: (path: string, text: string) => void;
+  /**
+   * A git repository at `<home>/<name>`, one commit, ignoring `.practice/`
+   * unless `ignorePractice` is false; returns its path.
+   */
+  repo: (name: string, options?: { ignorePractice?: boolean }) => string;
+  /** A new copy of the template at `<home>/<name>`, as a repository; returns its path. */
+  templateCopy: (name: string) => string;
   /** Stops the app if it runs and removes the folder. */
   dispose: () => Promise<void>;
+}
+
+export interface PracticeCopyOptions {
+  /** The copy at `<home>/copy`, inside HOME, rather than beside it. */
+  inHome?: boolean;
+  /** Arguments after `learn/app.mjs`, as `npm run learn -- ...` passes them. */
+  argv?: string[];
 }
 
 function git(dir: string, env: NodeJS.ProcessEnv, ...args: string[]) {
@@ -59,19 +75,22 @@ function git(dir: string, env: NodeJS.ProcessEnv, ...args: string[]) {
     throw new Error(`git ${args.join(" ")} failed: ${run.stderr}`);
 }
 
-export function practiceCopy(): PracticeCopy {
+export function practiceCopy({
+  inHome = false,
+  argv = [],
+}: PracticeCopyOptions = {}): PracticeCopy {
   if (!existsSync(join(BUNDLE, "app.mjs")))
     throw new Error(
       `No server bundle at ${BUNDLE}/app.mjs: run npm run build first.`,
     );
   const tmp = realpathSync(mkdtempSync(join(tmpdir(), "quest-e2e-")));
-  const dir = join(tmp, "copy");
   const home = join(tmp, "home");
+  const dir = inHome ? join(home, "copy") : join(tmp, "copy");
   const bin = join(tmp, "bin");
   cpSync(TEMPLATE, dir, { recursive: true });
   cpSync(BUNDLE, join(dir, "learn"), { recursive: true });
   // Root .practice/ is the host's to make on its first start (ticket 277).
-  mkdirSync(home);
+  mkdirSync(home, { recursive: true });
   writeFileSync(
     join(home, ".gitconfig"),
     `[user]\n\tname = ${LEARNER.name}\n\temail = ${LEARNER.email}\n[init]\n\tdefaultBranch = main\n`,
@@ -103,8 +122,16 @@ export function practiceCopy(): PracticeCopy {
   let child: ChildProcess | null = null;
   let exited: Promise<number | null> = Promise.resolve(null);
   let printed = "";
+  // A folder under HOME made a repository with one commit.
+  const commitAll = (path: string, message: string) => {
+    git(path, env, "init", "-q");
+    git(path, env, "add", "-A");
+    git(path, env, "commit", "-q", "--allow-empty", "-m", message);
+    return path;
+  };
   const copy: PracticeCopy = {
     dir,
+    home,
     url: "",
     port: 0,
     output: () => printed,
@@ -112,9 +139,10 @@ export function practiceCopy(): PracticeCopy {
       const base = copy.port;
       // Only this run's address: a restart's output follows the last run's.
       const from = printed.length;
-      const run = spawn(process.execPath, ["learn/app.mjs"], {
+      const run = spawn(process.execPath, ["learn/app.mjs", ...argv], {
         cwd: dir,
-        env: { ...env, QUEST_BASE_PORT: String(base) },
+        // npm run learn in the copy: a relative --dir is from there.
+        env: { ...env, INIT_CWD: dir, QUEST_BASE_PORT: String(base) },
         stdio: ["ignore", "pipe", "pipe"],
       });
       child = run;
@@ -188,6 +216,20 @@ export function practiceCopy(): PracticeCopy {
       const file = join(dir, path);
       mkdirSync(join(file, ".."), { recursive: true });
       writeFileSync(file, text);
+    },
+    repo(name, { ignorePractice = true } = {}) {
+      const path = join(home, name);
+      mkdirSync(path, { recursive: true });
+      writeFileSync(join(path, "README.md"), `# ${name}\n`);
+      if (ignorePractice)
+        writeFileSync(join(path, ".gitignore"), ".practice/\n");
+      return commitAll(path, "First commit");
+    },
+    templateCopy(name) {
+      const path = join(home, name);
+      cpSync(TEMPLATE, path, { recursive: true });
+      writeFileSync(join(path, ".gitignore"), ".practice/\n");
+      return commitAll(path, "New copy");
     },
     async dispose() {
       if (child !== null) {

@@ -304,16 +304,73 @@ describe("Lesson overview", () => {
     expect(screen.getByRole("button", { name: "Start" })).toHaveFocus();
   });
 
-  test("the Work folder slot shows only while the folder question asks", () => {
-    const page = renderConnected("/lesson/b-1", snapshotOf(overview));
-    expect(document.querySelector("[data-folder-question]")).toBeNull();
+  test("the Work folder question: asking with no Start, then the answer with Change", async () => {
+    const user = userEvent.setup();
+    const q = (
+      over: Partial<NonNullable<OverviewLesson["folderQuestion"]>>,
+    ) => ({
+      key: "intermediate",
+      asks: "work" as const,
+      current: null,
+      problem: null,
+      open: true,
+      checking: false,
+      ...over,
+    });
+    const i1 = overviewAt("i-1");
+    const page = renderConnected(
+      "/lesson/i-1",
+      snapshotOf(
+        { ...i1, folderQuestion: q({}), start: null },
+        { course: fullCourse },
+      ),
+    );
+    const slot = screen.getByRole("region", { name: "Work folder" });
+    expect(slot).toHaveAttribute("data-folder-question");
+    expect(screen.queryByRole("button", { name: "Start" })).toBeNull();
     page.send(
       snapshotOf(
         {
-          ...overview,
+          ...i1,
+          folderQuestion: q({ current: "/home/sam/practice", open: false }),
+        },
+        { course: fullCourse, revision: 2 },
+      ),
+    );
+    expect(slot).toHaveTextContent("Work folder: this practice copy");
+    // The answer taken: Start appears and takes focus.
+    expect(screen.getByRole("button", { name: "Start" })).toHaveFocus();
+    page.send(
+      snapshotOf(
+        { ...i1, folderQuestion: q({ current: "/home/sam/app", open: false }) },
+        { course: fullCourse, revision: 3 },
+      ),
+    );
+    expect(
+      screen.getByRole("region", { name: "Work folder" }),
+    ).toHaveTextContent("Work folder: /home/sam/app");
+    await user.click(screen.getByRole("button", { name: "Change" }));
+    expect(page.posts).toEqual([{ type: "folder.ask", key: "intermediate" }]);
+    // Editing a saved answer can be left with Cancel.
+    page.send(
+      snapshotOf(
+        { ...i1, folderQuestion: q({ current: "/home/sam/app" }) },
+        { course: fullCourse, revision: 4 },
+      ),
+    );
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(page.posts.at(-1)).toEqual({ type: "folder.cancel" });
+  });
+
+  test("a-5 asks for its new copy with the path field alone; i-capstone has no slot", () => {
+    const page = renderConnected(
+      "/lesson/a-5",
+      snapshotOf(
+        {
+          ...overviewAt("a-5"),
           folderQuestion: {
-            key: "beginner",
-            asks: "work",
+            key: "a-5",
+            asks: "new-copy",
             current: null,
             problem: null,
             open: true,
@@ -321,13 +378,47 @@ describe("Lesson overview", () => {
           },
           start: null,
         },
-        { revision: 2 },
+        { course: fullCourse },
       ),
     );
-    expect(document.querySelector("[data-folder-question]")).not.toBeNull();
-    expect(
-      screen.queryByRole("region", { name: "Work folder" }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio")).toBeNull();
+    expect(screen.getByRole("textbox")).toBeInTheDocument();
+    page.send(
+      snapshotOf(
+        { ...overviewAt("i-capstone"), folderQuestion: null },
+        { course: fullCourse, revision: 2 },
+      ),
+    );
+    page.router.navigate("/lesson/i-capstone").catch(() => undefined);
+    expect(document.querySelector("[data-folder-question]")).toBeNull();
+  });
+
+  test("each Work folder problem is worded, and the changed note keeps its words", () => {
+    renderConnected(
+      "/lesson/i-1",
+      snapshotOf(
+        {
+          ...overviewAt("i-1"),
+          notes: [
+            { kind: "changed" },
+            ...(["missing", "gitBroken", "notGit", "noPractice"] as const).map(
+              (problem) => ({ kind: "folder-problem" as const, problem }),
+            ),
+          ],
+        },
+        { course: fullCourse },
+      ),
+    );
+    const notes = within(
+      document.querySelector("[data-overview-notes]") as HTMLElement,
+    ).getAllByRole("listitem");
+    expect(notes.map((n) => n.textContent)).toEqual([
+      "This lesson changed since you started it, so it starts again here.",
+      "The work folder is not there any more. Choose it again, or choose another.",
+      "Git could not look at the work folder, so its checks cannot run yet. Check that git works in your terminal.",
+      "The work folder is not a git repository. Run git init there, or choose another folder.",
+      "Git does not ignore .practice/ in the work folder. Add .practice/ to its .gitignore, so your practice files stay out of your commits.",
+    ]);
   });
 
   test("a rich overview uses only course fields for its Claude Code words", async () => {

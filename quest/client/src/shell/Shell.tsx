@@ -15,6 +15,7 @@ import { PipStageProvider } from "../pip/PipStage";
 import { PendingMoment } from "../screens/LevelComplete";
 import { useCourseSnapshot } from "../screens/lesson";
 import { useLessonRoute } from "../screens/useLessonRoute";
+import { SaveNotices } from "./SaveNotices";
 import { TopBar } from "./TopBar";
 
 /** How long the wait for the first snapshot lasts before the screen says it is busy, so a snapshot that comes at once shows no flash. */
@@ -135,6 +136,7 @@ function Frame(): ReactNode {
       <div ref={top} data-top="" className="sticky top-0 z-20">
         {!welcome && <TopBar />}
         <Notice kind={NOTICES[connection]} />
+        <SaveNotices />
       </div>
       <div
         ref={screen}

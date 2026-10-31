@@ -10,6 +10,7 @@ import {
   type ThemeChoice,
 } from "../lib/settings";
 import { pageIndex } from "../pages/fetch";
+import { WorkFolders } from "./WorkFolders";
 
 const THEMES = [
   { value: "system", label: "System" },
@@ -89,10 +90,15 @@ export function SettingsBody({
           applyMotion(choice);
         }}
       />
-      <section aria-labelledby={foldersId} data-settings="work-folders">
+      <section
+        aria-labelledby={foldersId}
+        data-settings="work-folders"
+        className="grid gap-2"
+      >
         <h3 id={foldersId} className="text-sm font-semibold">
           Work folders
         </h3>
+        <WorkFolders />
       </section>
       <section aria-labelledby={helpId} className="grid gap-2">
         <h3 id={helpId} className="text-sm font-semibold">

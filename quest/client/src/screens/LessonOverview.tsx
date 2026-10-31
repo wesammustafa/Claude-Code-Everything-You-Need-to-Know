@@ -10,6 +10,8 @@ import { useActionProps } from "../live/useAction";
 import { ReadLesson } from "../pages/ReadLesson";
 import { PageTitle } from "../shell/PageTitle";
 import { CheckLooksFor } from "./CheckLooksFor";
+import { FolderQuestion } from "./FolderQuestion";
+import { problemText } from "./folderWords";
 import { LessonGate } from "./LessonGate";
 import { COLUMN, EYEBROW } from "./layout";
 import {
@@ -55,8 +57,7 @@ function noteText(note: OverviewNote): string | null {
     case "changed":
       return "This lesson changed since you started it, so it starts again here.";
     case "folder-problem":
-      // The folder question's own screen (252) words these.
-      return null;
+      return problemText(note.problem);
   }
 }
 
@@ -85,6 +86,15 @@ export function LessonOverview() {
       actions.current?.querySelector<HTMLElement>("[data-start]")?.focus();
     wasResumable.current = resumable;
   }, [resumable]);
+  // The folder question answered: Start appears, and focus moves to it.
+  const startable = Boolean(active?.lesson.start?.planned);
+  const asked = active?.lesson.folderQuestion?.open ?? false;
+  const wasAsked = useRef(asked);
+  useEffect(() => {
+    if (wasAsked.current && !asked && startable)
+      actions.current?.querySelector<HTMLElement>("[data-start]")?.focus();
+    wasAsked.current = asked;
+  }, [asked, startable]);
   if (!active) return <LessonGate />;
   const { lesson, summary } = active;
   const intro = lesson.intro;
@@ -191,12 +201,17 @@ export function LessonOverview() {
       )}
 
       {lesson.folderQuestion !== null && (
-        // The Work folder question's slot: 252 fills it.
-        <div data-folder-question="" />
+        <section
+          data-folder-question=""
+          aria-label="Work folder"
+          className="grid gap-2 rounded-lg border border-line bg-surface px-4 py-3"
+        >
+          <FolderQuestion question={lesson.folderQuestion} />
+        </section>
       )}
 
       <div ref={actions} className="flex flex-wrap items-center gap-2.5">
-        {/* No start while the folder question waits for its answer (252). */}
+        {/* No start while the folder question waits for its answer. */}
         {lesson.start?.planned && (
           <Button
             variant="primary"
