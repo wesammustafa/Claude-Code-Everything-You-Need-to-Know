@@ -262,6 +262,8 @@ function startOnce(dir, command, deadline) {
       env: { ...process.env, QUEST_BASE_PORT: "0" },
       // Piped, not a TTY, so the app opens no browser.
       stdio: ["ignore", "pipe", "pipe"],
+      // npm is npm.cmd on Windows, which only a shell can start.
+      shell: process.platform === "win32",
     });
     let stdout = "";
     let settled = false;

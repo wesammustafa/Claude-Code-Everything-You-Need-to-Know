@@ -16,6 +16,7 @@ import {
 } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isMain } from "./is-main.mjs";
 import { REPO_URL as REPO } from "./links.mjs";
 
 /** Names that must not appear at any depth: live Claude Code config and the retired Assert workflow. */
@@ -427,4 +428,4 @@ async function main() {
   }
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) await main();
+if (isMain(import.meta.url)) await main();

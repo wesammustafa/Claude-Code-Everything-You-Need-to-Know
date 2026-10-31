@@ -11,6 +11,7 @@
     "replay": "node src/replay.mjs",
     "budgets": "node src/budgets.mjs",
     "proof": "node src/proof.mjs",
+    "startup": "node src/startup.mjs",
     "publish:template": "node src/publish.mjs",
     "legacy:fingerprints": "node src/legacy-fingerprints.mjs"
   }

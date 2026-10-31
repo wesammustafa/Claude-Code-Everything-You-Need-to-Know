@@ -220,7 +220,8 @@ export function replayPasses({
  * Starts `npm run --silent learn` in `dir` with QUEST_BASE_PORT=0 and piped
  * stdio (no TTY, so no browser opens), and resolves at the first
  * http://127.0.0.1:<port> on stdout. stop() sends SIGTERM and resolves with the
- * exit code; Windows delivers no SIGTERM, so expect no exit code there.
+ * exit code. Windows delivers no SIGTERM: the whole tree is ended with taskkill
+ * and no exit code is expected.
  * Ticket 230 reuses it.
  */
 export function startLearn(
@@ -235,6 +236,13 @@ export function startLearn(
       stdio: ["ignore", "pipe", "pipe"],
       shell: WINDOWS,
     });
+    // With shell: WINDOWS the child is cmd.exe, so ending it alone would leave
+    // npm and the server holding the port and the folder.
+    const killTree = (signal) => {
+      if (WINDOWS)
+        spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"]);
+      else child.kill(signal);
+    };
     let output = "";
     let listening = false;
     const exited = new Promise((resolveExit) =>
@@ -242,7 +250,7 @@ export function startLearn(
     );
     const stop = async (waitMs = 10_000) => {
       if (child.exitCode !== null) return child.exitCode;
-      child.kill("SIGTERM");
+      killTree("SIGTERM");
       let timer;
       const code = await Promise.race([
         exited,
@@ -250,13 +258,13 @@ export function startLearn(
       ]);
       clearTimeout(timer);
       if (code === "timeout") {
-        child.kill("SIGKILL");
+        killTree("SIGKILL");
         return null;
       }
       return code;
     };
     const timer = setTimeout(() => {
-      child.kill("SIGKILL");
+      killTree("SIGKILL");
       fail(
         new Error(`not listening after ${String(deadlineMs)} ms\n${output}`),
       );
@@ -505,6 +513,7 @@ export function rebuild(repoRoot) {
   const run = spawnSync("npm", ["run", "build"], {
     cwd: repoRoot,
     encoding: "utf8",
+    shell: WINDOWS,
   });
   if (run.status === 0) return { ok: true, problems: [] };
   const tail = `${run.stdout ?? ""}${run.stderr ?? ""}`.trim().split("\n");

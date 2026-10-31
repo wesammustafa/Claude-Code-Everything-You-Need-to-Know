@@ -118,13 +118,37 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run proof
 
+  # The Checks' tests, and `npm run learn` starting on an assembled copy with
+  # no node_modules, offline, on 127.0.0.1, answering GET /api/health, on macOS
+  # and on Windows in Git Bash. The full proof stays on Ubuntu: it needs the
+  # replay, Chromium and an exit code on SIGTERM, which Windows never gives.
+  platforms:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci
+      - run: npm run test:checks
+      - run: npm run build
+      - run: npm run template -- "$RUNNER_TEMP/tpl"
+      - run: npm run startup -- "$RUNNER_TEMP/tpl"
+
   # The ruleset on main requires this job's check run, which GitHub names after
   # the job id. Renaming the job, or giving it a name:, would block every merge.
   # GitHub reports a skipped job as success and lets a skipped required check
   # through, so this job always runs and fails unless every job it needs
   # succeeded.
   checks:
-    needs: [guide, quest, e2e, template]
+    needs: [guide, quest, e2e, template, platforms]
     if: always()
     runs-on: ubuntu-latest
     steps:
