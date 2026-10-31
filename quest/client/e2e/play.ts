@@ -102,10 +102,20 @@ export async function move(page: Page) {
   } else if (await next.isVisible()) {
     await next.click();
   } else if ((await untried.count()) > 0) {
+    // Picking only selects (247): the button under the answers sends it.
     await untried.first().click();
+    await page
+      .locator("main")
+      .getByRole("button", { name: /^(Check my answer|That's my guess)$/ })
+      .first()
+      .click();
   } else if (await check.isVisible()) {
     await check.click();
-    await expect(next.or(page.locator("[data-state=not-yet]"))).toBeVisible({
+    // A passed Check may lead straight to a Step-down.
+    const stepDown = page.getByRole("heading", { name: "Less help from here" });
+    await expect(
+      next.or(page.locator("[data-state=not-yet]")).or(stepDown),
+    ).toBeVisible({
       timeout: 30_000,
     });
     return;

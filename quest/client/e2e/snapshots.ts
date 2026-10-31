@@ -1344,3 +1344,244 @@ export const richCopy = playingWith({
     },
   },
 });
+
+// ---- Questions, warm-ups and hints (247) -------------------------------------
+
+/** The fields every question beat shares: no Check, decided by its answer. */
+const questionBeat = {
+  decidedBy: "answer" as const,
+  status: "waiting" as const,
+  verification: [],
+  fail: null,
+  lines: [{ kind: "say" as const, text: "Before you run it, guess." }],
+};
+
+/** A predict beat before its guess. */
+export const predictBeat = playingWith({
+  beat: {
+    ...questionBeat,
+    kind: "predict",
+    ask: "What will `claude --version` print?",
+    options: [{ text: "A version number" }, { text: "Nothing at all" }],
+  },
+});
+
+const askOptions = [
+  { text: "`CLAUDE.md`" },
+  { text: "Every file in the folder" },
+  { text: "The settings file" },
+];
+
+/** An ask beat before a pick. */
+export const askBeat = playingWith({
+  beat: {
+    ...questionBeat,
+    kind: "ask",
+    ask: "Which file does Claude Code read at the start of a session?",
+    options: askOptions,
+    why: { onCard: "It is where the project's rules live.", all: [] },
+  },
+});
+
+/** The ask beat after one wrong pick: its reason and what to look for. */
+export const askWrong = playingWith({
+  beat: {
+    ...(askBeat.beat as NonNullable<PlayingLesson["beat"]>),
+    options: [
+      askOptions[0] as { text: string },
+      {
+        text: "Every file in the folder",
+        kind: "wrong",
+        because: "It reads only the files a task needs.",
+      },
+      askOptions[2] as { text: string },
+    ],
+    answer: {
+      ...(playing.beat as NonNullable<PlayingLesson["beat"]>).answer,
+      feedback: "wrong",
+      because: "It reads only the files a task needs.",
+      point: "Look for the file named in the lesson's first step.",
+    },
+  },
+});
+
+/** The ask beat after a right pick. */
+export const askRight = playingWith({
+  beat: {
+    ...(askWrong.beat as NonNullable<PlayingLesson["beat"]>),
+    status: "done",
+    options: [
+      { text: "`CLAUDE.md`", kind: "right", because: "Its rules load first." },
+      ...(askWrong.beat?.options.slice(1) ?? []),
+    ],
+    answer: {
+      ...(askWrong.beat as NonNullable<PlayingLesson["beat"]>).answer,
+      picked: 0,
+      feedback: "right",
+      because: null,
+      point: null,
+      reveal: "Claude Code reads `CLAUDE.md` when a session starts.",
+    },
+  },
+});
+
+/** The ask beat once its answer is shown. */
+export const askRevealed = playingWith({
+  beat: {
+    ...(askRight.beat as NonNullable<PlayingLesson["beat"]>),
+    answer: {
+      ...(askRight.beat as NonNullable<PlayingLesson["beat"]>).answer,
+      feedback: "revealed",
+    },
+  },
+});
+
+/** A typed-answer beat. */
+export const typeBeat = playingWith({
+  beat: {
+    ...questionBeat,
+    kind: "type",
+    ask: "Which command shows the session's cost?",
+    options: [],
+  },
+});
+
+/** The typed beat after a miss: the page's words for it. */
+export const typeWrong = playingWith({
+  beat: {
+    ...(typeBeat.beat as NonNullable<PlayingLesson["beat"]>),
+    answer: {
+      ...(playing.beat as NonNullable<PlayingLesson["beat"]>).answer,
+      feedback: "wrong",
+      because: "It starts with a slash.",
+    },
+  },
+});
+
+/** A choice whose pick shows later beats (`when:`): a guess, not judged. */
+export const whenOption = playingWith({
+  beat: {
+    ...questionBeat,
+    kind: "ask",
+    status: "done",
+    ask: "Which shell do you use?",
+    options: [
+      { text: "bash", kind: "option" },
+      { text: "zsh", kind: "option" },
+    ],
+    answer: {
+      ...(playing.beat as NonNullable<PlayingLesson["beat"]>).answer,
+      picked: 1,
+      feedback: "option",
+    },
+  },
+});
+
+/** b-2's warm-up question from b-1, with the line that explains warm-ups. */
+export const warmupAsk = {
+  ...askBeat,
+  id: "b-2",
+  title: warmupB2.title,
+  step: {
+    ...(askBeat.step as NonNullable<PlayingLesson["step"]>),
+    warmup: { from: "b-1", explainer: true },
+  },
+};
+/** The same warm-up, its explainer already seen. */
+export const warmupAskQuiet = {
+  ...warmupAsk,
+  step: {
+    ...warmupAsk.step,
+    warmup: { from: "b-1", explainer: false },
+  },
+};
+
+const waitQuestion = {
+  prompt: "While the check runs: which file holds the project's rules?",
+  options: [
+    { text: "`CLAUDE.md`", kind: "right" as const },
+    { text: "`README.md`" },
+  ],
+  answered: null,
+  words: null,
+};
+
+/** A long wait with its question. */
+export const waitQuestionOpen = playingWith({
+  beat: { ...fileBeat, status: "checking", checking: "notes.md" },
+  lesson: { waitQuestion },
+});
+/** The wait question answered, with the page's words. */
+export const waitQuestionAnswered = playingWith({
+  beat: { ...fileBeat, status: "checking", checking: "notes.md" },
+  lesson: {
+    waitQuestion: {
+      ...waitQuestion,
+      answered: 0,
+      words: "Yes: `CLAUDE.md` holds them.",
+    },
+  },
+});
+/** The wait over: the snapshot drops the question. */
+export const waitQuestionEnded = watchPassed;
+
+/** A Challenge step before its first Check: hints wait. */
+export const challengeUnavailable = {
+  ...playing,
+  hints: {
+    shown: [],
+    available: false,
+    unavailable: "run-check",
+    confirmExact: false,
+  },
+} satisfies PlayingLesson;
+/** A Challenge question before its first answer: hints wait. */
+export const challengeUnavailableAnswer = {
+  ...askBeat,
+  hints: {
+    shown: [],
+    available: false,
+    unavailable: "pick-answer",
+    confirmExact: false,
+  },
+} satisfies PlayingLesson;
+
+/** The hints open to the question before the exact command. */
+export const confirmExact = {
+  ...hinted,
+  hints: { ...hinted.hints, available: false, confirmExact: true },
+} satisfies PlayingLesson;
+
+/** The exact command taken: its rung has the command with Copy. */
+export const exactTaken = {
+  ...hinted,
+  hints: {
+    ...hinted.hints,
+    shown: [
+      ...hinted.hints.shown,
+      {
+        kind: "exact",
+        commands: [
+          {
+            leadIn: "Run the check:",
+            text: "npm run check -- b-1",
+            code: null,
+          },
+        ],
+      },
+    ],
+    available: false,
+  },
+} satisfies PlayingLesson;
+
+/** The predict once guessed: a guess is drawn chosen, then the step goes on. */
+export const predictDone = playingWith({
+  beat: {
+    ...(predictBeat.beat as NonNullable<PlayingLesson["beat"]>),
+    status: "done",
+    answer: {
+      ...(playing.beat as NonNullable<PlayingLesson["beat"]>).answer,
+      picked: 1,
+    },
+  },
+});

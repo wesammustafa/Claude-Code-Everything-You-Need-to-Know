@@ -31,6 +31,23 @@ import {
   watchPassed,
   watchWaiting,
   workFolderCheck,
+  askBeat,
+  askRevealed,
+  askRight,
+  askWrong,
+  challengeUnavailable,
+  challengeUnavailableAnswer,
+  confirmExact,
+  exactTaken,
+  predictBeat,
+  typeBeat,
+  typeWrong,
+  waitQuestionAnswered,
+  waitQuestionEnded,
+  waitQuestionOpen,
+  warmupAsk,
+  warmupAskQuiet,
+  whenOption,
 } from "../../e2e/snapshots";
 import { renderConnected } from "../../test/connected";
 import { WAITING_LINE } from "./Welcome";
@@ -117,6 +134,16 @@ const APP_WORDS: readonly RegExp[] = [
   /^The Check passed\. These steps put things back as they were\.$/,
   /^Run it in your practice copy too: you will see the same result\.$/,
   /^(No commands this time\.|You've done each part before\.|You've done this before\.)( You've done each part before\.)?$/,
+  // Questions, warm-ups and hints (247).
+  /^(Check my answer|That's my guess|Show the answer|Show the exact command|Not now)$/,
+  /^(Make your guess\.|Pick an answer\.|Type your answer\.|Not yet\. Try another answer\.|That's right\.|Here is the answer\.)$/,
+  /^(Right|The answer)$/,
+  /^(While you wait|Your result is in\.)$/,
+  /^(A quick look back at |A quick look back at an earlier lesson\.|A quick look back at the (Beginner|Intermediate|Advanced) level\.)$/,
+  /^Warm-ups bring back a skill from before, so it sticks\.$/,
+  /^(Hints open once you have run Check again\.|Hints open once you have tried an answer\.)$/,
+  /^Show the exact command\? This step then counts as Every command shown\.$/,
+  /^Hint \d+\. ?$/,
 ];
 
 /** Every string the snapshot carries, to match quotes against. */
@@ -1204,6 +1231,7 @@ describe("Lesson workspace, every step (246)", () => {
       tearDown,
       workFolderCheck,
       richCopy,
+      ...QUESTION_FIXTURES,
     ];
     for (const lesson of fixtures) {
       renderConnected("/lesson/b-1/step", snapshotOf(lesson));
@@ -1225,5 +1253,191 @@ describe("Lesson workspace, every step (246)", () => {
       }
       cleanup();
     }
+  });
+});
+
+const QUESTION_FIXTURES = [
+  predictBeat,
+  askBeat,
+  askWrong,
+  askRight,
+  askRevealed,
+  typeBeat,
+  typeWrong,
+  whenOption,
+  warmupAsk,
+  warmupAskQuiet,
+  waitQuestionOpen,
+  waitQuestionAnswered,
+  challengeUnavailable,
+  challengeUnavailableAnswer,
+  confirmExact,
+  exactTaken,
+];
+
+describe("Lesson workspace, questions and hints (247)", () => {
+  test.each(QUESTION_FIXTURES.map((lesson, i) => [i, lesson] as const))(
+    "fixture %i shows only the app's words and quotes",
+    (_i, lesson) => {
+      renderConnected(`/lesson/${lesson.id}/step`, snapshotOf(lesson));
+      expect(unquoted(snapshotOf(lesson))).toEqual([]);
+    },
+  );
+
+  test("moving between answers posts nothing; the button sends one answer.pick", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected("/lesson/b-1/step", snapshotOf(askBeat));
+    expect(bubbleText()).toContain("Pick an answer.");
+    // The question is decided by its answer: no Check again, no breathing dot.
+    expect(screen.queryByRole("button", { name: "Check again" })).toBeNull();
+    expect(
+      document.querySelector("[data-says-words] .animate-breathe"),
+    ).toBeNull();
+    await user.click(screen.getByRole("radio", { name: "CLAUDE.md" }));
+    await user.keyboard("{ArrowDown}");
+    expect(page.posts).toEqual([]);
+    await user.click(screen.getByRole("button", { name: "Check my answer" }));
+    expect(page.posts).toEqual([{ type: "answer.pick", option: 1 }]);
+  });
+
+  test("a predict is sent as a guess, and drawn chosen with no judgement", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected("/lesson/b-1/step", snapshotOf(predictBeat));
+    expect(bubbleText()).toContain("Make your guess.");
+    await user.click(screen.getByRole("radio", { name: "Nothing at all" }));
+    await user.click(screen.getByRole("button", { name: "That's my guess" }));
+    expect(page.posts).toEqual([{ type: "answer.pick", option: 1 }]);
+    cleanup();
+    renderConnected("/lesson/b-1/step", snapshotOf(whenOption));
+    expect(document.querySelector("[data-state=chosen]")).toHaveTextContent(
+      "zsh",
+    );
+    expect(
+      document.querySelector("[data-state=right], [data-state=notYet]"),
+    ).toBeNull();
+    expect(screen.getByRole("button", { name: "Next step" })).toBeVisible();
+  });
+
+  test("a wrong pick keeps the step, says its reason once and offers the answer", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected("/lesson/b-1/step", snapshotOf(askWrong));
+    expect(bubbleText()).toContain("Not yet. Try another answer.");
+    expect(document.querySelector("[data-state=notYet]")).toHaveTextContent(
+      "Every file in the folder",
+    );
+    expect(
+      screen.getAllByText("It reads only the files a task needs."),
+    ).toHaveLength(1);
+    expect(document.querySelector("[data-answer-because]")).toBeNull();
+    expect(document.querySelector("[data-answer-point]")).toHaveTextContent(
+      "Look for the file named",
+    );
+    expect(document.querySelector("[data-why]")).not.toBeNull();
+    await user.click(screen.getByRole("button", { name: "Show the answer" }));
+    expect(page.posts).toEqual([{ type: "answer.reveal" }]);
+    page.send(snapshotOf(askRevealed, { revision: 2 }));
+    expect(bubbleText()).toContain("Here is the answer.");
+    expect(document.querySelector("[data-state=shown]")).toHaveTextContent(
+      "The answer",
+    );
+    expect(
+      screen.queryByRole("button", { name: "Show the answer" }),
+    ).toBeNull();
+  });
+
+  test("a right pick says so and goes on", () => {
+    renderConnected("/lesson/b-1/step", snapshotOf(askRight));
+    expect(bubbleText()).toContain("That's right.");
+    expect(document.querySelector("[data-state=right]")).toHaveTextContent(
+      "CLAUDE.md",
+    );
+    expect(
+      screen.queryByRole("button", { name: "Check my answer" }),
+    ).toBeNull();
+    expect(screen.getByRole("button", { name: "Next step" })).toBeVisible();
+  });
+
+  test("a typed answer posts its text, at most 200 characters, and stays after a miss", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected("/lesson/b-1/step", snapshotOf(typeBeat));
+    expect(bubbleText()).toContain("Type your answer.");
+    const box = screen.getByRole("textbox", {
+      name: "Which command shows the session's cost?",
+    });
+    expect(box).toHaveAttribute("maxlength", "200");
+    await user.type(box, "/usage{Enter}");
+    expect(page.posts).toEqual([{ type: "answer.type", text: "/usage" }]);
+    page.send(snapshotOf(typeWrong, { revision: 2 }));
+    expect(box).toHaveValue("/usage");
+    expect(document.querySelector("[data-answer-because]")).toHaveTextContent(
+      "It starts with a slash.",
+    );
+  });
+
+  test("the hints say why they wait, and the exact command asks first", async () => {
+    const user = userEvent.setup();
+    renderConnected("/lesson/b-1/step", snapshotOf(challengeUnavailable));
+    expect(
+      document.querySelector("[data-hints-unavailable]"),
+    ).toHaveTextContent("Hints open once you have run Check again.");
+    expect(screen.queryByRole("button", { name: "Show a hint" })).toBeNull();
+    cleanup();
+    const page = renderConnected("/lesson/b-1/step", snapshotOf(confirmExact));
+    expect(screen.queryByRole("button", { name: "Another hint" })).toBeNull();
+    await user.click(
+      screen.getByRole("button", { name: "Show the exact command" }),
+    );
+    await user.click(screen.getByRole("button", { name: "Not now" }));
+    expect(page.posts).toEqual([
+      { type: "hint.takeExact", take: true },
+      { type: "hint.takeExact", take: false },
+    ]);
+    cleanup();
+    renderConnected("/lesson/b-1/step", snapshotOf(exactTaken));
+    const rungs = document.querySelectorAll("[data-hint-rung]");
+    expect(rungs[1]).toHaveTextContent("Run the check:");
+    expect(
+      within(rungs[1] as HTMLElement).getByRole("button", {
+        name: "Copy npm run check -- b-1",
+      }),
+    ).toBeInTheDocument();
+  });
+
+  test("a warm-up names the Lesson it looks back at", () => {
+    renderConnected("/lesson/b-2/step", snapshotOf(warmupAsk));
+    expect(document.querySelector("[data-warmup]")).toHaveTextContent(
+      "A quick look back at Install, sign in and look around.",
+    );
+    expect(document.querySelector("[data-warmup]")).toHaveTextContent(
+      "Warm-ups bring back a skill from before, so it sticks.",
+    );
+    cleanup();
+    renderConnected("/lesson/b-2/step", snapshotOf(warmupAskQuiet));
+    expect(document.querySelector("[data-warmup]")).not.toHaveTextContent(
+      "Warm-ups",
+    );
+  });
+
+  test("the waiting question answers, puts away, and stays read only once the wait ends", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected(
+      "/lesson/b-1/step",
+      snapshotOf(waitQuestionOpen),
+    );
+    const section = () => document.querySelector("[data-wait-question]");
+    expect(section()).toHaveTextContent("While you wait");
+    await user.click(screen.getByRole("radio", { name: "README.md" }));
+    expect(page.posts).toEqual([]);
+    await user.click(screen.getByRole("button", { name: "Check my answer" }));
+    expect(page.posts).toEqual([{ type: "waitQuestion.answer", option: 1 }]);
+    page.send(snapshotOf(waitQuestionAnswered, { revision: 2 }));
+    expect(section()).toHaveTextContent("Yes: CLAUDE.md holds them.");
+    page.send(snapshotOf(waitQuestionEnded, { revision: 3 }));
+    expect(section()).toHaveTextContent("Your result is in.");
+    expect(section()?.querySelector("fieldset")).toBeDisabled();
+    cleanup();
+    renderConnected("/lesson/b-1/step", snapshotOf(waitQuestionOpen));
+    await user.click(screen.getByRole("button", { name: "Not now" }));
+    expect(section()).toBeNull();
   });
 });
