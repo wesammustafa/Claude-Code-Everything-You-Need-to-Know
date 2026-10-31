@@ -3,9 +3,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, statSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { delimiter, dirname, join } from 'node:path';
 import { setTimeout as wait } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { claudeArgWords, parseYaml, readWorkflow as readActions } from '../actions.mjs';
@@ -17,7 +17,7 @@ import { boundedScript, narrowRules, runLimits, SCRIPT as RUNNER, SLICE, sliceRu
 import { CI, items as capstoneItems, noCommittedKey, REVIEW as REVIEW_WORKFLOW, RUN as CAPSTONE_RUN, SNAPSHOT as CAPSTONE_LISTING } from '../lessons/a-capstone.mjs';
 import { nameProblem } from '../marketplace.mjs';
 import { openRepo } from '../repo.mjs';
-import { notRun, runStubbed, scratchPath, STUB_SESSION } from '../stub-claude.mjs';
+import { findBash, notRun, runStubbed, scratchPath, scrubbed, STUB_SESSION, stubText, within } from '../stub-claude.mjs';
 import { readWorkflow } from '../workflow-script.mjs';
 import { parseWorktrees } from '../worktrees.mjs';
 import { check, commit, repo, setMode, withRepo, write } from './helpers.mjs';
@@ -1293,6 +1293,13 @@ test('a-4 refuses to run a script that could reach the real Claude Code, and run
       [edited(['set -uo pipefail\n', 'set -uo pipefail\n. /etc/profile\n']), /reads `\/etc\/profile`/],
       [edited(['set -uo pipefail\n', 'set -uo pipefail\nsource "/etc/zprofile"\n']), /reads `\/etc\/zprofile`/],
       [edited(['set -uo pipefail\n', 'set -uo pipefail\neval "$(/usr/libexec/path_helper -s)"\n']), /runs `path_helper`/],
+      [withCall(`claude.cmd -p "${PROMPT}" ${FLAGS}`), /calls `claude\.cmd`/],
+      [withCall(`claude.ps1 -p "${PROMPT}" ${FLAGS}`), /calls `claude\.ps1`/],
+      [withCall(`C:\\Users\\me\\npm\\claude.cmd -p "${PROMPT}" ${FLAGS}`), /calls Claude Code by its path, `C:\\Users\\me\\npm\\claude\.cmd`/],
+      [withCall(`cmd //c claude -p "${PROMPT}" ${FLAGS}`), /starts `cmd`/],
+      [withCall(`powershell.exe -Command claude -p "${PROMPT}" ${FLAGS}`), /starts `powershell`/],
+      [withCall(`pwsh -c 'claude -p "${PROMPT}" ${FLAGS}'`), /starts `pwsh`/],
+      [withCall(`wsl claude -p "${PROMPT}" ${FLAGS}`), /starts `wsl`/],
     ]) {
       const marked = script.replace('set -uo pipefail\n', () => `set -uo pipefail\ntouch "${ran}"\n`);
       withRepo(reviewRepo({ script: marked }), (dir) => {
@@ -1414,19 +1421,80 @@ test('the stand-in stops a script at the time limit, with whatever the script le
   }
 });
 
-test('the stand-in runs nothing on Windows itself, and says to run the check from WSL 2, macOS or Linux', () => {
+test('on Windows the stand-in gets one PATH, its bin first, and no sign-in variable in any case', () => {
+  const from = { Path: 'C:/real', PATH: 'C:/other', anthropic_api_key: 'k', Claude_Code_OAuth_Token: 't', ANTHROPIC_AUTH_TOKEN: 'a', KEEP: '1' };
+  const env = scrubbed(undefined, 'C:/stub/bin', 'win32', from);
+  assert.deepEqual(Object.keys(env).filter((k) => /^path$/i.test(k)), ['PATH']);
+  assert.ok(env.PATH?.startsWith('C:/stub/bin;'), env.PATH);
+  assert.deepEqual(Object.keys(env).sort(), ['KEEP', 'PATH']);
+});
+
+test('the stand-in refuses on Windows without Git Bash, and says to install Git for Windows', () => {
   const outside = mkdtempSync(join(tmpdir(), 'a4-win-'));
   const ran = join(outside, 'ran');
   try {
     withRepo(reviewRepo({ script: `#!/usr/bin/env bash\ntouch "${ran}"\n` }), (dir) => {
-      const run = runStubbed(openRepo(dir), SCRIPT, { platform: 'win32' });
+      const run = runStubbed(openRepo(dir), SCRIPT, { platform: 'win32', bash: null });
       assert.deepEqual(run, { windows: true });
-      assert.equal(existsSync(ran), false, 'the stand-in ran the script on Windows');
-      assert.equal(notRun(run, SCRIPT), 'The check didn\'t run `scripts/review-staged.sh`: it runs scripts with bash and a stand-in for `claude` only from WSL 2, macOS or Linux, not from Windows itself. Run the check there.');
+      assert.equal(existsSync(ran), false, 'the stand-in ran the script on Windows without Git Bash');
+      assert.equal(notRun(run, SCRIPT), 'The check didn\'t run `scripts/review-staged.sh`: on Windows it runs scripts with Git Bash and a stand-in for `claude`, and it found no Git Bash. Install Git for Windows, or run the check from WSL 2, macOS or Linux.');
       assert.equal(runStubbed(openRepo(dir), SCRIPT, { platform: 'linux' }).status, 0);
       assert.equal(existsSync(ran), true);
     });
   } finally {
+    rmSync(outside, { recursive: true, force: true });
+  }
+});
+
+test('Git Bash is found from git\'s own folder on Windows, never under the Windows folder or WindowsApps', () => {
+  const has = (...paths) => (path) => paths.includes(path);
+  const exec = 'C:\\Program Files\\Git\\mingw64\\libexec\\git-core';
+  const env = { SystemRoot: 'C:\\WINDOWS' };
+  assert.equal(findBash({ platform: 'win32', execPath: exec, env, exists: has('C:/Program Files/Git/bin/bash.exe', 'C:/Program Files/Git/usr/bin/bash.exe') }), 'C:/Program Files/Git/bin/bash.exe');
+  assert.equal(findBash({ platform: 'win32', execPath: exec, env, exists: has('C:/Program Files/Git/usr/bin/bash.exe') }), 'C:/Program Files/Git/usr/bin/bash.exe');
+  assert.equal(findBash({ platform: 'win32', execPath: exec, env, exists: has() }), null);
+  assert.equal(findBash({ platform: 'win32', execPath: 'C:/Windows/System32/git-core', env, exists: has('C:/Windows/System32/bin/bash.exe') }), null);
+  assert.equal(findBash({ platform: 'win32', execPath: 'C:\\Users\\me\\AppData\\Local\\Microsoft\\WindowsApps\\git', env, exists: has('C:/Users/me/AppData/Local/Microsoft/WindowsApps/git/bin/bash.exe') }), null);
+  assert.equal(findBash({ platform: 'linux', execPath: exec, exists: has() }), 'bash');
+  assert.equal(findBash({ platform: 'darwin' }), 'bash');
+});
+
+test('on Windows the stand-in records the folder as Windows names it, and paths match whatever their case and slashes', () => {
+  const text = stubText('C:\\Users\\RUNNER~1\\Temp\\stub-claude-x', 'win32');
+  assert.match(text, /^d='C:\/Users\/RUNNER~1\/Temp\/stub-claude-x'$/m);
+  assert.match(text, /^pwd -W > /m);
+  assert.match(stubText('/tmp/stub-claude-x', 'linux'), /^pwd > /m);
+  const roots = ['C:\\x\\repo'];
+  assert.equal(within(roots, '/c/x/repo/a', 'win32'), 'a');
+  assert.equal(within(roots, 'c:/X/Repo/src/b.js', 'win32'), 'src/b.js');
+  assert.equal(within(roots, 'C:/x/other', 'win32'), null);
+  assert.equal(within(roots, 'D:/x/repo', 'win32'), null);
+  const run = { roots };
+  assert.equal(scratchPath(run, { cwd: 'src' }, 'b.js', 'win32'), 'src/b.js');
+  assert.equal(scratchPath(run, { cwd: '' }, '/c/x/repo/.claude/x.json', 'win32'), '.claude/x.json');
+  assert.equal(scratchPath(run, { cwd: '' }, 'C:\\x\\repo\\.claude\\x.json', 'win32'), '.claude/x.json');
+});
+
+test('a script reaches the stand-in, not a real claude or claude.cmd earlier on PATH', () => {
+  const outside = mkdtempSync(join(tmpdir(), 'a4-real-'));
+  const real = join(outside, 'real');
+  const marker = join(outside, 'reached');
+  mkdirSync(real);
+  for (const name of ['claude', 'claude.cmd']) {
+    writeFileSync(join(real, name), `#!/bin/sh\ntouch "${marker}"\n`);
+    chmodSync(join(real, name), 0o755);
+  }
+  const path = process.env.PATH;
+  process.env.PATH = `${real}${delimiter}${path ?? ''}`;
+  try {
+    withRepo(reviewRepo({ script: '#!/usr/bin/env bash\nclaude -p "Say hi" > /dev/null\n' }), (dir) => {
+      const run = runStubbed(openRepo(dir), SCRIPT);
+      assert.equal(run.status, 0, run.stderr);
+      assert.equal(run.calls?.length, 1);
+      assert.equal(existsSync(marker), false, 'the script reached a claude before the stand-in');
+    });
+  } finally {
+    process.env.PATH = path;
     rmSync(outside, { recursive: true, force: true });
   }
 });
