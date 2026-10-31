@@ -128,9 +128,22 @@ async function failThenPass(page: Page, copy: PracticeCopy, note: string) {
 
   copy.write(note, CORRECTED);
   await check.click();
-  await expect(
-    bar(page).getByRole("button", { name: "Next step" }),
-  ).toBeVisible({ timeout: 30_000 });
+  try {
+    await expect(
+      bar(page).getByRole("button", { name: "Next step" }),
+    ).toBeVisible({ timeout: 30_000 });
+  } catch (error) {
+    // Say which item still fails, and what the app printed, not only that
+    // the button never came.
+    const shown = await page
+      .locator("main")
+      .innerText()
+      .catch(() => "");
+    throw new Error(
+      `The corrected note did not pass its Check.\nPage:\n${shown}\nApp output:\n${copy.output()}`,
+      { cause: error },
+    );
+  }
 
   await playTo(page, "Install, sign in and look around");
   await expect(page.getByText("Lesson 1 complete")).toBeVisible();

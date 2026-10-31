@@ -43,27 +43,63 @@ async function tabStops(region: Locator): Promise<string[]> {
 
 /**
  * Tabs from the page's heading through the controls, which come next, and
- * returns the Tab stops it reached there.
+ * returns the Tab stops it reached there. The page records each stop as
+ * focus lands, so a Tab press costs one round trip, not two.
  */
 async function tabbed(page: Page, region: Locator): Promise<string[]> {
+  await region.evaluate((root) => {
+    const reached: (string | null)[] = [];
+    Object.assign(window, { reached });
+    const note = () => {
+      const el = document.activeElement;
+      if (el === null || !root.contains(el)) reached.push(null);
+      else if (el instanceof HTMLInputElement && el.type === "radio")
+        reached.push(`radio:${el.name}`);
+      else {
+        const controls = [...root.querySelectorAll("button, select, input")];
+        reached.push(`el:${String(controls.indexOf(el))}`);
+      }
+    };
+    // One recorder at a time: a second call replaces the first.
+    const previous = (window as unknown as { stopNoting?: () => void })
+      .stopNoting;
+    previous?.();
+    document.addEventListener("focusin", note);
+    // Focus leaving for the browser's own UI fires no focusin: blur notes it.
+    window.addEventListener("blur", note);
+    Object.assign(window, {
+      stopNoting: () => {
+        document.removeEventListener("focusin", note);
+        window.removeEventListener("blur", note);
+      },
+    });
+  });
   // The heading takes focus from script only, and comes before the controls,
   // so the next Tab lands on the first control.
   await page.getByRole("heading", { level: 1 }).focus();
-  const reached = new Set<string>();
+  const read = () =>
+    page.evaluate(
+      () => (window as unknown as { reached: (string | null)[] }).reached,
+    );
+  // The heading's own focus is not a stop.
+  await page.evaluate(() => {
+    (window as unknown as { reached: unknown[] }).reached.length = 0;
+  });
+  // The stops up to the first focus outside the controls after reaching
+  // them; null while the controls have not been reached or have been left.
+  const within = (keys: (string | null)[]): string[] | null => {
+    const first = keys.findIndex((k) => k !== null);
+    if (first === -1) return null;
+    const end = keys.indexOf(null, first);
+    return end === -1 ? null : (keys.slice(first, end) as string[]);
+  };
   for (let i = 0; i < 200; i += 1) {
     await page.keyboard.press("Tab");
-    const key = await region.evaluate((root) => {
-      const el = document.activeElement;
-      if (el === null || !root.contains(el)) return null;
-      if (el instanceof HTMLInputElement && el.type === "radio")
-        return `radio:${el.name}`;
-      const controls = [...root.querySelectorAll("button, select, input")];
-      return `el:${String(controls.indexOf(el))}`;
-    });
-    if (key !== null) reached.add(key);
-    else if (reached.size > 0) break;
+    // Check for having left the controls every 10 presses, not every press.
+    if (i % 10 === 9 && within(await read()) !== null) break;
   }
-  return [...reached];
+  const keys = await read();
+  return [...new Set(within(keys) ?? keys.filter((k) => k !== null))];
 }
 
 test("every control is a Tab stop, for both sources", async ({ page }) => {
