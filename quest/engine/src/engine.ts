@@ -15,6 +15,7 @@ import type {
   LessonId,
 } from "@quest/contract";
 import {
+  decidedBy,
   fingerprint,
   GIT,
   isChoice,
@@ -1090,6 +1091,7 @@ function openBeat(s: EngineState, effects: Effect[]) {
     run: null,
     look: null,
     touched: false,
+    asksAtOpen: s.asks,
   };
   s.beat = st;
   const offer = beat.wait ? whileRunsPick(s) : null;
@@ -2074,8 +2076,7 @@ const ACTIONS: ActionHandlers = {
   "step.markDone"(s, _a, effects) {
     if (!answering(s) || openQuestion(s)) return false;
     const beat = currentBeat(s);
-    const v = beat.verify.kind;
-    if (v !== "self" && v !== "none" && beat.kind !== "self") return false;
+    if (decidedBy(beat) !== "learner") return false;
     beatState(s).status = "done";
     advance(s, effects);
     return true;
@@ -2085,7 +2086,7 @@ const ACTIONS: ActionHandlers = {
   "session.ended"(s, _a, effects) {
     if (!answering(s) || openQuestion(s)) return false;
     const beat = currentBeat(s);
-    if (beat.verify.kind !== "git-clean" || !beat.doneLabel) return false;
+    if (decidedBy(beat) !== "session") return false;
     const st = beatState(s);
     st.ended = true;
     st.explicit = true;
@@ -2274,6 +2275,17 @@ function apply(
     ev.dir !== resultFolder(s, ev)
   )
     ev = { ...ev, type: "stale" };
+  // The folder this beat's last result ran in (ticket 285). An r's result
+  // asked for before the beat opened is an earlier beat's run.
+  if (
+    result &&
+    s.beat &&
+    !(ev.asked && ev.asked <= (s.beat.asksAtOpen ?? 0)) &&
+    ev.type !== "stale" &&
+    ev.dir != null &&
+    (ev.lesson ?? s.lesson) === s.lesson
+  )
+    s.beat.ranIn = ev.dir;
   const look = lookAt(s, ev);
   switch (ev.type) {
     case "check":

@@ -3,7 +3,7 @@
 // states no Claude Code fact. The lesson test compares every quoted value
 // with the page. Parsing and compilation are pure: callers supply all text,
 // Check modules and probe definitions.
-import type { LevelId } from "@quest/contract";
+import type { DecidedBy, LevelId } from "@quest/contract";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { frontmatter, type FrontValue } from "./frontmatter.ts";
@@ -350,6 +350,38 @@ export const SINCE_GIT: ReadonlySet<string> = new Set([
 // sets.
 export const isReadVerify = (v: Verify): v is ReadVerify => READS.has(v.kind);
 export const isGitVerify = (v: Verify): v is GitVerify => GIT.has(v.kind);
+// The one place that decides a beat: what the markDone and session.ended
+// guards accept, and what the card shows (ticket 285).
+export function decidedBy(beat: Beat): DecidedBy {
+  if (beat.kind === "self") return "learner";
+  const v = beat.verify;
+  switch (v.kind) {
+    case "self":
+    case "none":
+      return "learner";
+    case "answer":
+      return "answer";
+    case "check":
+      return "check";
+    case "git-clean":
+      return beat.doneLabel ? "session" : "watch";
+    case "file":
+    case "json":
+    case "match":
+    case "no-match":
+    case "git-changed":
+    case "git-only":
+    case "git-staged":
+    case "head-moved":
+    case "git-unchanged":
+    case "probe":
+      return "watch";
+    default: {
+      const never: never = v;
+      return never;
+    }
+  }
+}
 export const BEAT_KINDS: ReadonlySet<string> = new Set([
   "do",
   "predict",
