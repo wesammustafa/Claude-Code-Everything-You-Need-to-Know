@@ -1,6 +1,4 @@
 {
-  "origin": "lesson-quotes-teardown-step-added",
-  "was": "fail",
   "expect": "fail",
   "about": "The capstone gained a Tear down step, so the step file's Tear down count is wrong.",
   "problems": [

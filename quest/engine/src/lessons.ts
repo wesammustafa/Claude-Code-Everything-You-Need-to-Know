@@ -1,7 +1,7 @@
 // The lesson test's checks (spec, The lesson test): every step file, read by
-// the engine's own parser, against this repo's pages. It keeps every check
-// the Guide's lesson-quotes rule makes, offline, apart from the title, which
-// a step file no longer holds:
+// the engine's own parser, against this repo's pages. It makes every check
+// the lesson test lists, offline; a step file holds no title, so there is no
+// title check:
 // - each double-quoted value is in its page, whitespace-flattened;
 // - each code block equals a block of its page line for line, and every
 //   block closes (the parser fails one that doesn't);

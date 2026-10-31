@@ -2,12 +2,9 @@
 // read by the engine's parser, against this repo's pages. `npm run
 // test:lessons` runs this file alone.
 //
-// The cases under fixtures/lessons/ are the Guide's lesson-quotes fixtures
-// rewritten for this test: case `<name>` comes from
-// .github/scripts/fixtures/lesson-quotes-<name>/, and its case.json records
-// that fixture's verdict (`was`) next to its own (`expect`). Each case holds
-// course/manifest.json, its step files and its pages, laid out as this repo
-// lays them out, and lists the problems it must report, in order, as
+// The cases under fixtures/lessons/ each hold course/manifest.json, its step
+// files and its pages, laid out as this repo lays them out; case.json gives
+// the verdict (`expect`) and the problems it must report, in order, as
 // regular expressions.
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -203,7 +200,7 @@ const cases = readdirSync(casesDir, { withFileTypes: true })
     return { name: entry.name, dir, spec };
   });
 
-describe("the rewritten lesson-quotes cases", () => {
+describe("the lesson test's cases", () => {
   test.each(cases.map((c) => [c.name, c]))("%s", (_, { dir, spec }) => {
     const result = checkLessons({
       ...courseAt(dir, { crlf: spec.crlf === true }),
@@ -217,31 +214,11 @@ describe("the rewritten lesson-quotes cases", () => {
     if (spec.compared) expect(result).toMatchObject(spec.compared);
   });
 
-  // Parity with the Guide's fixtures while lesson-quotes keeps them: one case
-  // for each, failing where it failed and passing where it passed. Its two
-  // offline warnings (pr-warn, index-pr-warn) have no offline mode to map
-  // to here, where the step files sit beside the pages: each case runs the
-  // comparison the warning asked for, and fails.
-  test("one case per lesson-quotes fixture, with its verdict", () => {
-    const guide = `${root}.github/scripts/fixtures/`;
-    const fixtures = readdirSync(guide)
-      .filter((name) => existsSync(`${guide}${name}/fixture.json`))
-      .map((name) => ({
-        name,
-        spec: JSON.parse(readFileSync(`${guide}${name}/fixture.json`, "utf8")),
-      }))
-      .filter(({ spec }) => spec.rule === "lesson-quotes");
-    expect(fixtures).toHaveLength(29);
-    expect(cases.map((c) => c.spec.origin).sort()).toEqual(
-      fixtures.map((f) => f.name).sort(),
-    );
-    for (const { name, spec } of fixtures) {
-      const rewritten = cases.find((c) => c.spec.origin === name);
-      expect(rewritten.name).toBe(name.replace(/^lesson-quotes-/, ""));
-      expect(rewritten.spec.was).toBe(spec.expect);
-      expect(rewritten.spec.expect).toBe(
-        spec.expect === "warn" ? "fail" : spec.expect,
-      );
+  test("every case states its verdict and its problems", () => {
+    for (const { name, spec } of cases) {
+      expect(["pass", "fail"], name).toContain(spec.expect);
+      expect(Array.isArray(spec.problems), name).toBe(true);
+      if (spec.expect === "pass") expect(spec.problems, name).toEqual([]);
     }
   });
 });

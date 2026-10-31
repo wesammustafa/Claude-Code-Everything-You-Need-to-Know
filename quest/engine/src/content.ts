@@ -1351,8 +1351,8 @@ const workPath = (path: string) =>
 // The fence opens on the line under the `code` line, at its first column,
 // with the page's info string, and its lines are the page block's lines
 // exactly, less the indent the page's fence has (three spaces inside a
-// numbered step), blank lines included: the guide's quote check compares
-// them with the page's blocks. A block shows on a do, ask or self beat,
+// numbered step), blank lines included: the lesson test compares them
+// with the page's blocks. A block shows on a do, ask or self beat,
 // and names no <your practice copy> or <your repo>, which only a run line
 // fills in.
 // The `code` line is the app's own words: `point <n>` is the line the beat

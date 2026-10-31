@@ -1,6 +1,4 @@
 {
-  "origin": "lesson-quotes-title-unquoted",
-  "was": "fail",
   "expect": "fail",
   "about": "An unquoted title is a dropped field too.",
   "problems": [
