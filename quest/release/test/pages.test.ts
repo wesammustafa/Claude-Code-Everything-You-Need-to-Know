@@ -206,6 +206,51 @@ function tree(dir: string): Record<string, string> {
   return Object.fromEntries(files.sort(([a], [b]) => (a < b ? -1 : 1)));
 }
 
+describe("task lists", () => {
+  const render = (md: string) =>
+    renderPage("docs/intermediate/05-hooks.md", md, ctx, noDiagram).html;
+
+  test("drops the marker from a tight list, with no box", () => {
+    const html = render("- [ ] One\n- [x] Two\n- [X] Three\n");
+    expect(html).toContain("<li>One</li>");
+    expect(html).toContain("<li>Two</li>");
+    expect(html).toContain("<li>Three</li>");
+    for (const s of ["[ ]", "[x]", "[X]", "<input"])
+      expect(html).not.toContain(s);
+  });
+
+  test("drops the marker from a loose list", () => {
+    expect(render("- [ ] One\n\n- [ ] Two\n")).toContain(
+      "<li>\n<p>One</p>\n</li>",
+    );
+  });
+
+  test("drops the marker from ordered and nested items", () => {
+    expect(render("1. [ ] One\n")).toContain("<li>One</li>");
+    expect(render("- a\n  - [ ] b\n")).toContain("<li>b</li>");
+  });
+
+  test("drops the marker inside a callout", () => {
+    const html = render("> [!TIP]\n> - [ ] Tip item\n");
+    expect(html).toContain("markdown-alert-tip");
+    expect(html).toContain("<li>Tip item</li>");
+  });
+
+  test("keeps formatting after the marker", () => {
+    expect(render("- [ ] **b** c\n")).toContain(
+      "<li><strong>b</strong> c</li>",
+    );
+  });
+
+  test("leaves other brackets as text", () => {
+    expect(render("- a [ ] b\n")).toContain("<li>a [ ] b</li>");
+    expect(render("- `[ ]` c\n")).toContain("<code>[ ]</code>");
+    expect(render("- [ ]\n")).toContain("[ ]");
+    expect(render("[ ] x\n")).toContain("<p>[ ] x</p>");
+    expect(render("- \\[ ] d\n")).toContain("<li>[ ] d</li>");
+  });
+});
+
 describe("the build", () => {
   // The commit stands in for a tag, as in a development build.
   const ref = releaseRef(repoRoot, {});

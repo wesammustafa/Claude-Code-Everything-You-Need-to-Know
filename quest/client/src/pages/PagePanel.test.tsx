@@ -49,8 +49,8 @@ const PAGES: Record<string, string> = {
 <p><a href="${BLOB}/docs/beginner/README.md">The README</a></p>
 <p><a href="${BLOB}/docs/topics/x.md" data-page="docs/topics/x.md">Not rendered</a></p>
 <picture class="diagram" data-light="/pages/d.light.svg" data-dark="/pages/d.dark.svg"><source media="(prefers-color-scheme: dark)" srcset="/pages/d.dark.svg" /><img src="/pages/d.light.svg" alt="A diagram" /></picture>
-<ul><li>[ ] Self-check one</li><li>[x] Self-check two</li></ul>
-<h2 id="check">Check</h2>`,
+<h2 id="check">Check</h2>
+<ul><li>[ ] shown as the release rendered it</li></ul>`,
   "/pages/reference/commands.html": `<h1 id="commands">Commands by level</h1><p>Every command.</p>`,
 };
 
@@ -128,6 +128,19 @@ test("fetches nothing until opened, then the index and the one page", async () =
   expect(fetches).toEqual(["/pages/index.json", "/pages/beginner/01-a.html"]);
 });
 
+// The release renderer drops task-list markers (279); the panel shows a
+// page's text exactly as rendered and edits none of it.
+test("shows list text as the release rendered it", async () => {
+  await openPage();
+  await heading("Install and look around");
+  expect(
+    screen.getByRole("listitem", {
+      name: (_, el) =>
+        el.textContent === "[ ] shown as the release rendered it",
+    }),
+  ).toBeInTheDocument();
+});
+
 test("a heading link scrolls inside the page, focuses the heading and leaves the hash", async () => {
   const user = await openPage();
   await heading("Install and look around");
@@ -181,14 +194,6 @@ test("the diagram follows data-theme", async () => {
     "srcset",
     "/pages/d.dark.svg",
   );
-});
-
-test("a self-check list shows no [ ] text", async () => {
-  await openPage();
-  await heading("Install and look around");
-  expect(screen.getByText("Self-check one").textContent).toBe("Self-check one");
-  expect(screen.getByText("Self-check two")).toBeInTheDocument();
-  expect(screen.queryByText(/\[ \]/)).toBeNull();
 });
 
 test("a page that did not load offers Retry and GitHub", async () => {

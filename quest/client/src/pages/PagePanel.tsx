@@ -108,18 +108,6 @@ function usePage(opened: Opened | undefined): {
   };
 }
 
-const TASK = /^\[[ xX]\] /;
-
-/** Drops the `[ ] ` a self-check list item starts with: the list shows no boxes. */
-function stripTaskMarkers(root: HTMLElement): void {
-  for (const item of root.querySelectorAll("li")) {
-    const walker = document.createTreeWalker(item, NodeFilter.SHOW_TEXT);
-    const first = walker.nextNode();
-    if (first?.nodeValue && TASK.test(first.nodeValue))
-      first.nodeValue = first.nodeValue.replace(TASK, "");
-  }
-}
-
 /** Shows each diagram drawn for `theme`, whatever the system theme is. */
 function paintDiagrams(root: HTMLElement, theme: Theme): void {
   for (const picture of root.querySelectorAll<HTMLElement>("picture.diagram")) {
@@ -172,7 +160,6 @@ function PageBody({
   useLayoutEffect(() => {
     const el = root.current;
     if (!el) return;
-    stripTaskMarkers(el);
     for (const link of el.querySelectorAll("a[href]")) {
       if (link.getAttribute("href")?.startsWith("#")) continue;
       link.setAttribute("target", "_blank");
