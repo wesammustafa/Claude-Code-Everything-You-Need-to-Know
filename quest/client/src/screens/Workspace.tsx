@@ -474,7 +474,10 @@ function StepDown({
       >
         Less help from here
       </PageTitle>
-      <p className="flex flex-wrap items-center justify-center gap-3">
+      <p
+        className="flex flex-wrap items-center justify-center gap-3"
+        data-pip-target="tiers"
+      >
         <Tier tier={lesson.from} />
         <span aria-hidden="true">→</span>
         <span className="sr-only">to</span>
