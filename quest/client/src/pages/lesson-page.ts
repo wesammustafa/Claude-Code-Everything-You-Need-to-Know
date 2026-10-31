@@ -1,11 +1,7 @@
 import type { Snapshot } from "@quest/contract";
 
-/**
- * The page "Read the full lesson" opens: a rendered page by repository path,
- * or a file to open on GitHub (a Level's README, which the release does not
- * render).
- */
-export type LessonPage = { page: string } | { github: string };
+/** The rendered page "Read the full lesson" opens, by repository path. */
+export type LessonPage = { page: string };
 
 const LEVEL_INDEX = /^(beginner|intermediate|advanced)-index$/;
 
@@ -25,7 +21,7 @@ export function lessonPageOf(snapshot: Snapshot | null): LessonPage | null {
     lesson.phase === "playing" ? lesson.step?.warmup?.from : undefined;
   if (from !== undefined) {
     const level = LEVEL_INDEX.exec(from)?.[1];
-    if (level !== undefined) return { github: `docs/${level}/README.md` };
+    if (level !== undefined) return { page: `docs/${level}/README.md` };
     const recalled = pageOf(from);
     if (recalled !== undefined) return { page: recalled };
   }

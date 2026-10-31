@@ -8,6 +8,7 @@ import type {
   CompleteLesson,
   CourseView,
   LearnerView,
+  Mastery,
   Milestone,
   OverviewLesson,
   PlayingLesson,
@@ -416,6 +417,14 @@ export const stepDown: StepDownLesson = {
     },
   ],
   moreHelp: false,
+};
+
+/** The first Step-down, from Guided to Hinted, with more help on offer. */
+export const stepDownGuided: StepDownLesson = {
+  ...stepDown,
+  from: "guided",
+  to: "hinted",
+  moreHelp: true,
 };
 
 export const complete: CompleteLesson = {
@@ -945,6 +954,105 @@ export function overviewAt(id: string): OverviewLesson {
   };
 }
 
+/** fullCourse with every Lesson and Level complete, and nothing next. */
+export const courseDone: CourseView = {
+  levels: fullCourse.levels.map((level) => ({
+    ...level,
+    complete: true,
+    lessons: level.lessons.map((lesson) => ({ ...lesson, complete: true })),
+  })),
+  next: null,
+};
+
+/** fullCourse with the Beginner Level complete, its capstone too, and i-1 next (249). */
+export const beginnerDone: CourseView = {
+  levels: fullCourse.levels.map((level) =>
+    level.id === "beginner"
+      ? {
+          ...level,
+          complete: true,
+          lessons: level.lessons.map((lesson) => ({
+            ...lesson,
+            complete: true,
+          })),
+        }
+      : level,
+  ),
+  next: "i-1",
+};
+
+/** The Beginner capstone completed for the first time, with no next in the Level (249). */
+export const completeCapstone: CompleteLesson = {
+  ...complete,
+  id: "b-capstone",
+  title: "Beginner capstone",
+  capstone: true,
+  badge: "Beginner",
+  handover: true,
+  invitation: true,
+  next: {
+    id: "i-1",
+    title: "Turn a repeated workflow into a skill",
+    notchHarder: false,
+  },
+};
+
+/** The capstone's first completion and the Level complete it brought (249). */
+export const levelCompleted: Milestone[] = [
+  {
+    id: "e2e.40",
+    revision: 1,
+    serverTime: 1793380000000,
+    type: "lesson.completed",
+    badge: "Beginner",
+    capstone: true,
+    firstTime: true,
+  },
+  {
+    id: "e2e.41",
+    revision: 1,
+    serverTime: 1793380000000,
+    type: "level.completed",
+    level: "beginner",
+  },
+];
+
+/** The last Level and the course complete, waiting together (249). */
+export const courseCompleted: Milestone[] = [
+  {
+    id: "e2e.50",
+    revision: 1,
+    serverTime: 1793380000000,
+    type: "level.completed",
+    level: "advanced",
+  },
+  {
+    id: "e2e.51",
+    revision: 1,
+    serverTime: 1793380000000,
+    type: "course.completed",
+  },
+];
+
+/** An unreadable-save notice ahead of b-1's first completion (249). */
+export const noticeFirst: Milestone[] = [
+  {
+    id: "e2e.30",
+    revision: 1,
+    serverTime: 1793380000000,
+    type: "notice",
+    kind: "unreadable",
+  },
+  ...completed,
+];
+
+/** Three of b-1's skills with a step finished, in course order. */
+export const someMastery: Record<string, Mastery> = {
+  install: { used: "commands", at: 1793380000000 },
+  ask: { used: "own", at: 1793380060000 },
+  exit: { used: "hints", at: 1793380120000 },
+};
+
 /** A whole snapshot around one phase of b-1. */
 export function snapshotOf(
   lesson: ActiveLesson,
@@ -954,12 +1062,14 @@ export function snapshotOf(
     milestones = [],
     name = learner.name,
     course: view = course,
+    mastery = {},
   }: {
     revision?: number;
     welcomed?: boolean;
     milestones?: Milestone[];
     name?: string | null;
     course?: CourseView;
+    mastery?: Record<string, Mastery>;
   } = {},
 ): Snapshot {
   return {
@@ -967,7 +1077,7 @@ export function snapshotOf(
     revision,
     milestones,
     course: view,
-    learner: { ...learner, welcomed, name },
+    learner: { ...learner, welcomed, name, mastery },
     lesson,
   };
 }

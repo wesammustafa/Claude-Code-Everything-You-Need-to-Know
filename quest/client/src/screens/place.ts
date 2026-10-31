@@ -1,4 +1,4 @@
-import type { LessonSummary, Snapshot } from "@quest/contract";
+import type { LessonSummary, LevelId, Snapshot } from "@quest/contract";
 import { summaryOf } from "./lesson";
 
 /** Where the Learner's place is on the journey, and the Next band's word. */
@@ -34,4 +34,36 @@ export function nodeState(
 ): NodeState {
   if (summary.id === current?.id) return "current";
   return summary.complete ? "done" : "to do";
+}
+
+/** The Level a Lesson of the course sits in. */
+export function levelOf(snapshot: Snapshot, lesson: LessonSummary): LevelId {
+  const found = snapshot.course.levels.find((l) =>
+    l.lessons.some((s) => s.id === lesson.id),
+  );
+  return found?.id ?? "beginner";
+}
+
+export interface Count {
+  done: number;
+  total: number;
+}
+
+/** How many Lessons, and how many Levels, are complete: completion only. */
+export function courseCounts(snapshot: Snapshot): {
+  lessons: Count;
+  levels: Count;
+} {
+  const { levels } = snapshot.course;
+  const lessons = levels.flatMap((level) => level.lessons);
+  return {
+    lessons: {
+      done: lessons.filter((s) => s.complete).length,
+      total: lessons.length,
+    },
+    levels: {
+      done: levels.filter((l) => l.complete).length,
+      total: levels.length,
+    },
+  };
 }

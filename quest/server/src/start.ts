@@ -3,8 +3,15 @@
 import type { Server } from "node:http";
 import { parseArgs } from "node:util";
 import type { CourseEntry } from "@quest/engine";
-import type { Adapters, Host, HostOptions, RealOptions } from "@quest/host";
+import type {
+  Adapters,
+  FolderLook,
+  Host,
+  HostOptions,
+  RealOptions,
+} from "@quest/host";
 import { createApp } from "./app.ts";
+import { dirAhead } from "./dir.ts";
 import { createStreams } from "./events.ts";
 import { codespaceUrl, localUrl, stopLine, type Env } from "./launch.ts";
 import { BASE_PORT, PORT_TRIES, listen, type TryListen } from "./listen.ts";
@@ -30,6 +37,8 @@ export interface StartOptions {
   /** Where the course is read from: the copy, or the repo's template in development. */
   courseRoot?: string;
   argv: readonly string[];
+  /** Where a relative --dir is from: npm's INIT_CWD, else the process's. */
+  cwd?: string;
   env: Env;
   platform: string;
   /** The first port to try: 4747, or 0 for any free port (a test). */
@@ -61,6 +70,7 @@ export async function start({
   courseRoot = root,
   argv,
   env,
+  cwd = env.INIT_CWD ?? process.cwd(),
   platform,
   base = BASE_PORT,
   statics,
@@ -76,10 +86,17 @@ export async function start({
   loadCourse,
   probe,
 }: StartOptions): Promise<Started | null> {
+  // A bare --dir, last or empty, is no folder: the app starts without it.
+  const args = [...argv];
+  let bare = false;
+  if (args.at(-1) === "--dir") {
+    args.pop();
+    bare = true;
+  }
   let dir: string | undefined;
   try {
     dir = parseArgs({
-      args: [...argv],
+      args,
       strict: true,
       allowPositionals: false,
       options: { dir: { type: "string" } },
@@ -89,19 +106,36 @@ export async function start({
     exit(2);
     return null;
   }
-  // Ticket 252 reads --dir.
-  if (dir !== undefined)
-    stderr.write("--dir is not read yet: starting without it.\n");
+  if (bare || dir === "") {
+    stderr.write("--dir needs a folder: starting without it.\n");
+    dir = undefined;
+  }
 
   const course = loadCourse(courseRoot);
   const adapters = realAdapters({ root, env, platform });
+  const saved = adapters.store.load();
+  let ahead: FolderLook | undefined;
+  if (dir !== undefined) {
+    const given = await dirAhead({
+      dir,
+      cwd,
+      env,
+      root,
+      course,
+      saved,
+      look: (path) => adapters.folders.look(path),
+    });
+    if ("refused" in given) stderr.write(`${given.refused}\n`);
+    else ahead = given.ahead;
+  }
   const host = createHost({
     root,
     course,
-    saved: adapters.store.load(),
+    saved,
     env,
     platform,
     adapters,
+    ...(ahead ? { ahead } : {}),
   });
 
   // Listen before the host opens: open() waits on git, and the health check

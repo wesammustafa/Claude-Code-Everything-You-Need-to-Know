@@ -13,7 +13,7 @@ export interface PageEntry {
   /** Where the fragment is served, such as /pages/beginner/01-....html. */
   url: string;
   title: string;
-  kind: "lesson" | "capstone" | "elective" | "reference" | "topic";
+  kind: "lesson" | "capstone" | "elective" | "reference" | "topic" | "index";
   level?: "beginner" | "intermediate" | "advanced";
 }
 
@@ -67,6 +67,11 @@ export function entryFor(
 /** The file on GitHub at `ref`. */
 export function githubBlob(ref: string, path: string): string {
   return `${GUIDE_REPO}/blob/${ref}/${path}`;
+}
+
+/** The folder on GitHub at `ref`. */
+export function githubTree(ref: string, path: string): string {
+  return `${GUIDE_REPO}/tree/${ref}/${path}`;
 }
 
 /** Forgets every request, for tests. */

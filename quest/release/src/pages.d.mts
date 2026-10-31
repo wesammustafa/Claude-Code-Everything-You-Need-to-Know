@@ -3,7 +3,7 @@ export interface PageEntry {
   path: string;
   url: string;
   title: string;
-  kind: "lesson" | "capstone" | "elective" | "reference" | "topic";
+  kind: "lesson" | "capstone" | "elective" | "reference" | "topic" | "index";
   level?: "beginner" | "intermediate" | "advanced";
 }
 

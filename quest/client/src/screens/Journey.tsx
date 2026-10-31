@@ -15,8 +15,9 @@ import { usePagePanel } from "../pages/PagePanel";
 import { Pip } from "../pip/Pip";
 import { PageTitle } from "../shell/PageTitle";
 import { EYEBROW, WIDE } from "./layout";
-import { pathOf, useCourseSnapshot, useOpenLesson } from "./lesson";
-import { journeyPlace, nodeState, type JourneyPlace } from "./place";
+import { OpenLessonButton } from "./OpenLessonButton";
+import { pathOf, useCourseSnapshot } from "./lesson";
+import { journeyPlace, levelOf, nodeState, type JourneyPlace } from "./place";
 
 type ElectiveList =
   | { state: "closed" | "loading" | "failed" }
@@ -353,7 +354,9 @@ function NextBand({
                 {label}
               </ButtonLink>
             ) : (
-              <OpenButton id={current.id}>{label}</OpenButton>
+              <OpenLessonButton variant="primary" id={current.id}>
+                {label}
+              </OpenLessonButton>
             )}
           </>
         ) : (
@@ -367,20 +370,4 @@ function NextBand({
       </div>
     </div>
   );
-}
-
-function OpenButton({ id, children }: { id: string; children: string }) {
-  const open = useOpenLesson(id);
-  return (
-    <Button variant="primary" iconEnd="arrow" {...open}>
-      {children}
-    </Button>
-  );
-}
-
-function levelOf(snapshot: Snapshot, lesson: LessonSummary) {
-  const found = snapshot.course.levels.find((l) =>
-    l.lessons.some((s) => s.id === lesson.id),
-  );
-  return found?.id ?? "beginner";
 }

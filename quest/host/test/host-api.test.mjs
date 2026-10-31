@@ -223,6 +223,19 @@ test("start arms the copy's watcher, then the tick, then the poll; saves the fol
   assert.equal(clock.pending().length, 2, "a second start starts nothing more");
 });
 
+test("start saves nothing for --dir where the app opens on Beginner: the engine took no folder from it", async () => {
+  const { host, adapters, heard, state } = fakeHost({
+    saved: AT_W3,
+    ahead: fine(MINE),
+  });
+  await host.open();
+  host.start();
+  assert.deepEqual(state().folders, {});
+  assert.equal(adapters.store.saves.length, 0);
+  assert.deepEqual(adapters.folders.looked, []);
+  assert.deepEqual(heard, []);
+});
+
 test("firstLook: a Learner welcomed back runs the lesson's check, then what its overview asks", async () => {
   const back = fakeHost({ saved: AT_W3 });
   await back.host.open();

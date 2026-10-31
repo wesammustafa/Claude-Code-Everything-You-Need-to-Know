@@ -1,16 +1,19 @@
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, test } from "vitest";
-import type { Snapshot } from "@quest/contract";
+import type { OverviewLesson, Snapshot } from "@quest/contract";
 import {
   complete,
   completed,
+  courseDone,
   fullCourse,
   overview,
   overviewAt,
   playing,
   snapshotOf,
+  someMastery,
   stepDown,
+  stepDownGuided,
 } from "../../e2e/snapshots";
 import { renderConnected } from "../../test/connected";
 import { WAITING_LINE } from "./Welcome";
@@ -46,7 +49,12 @@ const APP_WORDS: readonly RegExp[] = [
   /^to$/,
   /^Lesson \d+ complete$/,
   /^\d+ of \d+ lines pass$/,
-  /^Skills practised$/,
+  /^You practised$/,
+  /^A notch harder: it starts with less help\.$/,
+  /^You did every task without the exact command\.$/,
+  /^Questions about anything in this level\? Ask Claude Code, then compare the answer with the lesson pages\.$/,
+  /^Compare with a reference solution$/,
+  /^New badge: .+$/,
   /^Next: $/,
   /^Back to the learning journey$/,
   /^New badge$/,
@@ -64,6 +72,17 @@ const APP_WORDS: readonly RegExp[] = [
   /^Next$/,
   /^(Beginner|Intermediate|Advanced), (Lesson \d+|Capstone): $/,
   /^(Lesson \d+|Capstone)$/,
+  /^What the check looks for$/,
+  /^, (1 check|\d+ checks)$/,
+  /^Not found on your PATH:$/,
+  /^Open $/,
+  /^ first$/,
+  /^(Start over|Keep my place)$/,
+  /^Start this lesson over\? Your Badge and the help you used are kept\.$/,
+  /^(Skills|Next goal|Badges|lessons done|levels done)$/,
+  /^The help you used shows here once you finish a step\.$/,
+  /^(Every lesson is complete|See the journey)$/,
+  /^Only what your checks verified counts here\.$/,
 ];
 
 /** Every string the snapshot carries, to match quotes against. */
@@ -162,6 +181,11 @@ describe("Welcome", () => {
   });
 });
 
+/** An overview with ticket 283's check items. */
+function withCheck(lesson: OverviewLesson, check: string[]): OverviewLesson {
+  return { ...lesson, check } as OverviewLesson;
+}
+
 describe("Lesson overview", () => {
   test("quotes the Lesson and starts it as planned or with less help", async () => {
     const user = userEvent.setup();
@@ -175,6 +199,7 @@ describe("Lesson overview", () => {
     expect(
       screen.getByRole("img", { name: "Explorer, not yet" }),
     ).toBeInTheDocument();
+    // b-1's fixture carries no check items, so no Disclosure.
     expect(
       screen.queryByText("What the check looks for"),
     ).not.toBeInTheDocument();
@@ -199,6 +224,236 @@ describe("Lesson overview", () => {
     ).not.toBeInTheDocument();
     page.send(snapshotOf({ ...overview, resumable: true }, { revision: 2 }));
     expect(screen.getByRole("button", { name: "Resume" })).toBeInTheDocument();
+  });
+
+  test("what the check looks for shows closed, with the course's items", async () => {
+    const user = userEvent.setup();
+    const check = ["`notes.md` names the model", "the claim is corrected"];
+    renderConnected("/lesson/b-1", snapshotOf(withCheck(overview, check)));
+    const details = document.querySelector("main details");
+    expect(details).not.toHaveAttribute("open");
+    await user.click(screen.getByText("What the check looks for"));
+    expect(details).toHaveAttribute("open");
+    expect(details?.querySelectorAll("li")).toHaveLength(2);
+  });
+
+  test("a missing command names itself, and an unmet note offers its Lesson first", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected(
+      "/lesson/b-1",
+      snapshotOf({
+        ...overview,
+        notes: [
+          { kind: "need", quote: "You need `jq` installed.", missing: ["jq"] },
+          { kind: "unmet", line: "", lesson: null },
+          {
+            kind: "unmet",
+            line: "Lesson 2's plan is not there.",
+            lesson: "b-2",
+          },
+        ],
+        start: { planned: true, less: true, first: "b-2" },
+      }),
+    );
+    const notes = document.querySelectorAll("[data-overview-notes] > li");
+    expect(notes).toHaveLength(2);
+    expect(notes[0]).toHaveTextContent("Not found on your PATH: jq");
+    const offer = within(notes[1] as HTMLElement).getByRole("button", {
+      name: "Open Permission modes and plan mode first",
+    });
+    await user.click(offer);
+    expect(page.posts).toEqual([{ type: "lesson.open", lesson: "b-2" }]);
+  });
+
+  test("Start over is only for a saved place, and asks first", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected("/lesson/b-1", snapshotOf(overview));
+    expect(
+      screen.queryByRole("button", { name: "Start over" }),
+    ).not.toBeInTheDocument();
+    page.send(snapshotOf({ ...overview, resumable: true }, { revision: 2 }));
+    const trigger = screen.getByRole("button", { name: "Start over" });
+    await user.click(trigger);
+    const ask = screen.getByRole("group", { name: "Start over" });
+    expect(
+      within(ask).getByRole("button", { name: "Keep my place" }),
+    ).toHaveFocus();
+    await user.click(
+      within(ask).getByRole("button", { name: "Keep my place" }),
+    );
+    expect(page.posts).toEqual([]);
+    expect(screen.queryByRole("group")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Start over" }));
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("group")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start over" })).toHaveFocus();
+    expect(page.posts).toEqual([]);
+
+    await user.click(screen.getByRole("button", { name: "Start over" }));
+    await user.click(
+      within(screen.getByRole("group", { name: "Start over" })).getByRole(
+        "button",
+        { name: "Start over" },
+      ),
+    );
+    expect(page.posts).toEqual([{ type: "lesson.restart", lesson: "b-1" }]);
+    // The restart lands: Start over goes, and focus moves to Start.
+    page.send(snapshotOf(overview, { revision: 3 }));
+    expect(screen.queryByRole("group")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start" })).toHaveFocus();
+  });
+
+  test("the Work folder question: asking with no Start, then the answer with Change", async () => {
+    const user = userEvent.setup();
+    const q = (
+      over: Partial<NonNullable<OverviewLesson["folderQuestion"]>>,
+    ) => ({
+      key: "intermediate",
+      asks: "work" as const,
+      current: null,
+      problem: null,
+      open: true,
+      checking: false,
+      ...over,
+    });
+    const i1 = overviewAt("i-1");
+    const page = renderConnected(
+      "/lesson/i-1",
+      snapshotOf(
+        { ...i1, folderQuestion: q({}), start: null },
+        { course: fullCourse },
+      ),
+    );
+    const slot = screen.getByRole("region", { name: "Work folder" });
+    expect(slot).toHaveAttribute("data-folder-question");
+    expect(screen.queryByRole("button", { name: "Start" })).toBeNull();
+    page.send(
+      snapshotOf(
+        {
+          ...i1,
+          folderQuestion: q({ current: "/home/sam/practice", open: false }),
+        },
+        { course: fullCourse, revision: 2 },
+      ),
+    );
+    expect(slot).toHaveTextContent("Work folder: this practice copy");
+    // The answer taken: Start appears and takes focus.
+    expect(screen.getByRole("button", { name: "Start" })).toHaveFocus();
+    page.send(
+      snapshotOf(
+        { ...i1, folderQuestion: q({ current: "/home/sam/app", open: false }) },
+        { course: fullCourse, revision: 3 },
+      ),
+    );
+    expect(
+      screen.getByRole("region", { name: "Work folder" }),
+    ).toHaveTextContent("Work folder: /home/sam/app");
+    await user.click(screen.getByRole("button", { name: "Change" }));
+    expect(page.posts).toEqual([{ type: "folder.ask", key: "intermediate" }]);
+    // Editing a saved answer can be left with Cancel.
+    page.send(
+      snapshotOf(
+        { ...i1, folderQuestion: q({ current: "/home/sam/app" }) },
+        { course: fullCourse, revision: 4 },
+      ),
+    );
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(page.posts.at(-1)).toEqual({ type: "folder.cancel" });
+  });
+
+  test("a-5 asks for its new copy with the path field alone; i-capstone has no slot", () => {
+    const page = renderConnected(
+      "/lesson/a-5",
+      snapshotOf(
+        {
+          ...overviewAt("a-5"),
+          folderQuestion: {
+            key: "a-5",
+            asks: "new-copy",
+            current: null,
+            problem: null,
+            open: true,
+            checking: false,
+          },
+          start: null,
+        },
+        { course: fullCourse },
+      ),
+    );
+    expect(screen.queryByRole("radio")).toBeNull();
+    expect(screen.getByRole("textbox")).toBeInTheDocument();
+    page.send(
+      snapshotOf(
+        { ...overviewAt("i-capstone"), folderQuestion: null },
+        { course: fullCourse, revision: 2 },
+      ),
+    );
+    page.router.navigate("/lesson/i-capstone").catch(() => undefined);
+    expect(document.querySelector("[data-folder-question]")).toBeNull();
+  });
+
+  test("each Work folder problem is worded, and the changed note keeps its words", () => {
+    renderConnected(
+      "/lesson/i-1",
+      snapshotOf(
+        {
+          ...overviewAt("i-1"),
+          notes: [
+            { kind: "changed" },
+            ...(["missing", "gitBroken", "notGit", "noPractice"] as const).map(
+              (problem) => ({ kind: "folder-problem" as const, problem }),
+            ),
+          ],
+        },
+        { course: fullCourse },
+      ),
+    );
+    const notes = within(
+      document.querySelector("[data-overview-notes]") as HTMLElement,
+    ).getAllByRole("listitem");
+    expect(notes.map((n) => n.textContent)).toEqual([
+      "This lesson changed since you started it, so it starts again here.",
+      "The work folder is not there any more. Choose it again, or choose another.",
+      "Git could not look at the work folder, so its checks cannot run yet. Check that git works in your terminal.",
+      "The work folder is not a git repository. Run git init there, or choose another folder.",
+      "Git does not ignore .practice/ in the work folder. Add .practice/ to its .gitignore, so your practice files stay out of your commits.",
+    ]);
+  });
+
+  test("a rich overview uses only course fields for its Claude Code words", async () => {
+    const user = userEvent.setup();
+    const rich = withCheck(
+      {
+        ...overview,
+        intro: overview.intro && {
+          ...overview.intro,
+          can: [
+            ...overview.intro.can,
+            "read **every** line of [the docs](https://code.claude.com/docs/en/overview)",
+          ],
+        },
+        notes: [
+          { kind: "need", quote: "You need `jq` installed.", missing: ["jq"] },
+          { kind: "win-note", text: "" },
+          {
+            kind: "unmet",
+            line: "Lesson 2's plan is not there.",
+            lesson: "b-2",
+          },
+        ],
+        start: { planned: true, less: true, first: "b-2" },
+        resumable: true,
+      },
+      ["`notes.md` names the model"],
+    );
+    renderConnected("/lesson/b-1", snapshotOf(rich));
+    await user.click(screen.getByText("What the check looks for"));
+    await user.click(screen.getByRole("button", { name: "Start over" }));
+    expect(
+      screen.getByRole("group", { name: "Start over" }),
+    ).toBeInTheDocument();
+    expect(unquoted(snapshotOf(rich))).toEqual([]);
   });
 });
 
@@ -302,9 +557,51 @@ describe("Lesson workspace", () => {
       screen.getByRole("heading", { level: 1, name: "Less help from here" }),
     ).toBeInTheDocument();
     expect(unquoted(snapshotOf(stepDown))).toEqual([]);
+    expect(
+      screen.queryByRole("button", { name: /^Keep / }),
+    ).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Go on on your own" }));
     expect(page.posts).toEqual([{ type: "stepDown.accept" }]);
   });
+
+  test("Guided to Hinted offers going on with hints or keeping every command", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected(
+      "/lesson/b-1/step",
+      snapshotOf(stepDownGuided),
+    );
+    expect(unquoted(snapshotOf(stepDownGuided))).toEqual([]);
+    await user.click(screen.getByRole("button", { name: "Go on with hints" }));
+    await user.click(
+      screen.getByRole("button", { name: "Keep every command shown" }),
+    );
+    expect(page.posts).toEqual([
+      { type: "stepDown.accept" },
+      { type: "stepDown.moreHelp" },
+    ]);
+  });
+
+  test("a Step-down's Back goes back", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected("/lesson/b-1/step", snapshotOf(stepDown));
+    await user.click(screen.getByRole("button", { name: "Back" }));
+    expect(page.posts).toEqual([{ type: "stepDown.back" }]);
+  });
+
+  test.each([
+    ["Guided to Hinted", stepDownGuided, "Guided", "Hinted"],
+    ["Hinted to Challenge", stepDown, "Hinted", "Challenge"],
+  ] as const)(
+    "%s shows both tiers where Pip looks, and never says level up",
+    (_, lesson, from, to) => {
+      renderConnected("/lesson/b-1/step", snapshotOf(lesson));
+      const tiers = document.querySelector("[data-pip-target=tiers]");
+      expect(tiers).not.toBeNull();
+      expect(tiers?.textContent).toContain(from);
+      expect(tiers?.textContent).toContain(to);
+      expect(document.body.textContent).not.toMatch(/level.?up/i);
+    },
+  );
 
   test("a new step or a Step-down on the same route moves focus to its heading", async () => {
     const user = userEvent.setup();
@@ -399,6 +696,103 @@ describe("Learning journey", () => {
     renderConnected("/lesson/i-2", at);
     expect(screen.getByText("Intermediate · Lesson 2")).toBeInTheDocument();
     expect(unquoted(at)).toEqual([]);
+  });
+});
+
+describe("Progress", () => {
+  const at = (mastery = {}) =>
+    snapshotOf(overviewAt("b-4"), {
+      welcomed: true,
+      course: fullCourse,
+      mastery,
+    });
+  const skills = () => screen.getByRole("region", { name: "Skills" });
+
+  test("with no Mastery yet: completion at once, no skill rows", () => {
+    const snapshot = at();
+    renderConnected("/progress", snapshot);
+    expect(screen.getByText("3 of 23")).toBeInTheDocument();
+    expect(screen.getByText("0 of 3")).toBeInTheDocument();
+    expect(within(skills()).queryAllByRole("listitem")).toEqual([]);
+    expect(skills().querySelector("[data-tier]")).toBeNull();
+    expect(skills().textContent).not.toMatch(/On your own|\d/);
+    expect(
+      within(screen.getByRole("main")).queryByRole("progressbar"),
+    ).toBeNull();
+    expect(unquoted(snapshot)).toEqual([]);
+  });
+
+  test("each skill's row says the help last used, in course order", () => {
+    renderConnected("/progress", at(someMastery));
+    const rows = within(skills()).getAllByRole("listitem");
+    expect(rows.map((row) => row.textContent)).toEqual([
+      "installEvery command shown",
+      "askOn your own",
+      "exitWith hints",
+    ]);
+    expect(skills().textContent).not.toMatch(/\d/);
+    expect(screen.getByText("3 of 23")).toBeInTheDocument();
+    expect(screen.getByText("0 of 3")).toBeInTheDocument();
+  });
+
+  test("every Badge by Level, earned or not yet", () => {
+    renderConnected("/progress", at());
+    const box = screen.getByRole("region", { name: "Badges" });
+    const badges = within(box).getAllByRole("img");
+    expect(badges).toHaveLength(23);
+    const names = badges.map((b) => b.getAttribute("aria-label") ?? "");
+    expect(names.filter((n) => !n.endsWith(", not yet"))).toEqual([
+      "Explorer",
+      "Planner",
+      "Builder",
+    ]);
+    expect(names.filter((n) => n.endsWith(", not yet"))).toHaveLength(20);
+    expect(
+      within(box)
+        .getAllByRole("heading", { level: 3 })
+        .map((h) => h.textContent),
+    ).toEqual(["Beginner", "Intermediate", "Advanced"]);
+  });
+
+  test("the goal links to the open Lesson's path", () => {
+    renderConnected("/progress", at());
+    const goal = screen.getByRole("region", { name: "Next goal" });
+    expect(goal.textContent).toContain("Beginner, Lesson 4: ");
+    expect(within(goal).getByRole("link", { name: "Start" })).toHaveAttribute(
+      "href",
+      "/lesson/b-4",
+    );
+  });
+
+  test("the goal opens the course's next Lesson with lesson.open", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected(
+      "/progress",
+      snapshotOf(complete, { welcomed: true, course: fullCourse }),
+    );
+    const goal = screen.getByRole("region", { name: "Next goal" });
+    await user.click(within(goal).getByRole("button", { name: "Start" }));
+    expect(page.posts).toEqual([{ type: "lesson.open", lesson: "b-4" }]);
+  });
+
+  test("a finished course points to the journey and keeps Pip's target", () => {
+    renderConnected(
+      "/progress",
+      snapshotOf(complete, { welcomed: true, course: courseDone }),
+    );
+    const goal = screen.getByRole("region", { name: "Next goal" });
+    expect(goal).toHaveAttribute("data-pip-target", "goal");
+    expect(goal.textContent).toContain("Every lesson is complete");
+    expect(
+      within(goal).getByRole("link", { name: "See the journey" }),
+    ).toHaveAttribute("href", "/journey");
+  });
+
+  test("no score, rank, XP or streak", () => {
+    renderConnected("/progress", at(someMastery));
+    expect(screen.getByRole("main").textContent).not.toMatch(
+      /score|rank|\bXP\b|streak|points/i,
+    );
   });
 });
 

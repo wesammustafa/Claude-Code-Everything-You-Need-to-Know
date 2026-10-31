@@ -11,6 +11,7 @@ import { LEVEL_NAMES, lessonEyebrow, lessonLabel } from "../course/labels";
 import { usePagePanel } from "../pages/PagePanel";
 import { summaryOf, useCourseSnapshot } from "../screens/lesson";
 import { BrandMark } from "./BrandMark";
+import { SettingsBody } from "./Settings";
 
 const NAV_LINK =
   "inline-flex h-8.5 items-center gap-1.75 rounded-md px-3 text-sm font-semibold text-muted no-underline " +
@@ -240,10 +241,12 @@ export function TopBar() {
         </Button>
       </Panel>
       <Panel title="Settings" open={panel === "settings"} onClose={closePanel}>
-        <p className="text-sm text-muted">
-          Theme, motion, Work folders and help show here. The theme follows your
-          system setting.
-        </p>
+        <SettingsBody
+          onOpenPage={(path) => {
+            setPanel(null);
+            pages.open(path);
+          }}
+        />
       </Panel>
     </header>
   );
