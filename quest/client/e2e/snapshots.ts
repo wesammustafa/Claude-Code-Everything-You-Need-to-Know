@@ -415,6 +415,7 @@ export const stepDown: StepDownLesson = {
   phase: "step-down",
   from: "hinted",
   to: "challenge",
+  step: { id: "C", title: "Check", index: 10, of: 11 },
   toCome: [
     {
       tier: "challenge",
@@ -429,6 +430,7 @@ export const stepDownGuided: StepDownLesson = {
   ...stepDown,
   from: "guided",
   to: "hinted",
+  step: { id: "Y1", title: "Check the onboarding notes", index: 6, of: 11 },
   moreHelp: true,
 };
 

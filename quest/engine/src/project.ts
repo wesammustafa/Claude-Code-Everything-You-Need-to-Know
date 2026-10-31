@@ -762,11 +762,18 @@ const byTier = (tiers: readonly HelpTier[]) =>
 function stepDownOf(s: EngineState, head: LessonHead): StepDownLesson {
   const steps = stepsOf(s);
   const tiers = tiersOf(s);
+  const opensOn = currentStep(s);
   return {
     ...head,
     phase: "step-down",
     from: must(s.levelFrom, "a step-down has its level"),
     to: must(s.levelTo, "a step-down has its level"),
+    step: {
+      id: opensOn.id,
+      title: opensOn.title,
+      index: s.pos.step,
+      of: steps.length,
+    },
     toCome: byTier(
       tiers
         .map((_, i) => tierAt(tiers, i))

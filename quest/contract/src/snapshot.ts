@@ -405,6 +405,8 @@ export interface StepDownLesson extends LessonHead {
   phase: "step-down";
   from: HelpTier;
   to: HelpTier;
+  /** The step it opens on: its place in play order, from 0, of every step, warm-ups first. */
+  step: { id: StepId; title: string; index: number; of: number };
   /** The steps from this one on, counted by tier. */
   toCome: { tier: HelpTier; count: number }[];
   /** More help would give a step more help (never at the Check). */

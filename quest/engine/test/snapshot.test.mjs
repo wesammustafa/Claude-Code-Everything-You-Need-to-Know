@@ -27,6 +27,7 @@ import {
   running,
   save,
   stepOf,
+  stepsOf,
   struggles,
   withCode,
 } from "./drive.mjs";
@@ -843,18 +844,62 @@ test("a waiting beat names the Work folder it watches before the first look; the
 });
 
 // ---- step-down and complete --------------------------------------------------------
-test("step-down: from and to, the steps still to come, and no more help into the Check", () => {
+test("step-down: from and to, the steps still to come, and no more help into the Check, and the step it opens on", () => {
   const d = driver({ course });
   playUntil(d, (s) => s.phase === "step-down");
   let v = view(d);
   assert.deepEqual([v.from, v.to], [d.state.levelFrom, d.state.levelTo]);
+  assert.deepEqual(v.step, {
+    id: stepOf(d.state).id,
+    title: stepOf(d.state).title,
+    index: d.state.pos.step,
+    of: stepsOf(d.state).length,
+  });
+  assert.deepEqual([v.step.id, v.step.index], ["Y1", 7]);
+  const opensOn = v.step.id;
+  const of = v.step.of;
+  // A Step-down on the first step still names it.
+  const first = project({
+    ...d.state,
+    pos: { ...d.state.pos, step: 0 },
+  }).lesson;
+  assert.deepEqual(
+    [first.step.id, first.step.index, first.step.of],
+    [stepsOf(d.state)[0].id, 0, of],
+  );
   assert.ok(v.toCome.reduce((n, x) => n + x.count, 0) > 0);
   assert.equal(v.moreHelp, true);
   d.accept();
+  assert.equal(stepOf(d.state).id, opensOn);
+  // `of` counts every step the playing outline lists.
+  assert.equal(view(d).steps.length, of);
   playUntil(d, (s) => s.phase === "step-down" && stepOf(s).part === "Check");
   v = view(d);
+  assert.deepEqual([v.step.id, v.step.title], ["C", "Check"]);
+  assert.equal(v.step.index, v.step.of - 1);
   assert.equal(v.moreHelp, false);
   assert.deepEqual(v.toCome, [{ tier: "challenge", count: 1 }]);
+});
+
+test("step-down: its step count includes the warm-ups, as the outline does", () => {
+  const d = driver({
+    course,
+    saved: save({
+      missed: ["start"],
+      lessons: { "b-1": finished(course.find((l) => l.id === "b-1")) },
+    }),
+  });
+  d.open("b-2");
+  d.start();
+  assert.equal(stepOf(d.state).part, "Warm-up");
+  const outline = view(d).steps.length;
+  const v = project({
+    ...d.state,
+    phase: "step-down",
+    levelFrom: "guided",
+    levelTo: "hinted",
+  }).lesson;
+  assert.deepEqual([v.step.index, v.step.of], [0, outline]);
 });
 
 test("complete: b-1's Badge and first time, its check summary, the help used, and a next lesson in the same Level", () => {
