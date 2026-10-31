@@ -184,6 +184,9 @@ export function sanitize(input: unknown): Saved {
       recalled: Array.isArray(p.recalled)
         ? p.recalled.filter((x) => typeof x === "string" && /^R\d+$/.test(x))
         : [],
+      whileShown: Array.isArray(p.whileShown)
+        ? p.whileShown.filter((x) => typeof x === "string" && /^R\d+$/.test(x))
+        : [],
       stamps: Object.fromEntries(
         Object.entries((p.stamps ?? {}) as Loose)
           .filter(

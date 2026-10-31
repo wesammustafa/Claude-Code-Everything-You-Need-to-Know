@@ -102,7 +102,6 @@ export const ENGINE_FIELDS = [
   "now",
   "missedNow",
   "answeredNow",
-  "whileShown",
   "lesson",
   "phase",
   "pos",
@@ -139,6 +138,7 @@ const blankProgress = (): LessonProgress => ({
   complete: false,
   warm: [],
   recalled: [],
+  whileShown: [],
   stamps: {},
   bottomAt: null,
 });
@@ -213,6 +213,9 @@ export function initialState({
     pr.recalled = pr.recalled.filter((id) =>
       content.warmup.some((w) => w.id === id),
     );
+    pr.whileShown = pr.whileShown.filter((id) =>
+      content.warmup.some((w) => w.id === id),
+    );
     const steps = playOrder(content, pr);
     const ids = new Set(steps.map((s) => s.id));
     pr.done = pr.done.filter((id) => ids.has(id));
@@ -266,9 +269,6 @@ export function initialState({
     missed: saved?.missed ?? [],
     missedNow: [],
     answeredNow,
-    // The warm-ups a long wait's box asked in this sitting (ticket 150), in
-    // memory only: `lesson.id`.
-    whileShown: [],
     welcomed,
     // The Learner's place: the active lesson and its phase, 'overview',
     // 'playing' (a resume waits there with no beat open until the lesson
@@ -1030,7 +1030,7 @@ function whileRunsPick(s: EngineState) {
   const pool = must(contentOf(s), `no content for ${s.lesson}`).warmup.filter(
     (w) =>
       !p.warm.includes(w.id) &&
-      !s.whileShown.includes(`${s.lesson}.${w.id}`) &&
+      !p.whileShown.includes(w.id) &&
       first(w).ask &&
       first(w).kind !== "type" &&
       first(w).options.length &&
@@ -1140,6 +1140,13 @@ function openBeat(s: EngineState, effects: Effect[]) {
   } else if (beat.verify.kind === "probe") {
     st.status = "opening";
     effects.push(probeAsk(must(watching(s), "a probe beat watches a probe")));
+  }
+  // A box offered is on screen at once, so it counts as shown now (ticket
+  // 287): "Not now" only hides it in the client, and the save below keeps
+  // it for a resume.
+  if (offer && st.whileRuns?.id === offer && st.status !== "already") {
+    const shown = progressOf(s).whileShown;
+    if (!shown.includes(offer)) shown.push(offer);
   }
   effects.push({ type: "save" });
 }
@@ -2174,7 +2181,7 @@ const ACTIONS: ActionHandlers = {
   },
   // The long wait's question: answered once, during or after the wait, until
   // the step changes; scored nothing.
-  "waitQuestion.answer"(s, { option }) {
+  "waitQuestion.answer"(s, { option }, effects) {
     const box = !yesNo(s) && whileRunsBox(s);
     if (
       !box ||
@@ -2184,7 +2191,9 @@ const ACTIONS: ActionHandlers = {
       return false;
     must(beatState(s).whileRuns, "a long wait has its question").answer =
       option;
-    s.whileShown.push(`${s.lesson}.${box.step.id}`);
+    const shown = progressOf(s).whileShown;
+    if (!shown.includes(box.step.id)) shown.push(box.step.id);
+    effects.push({ type: "save" });
     return true;
   },
   "stepDown.accept"(s, _a, effects) {
