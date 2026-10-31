@@ -25,6 +25,13 @@ describe.each(course.filter((l) => l.content).map((l) => l.id))("%s", (id) => {
   const opened = reduce(fresh(), { type: "lesson.open", lesson: id }).state;
   const overview = project(opened).lesson as OverviewLesson;
 
+  test("the overview's outline is its planned staircase, nothing started", () => {
+    expect(overview.steps.map(({ part, tier }) => ({ part, tier }))).toEqual(
+      overview.staircase.planned,
+    );
+    expect(overview.steps.every((x) => x.state === "todo")).toBe(true);
+  });
+
   test.each(["planned", "less"] as const)(
     "Start (%s) reaches the workspace at the overview's tiers",
     (help) => {

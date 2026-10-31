@@ -120,7 +120,9 @@ export function TopBar() {
   };
   const pages = usePagePanel();
   const steps =
-    active && snapshot.lesson.phase === "playing"
+    active &&
+    snapshot.lesson.phase !== "complete" &&
+    snapshot.lesson.steps.length > 0
       ? snapshot.lesson.steps
       : null;
   const card = snapshot?.learner.card ?? [];
@@ -216,9 +218,7 @@ export function TopBar() {
         {steps ? (
           <StepOutline steps={steps} />
         ) : (
-          <p className="text-sm text-muted">
-            The step outline shows once the Lesson starts.
-          </p>
+          <p className="text-sm text-muted">No step outline for this Lesson.</p>
         )}
       </Panel>
       <Panel

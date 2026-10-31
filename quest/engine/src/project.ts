@@ -33,6 +33,7 @@ import type {
   Snapshot,
   StairStep,
   StepDownLesson,
+  StepId,
   StepSummary,
   StepView,
 } from "@quest/contract";
@@ -242,13 +243,41 @@ const stairs = (
 ): StairStep[] =>
   steps.map((x, i) => ({ part: x.part, tier: tierAt(tiers, i) }));
 
+// Each step's line in the outline; current -1 means no step is current.
+const outlineOf = (
+  steps: readonly Step[],
+  tiers: readonly (HelpTier | undefined)[],
+  done: readonly StepId[],
+  current: number,
+  passedNow: boolean,
+): StepSummary[] =>
+  steps.map((x, i) => ({
+    id: x.id,
+    part: x.part,
+    title: x.title,
+    tier: tierAt(tiers, i),
+    state:
+      i === current
+        ? passedNow
+          ? "done"
+          : "current"
+        : done.includes(x.id)
+          ? "done"
+          : "todo",
+    optional: Boolean(x.optional),
+  }));
+
 // The steps and tiers the overview's start will play: with the warm-ups it
 // would pick, and the help as planned or with less help.
-function planOf(s: EngineState, lessHelp: boolean) {
+function startedCopy(s: EngineState, lessHelp: boolean) {
   const st = asStarted(s);
   const p = progressOf(st);
   p.lessHelp = lessHelp;
   p.warm = pickWarmups(s);
+  return st;
+}
+function planOf(s: EngineState, lessHelp: boolean) {
+  const st = startedCopy(s, lessHelp);
   return stairs(stepsOf(st), tiersOf(st));
 }
 
@@ -259,6 +288,7 @@ function overviewOf(s: EngineState, head: LessonHead): OverviewLesson {
     return {
       ...head,
       phase: "overview",
+      steps: [],
       intro: null,
       staircase: { planned: [], less: null },
       check: [],
@@ -272,9 +302,11 @@ function overviewOf(s: EngineState, head: LessonHead): OverviewLesson {
   const planned = planOf(s, false);
   const less = planOf(s, true);
   const lessDiffers = JSON.stringify(less) !== JSON.stringify(planned);
+  const st = startedCopy(s, false);
   return {
     ...head,
     phase: "overview",
+    steps: outlineOf(stepsOf(st), tiersOf(st), p.done, -1, false),
     intro: {
       can: [...c.intro.can],
       payoff: c.intro.payoff ?? null,
@@ -346,21 +378,7 @@ function playingOf(s: EngineState, head: LessonHead): PlayingLesson {
   const current = s.beat ? s.pos.step : steps.findIndex((x) => x.id === p.step);
   // A step counts as passed once its last beat is done, by any route.
   const passedNow = Boolean(s.beat) && isDone(s.beat) && isLastBeat(s);
-  const list: StepSummary[] = steps.map((x, i) => ({
-    id: x.id,
-    part: x.part,
-    title: x.title,
-    tier: tierAt(tiers, i),
-    state:
-      i === current
-        ? passedNow
-          ? "done"
-          : "current"
-        : p.done.includes(x.id)
-          ? "done"
-          : "todo",
-    optional: Boolean(x.optional),
-  }));
+  const list = outlineOf(steps, tiers, p.done, current, passedNow);
   if (!s.beat)
     return {
       ...head,
@@ -720,6 +738,7 @@ function stepDownOf(s: EngineState, head: LessonHead): StepDownLesson {
       index: s.pos.step,
       of: steps.length,
     },
+    steps: outlineOf(steps, tiers, progressOf(s).done, s.pos.step, false),
     toCome: byTier(
       tiers
         .map((_, i) => tierAt(tiers, i))
