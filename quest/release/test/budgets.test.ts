@@ -134,17 +134,24 @@ describe("the planted tree", () => {
     expect(budgetProblems(measureTree(dir, { manifestFile }))).toEqual([]);
   });
 
-  test("riv and posters are measured off, and fail once switched on", () => {
+  test("riv and posters fail over their limits", () => {
     put("learn/app/assets/pip-x.riv", Buffer.alloc(65 * KIB));
     put("learn/app/assets/hero-x.png", Buffer.alloc(300 * KIB));
-    const off = measureTree(dir, { manifestFile });
-    expect(budgetProblems(off)).toEqual([]);
-    expect(report(off).text).toMatch(/Pip \.riv .*off \(ticket 240\)/);
-    const on = measureTree(dir, {
+    const rows = measureTree(dir, { manifestFile });
+    expect(failing(rows)).toEqual([label("riv"), label("posters")]);
+    expect(report(rows).text).toMatch(/Pip \.riv .*FAIL/);
+    expect(report(rows).text).toMatch(/Posters .*FAIL/);
+  });
+
+  test("`on` still switches a row off", () => {
+    put("learn/app/assets/pip-x.riv", Buffer.alloc(65 * KIB));
+    put("learn/app/assets/hero-x.png", Buffer.alloc(300 * KIB));
+    const off = measureTree(dir, {
       manifestFile,
-      on: { riv: true, posters: true },
+      on: { riv: false, posters: false },
     });
-    expect(failing(on)).toEqual([label("riv"), label("posters")]);
+    expect(budgetProblems(off)).toEqual([]);
+    expect(report(off).text).toMatch(/Pip \.riv .*off/);
   });
 });
 
@@ -183,6 +190,18 @@ describe("what the budgets refuse", () => {
       "page",
       () => {
         rmSync(join(dir, "learn/app/pages"), { recursive: true });
+      },
+    ],
+    [
+      "riv",
+      () => {
+        rmSync(join(dir, "learn/app/assets/pip-x.riv"));
+      },
+    ],
+    [
+      "posters",
+      () => {
+        rmSync(join(dir, "learn/app/assets/idle-x.png"));
       },
     ],
     [
