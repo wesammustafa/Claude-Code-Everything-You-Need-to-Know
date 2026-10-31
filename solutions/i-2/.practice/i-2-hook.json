@@ -1,0 +1,7 @@
+{
+  "hooks": {
+    "InstructionsLoaded": [
+      { "hooks": [ { "type": "command", "command": "jq -r '[.load_reason, .file_path] | @tsv' >> \"$CLAUDE_PROJECT_DIR/.practice/i-2-loaded.txt\"" } ] }
+    ]
+  }
+}

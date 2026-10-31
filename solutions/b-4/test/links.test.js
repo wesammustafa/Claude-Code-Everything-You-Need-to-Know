@@ -39,9 +39,10 @@ test('finds links whose target sits in angle brackets', () => {
   assert.deepEqual(findLinks('Read [my notes](<my notes.md>).\n').map((l) => l.target), ['my notes.md']);
 });
 
-test('a malformed percent escape is a broken link, not a crash', (t) => {
+test('a percent-encoded link to a file that exists resolves', (t) => {
   const dir = mkdtempSync(join(tmpdir(), 'linkcheck-'));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
-  writeFileSync(join(dir, 'doc.md'), '[bad](bad%.md)\n');
-  assert.deepEqual(brokenLinks(dir, { files: ['.'], ignore: [] }), [{ file: 'doc.md', line: 1, target: 'bad%.md' }]);
+  writeFileSync(join(dir, 'my notes.md'), '# Notes\n');
+  writeFileSync(join(dir, 'doc.md'), '[notes](my%20notes.md)\n');
+  assert.deepEqual(brokenLinks(dir, { files: ['.'], ignore: [] }), []);
 });

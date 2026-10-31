@@ -1,7 +1,7 @@
 // The Reference solutions' replay: its contract on fixture solutions (the
 // names it restores, where and how steps.sh runs, which Lessons it applies),
-// the CLIs' path resolution, the real Beginner solutions on an assembled
-// copy, and that no solution file names a commit SHA.
+// the CLIs' path resolution, the real Beginner and Intermediate solutions
+// on an assembled copy, and that no solution file names a commit SHA.
 import { execFileSync, spawnSync } from "node:child_process";
 import {
   chmodSync,
@@ -205,27 +205,34 @@ function claudeOnPath(): string {
   return `${bin}${delimiter}${process.env.PATH ?? ""}`;
 }
 
+// NODE_TEST_CONTEXT would make an `npm test` a Check runs skip its tests.
+const checkEnv: NodeJS.ProcessEnv = { ...process.env, PATH: claudeOnPath() };
+delete checkEnv.NODE_TEST_CONTEXT;
+const check = (copy: string, id: string) =>
+  spawnSync(process.execPath, ["../checks/run.mjs", id], {
+    cwd: join(copy, "project"),
+    env: checkEnv,
+    encoding: "utf8",
+  });
+
+/** A fresh assembled copy, made a git repository with one commit. */
+async function assembledCopy(): Promise<string> {
+  const copy = join(tempDir("quest-tpl-"), "tpl");
+  await assembleTemplate({
+    repoRoot,
+    outDir: copy,
+    inputs: fixtureInputs(lessonPages(REF)),
+    writeNotices: stubNotices,
+  });
+  prepareCopy(copy);
+  return copy;
+}
+
 describe("the Beginner solutions on an assembled copy", () => {
   const beginner = order.slice(0, order.indexOf("b-capstone") + 1);
-  // NODE_TEST_CONTEXT would make an `npm test` a Check runs skip its tests.
-  const env: NodeJS.ProcessEnv = { ...process.env, PATH: claudeOnPath() };
-  delete env.NODE_TEST_CONTEXT;
-  const check = (copy: string, id: string) =>
-    spawnSync(process.execPath, ["../checks/run.mjs", id], {
-      cwd: join(copy, "project"),
-      env,
-      encoding: "utf8",
-    });
 
   test("each Check fails before its Lesson's solution and passes after it, with every earlier one", async () => {
-    const copy = join(tempDir("quest-tpl-"), "tpl");
-    await assembleTemplate({
-      repoRoot,
-      outDir: copy,
-      inputs: fixtureInputs(lessonPages(REF)),
-      writeNotices: stubNotices,
-    });
-    prepareCopy(copy);
+    const copy = await assembledCopy();
     for (const [i, id] of beginner.entries()) {
       expect(check(copy, id).status, `${id} before its solution`).toBe(1);
       applyLesson({ repoRoot, copy, id });
@@ -235,6 +242,31 @@ describe("the Beginner solutions on an assembled copy", () => {
       }
     }
   }, 300_000);
+});
+
+describe("the Intermediate solutions on an assembled copy", () => {
+  const first = order.indexOf("i-1");
+  const done = order.slice(0, first);
+  const intermediate = order.slice(first, order.indexOf("i-capstone") + 1);
+
+  // b-3's last-commit item holds only while a commit with a test is the
+  // latest, so the earlier levels are checked again once, at the end.
+  test("each Check fails before its Lesson's solution and passes after it, with every earlier one", async () => {
+    const copy = await assembledCopy();
+    for (const id of done) applyLesson({ repoRoot, copy, id });
+    for (const [i, id] of intermediate.entries()) {
+      expect(check(copy, id).status, `${id} before its solution`).toBe(1);
+      applyLesson({ repoRoot, copy, id });
+      for (const earlier of intermediate.slice(0, i + 1)) {
+        const run = check(copy, earlier);
+        expect(run.status, `${earlier} after ${id}:\n${run.stdout}`).toBe(0);
+      }
+    }
+    for (const id of [...done, ...intermediate]) {
+      const run = check(copy, id);
+      expect(run.status, `${id} at the end:\n${run.stdout}`).toBe(0);
+    }
+  }, 600_000);
 });
 
 /** Every file under `dir`, relative to it. */

@@ -61,7 +61,7 @@ export const items = [
       const sha = saved.trim().split(/\s+/)[0];
       let files;
       try {
-        files = repo.git('show', '--name-only', '--format=', sha).split('\n').filter(Boolean);
+        files = repo.git('show', '--name-only', '--format=', sha).split('\n').filter(Boolean).map((f) => repo.local(f));
       } catch {
         return `\`.practice/i-1-commit.txt\` names ${sha}, which is not a commit in this repository.`;
       }

@@ -28,11 +28,7 @@ export function brokenLinks(root, config) {
   return broken;
 }
 
-// A malformed percent escape, such as bad%.md, cannot name a file, so it is a broken link.
+// Whether a link's target, percent-decoded, names a file next to the link.
 function targetExists(folder, target) {
-  try {
-    return existsSync(join(folder, decodeURIComponent(target)));
-  } catch {
-    return false;
-  }
+  return existsSync(join(folder, decodeURIComponent(target)));
 }
