@@ -1,6 +1,10 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "./live.ts";
+import { servePages } from "./pages.ts";
 import { watch } from "./watch.ts";
+
+/** b-1's page title, from the rendered index. */
+const B1_PAGE = "Install, sign in and look around";
 
 const SCREENS: readonly (readonly [path: string, heading: string])[] = [
   ["/", "Learn Claude Code by using it."],
@@ -125,7 +129,10 @@ test("renders with both bundled fonts, fetching only their Latin files", async (
       expect.objectContaining({
         familyName: family,
         isCustomFont: true,
-        postScriptName: expect.stringMatching(instance),
+        // Linux reports another PostScript name for the same instance.
+        ...(process.platform === "darwin"
+          ? { postScriptName: expect.stringMatching(instance) }
+          : {}),
       }),
     ]);
   }
@@ -557,11 +564,13 @@ test.describe("the reading sheet", () => {
   ] as const) {
     test(`is ${String(expected)} px wide in a ${String(width)} px window`, async ({
       page,
+      context,
     }) => {
+      await servePages(context);
       await page.setViewportSize({ width, height: 900 });
       await page.goto("/#/lesson/b-1");
       await page.getByRole("button", { name: "Read the full lesson" }).click();
-      const dialog = page.getByRole("dialog", { name: "Read the full lesson" });
+      const dialog = page.getByRole("dialog", { name: B1_PAGE });
       await expect(dialog).toBeVisible();
       const box = await dialog.boundingBox();
       expect(Math.round(box?.width ?? 0)).toBe(expected);
@@ -633,7 +642,8 @@ test.describe("keyboard focus is never hidden behind the fixed bars", () => {
       await page.setViewportSize({ width, height });
       await page.goto("/#/lesson/b-1/step");
       await fontsSettled(page);
-      await page.getByRole("button", { name: "Settings" }).focus();
+      // The step header's Read the full lesson comes just before the command.
+      await page.getByRole("button", { name: "Read the full lesson" }).focus();
       await page.keyboard.press("Tab");
       const copy = page.getByRole("button", { name: /^Copy/ });
       await expect(copy).toBeFocused();
@@ -658,19 +668,24 @@ test.describe("keyboard focus is never hidden behind the fixed bars", () => {
 
 test("a Panel whose body overflows lets the keyboard reach and scroll it", async ({
   page,
+  context,
 }) => {
+  // A short page, which grows once shown, as a page does while its
+  // diagrams load.
+  await servePages(context, {
+    "/pages/beginner/01-install-and-look-around.html": `<h1 id="i">${B1_PAGE}</h1><p>Short.</p>`,
+  });
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto("/#/lesson/b-1");
   await page.getByRole("button", { name: "Read the full lesson" }).click();
-  const dialog = page.getByRole("dialog", { name: "Read the full lesson" });
-  await expect(dialog).toBeVisible();
-  const body = dialog.getByRole("region", { name: "Read the full lesson" });
+  const dialog = page.getByRole("dialog", { name: B1_PAGE });
+  await expect(dialog.getByRole("heading", { level: 1 })).toBeVisible();
+  const body = dialog.getByRole("region", { name: B1_PAGE });
   // A body that fits is no tab stop.
   await expect(body).toHaveCount(0);
 
-  // A long page, as the rendered lesson will be.
   await dialog.evaluate((el) => {
-    const content = el.querySelector(":scope > div");
+    const content = el.querySelector(".page-prose");
     for (let i = 0; i < 80; i++) {
       const line = document.createElement("p");
       line.textContent = `Line ${String(i + 1)}`;
@@ -682,6 +697,11 @@ test("a Panel whose body overflows lets the keyboard reach and scroll it", async
   await expect(dialog.getByRole("button", { name: "Close" })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(body).toBeFocused();
+  // The body's one link, the lesson feedback line, then round to Close.
+  await page.keyboard.press("Tab");
+  await expect(
+    dialog.getByRole("link", { name: "Stuck on this lesson? Tell us" }),
+  ).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(dialog.getByRole("button", { name: "Close" })).toBeFocused();
   await page.keyboard.press("Tab");
@@ -763,5 +783,84 @@ test.describe("in a contrast theme (forced colours)", () => {
         .evaluate((a) => getComputedStyle(a).backgroundColor);
     expect(await fill(/, current$/)).toBe(await system(page, "Highlight"));
     expect(await fill(/^Lesson 2\b/)).toBe(await system(page, "Canvas"));
+  });
+});
+
+test.describe("the Learning journey at every width", () => {
+  for (const width of [720, 1920, 390]) {
+    test(`fits ${String(width)} px with no sideways scroll, the Next band in view`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/#/journey");
+      await fontsSettled(page);
+      await expect(page.getByRole("tab")).toHaveCount(3);
+      const fit = await page.evaluate(() => ({
+        page: document.documentElement.scrollWidth - window.innerWidth,
+        bar: (() => {
+          const bar = document.querySelector("[data-top] > header");
+          return bar ? bar.scrollWidth - bar.clientWidth : -1;
+        })(),
+      }));
+      expect(fit.page).toBeLessThanOrEqual(0);
+      expect(fit.bar).toBe(0);
+      const band = page.getByText("Next", { exact: true }).locator("../..");
+      const box = await band.boundingBox();
+      expect(box).not.toBeNull();
+      expect((box?.x ?? -1) >= 0).toBe(true);
+      expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(width);
+    });
+  }
+
+  for (const width of [1440, 390]) {
+    test(`at ${String(width)} px the keyboard reaches every Lesson with a visible ring, never under the top bar, and Enter previews one`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 700 });
+      await page.goto("/#/journey");
+      await fontsSettled(page);
+      // Each Level card's Electives summary comes after the tabs (244).
+      await page.locator("[data-level-footer] summary").last().focus();
+      const top = await page
+        .locator("[data-top]")
+        .evaluate((el) => el.getBoundingClientRect().bottom);
+      for (let i = 0; i < 6; i++) {
+        await page.keyboard.press("Tab");
+        const seen = await page.evaluate(() => {
+          const el = document.activeElement as HTMLElement;
+          const box = el.getBoundingClientRect();
+          return {
+            name: el.getAttribute("aria-label") ?? "",
+            ring: getComputedStyle(el).outlineStyle,
+            top: box.top,
+          };
+        });
+        expect(seen.name).toMatch(
+          /^(Lesson \d+|Capstone): .*, (done|current|to do)$/,
+        );
+        expect(seen.ring).toBe("solid");
+        expect(seen.top).toBeGreaterThanOrEqual(top);
+      }
+      await page.keyboard.press("Shift+Tab");
+      await page.keyboard.press("Enter");
+      await expect(page).toHaveURL(/#\/lesson\/b-5$/);
+      await expect(
+        page.getByRole("button", { name: "Open this lesson" }),
+      ).toBeVisible();
+    });
+  }
+
+  test("Enter and Space on a Level card select it", async ({ page }) => {
+    await page.goto("/#/journey");
+    const intermediate = page.getByRole("tab", { name: /^Intermediate/ });
+    const advanced = page.getByRole("tab", { name: /^Advanced/ });
+    // A card out of the tab order is still a button the pointer or a
+    // screen reader can press.
+    await intermediate.focus();
+    await page.keyboard.press("Enter");
+    await expect(intermediate).toHaveAttribute("aria-selected", "true");
+    await advanced.focus();
+    await page.keyboard.press("Space");
+    await expect(advanced).toHaveAttribute("aria-selected", "true");
   });
 });

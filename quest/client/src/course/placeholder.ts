@@ -1,8 +1,7 @@
-// Placeholder course data for the top bar, the Learning journey and
-// Progress, until they read the course from the server's snapshot: 243
-// moves TopBar and Journey off it and 250 Progress, then this file goes.
-// The Lesson screens read the snapshot already (221). Each title is its
-// Guide page's heading, quoted exactly.
+// Placeholder course data for Progress, until it reads the course from the
+// server's snapshot: 250 moves it off and deletes this file. Every other
+// screen and the top bar read the snapshot already (221, 243). Each title
+// is its Guide page's heading, quoted exactly.
 import type { LevelId } from "@quest/contract";
 import { LEVEL_NAMES, lessonLabel as placeLabel } from "./labels";
 
@@ -88,10 +87,6 @@ export const LEVELS: readonly LevelInfo[] = [
 
 export const LESSONS: readonly LessonInfo[] = LEVELS.flatMap((l) => l.lessons);
 
-export function findLesson(id: string | undefined): LessonInfo | undefined {
-  return LESSONS.find((lesson) => lesson.id === id);
-}
-
 export function levelOf(lesson: LessonInfo): LevelInfo {
   const found = LEVELS.find((l) => l.id === lesson.level);
   if (!found) throw new Error(`No level ${lesson.level}`);
@@ -102,8 +97,4 @@ export function levelOf(lesson: LessonInfo): LevelInfo {
 export function lessonLabel(lesson: LessonInfo): string {
   const index = levelOf(lesson).lessons.indexOf(lesson);
   return placeLabel(index + 1, lesson.capstone);
-}
-
-export function nextLesson(lesson: LessonInfo): LessonInfo | undefined {
-  return LESSONS[LESSONS.indexOf(lesson) + 1];
 }

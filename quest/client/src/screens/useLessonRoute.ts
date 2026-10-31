@@ -10,9 +10,10 @@ const LESSON_ROUTE = /^\/lesson\/([^/]+)(?:\/(?:step|complete))?\/?$/;
  * follows it. Mounted once, in the shell:
  * - on the active Lesson's route, the path follows its phase (overview, the
  *   workspace for play and a Step-down, or complete), replacing the entry;
- * - a route naming another Lesson of the course sends `lesson.open` for it,
- *   once, and the path follows when the snapshot moves there;
  * - a resume with no beat open yet sends `lesson.open` for it, once;
+ * - a route naming another Lesson of the course is browsing: it moves
+ *   nothing, and LessonGate shows that Lesson's preview, whose button opens
+ *   it (243 D1, superseding 221 D3);
  * - a route naming no Lesson is left to the screens' NotFound.
  * Other routes (Welcome, Journey, Progress) are never moved.
  */
@@ -36,7 +37,11 @@ export function useLessonRoute(): void {
 
   useEffect(() => {
     if (routeId === undefined || !lesson?.phase || !known) return;
-    if (routeId !== lesson.id || waitsToOpen) {
+    if (routeId !== lesson.id) {
+      asked.current = null;
+      return;
+    }
+    if (waitsToOpen) {
       if (!enabled || asked.current === routeId) return;
       asked.current = routeId;
       void act({ type: "lesson.open", lesson: routeId }, "lesson.open").then(

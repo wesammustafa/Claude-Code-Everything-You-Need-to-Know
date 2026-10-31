@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import type { CompleteLesson } from "@quest/contract";
-import { ButtonLink } from "../components/Button";
+import { Button } from "../components/Button";
 import { CheckLines } from "../components/CheckLines";
 import { InlineText } from "../components/InlineText";
 import { Tier } from "../components/Tier";
@@ -12,7 +12,7 @@ import { Pip } from "../pip/Pip";
 import { PageTitle } from "../shell/PageTitle";
 import { LessonGate } from "./LessonGate";
 import { BOX, EYEBROW, MOMENT, QUIET_LINK } from "./layout";
-import { useActiveLesson } from "./lesson";
+import { useActiveLesson, useOpenLesson } from "./lesson";
 
 /**
  * Whether this tab reveals the Lesson's Badge: only on its first
@@ -99,23 +99,28 @@ export function LessonComplete() {
           </ul>
         </section>
       )}
-      {lesson.next && (
-        // The Lesson's route opens it (useLessonRoute sends lesson.open).
-        <ButtonLink
-          to={`/lesson/${lesson.next.id}`}
-          variant="primary"
-          size="lg"
-          iconEnd="arrow"
-          className="mt-2"
-        >
-          <span>
-            Next: <InlineText text={lesson.next.title} />
-          </span>
-        </ButtonLink>
-      )}
+      {lesson.next && <NextLesson next={lesson.next} />}
       <Link to="/journey" className={QUIET_LINK}>
         Back to the learning journey
       </Link>
     </main>
+  );
+}
+
+/** Opens the next Lesson: it sends lesson.open, as browsing to it would not. */
+function NextLesson({ next }: { next: NonNullable<CompleteLesson["next"]> }) {
+  const open = useOpenLesson(next.id);
+  return (
+    <Button
+      variant="primary"
+      size="lg"
+      iconEnd="arrow"
+      className="mt-2"
+      {...open}
+    >
+      <span>
+        Next: <InlineText text={next.title} />
+      </span>
+    </Button>
   );
 }

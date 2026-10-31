@@ -15,7 +15,11 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { build, type Rolldown } from "vite";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import { checkClientFresh, staticTable } from "../build/statics.ts";
+import {
+  checkClientFresh,
+  checkPagesBuilt,
+  staticTable,
+} from "../build/statics.ts";
 import { STAMP, inputsDigest } from "../../client/build/inputs.ts";
 import { checksSpecifier, runCheckBuild } from "../vite.run-check.config.ts";
 import { repoRoot, serverBuild, serverRoot } from "../vite.config.ts";
@@ -40,6 +44,15 @@ function fixtureClient(): string {
     Buffer.from([0, 0x61, 0x73, 0x6d]),
   );
   writeFileSync(join(dir, "favicon.svg"), "<svg/>");
+  return dir;
+}
+
+function fixturePages(): string {
+  const dir = tempDir("quest-pages-");
+  mkdirSync(join(dir, "intermediate"));
+  writeFileSync(join(dir, "index.json"), '{"ref":"v0","pages":[]}\n');
+  writeFileSync(join(dir, "intermediate/05-hooks.html"), "<h1>Hooks</h1>");
+  writeFileSync(join(dir, "intermediate/05-hooks.d1.light.svg"), "<svg/>");
   return dir;
 }
 
@@ -78,7 +91,12 @@ beforeAll(async () => {
   outDir = join(made, "learn");
   chunks = chunksOf(
     await build({
-      ...serverBuild({ clientDir: fixtureClient(), outDir, checkFresh: false }),
+      ...serverBuild({
+        clientDir: fixtureClient(),
+        pagesDir: fixturePages(),
+        outDir,
+        checkFresh: false,
+      }),
       configFile: false,
     }),
   );
@@ -123,6 +141,18 @@ describe("app.mjs", () => {
       "favicon.svg",
     ])
       expect(existsSync(join(outDir, "app", file)), file).toBe(true);
+  });
+
+  test("has the rendered pages beside it, each listed by name", () => {
+    const code = readFileSync(join(outDir, "app.mjs"), "utf8");
+    for (const file of [
+      "index.json",
+      "intermediate/05-hooks.html",
+      "intermediate/05-hooks.d1.light.svg",
+    ]) {
+      expect(existsSync(join(outDir, "app/pages", file)), file).toBe(true);
+      expect(code).toContain(`"/pages/${file}"`);
+    }
   });
 });
 
@@ -192,6 +222,15 @@ test("the build refuses a client build that is missing or stale", () => {
   expect(() => {
     checkClientFresh(client);
   }).toThrow(/missing or was built from other sources/);
+});
+
+test("the build refuses a missing pages folder", () => {
+  expect(() => {
+    checkPagesBuilt(tempDir("quest-no-pages-"));
+  }).toThrow(/has no rendered pages\. Run `npm run build -w @quest\/release`/);
+  expect(() => {
+    checkPagesBuilt(fixturePages());
+  }).not.toThrow();
 });
 
 test("QUEST_BASE_PORT must be a port", () => {

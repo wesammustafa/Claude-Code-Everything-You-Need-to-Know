@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, SyntheticEvent } from "react";
 import { cx } from "../lib/cx";
 import { Icon } from "./Icon";
 
@@ -11,6 +11,8 @@ export interface DisclosureProps {
   count?: { value: number; label: string };
   /** A card of its own, or a quiet line inside another. */
   variant?: "card" | "quiet";
+  /** Called as it opens or closes, from the details element's toggle event. */
+  onToggle?: (event: SyntheticEvent<HTMLDetailsElement>) => void;
   children: ReactNode;
 }
 
@@ -23,12 +25,14 @@ export function Disclosure({
   summary,
   count,
   variant = "card",
+  onToggle,
   children,
 }: DisclosureProps) {
   const card = variant === "card";
   return (
     <details
       data-disclosure={variant}
+      onToggle={onToggle}
       className={cx(
         "group/details",
         card && "rounded-lg border border-line bg-surface p-5 shadow-sm",

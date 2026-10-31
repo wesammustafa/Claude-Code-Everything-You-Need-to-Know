@@ -5,7 +5,9 @@ import type { Snapshot } from "@quest/contract";
 import {
   complete,
   completed,
+  fullCourse,
   overview,
+  overviewAt,
   playing,
   snapshotOf,
   stepDown,
@@ -51,6 +53,17 @@ const APP_WORDS: readonly RegExp[] = [
   /^You already earned this badge\.$/,
   /^Explorer(, not yet)?$/,
   /^Not yet$/,
+  /^(Beginner|Intermediate|Advanced) · (Lesson \d+|Capstone)$/,
+  /^Open this lesson$/,
+  /^(Claude Code Quest|Journey|Progress|Steps|Your card)$/,
+  /^Electives$/,
+  /^Learning journey$/,
+  /^Three levels\. Each lesson ends with a check you can also run yourself\.$/,
+  /^(Beginner|Intermediate|Advanced)$/,
+  /^\d+ of \d+$/,
+  /^Next$/,
+  /^(Beginner|Intermediate|Advanced), (Lesson \d+|Capstone): $/,
+  /^(Lesson \d+|Capstone)$/,
 ];
 
 /** Every string the snapshot carries, to match quotes against. */
@@ -69,10 +82,11 @@ function quotes(snapshot: Snapshot): string[] {
 /** The text on screen that is neither the app's own words nor a quote. */
 function unquoted(snapshot: Snapshot): string[] {
   const from = quotes(snapshot);
-  // The screen and its action bar: the top bar is 243's, still placeholder.
+  // The screen, its action bar and the top bar.
   const roots = [
     document.querySelector("[data-screen]"),
     document.querySelector("[data-action-bar]"),
+    document.querySelector("[data-top] > header"),
   ].filter((root) => root !== null);
   const found: string[] = [];
   for (const root of roots) {
@@ -338,8 +352,8 @@ describe("Lesson complete", () => {
       0,
     );
     expect(
-      screen.getByRole("link", { name: /Next: Permission modes/ }),
-    ).toHaveAttribute("href", "/lesson/b-2");
+      screen.getByRole("button", { name: /Next: Permission modes/ }),
+    ).toBeInTheDocument();
     expect(unquoted(snapshotOf(complete))).toEqual([]);
     await waitFor(() => {
       expect(page.posts).toEqual([
@@ -366,6 +380,28 @@ describe("Lesson complete", () => {
   });
 });
 
+describe("Learning journey", () => {
+  test("every word on it, and on the top bar, is the app's or the course's", () => {
+    const at = snapshotOf(overviewAt("b-4"), {
+      welcomed: true,
+      course: fullCourse,
+    });
+    renderConnected("/journey", at);
+    expect(screen.getAllByRole("tab")).toHaveLength(3);
+    expect(unquoted(at)).toEqual([]);
+  });
+
+  test("a Lesson's preview and its top bar quote the course", () => {
+    const at = snapshotOf(overviewAt("b-4"), {
+      welcomed: true,
+      course: fullCourse,
+    });
+    renderConnected("/lesson/i-2", at);
+    expect(screen.getByText("Intermediate · Lesson 2")).toBeInTheDocument();
+    expect(unquoted(at)).toEqual([]);
+  });
+});
+
 describe("the engine owns the place", () => {
   test("the path follows the phase, replacing the entry", async () => {
     const page = renderConnected("/lesson/b-1", snapshotOf(overview));
@@ -380,16 +416,58 @@ describe("the engine owns the place", () => {
     });
   });
 
-  test("a route to another Lesson asks the engine to open it, once", async () => {
+  test("a route to another Lesson shows its preview and posts nothing", async () => {
     const page = renderConnected("/lesson/b-2", snapshotOf(complete));
-    await waitFor(() => {
-      expect(page.posts).toEqual([{ type: "lesson.open", lesson: "b-2" }]);
-    });
+    expect(
+      screen.getByRole("heading", {
+        level: 1,
+        name: "Permission modes and plan mode",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Beginner · Lesson 2")).toBeInTheDocument();
+    expect(screen.getByText("about 25 minutes")).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "Planner, not yet" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Back to the learning journey" }),
+    ).toHaveAttribute("href", "/journey");
     page.send(snapshotOf(complete, { revision: 2 }));
     await act(async () => {
       await Promise.resolve();
     });
-    expect(page.posts).toHaveLength(1);
+    expect(page.posts).toEqual([]);
+    expect(page.router.state.location.pathname).toBe("/lesson/b-2");
+  });
+
+  test("Open this lesson posts one lesson.open and follows the phase", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected("/lesson/b-2", snapshotOf(complete));
+    const b2 = {
+      ...overview,
+      id: "b-2",
+      title: "Permission modes and plan mode",
+    };
+    page.answer(snapshotOf(b2, { revision: 2, welcomed: true }));
+    await user.click(screen.getByRole("button", { name: "Open this lesson" }));
+    expect(page.posts).toEqual([{ type: "lesson.open", lesson: "b-2" }]);
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Permission modes and plan mode",
+      }),
+    ).toBeInTheDocument();
+    expect(document.querySelector("[data-lesson-preview]")).toBeNull();
+    expect(page.router.state.location.pathname).toBe("/lesson/b-2");
+  });
+
+  test("Lesson complete's Next posts lesson.open for the next Lesson", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected("/lesson/b-1/complete", snapshotOf(complete));
+    await user.click(
+      screen.getByRole("button", { name: /Next: Permission modes/ }),
+    );
+    expect(page.posts).toEqual([{ type: "lesson.open", lesson: "b-2" }]);
   });
 
   test("a resume with no beat open asks to open it; an unknown id is NotFound", async () => {

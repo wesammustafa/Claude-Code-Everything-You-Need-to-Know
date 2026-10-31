@@ -3,15 +3,18 @@
 // drives through `window.__questStream`, and a health answer. By default each
 // stream answers with a snapshot at once, so a page is connected as it opens:
 // the typed b-1 snapshot (snapshots.ts) whose phase the opened route shows,
-// the workspace watching its step on a step route, Lesson complete's on a complete route and
+// the workspace watching its step on a step route, Lesson complete's on a complete route,
+// the whole course with b-4 open on its overview on the Learning journey, and
 // the overview's elsewhere, sent again whenever the route changes. A test that
 // sets `manualStream` sends every frame itself. Actions get an answer that
 // changes nothing, but for hint.next, which opens the step's first hint. The real server's stream is b1-slice.spec.ts's and 222's.
 import { test as base, expect, type Page } from "@playwright/test";
 import {
   complete,
+  fullCourse,
   hinted,
   overview,
+  overviewAt,
   snapshotOf,
   watching,
 } from "./snapshots.ts";
@@ -24,12 +27,19 @@ export const INSTANCE = "e2e";
 export interface RoutedSnapshots {
   step: unknown;
   complete: unknown;
+  journey: unknown;
   other: unknown;
 }
 
 const ROUTED: RoutedSnapshots = {
   step: snapshotOf(watching),
   complete: snapshotOf(complete),
+  // Every Level and Lesson, three done (243). The other routes keep b-1's
+  // place, which the Lesson specs read.
+  journey: snapshotOf(overviewAt("b-4"), {
+    welcomed: true,
+    course: fullCourse,
+  }),
   // Welcomed, so Welcome's Start goes straight to the Lesson's route.
   other: snapshotOf(overview, { welcomed: true }),
 };
@@ -77,7 +87,9 @@ function installFakeStream({
       ? routed.step
       : /^#\/lesson\/[^/]+\/complete\/?$/.test(location.hash)
         ? routed.complete
-        : routed.other;
+        : /^#\/journey\/?$/.test(location.hash)
+          ? routed.journey
+          : routed.other;
     revision += 1;
     return { ...(data as object), revision };
   };
@@ -113,8 +125,12 @@ function installFakeStream({
   // rule already lands on the new hash.
   if (!manual)
     window.addEventListener("popstate", () => {
-      // Only a Lesson's route has a place to move to.
-      if (location.hash.startsWith("#/lesson/"))
+      // Only a Lesson's route has a place to move to, and the journey its
+      // whole course.
+      if (
+        location.hash.startsWith("#/lesson/") ||
+        /^#\/journey\/?$/.test(location.hash)
+      )
         open()?.frame("snapshot", first());
     });
   const stream: QuestStream = {
