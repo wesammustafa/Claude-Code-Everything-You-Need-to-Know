@@ -71,7 +71,7 @@ const ROOT_FILES = [
 const LEARN_MODULES = ["app.mjs", "run-check.mjs"];
 
 /** Every file and folder under `dir`, as sorted "/"-separated paths, skipping node_modules. */
-function walk(dir, at = "") {
+export function walk(dir, at = "") {
   return readdirSync(join(dir, at), { withFileTypes: true })
     .filter((e) => e.name !== "node_modules")
     .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
@@ -187,10 +187,28 @@ const camel = (id) => id.replace(/-(\w)/g, (_, c) => c.toUpperCase());
 /** checks/lessons/index.mjs for the manifest's lessons, in course order. */
 export function lessonIndex(manifest) {
   const checks = manifest.lessons.map((l) => l.check);
+  // The typedefs the checks import (215's @ts-check host types them).
   return [
+    "// @ts-check",
     "// Every lesson and capstone with a check, in course order.",
-    ...checks.map((c) => `import * as ${camel(c)} from './${c}.mjs';`),
     "",
+    "/**",
+    " * What a check returns: true when the item passes, or the hint to show.",
+    " * @typedef {true | string} Result",
+    " */",
+    "",
+    "/**",
+    " * One item of a lesson's check: `local` when it reads the Learner's",
+    " * machine (the installed CLI or files under .practice/).",
+    " * @typedef {{ text: string, local?: boolean, check: (repo: Repo) => Result }} Item",
+    " */",
+    "",
+    "/** @typedef {{ title: string, items: readonly Item[] }} Lesson */",
+    "",
+    ...checks.map((c) => `import * as ${camel(c)} from './${c}.mjs';`),
+    "/** @import { Repo } from '../repo.mjs' */",
+    "",
+    "/** @type {Record<string, Lesson | undefined>} */",
     `export const lessons = { ${checks.map((c) => `'${c}': ${camel(c)}`).join(", ")} };`,
     "",
   ].join("\n");

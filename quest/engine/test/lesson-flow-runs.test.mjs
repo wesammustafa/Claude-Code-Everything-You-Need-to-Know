@@ -11,7 +11,6 @@ import {
   courseWith,
   DEMO_B2,
   driver,
-  FACTS,
   finishedBefore,
   gitLists,
   hintAvailable,
@@ -19,6 +18,7 @@ import {
   onReading,
   pending,
   playUntil,
+  PROJECT,
   recallOf,
   rungsOf,
   save,
@@ -55,7 +55,7 @@ test("r shows the checking state on every checked beat, and its check, file and 
       evidence: ".practice/version.txt",
       slow: true,
       asked: d.state.asks,
-      dir: FACTS.root,
+      dir: PROJECT,
     },
   ]);
   d.send({
@@ -87,7 +87,7 @@ test("r shows the checking state on every checked beat, and its check, file and 
       type: "file",
       path: ".practice/b-2-plan.txt",
       asked: f.state.asks,
-      dir: FACTS.root,
+      dir: PROJECT,
     },
   ]);
   const g = at("W7", { beat: 2 });
@@ -96,7 +96,7 @@ test("r shows the checking state on every checked beat, and its check, file and 
   const gitOut = g.run().effects;
   assert.equal(g.state.beat.status, "opening", "a git beat");
   assert.deepEqual(ofType(gitOut, "git"), [
-    { type: "git", asked: g.state.asks, dir: FACTS.root },
+    { type: "git", asked: g.state.asks, dir: PROJECT },
   ]);
 });
 
@@ -366,7 +366,7 @@ test("json: done once the file parses and holds the key; the not-yet line names 
   // was learn-flow:1999
   const path = ".claude/settings.json";
   const d = onReading(`json ${path} permissions.deny`);
-  assert.deepEqual(watching(d.state), { file: path, dir: FACTS.root });
+  assert.deepEqual(watching(d.state), { file: path, dir: PROJECT });
   assert.match(
     tryNow(d, path, null).fail.hint,
     /\.claude\/settings\.json is not there yet/,
@@ -640,7 +640,7 @@ test("match: done once a line matches, front matter included, and the evidence i
   // was learn-flow:2146
   const path = ".claude/skills/tdd/SKILL.md";
   const d = onReading(`match ${path} ^disable-model-invocation: true$`);
-  assert.deepEqual(watching(d.state), { file: path, dir: FACTS.root });
+  assert.deepEqual(watching(d.state), { file: path, dir: PROJECT });
   assert.equal(
     tryNow(d, path, null).fail.hint,
     ".claude/skills/tdd/SKILL.md is not there yet.",
@@ -999,7 +999,7 @@ test("git-clean with paths: done once git status lists nothing under them, whate
   // It asks git for every untracked file, not just its folder.
   assert.deepEqual(pending(d, "git"), {
     type: "git",
-    dir: FACTS.root,
+    dir: PROJECT,
     files: true,
   });
   d.send(gitLists(["README.md", "secrets/key.txt", "package-lock.json"]));
@@ -1021,7 +1021,7 @@ test("git-clean with paths: done once git status lists nothing under them, whate
   // Without paths, it is the whole tree, as before.
   const whole = onReading("git-clean");
   assert.deepEqual(beatOf(whole.state).verify, { kind: "git-clean" });
-  assert.deepEqual(pending(whole, "git"), { type: "git", dir: FACTS.root });
+  assert.deepEqual(pending(whole, "git"), { type: "git", dir: PROJECT });
   whole.send({ type: "git", paths: ["README.md"] });
   assert.equal(whole.state.beat.status, "fail");
 });
@@ -1053,7 +1053,7 @@ test('git-changed: done once git status lists something under the path; the firs
   });
   assert.deepEqual(pending(d, "git"), {
     type: "git",
-    dir: FACTS.root,
+    dir: PROJECT,
     files: true,
   });
   d.send(gitLists(["README.md", "srcs/a.js"]));
@@ -1132,7 +1132,7 @@ test("git-staged: done once git status says a path is staged; a change not yet a
   assert.deepEqual(beatOf(d.state).verify, { kind: "git-staged" });
   assert.deepEqual(pending(d, "git"), {
     type: "git",
-    dir: FACTS.root,
+    dir: PROJECT,
     files: true,
   });
   d.send(gitLists(["src/config.js"]));
@@ -1185,7 +1185,7 @@ test("h at CHALLENGE on a git-changed, git-only or git-staged beat: r is the try
     broken.send({
       type: "git-error",
       message: "git is not installed",
-      dir: FACTS.root,
+      dir: PROJECT,
     });
     assert.deepEqual(
       [broken.state.beat.status, broken.state.beat.error],

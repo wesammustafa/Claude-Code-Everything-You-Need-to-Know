@@ -2,7 +2,8 @@
 // for the adapters and the course, signals as an emitter, and base 0, so no
 // test binds the real ports 4747 to 4756.
 import { EventEmitter } from "node:events";
-import type { Host, HostOptions } from "@quest/host";
+import type { Adapters, Host, HostOptions } from "@quest/host";
+import { fakeClock } from "@quest/host/fake";
 import { tryListen } from "../src/listen.ts";
 import { start, type StartOptions, type Started } from "../src/start.ts";
 
@@ -46,6 +47,16 @@ export async function startWith(
       closed++;
     },
     instance: "test-instance",
+    dispatch: () => {
+      calls.push("dispatch");
+      return { revision: 0, snapshot: null };
+    },
+    snapshot: () => null,
+    revision: () => 0,
+    serverTime: () => 0,
+    eventsAfter: () => null,
+    subscribe: () => () => undefined,
+    clock: fakeClock(),
   };
   kit.started = await start({
     root: "/copy",
@@ -64,7 +75,9 @@ export async function startWith(
       kit.hostOptions.push(o);
       return host;
     },
-    realAdapters: () => ({ store: { load: () => ({ saved: true }) } }),
+    // Only the store, which the server loads once.
+    realAdapters: () =>
+      ({ store: { load: () => ({ saved: true }) } }) as unknown as Adapters,
     loadCourse: () => {
       calls.push("loadCourse");
       return [];

@@ -1,3 +1,4 @@
+// @ts-check
 // Parallel sessions with worktrees (Advanced, lesson 1). The Learner ignores
 // .claude/worktrees/ in a committed .gitignore, runs two sessions at once,
 // each in a worktree that `claude --worktree <name>` makes there, merges both
@@ -9,15 +10,18 @@
 import { execFileSync } from 'node:child_process';
 import { committedIgnore, ignoreHint } from '../ignore.mjs';
 import { claudeWorktrees, CLAUDE_WORKTREES, liveWorktrees, parseWorktrees } from '../worktrees.mjs';
+/** @import { Worktree } from '../worktrees.mjs' */
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Parallel sessions with worktrees';
 
 const SNAPSHOT = '.practice/a-1-worktrees.txt';
 
-const save = (snapshot) => `\`git worktree list --porcelain > ${snapshot}\``;
-const short = (sha) => sha.slice(0, 7);
-const label = (r) => r.branch ?? short(r.head);
-const shell = (path) => (/\s/.test(path) ? `"${path}"` : path);
+const save = (/** @type {string} */ snapshot) => `\`git worktree list --porcelain > ${snapshot}\``;
+const short = (/** @type {string} */ sha) => sha.slice(0, 7);
+const label = (/** @type {Worktree} */ r) => r.branch ?? short(/** @type {string} */ (r.head));
+const shell = (/** @type {string} */ path) => (/\s/.test(path) ? `"${path}"` : path);
 
 // Whether a lock is a running Claude Code session's: its reason reads like
 // `claude session <name> (pid <n> start <date>)` and that process is alive
@@ -25,6 +29,7 @@ const shell = (path) => (/\s/.test(path) ? `"${path}"` : path);
 // would pull its folder from under the session. That reason's form is what
 // Claude Code wrote in the r27 dry-run, not a documented format, so any
 // other lock may still be a session's: its message says to exit one first.
+/** @param {string | true} reason */
 function sessionRunning(reason) {
   const pid = Number(String(reason).match(/^"?claude session\b.*\(pid (\d+)\b/)?.[1]);
   if (!Number.isSafeInteger(pid) || pid < 1) return false;
@@ -32,10 +37,14 @@ function sessionRunning(reason) {
     process.kill(pid, 0);
     return true;
   } catch (error) {
-    return error.code === 'EPERM';
+    return /** @type {NodeJS.ErrnoException} */ (error).code === 'EPERM';
   }
 }
 
+/**
+ * @param {Repo} repo
+ * @param {string} sha
+ */
 function isCommit(repo, sha) {
   try {
     repo.gitLocal('cat-file', '-e', `${sha}^{commit}`);
@@ -46,8 +55,11 @@ function isCommit(repo, sha) {
 }
 
 // `git merge-base --is-ancestor`, remembered: it exits 1 for "no".
+/** @param {Repo} repo */
 function ancestry(repo) {
+  /** @type {Map<string, boolean>} */
   const known = new Map();
+  /** @type {(a: string, b: string) => boolean} */
   return (a, b) => {
     const key = `${a} ${b}`;
     if (!known.has(key)) {
@@ -55,16 +67,20 @@ function ancestry(repo) {
         repo.gitLocal('merge-base', '--is-ancestor', a, b);
         known.set(key, true);
       } catch (error) {
-        if (error.status !== 1) throw error;
+        if (/** @type {{ status?: number | null }} */ (error).status !== 1) throw error;
         known.set(key, false);
       }
     }
-    return known.get(key);
+    return /** @type {boolean} */ (known.get(key));
   };
 }
 
 // The patch-ids `git patch-id --stable` gives for a diff or a log with
 // patches, one `<patch-id> <commit>` line each.
+/**
+ * @param {Repo} repo
+ * @param {string} text
+ */
 function patchIds(repo, text) {
   if (!text.trim()) return [];
   const out = execFileSync('git', ['patch-id', '--stable'], { cwd: repo.dir, input: text, encoding: 'utf8', env: { ...process.env, GIT_NO_LAZY_FETCH: '1' }, stdio: ['pipe', 'pipe', 'pipe'] });
@@ -75,14 +91,23 @@ function patchIds(repo, text) {
 // itself (a merge or a fast-forward), every commit of its branch as an
 // equal patch (a rebase or a cherry-pick), or one commit whose patch is the
 // branch's whole change (a squash merge). Remembered per commit.
+/**
+ * @param {Repo} repo
+ * @param {(a: string, b: string) => boolean} isAncestor
+ */
 function integration(repo, isAncestor) {
+  /** @type {Map<string, boolean>} */
   const known = new Map();
-  return (sha) => {
+  return (/** @type {string} */ sha) => {
     if (!known.has(sha)) known.set(sha, isAncestor(sha, 'HEAD') || copied(repo, sha));
-    return known.get(sha);
+    return /** @type {boolean} */ (known.get(sha));
   };
 }
 
+/**
+ * @param {Repo} repo
+ * @param {string} sha
+ */
 function copied(repo, sha) {
   try {
     const base = repo.gitLocal('merge-base', sha, 'HEAD');
@@ -103,6 +128,11 @@ function copied(repo, sha) {
 // `anywhere`, every linked worktree, wherever it is), the two whose commits
 // split from each other (a merged pair first, as any two pass), and a hint,
 // which is null when both changes of that pair are in HEAD.
+/**
+ * @param {Repo} repo
+ * @param {string} snapshot
+ * @returns {{ worktrees: Worktree[], pair?: Worktree[], hint: string | null }}
+ */
 function review(repo, snapshot, anywhere = false) {
   const text = repo.read(snapshot);
   if (text === null || !text.trim()) return { worktrees: [], hint: `While both worktree sessions exist, and after each has committed, run ${save(snapshot)} from your main checkout.` };
@@ -117,27 +147,30 @@ function review(repo, snapshot, anywhere = false) {
   }
   const known = worktrees.filter((r) => r.head && isCommit(repo, r.head));
   if (known.length < 2) {
-    const missing = worktrees.find((r) => !known.includes(r));
+    const missing = /** @type {Worktree} */ (worktrees.find((r) => !known.includes(r)));
     const what = missing.head ? `commit ${short(missing.head)}, which isn't in this repository` : `\`${missing.path}\` without a commit`;
     return { worktrees, hint: `\`${snapshot}\` names ${what}. Save the listing from this repository's main checkout, while its worktrees exist: ${save(snapshot)}.` };
   }
   const isAncestor = ancestry(repo);
   const inHead = integration(repo, isAncestor);
+  // Every worktree in `known` has a head.
+  /** @type {Worktree[][]} */
   const pairs = [];
   for (const [i, a] of known.entries()) {
     for (const b of known.slice(i + 1)) {
-      if (a.head !== b.head && !isAncestor(a.head, b.head) && !isAncestor(b.head, a.head)) pairs.push([a, b]);
+      if (a.head !== b.head && !isAncestor(/** @type {string} */ (a.head), /** @type {string} */ (b.head)) && !isAncestor(/** @type {string} */ (b.head), /** @type {string} */ (a.head))) pairs.push([a, b]);
     }
   }
   if (!pairs.length) return { worktrees, hint: `\`${snapshot}\` was saved before both sessions committed: its worktrees point at one commit, or one at an earlier commit of the other's. Save it again before you remove them: ${save(snapshot)}.` };
-  const [{ pair, unmerged }] = pairs
-    .map((p) => ({ pair: p, unmerged: p.filter((r) => !inHead(r.head)) }))
-    .sort((x, y) => x.unmerged.length - y.unmerged.length);
+  const [{ pair, unmerged }] = /** @type {[{ pair: Worktree[], unmerged: Worktree[] }]} */ (pairs
+    .map((p) => ({ pair: p, unmerged: p.filter((r) => !inHead(/** @type {string} */ (r.head))) }))
+    .sort((x, y) => x.unmerged.length - y.unmerged.length));
   if (!unmerged.length) return { worktrees, pair, hint: null };
   const names = unmerged.map(label);
   return { worktrees, pair, hint: `${names.length > 1 ? 'The changes on' : 'The change on'} ${names.map((n) => `\`${n}\``).join(' and ')} ${names.length > 1 ? "aren't" : "isn't"} in your current branch. From your main checkout, bring ${names.length > 1 ? 'each one' : 'it'} in the way your team does: ${names.map((n) => `\`git merge ${n}\``).join(', then ')}, or a rebase or a squash merge.` };
 }
 
+/** @type {Item} */
 export const ignoresWorktrees = {
   text: 'a committed `.gitignore` ignores `.claude/worktrees/` and not the rest of `.claude/`',
   check(repo) {
@@ -151,6 +184,11 @@ export const ignoresWorktrees = {
 
 // With `anywhere`, as the Advanced capstone asks, a worktree may sit
 // anywhere, not only where `claude --worktree` makes it.
+/**
+ * @param {string} snapshot
+ * @param {{ anywhere?: boolean }} [options]
+ * @returns {Item}
+ */
 export function mergedWorktrees(snapshot, { anywhere = false } = {}) {
   return {
     text: `\`${snapshot}\` lists two worktrees ${anywhere ? 'of this repository' : 'under `.claude/worktrees/`'} whose commits split from each other, and both changes are in your branch`,
@@ -159,6 +197,10 @@ export function mergedWorktrees(snapshot, { anywhere = false } = {}) {
   };
 }
 
+/**
+ * @param {string} snapshot
+ * @returns {Item}
+ */
 export function removedWorktrees(snapshot) {
   return {
     text: 'neither of those worktrees still exists',
@@ -171,12 +213,12 @@ export function removedWorktrees(snapshot) {
       // Paths as git printed them: one that isn't on this machine was saved elsewhere.
       const records = liveWorktrees(repo);
       const live = new Map(records.map((r) => [r.path, r]));
-      const left = (pair ?? worktrees).map((r) => live.get(r.path)).filter(Boolean);
+      const left = /** @type {Worktree[]} */ ((pair ?? worktrees).map((r) => live.get(r.path)).filter(Boolean));
       if (!left.length) return true;
       // A worktree under the main checkout's .claude/worktrees/, named from
       // there, so a long repository path shows once, not three times.
       const main = records[0]?.path ?? '';
-      const named = (p) => (main && p.startsWith(`${main}${CLAUDE_WORKTREES}`) ? p.slice(main.length + 1) : p);
+      const named = (/** @type {string} */ p) => (main && p.startsWith(`${main}${CLAUDE_WORKTREES}`) ? p.slice(main.length + 1) : p);
       return left.map((r) => {
         const at = named(r.path);
         const path = shell(at);
@@ -189,4 +231,5 @@ export function removedWorktrees(snapshot) {
   };
 }
 
+/** @type {Item[]} */
 export const items = [ignoresWorktrees, mergedWorktrees(SNAPSHOT), removedWorktrees(SNAPSHOT)];

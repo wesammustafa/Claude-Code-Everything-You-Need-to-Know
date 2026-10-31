@@ -98,6 +98,41 @@ describe("Button", () => {
     expect(button.className).toContain("h-12");
     expect(button.querySelectorAll("svg[aria-hidden='true']")).toHaveLength(2);
   });
+
+  test.each(VARIANTS)(
+    "%s, while its action is in flight, holds the pressed state and is busy",
+    (variant) => {
+      const { rerender } = render(
+        <Button variant={variant}>Check again</Button>,
+      );
+      const button = screen.getByRole("button", { name: "Check again" });
+      expect(button).not.toHaveAttribute("aria-busy");
+      expect(button).not.toHaveAttribute("data-pending");
+      expect(button.className).not.toContain("data-pending:");
+
+      rerender(
+        <Button variant={variant} pending>
+          Check again
+        </Button>,
+      );
+      expect(button).toHaveAttribute("aria-busy", "true");
+      expect(button).toHaveAttribute("data-pending", "");
+      const held = button.className
+        .split(/\s+/)
+        .filter((name) => name.startsWith("data-pending:"))
+        .map((name) => name.slice("data-pending:".length));
+      const pressed = stateUtilities(button.className, "active");
+      // The same look pressing gives: its fill and its travel.
+      for (const utility of held) expect(pressed).toContain(utility);
+      expect(held).toEqual(
+        expect.arrayContaining([
+          "translate-y-(--press-y)",
+          "scale-(--press-scale)",
+        ]),
+      );
+      expectStylesFromTokens(button.className);
+    },
+  );
 });
 
 describe("ButtonLink", () => {

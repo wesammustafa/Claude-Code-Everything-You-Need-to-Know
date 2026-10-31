@@ -1,6 +1,5 @@
 // Spec behaviors no old key-driven test pinned (ticket 208), proved through
-// actions. The todos are the spec's project/ clauses the engine doesn't
-// keep yet (the 208 map's G3).
+// actions, with the spec's project/ clauses (the 208 map's G3, ticket 277).
 import { test } from "vitest";
 import assert from "node:assert/strict";
 import {
@@ -12,19 +11,29 @@ import {
   course,
   courseWith,
   DEMO_B2,
+  DEMO_I1,
   driver,
   FACTS,
   finished,
   finishedBefore,
+  folderHere,
+  folderOf,
   isDone,
+  levelFolder,
   NEW_COPY,
+  NEW_PROJECT,
   normalize,
   onReading,
   pending,
+  playUntil,
+  probed,
   probeResult,
+  PROJECT,
   respond,
   running,
   save,
+  stepOf,
+  threeLevels,
   watching,
   where,
 } from "./drive.mjs";
@@ -37,7 +46,7 @@ test("a probe's answer counts only for the arguments the beat names", () => {
     type: "probe",
     name: "worktrees",
     args: ["2"],
-    dir: FACTS.root,
+    dir: PROJECT,
   });
   respond(d, eff, { state: "a" });
   assert.equal(
@@ -65,7 +74,7 @@ test("only the current run's progress counts, and a poll's check runs no slow it
   assert.equal("asked" in poll, false);
   assert.deepEqual(watching(d.state), {
     check: { lesson: "b-1", items: [0] },
-    dir: FACTS.root,
+    dir: PROJECT,
   });
   d.send(running(poll, 1, 1));
   assert.deepEqual(d.state.beat.running, { n: 1, m: 1 });
@@ -194,7 +203,7 @@ test("a beat's first stamp holds: a later one for the same key changes nothing",
     type: "stamp",
     key: "Y1.0",
     stamp: value,
-    dir: FACTS.root,
+    dir: PROJECT,
   });
   d.send(stamp("first"));
   assert.equal(d.state.progress["b-2"].stamps["Y1.0"], "first");
@@ -227,12 +236,106 @@ test("an overview whose folder question has no answer yet starts nothing", () =>
   );
 });
 
-// The spec's project/ clauses (Behavior the engine keeps): today the engine
-// uses the practice copy's root (levelFolder, pinOf, and the copy refusal
-// in apply's `probed`).
-test.todo(
-  "Intermediate and Advanced default to the practice copy's project/ folder",
-);
-test.todo("a-5 and a-capstone run in the project/ folder of their new copy");
-test.todo("the practice copy's project/ is refused as a new copy");
-test.todo("i-capstone is pinned to the original copy's project/");
+// The spec's project/ clauses (Behavior the engine keeps, ticket 277): the
+// Starter project lives in the copy's project/, and so does a new copy's.
+const lastOf = (effects, type) => effects.filter((e) => e.type === type).at(-1);
+// Plays on to the lesson's first check beat outside a Worked example and
+// returns that check's folder.
+const firstCheckDir = (d) => {
+  playUntil(
+    d,
+    (s) =>
+      Boolean(s.beat) &&
+      beatOf(s).verify.kind === "check" &&
+      stepOf(s).part !== "Worked example",
+  );
+  return lastOf(d.effects, "check")?.dir;
+};
+// A Learner on `id`'s overview with every earlier lesson finished.
+const overview = (id, folders) => {
+  const lessons = threeLevels({ "i-1": DEMO_I1 });
+  const d = driver({
+    course: lessons,
+    saved: save({
+      lessons: finishedBefore("i-1", lessons),
+      ...(folders ? { folders } : {}),
+    }),
+  });
+  if (id !== "i-1") d.open(id);
+  assert.deepEqual([d.state.lesson, d.state.phase], [id, "overview"]);
+  return d;
+};
+// A folder given for `key` and found by the host at `path`.
+const give = (d, key, path) => {
+  d.folderAsk(key);
+  d.folderChoose(key, { path });
+  d.send(probed(lastOf(d.effects, "folder"), { path }));
+};
+
+// spec: folders.default
+test("Intermediate and Advanced default to the practice copy's project/ folder", () => {
+  for (const choose of [false, true]) {
+    const d = overview("i-1");
+    if (choose) d.folderChoose("intermediate", "practice-copy");
+    for (const level of ["intermediate", "advanced"])
+      assert.equal(levelFolder(d.state, level), PROJECT, `${level} ${choose}`);
+    if (choose) assert.equal(d.state.folders.intermediate, FACTS.root);
+    assert.equal(folderOf(d.state), PROJECT);
+    d.open("a-1");
+    assert.equal(folderOf(d.state), PROJECT, `a-1 ${choose}`);
+    d.open("i-1");
+    if (!choose) d.folderChoose("intermediate", "practice-copy");
+    assert.equal(firstCheckDir(d), PROJECT);
+    assert.equal(folderHere(d.state), PROJECT);
+    assert.equal(watching(d.state).dir, PROJECT);
+  }
+});
+
+// spec: newcopy.by-lesson-id
+test("a-5 and a-capstone run in the project/ folder of their new copy", () => {
+  for (const id of ["a-5", "a-capstone"]) {
+    const d = overview(id);
+    assert.equal(lastOf(d.effects, "check"), undefined, id);
+    assert.equal(folderOf(d.state), null, id);
+    give(d, id, NEW_COPY);
+    assert.equal(d.state.folders[id], NEW_COPY, id);
+    assert.equal(folderOf(d.state), NEW_PROJECT, id);
+    assert.equal(firstCheckDir(d), NEW_PROJECT, id);
+    // Its project/ typed in full saves the copy itself.
+    const typed = overview(id);
+    give(typed, id, NEW_PROJECT);
+    assert.equal(typed.state.folders[id], NEW_COPY, id);
+    assert.equal(folderOf(typed.state), NEW_PROJECT, id);
+  }
+});
+
+// spec: newcopy.copy-refused
+test("the practice copy's project/ is refused as a new copy", () => {
+  for (const path of [PROJECT, FACTS.root, `${PROJECT}/src`]) {
+    const d = overview("a-5");
+    give(d, "a-5", path);
+    assert.equal(d.state.folderAsk?.isCopy, true, path);
+    assert.equal(d.state.folders["a-5"], undefined, path);
+    assert.equal(lastOf(d.effects, "check"), undefined, path);
+  }
+});
+
+// spec: newcopy.i-capstone-pinned
+test("i-capstone is pinned to the original copy's project/", () => {
+  const d = overview("i-capstone", { intermediate: "/elsewhere" });
+  assert.equal(folderHere(d.state), PROJECT);
+  assert.equal(firstCheckDir(d), PROJECT);
+});
+
+// spec: folders.default
+test("a Beginner Lesson's check and watcher run in the copy's project/", () => {
+  const d = driver({
+    saved: save({ lessons: { "b-1": { step: "W3", beat: 0 } } }),
+  });
+  d.open();
+  assert.equal(pending(d, "check").dir, PROJECT);
+  assert.deepEqual(watching(d.state), {
+    check: { lesson: "b-1", items: [0] },
+    dir: PROJECT,
+  });
+});

@@ -1,3 +1,4 @@
+// @ts-check
 // GitHub Actions (Advanced, lesson 5). In a copy of the template made for this
 // lesson, set up by hand with a repository secret and no Claude GitHub App,
 // the Learner commits a workflow they start by hand, in which a pinned
@@ -14,6 +15,9 @@
 // own events.
 import { claudeArgWords, claudeHistory, claudeWorkflowsAt, headBlob, uncommittedWorkflows } from '../actions.mjs';
 import { ruleList } from '../claude-args.mjs';
+/** @import { WorkflowFile, Step, Value } from '../actions.mjs' */
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 
 export const title = 'GitHub Actions';
 
@@ -27,6 +31,9 @@ export const TIMEOUT_MAX = 30;
 // secret came from, and what the action does without `github_token`. The
 // lesson's copy has only the secret, saved with `gh secret set`, and no
 // Claude GitHub App.
+/** @typedef {{ triggers: string[], file: string, guide: string, secret: string, noToken: string }} Options */
+
+/** @type {Options} */
 const LESSON = {
   triggers: ['workflow_dispatch'],
   file: WORKFLOW,
@@ -48,23 +55,30 @@ const FAILED = new Set(['failure', 'timed_out', 'startup_failure']);
 const RUN_URL = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/actions\/runs\/\d+/i;
 const GITHUB_REMOTE = /^(?:(?:https?|ssh|git):\/\/)?(?:[^@/]+@)?(?:www\.)?github\.com(?::\d+)?[:/]([^/]+)\/([^/]+?)(?:\.git)?\/?$/i;
 
-const and = (list) => (list.length > 1 ? `${list.slice(0, -1).join(', ')} and ${list.at(-1)}` : list[0]);
-const or = (list) => (list.length > 1 ? `${list.slice(0, -1).join(', ')} or ${list.at(-1)}` : list[0]);
-const code = (text) => `\`${text}\``;
-const short = (sha) => sha.slice(0, 7);
-const onPhrase = (triggers) => (triggers.length === 1 ? code(`on: ${triggers[0]}`) : `\`on:\` with ${or(triggers.map(code))}`);
-const startsOn = (triggers) => `that starts on ${or(triggers.map(code))}`;
-const squash = (flag) => flag.split('=')[0].replace(/^-+/, '').replace(/[-_]/g, '').toLowerCase();
+const and = (/** @type {unknown[]} */ list) => (list.length > 1 ? `${list.slice(0, -1).join(', ')} and ${list.at(-1)}` : list[0]);
+const or = (/** @type {unknown[]} */ list) => (list.length > 1 ? `${list.slice(0, -1).join(', ')} or ${list.at(-1)}` : list[0]);
+const code = (/** @type {string} */ text) => `\`${text}\``;
+const short = (/** @type {string} */ sha) => sha.slice(0, 7);
+const onPhrase = (/** @type {string[]} */ triggers) => (triggers.length === 1 ? code(`on: ${triggers[0]}`) : `\`on:\` with ${or(triggers.map(code))}`);
+const startsOn = (/** @type {string[]} */ triggers) => `that starts on ${or(triggers.map(code))}`;
+const squash = (/** @type {string} */ flag) => /** @type {string} */ (flag.split('=')[0]).replace(/^-+/, '').replace(/[-_]/g, '').toLowerCase();
 
 // The ways to write a Bash rule that matches every command.
+/** @param {string} entry */
 function anyBash(entry) {
   if (entry === 'Bash') return true;
   const m = entry.match(/^Bash\((.*)\)$/s);
-  return Boolean(m && /^\*+$/.test(m[1].replace(/[\s:]/g, '')));
+  return Boolean(m && /^\*+$/.test(/** @type {string} */ (m[1]).replace(/[\s:]/g, '')));
 }
 
 // What item 1 reads: the pin, automation mode, the credential and the events.
+/**
+ * @param {WorkflowFile} file
+ * @param {Step} step
+ * @param {Options} o
+ */
 function setupProblems(file, step, o) {
+  /** @type {string[]} */
   const problems = [];
   const leaked = file.text.split('\n').findIndex((line) => KEY.test(line));
   if (leaked !== -1) problems.push(`Line ${leaked + 1} holds what looks like a Claude API key or token. Treat it as leaked: delete the key in the Claude Console now, because removing it from the file doesn't take it out of your history. Keep the credential only in a repository secret.`);
@@ -79,7 +93,7 @@ function setupProblems(file, step, o) {
   const given = CREDENTIALS.filter((k) => step.inputs[k]);
   if (!given.length) problems.push(`The step on line ${step.line} passes no credential. Add \`anthropic_api_key: \${{ secrets.ANTHROPIC_API_KEY }}\` under \`with:\`, or \`claude_code_oauth_token: \${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}\` for a subscription token, naming ${o.secret}.`);
   for (const k of given) {
-    const v = step.inputs[k];
+    const v = /** @type {Value} */ (step.inputs[k]);
     const text = (v.text ?? '').trim();
     if (!SECRET.test(text) && !KEY.test(text)) problems.push(`\`${k}\` on line ${v.line} isn't read from a secret. Write \`${k}: \${{ secrets.<NAME> }}\`, naming ${o.secret}, and keep the credential itself out of the file.`);
   }
@@ -88,27 +102,31 @@ function setupProblems(file, step, o) {
 }
 
 // The flags in `claude_args` that set the turn limit and the tools.
+/** @param {Value} args */
 function argProblems(args) {
   const { words, comment } = claudeArgWords(args.text);
+  /** @type {string[]} */
   const problems = [];
   // Flags after an unquoted `#`, which the action never reads.
   const hidden = ['--max-turns', '--allowedTools', '--allowed-tools'].filter((f) => comment && new RegExp(`(^|\\s)${f}(=|\\s|$)`).test(comment));
   if (hidden.length) problems.push(`An unquoted \`#\` in \`claude_args\` starts a comment that, for the action, runs to the end of the value, so it never reads ${and(hidden.map(code))}. Move that comment to a line of its own, above \`claude_args\`.`);
-  const spelling = (flags) => {
-    const typo = words.find((w) => w.startsWith('--') && !flags.includes(w.split('=')[0]) && flags.some((f) => squash(w) === squash(f)));
-    return typo ? ` Claude Code doesn't know ${code(typo.split('=')[0])}: write ${code(flags[0])}.` : '';
+  const spelling = (/** @type {string[]} */ flags) => {
+    const typo = words.find((w) => w.startsWith('--') && !flags.includes(/** @type {string} */ (w.split('=')[0])) && flags.some((f) => squash(w) === squash(f)));
+    return typo ? ` Claude Code doesn't know ${code(/** @type {string} */ (typo.split('=')[0]))}: write ${code(/** @type {string} */ (flags[0]))}.` : '';
   };
 
   // The action reads a flag's value from the word after it, so it takes the
   // turn limit itself only from `--max-turns 5`; the page asks for that form.
+  /** @type {string | null | undefined} */
   let turns;
+  /** @type {string | null} */
   let joined = null;
   for (let i = 0; i < words.length; i += 1) {
-    if (words[i] === '--max-turns') turns = words[i + 1] !== undefined && !words[i + 1].startsWith('--') ? words[i + 1] : null;
-    else if (words[i].startsWith('--max-turns=')) joined = words[i];
+    if (words[i] === '--max-turns') turns = words[i + 1] !== undefined && !/** @type {string} */ (words[i + 1]).startsWith('--') ? words[i + 1] : null;
+    else if (/** @type {string} */ (words[i]).startsWith('--max-turns=')) joined = /** @type {string} */ (words[i]);
   }
   const range = `a number from 1 to ${TURNS_MAX}`;
-  const fits = (n) => /^\d+$/.test(n ?? '') && Number(n) >= 1 && Number(n) <= TURNS_MAX;
+  const fits = (/** @type {string} */ n) => /^\d+$/.test(n ?? '') && Number(n) >= 1 && Number(n) <= TURNS_MAX;
   if (joined) {
     const n = joined.slice('--max-turns='.length);
     problems.push(`Write ${fits(n) ? `\`--max-turns ${n}\` with a space` : `\`--max-turns\` with a space and ${range}`}, not ${code(joined)}: the action reads a flag's value from the word after it.`);
@@ -121,13 +139,14 @@ function argProblems(args) {
   else if (Number(turns) < 1 || Number(turns) > TURNS_MAX) problems.push(`\`--max-turns ${turns}\` is ${Number(turns) < 1 ? 'below 1' : `above ${TURNS_MAX}`}: use ${range}.`);
 
   // Every word after `--allowedTools` up to the next option is a value.
+  /** @type {string[]} */
   const values = [];
   let named = false;
   for (let i = 0; i < words.length; i += 1) {
-    const w = words[i];
+    const w = /** @type {string} */ (words[i]);
     if (w === '--allowedTools' || w === '--allowed-tools') {
       named = true;
-      while (i + 1 < words.length && !words[i + 1].startsWith('--')) values.push(words[(i += 1)]);
+      while (i + 1 < words.length && !/** @type {string} */ (words[i + 1]).startsWith('--')) values.push(/** @type {string} */ (words[(i += 1)]));
     } else if (/^--(allowedTools|allowed-tools)=/.test(w)) {
       named = true;
       values.push(w.slice(w.indexOf('=') + 1));
@@ -139,7 +158,7 @@ function argProblems(args) {
     return problems;
   }
   const entries = ruleList(values);
-  const count = (text, ch) => text.split(ch).length - 1;
+  const count = (/** @type {string} */ text, /** @type {string} */ ch) => text.split(ch).length - 1;
   if (!entries.length) problems.push(`\`--allowedTools\` lists no tool: name only the command Claude needs, ${example}.`);
   else if (entries.some((e) => count(e, '(') !== count(e, ')'))) {
     problems.push(`\`--allowedTools\` gets ${and(values.slice(0, 4).map(code))}${values.length > 4 ? ' and more' : ''} as separate words, because the action splits \`claude_args\` at spaces outside quotes. Put each rule in quotes, as in \`--allowedTools "${values.join(' ')}"\`.`);
@@ -150,14 +169,20 @@ function argProblems(args) {
 }
 
 // What item 2 reads: the turn and tool limits, the time limit and the token.
+/**
+ * @param {WorkflowFile} file
+ * @param {Step} step
+ * @param {Options} o
+ */
 function limitProblems(file, step, o) {
+  /** @type {string[]} */
   const problems = [];
   const args = step.inputs.claude_args;
   if (!args?.text?.trim()) problems.push(`The step on line ${step.line} has no \`claude_args\`, so nothing limits the run. Add \`claude_args\` with \`--max-turns\` and a number from 1 to ${TURNS_MAX}, and \`--allowedTools\` naming only the command Claude needs, as in \`--allowedTools "Bash(<command> *)"\`.`);
   else problems.push(...argProblems(args));
 
   const range = `a number from 1 to ${TIMEOUT_MAX}`;
-  const timeouts = [step.stepTimeout, step.jobTimeout].filter(Boolean);
+  const timeouts = /** @type {Value[]} */ ([step.stepTimeout, step.jobTimeout].filter(Boolean));
   if (!timeouts.length) problems.push(`The job \`${step.job}\` sets no \`timeout-minutes\`, so only GitHub's default limit stops a run that hangs. Add \`timeout-minutes\` with ${range} to the job.`);
   for (const t of timeouts) {
     const v = (t.text ?? '').trim();
@@ -187,6 +212,9 @@ function limitProblems(file, step, o) {
 }
 
 // Each repository's chosen workflow, by the events it may start on.
+/** @typedef {{ file: WorkflowFile, step: Step, setup: string[], limits: string[] }} Chosen */
+
+/** @type {WeakMap<Repo, Map<string, Chosen | null>>} */
 const chosen = new WeakMap();
 
 // The workflow step the items evaluate: in the newest commit that holds a
@@ -194,12 +222,19 @@ const chosen = new WeakMap();
 // Once the history holds `o.file`, only that file counts. `options` gives
 // the hints' wording, as the items' options do. Returns
 // `{ file, step, setup, limits }`, or null.
+/**
+ * @param {Repo} repo
+ * @param {string[]} triggers
+ * @param {Partial<Options>} [options]
+ * @returns {Chosen | null}
+ */
 export function chosenWorkflow(repo, triggers, options = LESSON) {
   const o = { ...LESSON, ...options };
   if (!chosen.has(repo)) chosen.set(repo, new Map());
-  const byTriggers = chosen.get(repo);
+  const byTriggers = /** @type {Map<string, Chosen | null>} */ (chosen.get(repo));
   const key = [...triggers, o.file, o.secret, o.noToken].join('\0');
   if (!byTriggers.has(key)) {
+    /** @type {Chosen | null | undefined} */
     let found = null;
     const history = claudeHistory(repo);
     const named = history.some(({ files }) => files.some((f) => f.path === o.file));
@@ -208,18 +243,22 @@ export function chosenWorkflow(repo, triggers, options = LESSON) {
         .filter((step) => step.triggers.some((t) => triggers.includes(t)))
         .map((step) => ({ file, step, setup: setupProblems(file, step, o), limits: limitProblems(file, step, o) })));
       if (!steps.length) continue;
-      const rank = (c) => [c.step.inputs.prompt?.text?.trim() ? 0 : 1, c.setup.length + c.limits.length];
+      const rank = (/** @type {Chosen} */ c) => [c.step.inputs.prompt?.text?.trim() ? 0 : 1, c.setup.length + c.limits.length];
       [found] = steps.sort((a, b) => {
         const [x, y] = [rank(a), rank(b)];
-        return x[0] - y[0] || x[1] - y[1];
+        return /** @type {number} */ (x[0]) - /** @type {number} */ (y[0]) || /** @type {number} */ (x[1]) - /** @type {number} */ (y[1]);
       });
       break;
     }
-    byTriggers.set(key, found);
+    byTriggers.set(key, /** @type {Chosen | null} */ (found));
   }
-  return byTriggers.get(key);
+  return /** @type {Chosen | null} */ (byTriggers.get(key));
 }
 
+/**
+ * @param {Repo} repo
+ * @param {string} path
+ */
 function changed(repo, path) {
   try {
     repo.git('diff', '--quiet', 'HEAD', '--', path);
@@ -229,6 +268,11 @@ function changed(repo, path) {
   }
 }
 
+/**
+ * @param {Repo} repo
+ * @param {{ file: WorkflowFile }} chosen
+ * @param {string[]} problems
+ */
 function report(repo, { file }, problems) {
   const inHead = headBlob(repo, file.path) === file.blob;
   const where = inHead ? code(file.path) : `${code(file.path)} (as committed in ${short(file.commit)})`;
@@ -238,6 +282,10 @@ function report(repo, { file }, problems) {
 }
 
 // Why no committed workflow step starts on one of `triggers`.
+/**
+ * @param {Repo} repo
+ * @param {Options} options
+ */
 function missingHint(repo, { triggers, file, guide }) {
   const byHand = triggers.includes('workflow_dispatch') ? ' GitHub starts a workflow by hand only once its file is on the default branch.' : '';
   const [loose] = uncommittedWorkflows(repo);
@@ -246,23 +294,28 @@ function missingHint(repo, { triggers, file, guide }) {
       ? `Your copy of ${code(loose.path)} runs \`anthropics/claude-code-action\`, but that change isn't committed. Commit it, and push.${byHand}`
       : `${code(loose.path)} isn't committed. Run \`git add ${loose.path}\`, commit it, and push.${byHand}`;
   }
+  /** @type {Map<string, WorkflowFile>} */
   const seen = new Map();
   for (const { files } of claudeHistory(repo)) for (const f of files) if (!seen.has(f.path)) seen.set(f.path, f);
   const files = [...seen.values()];
   const prompted = files.find((f) => f.steps.some((s) => s.inputs.prompt?.text?.trim()));
   if (prompted) {
-    const events = prompted.steps[0].triggers;
+    const events = /** @type {Step} */ (prompted.steps[0]).triggers;
     return `${code(prompted.path)} runs Claude with a \`prompt\`, but ${events.length ? `starts on ${and(events.map(code))}` : 'has no `on:` events the check can read'}. Start it with ${onPhrase(triggers)}, then commit and push.${byHand}`;
   }
   // This one is long already: GitHub's rule about manual runs waits for the
   // hint about the second workflow's commit (ticket 198).
-  if (files.length) return `${code(files[0].path)} has no \`prompt\`, so it waits for \`@claude\` (interactive mode). You need a second workflow, ${code(file)}, that starts with ${onPhrase(triggers)} and has a \`prompt\`. Write it as ${guide} describes, then commit and push it.`;
+  if (files.length) return `${code(/** @type {WorkflowFile} */ (files[0]).path)} has no \`prompt\`, so it waits for \`@claude\` (interactive mode). You need a second workflow, ${code(file)}, that starts with ${onPhrase(triggers)} and has a \`prompt\`. Write it as ${guide} describes, then commit and push it.`;
   return `There is no committed workflow that runs \`anthropics/claude-code-action\`. Write ${code(file)} as ${guide} describes, then commit and push it.${byHand}`;
 }
 
 // The workflow items. Options: `triggers`, the events the workflow may start
 // on, which pick it out of the history; `file`, the path a hint suggests;
 // `guide`, where the page describes it; `secret` and `noToken`, as in LESSON.
+/**
+ * @param {Partial<Options>} [options]
+ * @returns {Item}
+ */
 export function pinnedWorkflow(options = LESSON) {
   const o = { ...LESSON, ...options };
   return {
@@ -275,6 +328,10 @@ export function pinnedWorkflow(options = LESSON) {
   };
 }
 
+/**
+ * @param {Partial<Options>} [options]
+ * @returns {Item}
+ */
 export function workflowLimits(options = LESSON) {
   const o = { ...LESSON, ...options };
   return {
@@ -289,6 +346,10 @@ export function workflowLimits(options = LESSON) {
 
 // Both workflow items as one, as the Advanced capstone checks its review
 // workflow: what each finds wrong, in one report on the file it read.
+/**
+ * @param {Partial<Options>} [options]
+ * @returns {Item}
+ */
 export function boundedWorkflow(options = LESSON) {
   const o = { ...LESSON, ...options };
   return {
@@ -303,6 +364,7 @@ export function boundedWorkflow(options = LESSON) {
 }
 
 // `owner/repo` of a github.com `origin`, or null.
+/** @param {Repo} repo */
 export function originRepo(repo) {
   try {
     const m = repo.git('remote', 'get-url', 'origin').match(GITHUB_REMOTE);
@@ -312,6 +374,10 @@ export function originRepo(repo) {
   }
 }
 
+/**
+ * @param {Repo} repo
+ * @param {string} sha
+ */
 function isCommit(repo, sha) {
   try {
     repo.gitLocal('cat-file', '-e', `${sha}^{commit}`);
@@ -324,6 +390,7 @@ function isCommit(repo, sha) {
 // A saved run of the workflow: `record` holds `gh run list --json` output
 // (or one run from `gh run view --json`), and `file` is the workflow the
 // hints name.
+/** @returns {Item} */
 export function dispatchedRun(record = RUNS, file = WORKFLOW) {
   const name = file.split('/').pop();
   const save = `\`gh run list --workflow ${name} --json ${RUN_FIELDS} > ${record}\``;
@@ -335,6 +402,12 @@ export function dispatchedRun(record = RUNS, file = WORKFLOW) {
   // How far one run gets: 0, not started by hand; 1, another repository;
   // 2, not finished; 3, not successful; 4, an unknown commit; 5, a commit
   // without the workflow; 6, passed.
+  /**
+   * @param {Repo} repo
+   * @param {any} run One run from the saved JSON.
+   * @param {string | null} origin
+   * @returns {{ stage: number, hint?: string }}
+   */
   function review(repo, run, origin) {
     const id = /^\d+$/.test(String(run.databaseId ?? '')) ? String(run.databaseId) : '<run-id>';
     const which = id === '<run-id>' ? 'The run' : `Run ${id}`;
@@ -384,7 +457,7 @@ export function dispatchedRun(record = RUNS, file = WORKFLOW) {
       // The run that got furthest; the first of those, as gh lists the newest first.
       const best = runs.map((r) => review(repo, r, origin)).reduce((a, b) => (b.stage > a.stage ? b : a));
       if (best.stage === 6) return true;
-      if (best.stage > 0) return best.hint;
+      if (best.stage > 0) return /** @type {string} */ (best.hint);
       const events = [...new Set(runs.map((r) => r.event).filter((e) => typeof e === 'string' && e))];
       if (events.length && events.every((e) => CONVERSATION.has(e))) return `${code(record)} lists only runs that \`@claude\` started (${and(events.map(code))}). Start your workflow by hand with ${start}, wait for it to finish, ${again}.`;
       return `${code(record)} lists no run started by hand (\`workflow_dispatch\`)${events.length ? `, only ${and(events.map(code))}` : ''}. Start your workflow with ${start}, wait for it to finish, ${again}.`;
@@ -392,4 +465,5 @@ export function dispatchedRun(record = RUNS, file = WORKFLOW) {
   };
 }
 
+/** @type {Item[]} */
 export const items = [pinnedWorkflow(), workflowLimits(), dispatchedRun()];

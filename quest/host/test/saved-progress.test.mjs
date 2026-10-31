@@ -3,7 +3,7 @@
 // carries the wall clock a finished step's help is saved with.
 import { test } from "vitest";
 import assert from "node:assert/strict";
-import { fakeClock } from "../src/fake.mjs";
+import { fakeClock } from "../src/fake.ts";
 import { course } from "../../engine/test/drive.mjs";
 import { fakeHost } from "./scripted.mjs";
 

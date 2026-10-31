@@ -103,10 +103,12 @@ export function buildPages({ root, ref, outDir, diagramsDir, course }) {
     join(outDir, "index.json"),
     `${JSON.stringify({ ref, pages }, null, 2)}\n`,
   );
+  // Shipped without indentation: the compiled course is the largest file in
+  // learn/ after Rive's WASM, and the whitespace was about half of it.
   if (course)
     writeFileSync(
       course.to,
-      rewriteExampleUrls(readFileSync(course.from, "utf8"), ref),
+      `${JSON.stringify(JSON.parse(rewriteExampleUrls(readFileSync(course.from, "utf8"), ref)))}\n`,
     );
   return { pages, problems };
 }

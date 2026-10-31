@@ -1,3 +1,4 @@
+// @ts-check
 // Enforce a rule with a hook (Intermediate, lesson 5). The Learner registers
 // the hooks guide's protect-files script as a PreToolUse hook for Edit and
 // Write that fails closed ("onFailure": "block"), then writes a Stop hook, the
@@ -14,6 +15,8 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } 
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { committedMode, editWriteScripts, missingJq } from '../hooks.mjs';
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Enforce a rule with a hook';
 
@@ -28,6 +31,10 @@ const SETTINGS = '.claude/settings.json';
 // stderr and nothing on stdout, as a test that reads a missing fixture may.
 const TEST_COMMANDS = ['npm', 'npx', 'pnpm', 'yarn', 'bun', 'node', 'deno', 'pytest', 'python', 'python3', 'tox', 'uv', 'poetry', 'go', 'cargo', 'make', 'mvn', 'gradle', 'bundle', 'rake', 'rspec', 'dotnet', 'mix'];
 
+/**
+ * @param {Repo} repo
+ * @returns {{ missing?: true, value?: any, error?: string }}
+ */
 function committedSettings(repo) {
   let text;
   try {
@@ -38,10 +45,14 @@ function committedSettings(repo) {
   try {
     return { value: JSON.parse(text) };
   } catch (error) {
-    return { error: error.message };
+    return { error: /** @type {Error} */ (error).message };
   }
 }
 
+/**
+ * @param {Repo} repo
+ * @param {string} path
+ */
 function committedText(repo, path) {
   try {
     return repo.git('show', `HEAD:./${path}`);
@@ -54,6 +65,10 @@ function committedText(repo, path) {
 // responding, with the stand-in test commands passing or failing. Returns
 // spawnSync's result and whether the gate ran a test command, or null when
 // HEAD lacks the gate.
+/**
+ * @param {Repo} repo
+ * @param {{ testsPass: boolean, retried: boolean, missingFile?: boolean }} options
+ */
 function runGateScript(repo, { testsPass, retried, missingFile = false }) {
   const text = committedText(repo, GATE);
   if (text === null) return null;
@@ -84,6 +99,7 @@ function runGateScript(repo, { testsPass, retried, missingFile = false }) {
   }
 }
 
+/** @type {Item[]} */
 export const items = [
   {
     text: '`.claude/hooks/protect-files.sh` and `.claude/hooks/test-gate.sh` are committed and executable',
@@ -104,7 +120,7 @@ export const items = [
       if (error) return `The committed ${SETTINGS} is not valid JSON: ${error}`;
       if (!editWriteScripts(value).includes(HOOK)) return `${SETTINGS} doesn't run protect-files.sh as a PreToolUse hook for Edit and Write. Use \`"matcher": "Edit|Write"\`.`;
       // The same scripts, counting only the hook entries that fail closed.
-      const groups = value.hooks.PreToolUse.map((g) => ({ ...g, hooks: (g?.hooks ?? []).filter((h) => h?.onFailure === 'block') }));
+      const groups = value.hooks.PreToolUse.map((/** @type {any} */ g) => ({ ...g, hooks: (g?.hooks ?? []).filter((/** @type {any} */ h) => h?.onFailure === 'block') }));
       return editWriteScripts({ hooks: { PreToolUse: groups } }).includes(HOOK) ? true : 'Add `"onFailure": "block"` to the protect-files.sh hook, so a hook that can\'t start or crashes blocks the edit instead of letting it through.';
     },
   },
@@ -118,11 +134,12 @@ export const items = [
       if (!failing.ranTests) return 'The gate ran no test command the check can stand in for. Run your test command by name, such as `npm test` or `pytest`.';
       if (failing.status !== 2) return `While the tests fail, the gate exits ${failing.status}, so Claude stops anyway. Exit 2 when the test command fails.`;
       if (!failing.stderr.trim()) return 'The gate blocks without a reason on stderr. Print why to stderr, so Claude knows what to fix.';
-      const passing = runGateScript(repo, { testsPass: true, retried: false });
+      // The gate is committed: the failing run above found it.
+      const passing = /** @type {NonNullable<ReturnType<typeof runGateScript>>} */ (runGateScript(repo, { testsPass: true, retried: false }));
       if (passing.status !== 0) return `With the tests passing, the gate exits ${passing.status}. Exit 0 then, so Claude can stop.`;
-      const retried = runGateScript(repo, { testsPass: false, retried: true });
+      const retried = /** @type {NonNullable<ReturnType<typeof runGateScript>>} */ (runGateScript(repo, { testsPass: false, retried: true }));
       if (retried.status !== 0) return 'With `stop_hook_active` true, the gate still blocks. Exit 0 then, so a failure Claude can\'t fix doesn\'t keep it working.';
-      const missing = runGateScript(repo, { testsPass: false, retried: false, missingFile: true });
+      const missing = /** @type {NonNullable<ReturnType<typeof runGateScript>>} */ (runGateScript(repo, { testsPass: false, retried: false, missingFile: true }));
       if (missing.status !== 2) return `While the tests fail, the gate exits ${missing.status}, so Claude stops anyway. Exit 2 when the test command fails.`;
       if (!missing.stdout.trim() && /no such file or directory/i.test(missing.stderr)) return 'A failing test\'s missing-file error reaches the gate\'s stderr with nothing on stdout, so Claude can still stop. Run `npm test 2>&1` and print only your reason to stderr.';
       return true;
@@ -135,7 +152,7 @@ export const items = [
       if (missing) return `There is no committed ${SETTINGS}. Add the Stop hook from the lesson and commit it.`;
       if (error) return `The committed ${SETTINGS} is not valid JSON: ${error}`;
       // A Stop hook takes no matcher: read its groups as matching every tool.
-      const stop = Array.isArray(value?.hooks?.Stop) ? value.hooks.Stop.map((g) => ({ ...g, matcher: '' })) : [];
+      const stop = Array.isArray(value?.hooks?.Stop) ? value.hooks.Stop.map((/** @type {any} */ g) => ({ ...g, matcher: '' })) : [];
       return editWriteScripts({ hooks: { PreToolUse: stop } }).includes(GATE) ? true : `${SETTINGS} doesn't run test-gate.sh as a \`Stop\` hook. Add it under \`hooks.Stop\`, as the lesson shows.`;
     },
   },

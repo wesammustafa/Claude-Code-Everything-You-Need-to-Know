@@ -9,8 +9,8 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PATH, SLOW } from '../../../quest/engine/src/course.mjs';
-import { sanitize, saveState } from '../../../quest/host/src/store.mjs';
+import { PATH, SLOW } from '../../../quest/engine/src/course.ts';
+import { sanitize, saveState } from '../../../quest/host/src/store.ts';
 import { lessons } from '../lessons/index.mjs';
 import { check, exportHead } from './helpers.mjs';
 
@@ -18,7 +18,7 @@ import { check, exportHead } from './helpers.mjs';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 // Every lesson on the course, in its order.
 const EVERY = PATH.map((p) => p.id);
-const RUN_CHECK = join(root, '../quest/host/src/run-check.mjs');
+const RUN_CHECK = join(root, '../quest/host/src/run-check.ts');
 const child = (args, extraEnv = {}) => {
   const { NODE_TEST_CONTEXT, ...env } = process.env;
   const r = spawnSync(process.execPath, [RUN_CHECK, ...args], { encoding: 'utf8', env: { ...env, ...extraEnv } });

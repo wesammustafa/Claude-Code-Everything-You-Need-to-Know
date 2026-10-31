@@ -38,6 +38,7 @@ import {
   pending,
   playUntil,
   probed,
+  PROJECT,
   save,
   snapshot,
   stepOf,
@@ -94,13 +95,13 @@ test("the default work folder is the practice copy: every check, file and git ef
   // was learn-folder:78
   const b = driver({ course: threeLevels() });
   playUntil(b, (s) => Boolean(s.beat) && beatOf(s).verify.kind === "check");
-  assert.equal(lastOf(b.effects, "check").dir, COPY);
+  assert.equal(lastOf(b.effects, "check").dir, PROJECT);
   playUntil(b, (s) => Boolean(s.beat) && beatOf(s).verify.kind === "git-clean");
-  assert.equal(lastOf(b.effects, "git").dir, COPY);
+  assert.equal(lastOf(b.effects, "git").dir, PROJECT);
   const d = atI1(null);
   toW1(d);
-  assert.equal(lastOf(d.effects, "check").dir, COPY);
-  assert.equal(watching(d.state).dir, COPY);
+  assert.equal(lastOf(d.effects, "check").dir, PROJECT);
+  assert.equal(watching(d.state).dir, PROJECT);
 });
 
 // spec: folders.picked
@@ -119,7 +120,7 @@ test("a saved work folder is where its level's checks run; Beginner stays in the
     saved: save({ lessons: {}, folders }),
   });
   playUntil(b, (s) => Boolean(s.beat) && beatOf(s).verify.kind === "check");
-  assert.equal(lastOf(b.effects, "check").dir, COPY);
+  assert.equal(lastOf(b.effects, "check").dir, PROJECT);
   // Another lesson of each later level: its own level's folder.
   for (const [id, dir] of [
     ["i-5", MINE],
@@ -143,7 +144,7 @@ test("a result from another folder than the lesson's decides nothing", () => {
   const d = atI1({ intermediate: MINE });
   toW1(d);
   const items = [{ index: 0, text: "x", pass: true, hint: "" }];
-  d.send({ type: "check", lesson: "i-1", items, dir: COPY });
+  d.send({ type: "check", lesson: "i-1", items, dir: PROJECT });
   assert.equal(
     d.state.beat.status,
     "opening",
@@ -191,7 +192,7 @@ test("a beat that reads a file (json, match, no-match) reads it in the work fold
       read,
       stamp: "a",
       asked: d.state.beat.asked,
-      dir: COPY,
+      dir: PROJECT,
     });
     assert.equal(
       d.state.beat.status,
@@ -248,7 +249,7 @@ test('"this practice copy" saves the copy as the level\'s work folder and nothin
   assert.equal(introOptions(d.state)[0], "start");
   // The overview that took the answer shows it: this copy.
   assert.ok(asksHere(d.state));
-  assert.equal(folderOf(d.state), COPY);
+  assert.equal(folderOf(d.state), PROJECT);
   // dropped: T-render the "Work folder: this practice copy" row
   d.start();
   assert.equal(d.state.phase, "playing", "the start now starts the lesson");
@@ -361,8 +362,8 @@ test("when the work folder isn't the copy, the header names it on every lesson s
     course: withI1(),
     saved: save({ lessons: {}, folders: { intermediate: MINE } }),
   });
-  assert.equal(folderHere(b.state), COPY);
-  assert.equal(folderHere(atI1({ intermediate: COPY }).state), COPY);
+  assert.equal(folderHere(b.state), PROJECT);
+  assert.equal(folderHere(atI1({ intermediate: COPY }).state), PROJECT);
   // Another lesson's overview in the level names it too.
   const c = atI1({ intermediate: MINE });
   c.open("i-5");
@@ -393,7 +394,7 @@ test("every line that sends the learner to another terminal says which folder: t
   // In the copy, every step is there.
   const copy = atI1({ intermediate: COPY });
   playUntil(copy, stepIs("C"));
-  assert.equal(folderHere(copy.state), COPY);
+  assert.equal(folderHere(copy.state), PROJECT);
   // Another lesson's overview: its place is the work folder, or the copy for
   // i-capstone, pinned there.
   const c = atI1({ intermediate: MINE });
@@ -401,8 +402,8 @@ test("every line that sends the learner to another terminal says which folder: t
   assert.equal(folderHere(c.state), MINE);
   c.open("i-capstone");
   assert.equal(c.state.lesson, "i-capstone");
-  assert.equal(folderHere(c.state), COPY);
-  assert.equal(firstCheckDir(c), COPY, "i-capstone checks in the copy");
+  assert.equal(folderHere(c.state), PROJECT);
+  assert.equal(firstCheckDir(c), PROJECT, "i-capstone checks in the copy");
 });
 
 // ---- the map's folder rows: an answer given away from the overview -------------
@@ -412,7 +413,7 @@ test("the map shows each later level's work folder, and f there changes it; Begi
   // dropped: T-view T-render the map's folder rows; each is levelFolder
   const d = atI1(null);
   const at = where(d.state);
-  assert.equal(levelFolder(d.state, "intermediate"), COPY);
+  assert.equal(levelFolder(d.state, "intermediate"), PROJECT);
   d.folderAsk("intermediate");
   assert.equal(d.state.folderAsk.key, "intermediate");
   d.folderChoose("intermediate", { path: MINE });
@@ -421,7 +422,7 @@ test("the map shows each later level's work folder, and f there changes it; Begi
   assert.deepEqual(d.state.folders, { intermediate: MINE });
   assert.equal(levelFolder(d.state, "intermediate"), MINE);
   // Advanced has its own, the copy until it is changed.
-  assert.equal(levelFolder(d.state, "advanced"), COPY);
+  assert.equal(levelFolder(d.state, "advanced"), PROJECT);
   d.folderAsk("advanced");
   assert.equal(d.state.folderAsk.key, "advanced");
   // An empty line is this practice copy.
@@ -449,6 +450,8 @@ test("f on another lesson's overview changes its level's folder; i-capstone, pin
 
 // ---- pinned folders --------------------------------------------------------------
 const ACTIONS = "/home/sam/claude-actions-practice";
+// Its project/, where its checks run (ticket 277).
+const ACTIONS_WORK = `${ACTIONS}/project`;
 const overviewAt = (id, folders) => {
   const d = atI1(folders);
   d.open(id);
@@ -494,9 +497,9 @@ test("a-5's overview asks for its new copy and runs no check until it has one; t
   answer(d);
   assert.deepEqual(d.state.folders, { "a-5": ACTIONS });
   assert.deepEqual(snapshot(d.state).folders, { "a-5": ACTIONS });
-  assert.equal(folderHere(d.state), ACTIONS);
-  assert.equal(firstCheckDir(d), ACTIONS);
-  assert.equal(watching(d.state).dir, ACTIONS);
+  assert.equal(folderHere(d.state), ACTIONS_WORK);
+  assert.equal(firstCheckDir(d), ACTIONS_WORK);
+  assert.equal(watching(d.state).dir, ACTIONS_WORK);
   // dropped: T-render the header and "r check now" on the key bar
   // Its folder is a-5's alone: the Advanced capstone still asks, and a-1
   // runs in the copy.
@@ -514,12 +517,12 @@ test("a-5's overview asks for its new copy and runs no check until it has one; t
   const cap = overviewAt("a-capstone", {
     "a-capstone": "/home/sam/ci-review",
   });
-  assert.equal(folderOf(cap.state), "/home/sam/ci-review");
+  assert.equal(folderOf(cap.state), "/home/sam/ci-review/project");
   assert.ok(lessonOf(cap.state).slow.length > 0);
-  assert.equal(firstCheckDir(cap), "/home/sam/ci-review");
+  assert.equal(firstCheckDir(cap), "/home/sam/ci-review/project");
   // dropped: T-render fitsAll with the new copy
   d.open("a-1");
-  assert.equal(folderOf(d.state), COPY);
+  assert.equal(folderOf(d.state), PROJECT);
 });
 
 test("a lesson file can pin its folder in its front matter: copy, or new copy; anything else is an error", () => {
@@ -540,7 +543,7 @@ test("a lesson file can pin its folder in its front matter: copy, or new copy; a
   });
   const d = atI1({ intermediate: MINE }, lessons);
   toW1(d);
-  assert.equal(lastOf(d.effects, "check").dir, COPY);
+  assert.equal(lastOf(d.effects, "check").dir, PROJECT);
 });
 
 test("a lesson file of a-5 asks for its new copy at its intro, with that answer alone", () => {
@@ -564,7 +567,7 @@ test("a lesson file of a-5 asks for its new copy at its intro, with that answer 
   d.folderChoose("a-5", { path: ACTIONS });
   answer(d);
   assert.ok(asksHere(d.state) && !asksFolder(d.state));
-  assert.equal(folderOf(d.state), ACTIONS);
+  assert.equal(folderOf(d.state), ACTIONS_WORK);
   assert.equal(introOptions(d.state)[0], "start");
   assert.equal(lessonNumber(d.state), 5);
 });
@@ -997,14 +1000,14 @@ test("worked: copy reads each Worked example step in the practice copy, every ve
   // The fresh stamps: W1's in the copy, and Y1's, taken as W1 opens, in the
   // work folder.
   assert.deepEqual(stampsAsked(d), [
-    ["W1.0", COPY],
+    ["W1.0", PROJECT],
     ["Y1.0", MINE],
   ]);
   // A stamp from the other folder is not about its file.
   d.send({ type: "stamp", key: "W1.0", stamp: "mine", dir: MINE });
-  d.send({ type: "stamp", key: "Y1.0", stamp: "copy", dir: COPY });
+  d.send({ type: "stamp", key: "Y1.0", stamp: "copy", dir: PROJECT });
   assert.deepEqual(d.state.progress["i-1"].stamps, {});
-  d.send({ type: "stamp", key: "W1.0", stamp: "first", dir: COPY });
+  d.send({ type: "stamp", key: "W1.0", stamp: "first", dir: PROJECT });
   d.send({ type: "stamp", key: "Y1.0", stamp: "first", dir: MINE });
   assert.deepEqual(d.state.progress["i-1"].stamps, {
     "W1.0": "first",
@@ -1015,12 +1018,12 @@ test("worked: copy reads each Worked example step in the practice copy, every ve
   assert.deepEqual(lastOf(d.effects, "file"), {
     type: "file",
     path: SETTINGS,
-    dir: COPY,
+    dir: PROJECT,
   });
-  assert.deepEqual(watching(d.state), { file: SETTINGS, dir: COPY });
-  assert.equal(folderHere(d.state), COPY);
+  assert.deepEqual(watching(d.state), { file: SETTINGS, dir: PROJECT });
+  assert.equal(folderHere(d.state), PROJECT);
   d.run();
-  assert.equal(lastOf(d.effects, "file").dir, COPY, "r's read too");
+  assert.equal(lastOf(d.effects, "file").dir, PROJECT, "r's read too");
   d.send({
     type: "file",
     path: SETTINGS,
@@ -1042,7 +1045,7 @@ test("worked: copy reads each Worked example step in the practice copy, every ve
     read: RULES,
     stamp: "first",
     asked: d.state.beat.asked,
-    dir: COPY,
+    dir: PROJECT,
   });
   assert.equal(d.state.beat.status, "waiting");
   d.send({
@@ -1050,15 +1053,15 @@ test("worked: copy reads each Worked example step in the practice copy, every ve
     path: SETTINGS,
     read: RULES,
     stamp: "changed",
-    dir: COPY,
+    dir: PROJECT,
   });
   assert.equal(d.state.beat.status, "done");
   d.cont();
   // W2's check, in the copy; a result from the work folder decides nothing.
   assert.equal(stepOf(d.state).id, "W2");
-  assert.equal(askedIn(d), COPY);
+  assert.equal(askedIn(d), PROJECT);
   d.run();
-  assert.equal(lastOf(d.effects, "check").dir, COPY, "r's run too");
+  assert.equal(lastOf(d.effects, "check").dir, PROJECT, "r's run too");
   const items = [
     { index: 0, text: lessonOf(d.state).items[0], pass: true, hint: "" },
   ];
@@ -1070,17 +1073,17 @@ test("worked: copy reads each Worked example step in the practice copy, every ve
     dir: MINE,
   });
   assert.equal(d.state.beat.status, "opening");
-  passHere(d, COPY);
+  passHere(d, PROJECT);
   // W3's git status, in the copy.
   assert.equal(stepOf(d.state).id, "W3");
   assert.deepEqual(lastOf(d.effects, "git"), {
     type: "git",
-    dir: COPY,
+    dir: PROJECT,
     files: true,
   });
   d.send(gitLists([".claude/settings.json"], [], { dir: MINE }));
   assert.equal(d.state.beat.status, "opening");
-  passHere(d, COPY);
+  passHere(d, PROJECT);
   // Your turn: every verify in the work folder.
   for (const [id, beat] of [
     ["Y1", 0],
@@ -1122,15 +1125,15 @@ test("worked: copy keeps each step in its own folder through back and forward, a
   // folder.
   d.back();
   assert.equal(stepOf(d.state).id, "W3");
-  assert.equal(askedIn(d), COPY);
-  assert.equal(watching(d.state).dir, COPY);
-  passHere(d, COPY);
+  assert.equal(askedIn(d), PROJECT);
+  assert.equal(watching(d.state).dir, PROJECT);
+  passHere(d, PROJECT);
   assert.equal(stepOf(d.state).id, "Y1");
   assert.equal(askedIn(d), MINE);
   // A resume on a Worked example step: the copy.
   for (const [step, dir] of [
-    ["W1", COPY],
-    ["W2", COPY],
+    ["W1", PROJECT],
+    ["W2", PROJECT],
     ["Y2", MINE],
     ["C", MINE],
   ]) {
@@ -1158,9 +1161,9 @@ test("worked: copy keeps each step in its own folder through back and forward, a
   assert.equal(x.state.phase, "overview");
   assert.equal(lastOf(x.effects, "prereqs").dir, MINE);
   x.start();
-  assert.deepEqual([stepOf(x.state).id, askedIn(x)], ["W1", COPY]);
+  assert.deepEqual([stepOf(x.state).id, askedIn(x)], ["W1", PROJECT]);
   assert.deepEqual(stampsAsked(x), [
-    ["W1.0", COPY],
+    ["W1.0", PROJECT],
     ["Y1.0", MINE],
   ]);
   // A finished lesson played again: the same.
@@ -1181,7 +1184,7 @@ test("worked: copy keeps each step in its own folder through back and forward, a
   again.open("i-1");
   assert.equal(again.state.phase, "overview");
   again.start();
-  assert.deepEqual([stepOf(again.state).id, askedIn(again)], ["W1", COPY]);
+  assert.deepEqual([stepOf(again.state).id, askedIn(again)], ["W1", PROJECT]);
 });
 
 test("r27 E15: a lesson in a new copy shows the page's check command, without --dir, and says to run it in the new copy; a level folder keeps --dir", () => {
@@ -1212,10 +1215,10 @@ test("r27 E15: a lesson in a new copy shows the page's check command, without --
   a5.open();
   assert.deepEqual(
     [a5.state.lesson, stepOf(a5.state).id, folderHere(a5.state)],
-    ["a-5", "C", ACTIONS],
+    ["a-5", "C", ACTIONS_WORK],
   );
-  assert.equal(lastOf(a5.effects, "check").dir, ACTIONS);
-  passAll(a5, "a-5", ACTIONS);
+  assert.equal(lastOf(a5.effects, "check").dir, ACTIONS_WORK);
+  passAll(a5, "a-5", ACTIONS_WORK);
   assert.ok(isDone(a5.state.beat), a5.state.beat.status);
   // The Learner's own repository: its Check runs there.
   const mine = atWorked(
@@ -1241,7 +1244,7 @@ test("r27 E10: a clean tree is named for where it is: the learner's repository i
   // dropped: T-render C.cleanRepo and C.cleanCopy; the engine fact is the folder the clean tree was read in
   for (const [folders, dir] of [
     [{ intermediate: MINE }, MINE],
-    [{ intermediate: COPY }, COPY],
+    [{ intermediate: COPY }, PROJECT],
   ]) {
     const d = atWorked(folders, {
       "i-1": {
@@ -1271,17 +1274,17 @@ test("worked: copy where the work folder is the practice copy itself, or not cho
     if (!folders) d.folderChoose("intermediate", "practice-copy");
     assert.equal(
       introAsks(d.state).find((e) => e.type === "prereqs").dir,
-      COPY,
+      PROJECT,
     );
     d.start();
     const dirs = [];
     for (let i = 0; i < 8 && stepOf(d.state).id !== "C"; i++) {
       dirs.push(askedIn(d), watching(d.state).dir, folderHere(d.state));
       // dropped: T-render the header naming no folder
-      passHere(d, COPY);
+      passHere(d, PROJECT);
     }
-    assert.deepEqual([...new Set(dirs)], [COPY]);
-    assert.equal(askedIn(d), COPY);
+    assert.deepEqual([...new Set(dirs)], [PROJECT]);
+    assert.equal(askedIn(d), PROJECT);
   }
 });
 
@@ -1291,7 +1294,7 @@ test("switching folders keeps what a Worked example step in the copy compares it
   const OTHER = "/home/sam/code/other-app";
   const d = atWorked({ intermediate: MINE });
   d.start();
-  d.send({ type: "stamp", key: "W1.0", stamp: "copy-1", dir: COPY });
+  d.send({ type: "stamp", key: "W1.0", stamp: "copy-1", dir: PROJECT });
   d.send({ type: "stamp", key: "Y1.0", stamp: "mine-1", dir: MINE });
   // The folder changes with the step card open (D2): the engine asks
   // nothing again; W1 still watches the copy, and the host's next poll
@@ -1299,7 +1302,7 @@ test("switching folders keeps what a Worked example step in the copy compares it
   giveFolder(d, "intermediate", OTHER);
   assert.deepEqual(d.state.progress["i-1"].stamps, { "W1.0": "copy-1" });
   const w = watching(d.state);
-  assert.deepEqual([stepOf(d.state).id, w.dir], ["W1", COPY]);
+  assert.deepEqual([stepOf(d.state).id, w.dir], ["W1", PROJECT]);
   // The file in the copy, unchanged since its stamp: W1 still waits for the
   // change.
   d.send({
@@ -1319,11 +1322,11 @@ test("the header says where each step happens: in your practice copy on a Worked
   const here = (label, want) => assert.equal(folderHere(d.state), want, label);
   here("intro", MINE);
   d.start();
-  here("W1", COPY);
-  passHere(d, COPY);
-  here("W2", COPY);
-  passHere(d, COPY);
-  passHere(d, COPY);
+  here("W1", PROJECT);
+  passHere(d, PROJECT);
+  here("W2", PROJECT);
+  passHere(d, PROJECT);
+  passHere(d, PROJECT);
   assert.equal(stepOf(d.state).id, "Y1");
   here("Y1", MINE);
   passHere(d, MINE);
@@ -1340,7 +1343,7 @@ test("the header says where each step happens: in your practice copy on a Worked
     { "i-1": { step: "W3", beat: 0, levels: [] } },
   );
   assert.deepEqual([r.state.phase, r.state.beat], ["playing", null]);
-  assert.equal(folderHere(r.state), COPY);
+  assert.equal(folderHere(r.state), PROJECT);
 });
 
 test("a check all on a Worked example step names no --dir: it runs in the copy itself", () => {
@@ -1358,14 +1361,14 @@ test("a check all on a Worked example step names no --dir: it runs in the copy i
     }),
   });
   d.open();
-  assert.equal(lastOf(d.effects, "check").dir, COPY);
+  assert.equal(lastOf(d.effects, "check").dir, PROJECT);
   const items = lessonOf(d.state).items.map((t, index) => ({
     index,
     text: t,
     pass: true,
     hint: "",
   }));
-  d.send({ type: "check", lesson: "i-1", items, dir: COPY });
+  d.send({ type: "check", lesson: "i-1", items, dir: PROJECT });
   assert.ok(isDone(d.state.beat), d.state.beat.status);
   // dropped: T-render "npm run check -- i-1 passes" with no --dir, and fitsAll
 });

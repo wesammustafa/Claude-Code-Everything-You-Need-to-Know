@@ -9,7 +9,7 @@ import {
   exportHead,
   write,
 } from "../../../practice-template/checks/test/helpers.mjs";
-import { runCheck } from "../src/check-child.mjs";
+import { runCheck } from "../src/check-child.ts";
 
 const FIXTURES = REDUCER_COURSE;
 

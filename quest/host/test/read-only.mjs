@@ -50,19 +50,19 @@ const ALLOWED_CALLS = [
 ];
 const ALLOWED_SPAWN =
   /(?<![.\w$])spawn\s*\(\s*process\.execPath\s*,\s*\[\s*RUN_CHECK\b/g;
-// A file that runs RUN_CHECK names it once, as run-check.mjs beside itself,
+// A file that runs RUN_CHECK names it once, as run-check beside itself with its own extension,
 // and gives the name no other value.
 const RUN_CHECK_IN = /\[\s*RUN_CHECK\b/g;
 const RUN_CHECK_DEF =
-  /\bconst\s+RUN_CHECK\s*=\s*join\(\s*dirname\(\s*fileURLToPath\(\s*import\.meta\.url\s*\)\s*\)\s*,\s*["']run-check\.mjs["']\s*,?\s*\)/g;
+  /\bconst\s+RUN_CHECK\s*=\s*join\(\s*dirname\(\s*fileURLToPath\(\s*import\.meta\.url\s*\)\s*\)\s*,\s*["']run-check["']\s*\+\s*extname\(\s*fileURLToPath\(\s*import\.meta\.url\s*\)\s*\)\s*,?\s*\)/g;
 const RUN_CHECK_BOUND = /\bRUN_CHECK\s*=(?!=)|\bas\s+RUN_CHECK\b/g;
 // A signal goes only to the Check child's own process group, which its
-// spawn makes: `process.kill(-child.pid, ...)`, in check-child.mjs alone.
+// spawn makes: `process.kill(-child.pid, ...)`, in check-child.ts alone.
 // `process` is read by its members only, so no kill hides behind a name, a
 // computed member or an argument.
 const KILL = /\bprocess\s*(?:\?\.|\.)\s*kill\b/g;
 const GROUP_KILL = /\bprocess\.kill\(\s*-\s*child\.pid\s*,/g;
-const KILLS_HERE = "quest/host/src/check-child.mjs";
+const KILLS_HERE = "quest/host/src/check-child.ts";
 const PROCESS_HANDED =
   /(?<![=!<>])=\s*process\b(?!\s*(?:\?\.|\.))|\bprocess\s*(?:\?\.\s*)?\[|[(,]\s*process\s*[,)]/;
 
@@ -87,7 +87,8 @@ const FS_READS = new Set([
 const FS_SPECIFIER = /["'](?:node:)?fs(?:\/promises)?["']/g;
 const FS_IMPORT =
   /\bimport\s+((?:(?!\bfrom\b)[^;])*?)\s*from\s*["'](?:node:)?fs(?:\/promises)?["']/g;
-// A read name opened to write: `readFileSync(p, { flag: "w" })`.
+// A read name opened to write: `readFileSync(p, { flag: "w" })`, in a
+// file that imports fs (a TypeScript `flags: Flags` elsewhere opens nothing).
 const OPEN_FLAG = /\bflags?\s*:/;
 const WRITES =
   /\b(writeFile|appendFile|rename|rm|rmdir|unlink|mkdir|copyFile|cp|createWriteStream|truncate|symlink|link|chmod|utimes|writeSync|writev)(Sync)?\s*\(/;
@@ -97,14 +98,30 @@ const NEWER_NODE = /\bimport\.meta\.main\b|\bstyleText\b/;
 
 const count = (re, text) => [...text.matchAll(re)].length;
 
+// TypeScript's type-only imports, which load nothing at run time: whole
+// `import type` statements, and `type` names inside an import's braces.
+const TYPE_IMPORT =
+  /\b(?:import|export)\s+type\s+(?:(?!\bfrom\b)[^;])*?\s*from\s*["'][^"']*["'];?/g;
+const TYPE_NAME =
+  /(\bimport\s*\{[^}]*?)\btype\s+[\w$]+(?:\s+as\s+[\w$]+)?\s*,?/g;
+export function valuesOnly(text) {
+  let out = text.replace(TYPE_IMPORT, "");
+  for (let before = ""; before !== out;) {
+    before = out;
+    out = out.replace(TYPE_NAME, "$1");
+  }
+  return out;
+}
+
 // The findings for `files` ([{ path, text }], paths from the repository's
 // root, with forward slashes). `store` is the one file that may write.
 export function readOnlyFindings(
   files,
-  { store = "quest/host/src/store.mjs" } = {},
+  { store = "quest/host/src/store.ts" } = {},
 ) {
   const found = [];
-  for (const { path, text } of files) {
+  for (const { path, text: source } of files) {
+    const text = valuesOnly(source);
     const say = (what) => found.push(`${path}: ${what}`);
     if (NET_SPECIFIER.test(text)) say("imports a network module");
     for (const re of NET_CALLS)
@@ -130,7 +147,7 @@ export function readOnlyFindings(
       count(RUN_CHECK_IN, text) &&
       (count(RUN_CHECK_DEF, text) !== 1 || count(RUN_CHECK_BOUND, text) !== 1)
     )
-      say("runs a RUN_CHECK that is not run-check.mjs");
+      say("runs a RUN_CHECK that is not run-check");
     if (
       count(KILL, text) !== (path === KILLS_HERE ? count(GROUP_KILL, text) : 0)
     )
@@ -153,7 +170,8 @@ export function readOnlyFindings(
       }
       const write = WRITES.exec(text);
       if (write) say(`writes a file with ${write[0].replace(/\s*\($/, "")}`);
-      if (OPEN_FLAG.test(text)) say("opens a file with a flag");
+      if (clauses.length && OPEN_FLAG.test(text))
+        say("opens a file with a flag");
     }
 
     if (path.startsWith("quest/host/src/") && NEWER_NODE.test(text))

@@ -5,7 +5,7 @@
 // tests below read every state, effect and input it met.
 import { test } from "vitest";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -42,12 +42,12 @@ import {
 const ROOT = resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
 const at = (path) => join(ROOT, path);
 const SRC = at("quest/engine/src");
-const ENGINE = join(SRC, "engine.mjs");
-const MOMENTS = join(SRC, "moments.mjs");
+const ENGINE = join(SRC, "engine.ts");
+const MOMENTS = join(SRC, "moments.ts");
 // The engine's modules that read files: the course loader reads the
 // manifest and the compiled course at load (ticket 212: the engine takes
 // its work levels from the course it is given instead).
-const READS_FILES = [join(SRC, "course.mjs")];
+const READS_FILES = [join(SRC, "course.ts")];
 
 // The fields the old terminal's translator owned, which no engine state
 // holds; `away` went with the translator in 210.
@@ -325,9 +325,10 @@ const inside = (file, dir) => !relative(dir, file).startsWith("..");
 
 test("the import walk sees every way a module reaches another", () => {
   const text =
-    "import { a } from './a.mjs';\nimport * as b from \"../b.mjs\";\nexport { c } from './c.mjs';\nexport * from './d.mjs';\nimport './e.mjs';\nconst f = await import('./f.mjs');\nexport const g = 1;\n";
+    "import { a } from './a.mjs';\nimport { t } from './a.ts';\nimport * as b from \"../b.mjs\";\nexport { c } from './c.mjs';\nexport * from './d.mjs';\nimport './e.mjs';\nconst f = await import('./f.mjs');\nexport const g = 1;\n";
   assert.deepEqual(relativeOf(text), [
     "./a.mjs",
+    "./a.ts",
     "../b.mjs",
     "./c.mjs",
     "./d.mjs",
@@ -338,14 +339,14 @@ test("the import walk sees every way a module reaches another", () => {
 
 test("the engine and its snapshot reach nothing outside quest/engine/src and no module that reads a file, reach the package's text module, and read no clock and pick nothing at random", () => {
   // The snapshot's module too (ticket 212), which the host imports.
-  const files = reached(join(SRC, "project.mjs"), reached(ENGINE));
+  const files = reached(join(SRC, "project.ts"), reached(ENGINE));
   for (const file of files) {
-    assert.ok(inside(file, SRC), `engine.mjs reaches ${relative(ROOT, file)}`);
-    assert.ok(!READS_FILES.includes(file), `engine.mjs reaches ${file}`);
+    assert.ok(inside(file, SRC), `engine.ts reaches ${relative(ROOT, file)}`);
+    assert.ok(!READS_FILES.includes(file), `engine.ts reaches ${file}`);
   }
   assert.ok(
-    files.has(join(SRC, "text.mjs")),
-    "holds.mjs reads text through text.mjs",
+    files.has(join(SRC, "text.ts")),
+    "holds.ts reads text through text.ts",
   );
   for (const file of [...files].filter((f) => inside(f, SRC)))
     assert.doesNotMatch(
@@ -422,7 +423,7 @@ test("the engine asks for only its nine effects, and the script sends every acti
   );
 });
 
-test("the engine's events are its EVENT_TYPES, named in moments.mjs alone, and the script meets each but the Level's, the course's and the help offer", () => {
+test("the engine's events are its EVENT_TYPES, named in moments.ts alone, and the script meets each but the Level's, the course's and the help offer", () => {
   assert.equal(EVENT_TYPES.length, 19);
   assert.ok(Object.isFrozen(EVENT_TYPES));
   for (const e of seen.events)
@@ -436,7 +437,7 @@ test("the engine's events are its EVENT_TYPES, named in moments.mjs alone, and t
     [],
     "every other event is met",
   );
-  // Every type moments.mjs gives an event, a ternary's both sides too: each
+  // Every type moments.ts gives an event, a ternary's both sides too: each
   // event but the help offer, and nothing else.
   const named = new Set(
     [...readFileSync(MOMENTS, "utf8").matchAll(/\btype:\s*([^,}\n]+)/g)]
@@ -556,4 +557,20 @@ test("the package's main export is the engine: reduce and initialState from @que
   assert.equal(typeof engine.reduce, "function");
   assert.equal(typeof engine.initialState, "function");
   assert.equal(engine.reduce, reduce);
+});
+
+// Ticket 214: every engine module is strict TypeScript, and the package's
+// entry is one of them.
+test("the engine's sources are TypeScript only, and the package entry is index.ts", () => {
+  const files = readdirSync(SRC, { recursive: true, withFileTypes: true })
+    .filter((d) => d.isFile())
+    .map((d) => relative(SRC, join(d.parentPath, d.name)));
+  assert.ok(files.length > 0, "the engine has sources");
+  assert.deepEqual(
+    files.filter((f) => !f.endsWith(".ts")),
+    [],
+    "no .mjs or .js left",
+  );
+  const pkg = JSON.parse(readFileSync(at("quest/engine/package.json"), "utf8"));
+  assert.equal(pkg.exports["."], "./src/index.ts");
 });

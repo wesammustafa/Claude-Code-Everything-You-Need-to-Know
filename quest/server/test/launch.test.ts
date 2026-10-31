@@ -1,6 +1,11 @@
 import type { spawn } from "node:child_process";
 import { afterEach, describe, expect, test } from "vitest";
-import { codespaceUrl, openBrowser, stopLine } from "../src/launch.ts";
+import {
+  codespaceHost,
+  codespaceUrl,
+  openBrowser,
+  stopLine,
+} from "../src/launch.ts";
 import { startWith, stopAll, type Kit } from "./start-kit.ts";
 
 const kits: Kit[] = [];
@@ -46,6 +51,23 @@ describe("the address", () => {
     const kit = await launch({ isTTY: false });
     expect(kit.opened).toEqual([]);
     expect(kit.stdout).toHaveLength(1);
+  });
+
+  test("codespaceHost is the name the forwarder sends, or null outside a codespace", () => {
+    const env = {
+      CODESPACE_NAME: "fuzzy-robot-123",
+      GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN: "app.github.dev",
+    };
+    expect(codespaceHost(env, 4747)).toBe(
+      "fuzzy-robot-123-4747.app.github.dev",
+    );
+    expect(codespaceUrl(env, 4747)).toBe(
+      `https://${codespaceHost(env, 4747) ?? ""}`,
+    );
+    expect(codespaceHost({ CODESPACE_NAME: "n" }, 4747)).toBeNull();
+    expect(
+      codespaceHost({ GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN: "d" }, 1),
+    ).toBeNull();
   });
 
   test("codespaceUrl needs both variables", () => {

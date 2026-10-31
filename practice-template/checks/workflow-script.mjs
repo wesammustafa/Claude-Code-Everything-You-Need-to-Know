@@ -1,3 +1,4 @@
+// @ts-check
 // Workflow-script helpers shared by Advanced lesson 3's check and the Advanced
 // capstone: the saved workflows a repository keeps in .claude/workflows/,
 // read the way Claude Code loads them, without running them. The meta block
@@ -5,6 +6,7 @@
 // names the code uses are found with comments and strings left out.
 import { execFileSync } from 'node:child_process';
 import { Script } from 'node:vm';
+/** @import { Repo } from './repo.mjs' */
 
 // A saved workflow: a .js file directly in a .claude/workflows/ folder, at
 // the repository's root or in a package's own .claude/ folder.
@@ -17,7 +19,7 @@ const SKIPPED = /^(?:checks|capstone)\/|(?:^|\/)(?:node_modules|\.claude\/worktr
 
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
 
-const paths = (run) => {
+const paths = (/** @type {() => string} */ run) => {
   try {
     return run().split('\0').filter(Boolean);
   } catch {
@@ -27,6 +29,10 @@ const paths = (run) => {
 
 // The ignore rule that hides `path`, as git reports it with the Learner's own
 // configuration, global excludes file included, or null.
+/**
+ * @param {Repo} repo
+ * @param {string} path
+ */
 function ignoreRule(repo, path) {
   try {
     const out = execFileSync('git', ['check-ignore', '--stdin', '-z', '-v', '--no-index'], { cwd: repo.dir, input: `${path}\0`, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
@@ -37,6 +43,10 @@ function ignoreRule(repo, path) {
   }
 }
 
+/**
+ * @param {Repo} repo
+ * @param {string} path
+ */
 function changedSinceHead(repo, path) {
   try {
     repo.git('diff', '--quiet', 'HEAD', '--', path);
@@ -52,6 +62,7 @@ function changedSinceHead(repo, path) {
 // aren't a .js file directly in it; and `uncommitted`, scripts only in the
 // working tree or the index, each `{ path, rule }`, with the ignore rule
 // that hides it, if any.
+/** @param {Repo} repo */
 export function findWorkflows(repo) {
   const committed = paths(() => repo.git('ls-tree', '-r', '-z', '--name-only', 'HEAD'))
     .filter((p) => IN_WORKFLOWS.test(p) && !SKIPPED.test(p));
@@ -81,33 +92,46 @@ const NUMBER = /(?:0[xXoObB][\da-fA-F_]+|(?:\d[\d_]*(?:\.[\d_]*)?|\.\d[\d_]*)(?:
 const PUNCT = /\.\.\.|\?\?=|\?\.(?!\d)|=>|[=!]==?|\*\*=?|<<=?|>>>?=?|&&=?|\|\|=?|\?\?|\+\+|--|[-+*%&|^<>]=?|[~?:;,.()[\]{}@#]/y;
 // After these, a slash starts a regular expression rather than a division.
 const BEFORE_REGEX = new Set(['return', 'typeof', 'instanceof', 'in', 'of', 'new', 'delete', 'void', 'throw', 'case', 'do', 'else', 'yield', 'await']);
+/** @type {Record<string, string | undefined>} */
 const ESCAPES = { n: '\n', t: '\t', r: '\r', b: '\b', f: '\f', v: '\v', 0: '\0' };
 
+/**
+ * @typedef {{ type: 'name' | 'punct' | 'number' | 'string' | 'template' | 'regex', value: string, start: number, end: number, line: number, subst?: boolean }} Token
+ */
+
+/**
+ * @param {string} source
+ * @returns {Token[]}
+ */
 export function tokenize(source) {
+  /** @type {Token[]} */
   const tokens = [];
+  /** @type {number[]} */
   const newlines = [];
   for (let i = source.indexOf('\n'); i !== -1; i = source.indexOf('\n', i + 1)) newlines.push(i);
-  const lineAt = (pos) => {
+  const lineAt = (/** @type {number} */ pos) => {
     let lo = 0;
     let hi = newlines.length;
     while (lo < hi) {
       const mid = (lo + hi) >> 1;
-      if (newlines[mid] < pos) lo = mid + 1;
+      if (/** @type {number} */ (newlines[mid]) < pos) lo = mid + 1;
       else hi = mid;
     }
     return lo + 1;
   };
   const n = source.length;
+  /** @type {string[]} */
   const stack = [];
   let i = 0;
+  /** @type {(type: Token['type'], start: number, value: string, extra?: { subst?: boolean }) => number} */
   const push = (type, start, value, extra = {}) => tokens.push({ type, value, start, end: i, line: lineAt(start), ...extra });
-  const sticky = (pattern) => {
+  const sticky = (/** @type {RegExp} */ pattern) => {
     pattern.lastIndex = i;
     const m = pattern.exec(source);
     return m ? m[0] : null;
   };
   // The cooked text of a quoted string or template part, up to `close`.
-  const quoted = (close) => {
+  const quoted = (/** @type {string} */ close) => {
     let text = '';
     while (i < n) {
       const c = source[i];
@@ -139,14 +163,14 @@ export function tokenize(source) {
     }
     return { text, open: false };
   };
-  const template = (start) => {
+  const template = (/** @type {number} */ start) => {
     const { text, open } = quoted('`');
     push('template', start, text, { subst: open });
     if (open) stack.push('`');
   };
 
   while (i < n) {
-    const c = source[i];
+    const c = /** @type {string} */ (source[i]);
     if (/\s/.test(c)) {
       i += 1;
       continue;
@@ -191,7 +215,7 @@ export function tokenize(source) {
           else if (ch === ']') inClass = false;
           else if (ch === '/' && !inClass) break;
         }
-        i += sticky(/[A-Za-z]*/y).length;
+        i += /** @type {string} */ (sticky(/[A-Za-z]*/y)).length;
         push('regex', start, source.slice(start, i));
         continue;
       }
@@ -220,11 +244,17 @@ export function tokenize(source) {
   return tokens;
 }
 
-const is = (token, value) => token?.type === 'punct' && token.value === value;
+const is = (/** @type {Token | undefined} */ token, /** @type {string} */ value) => token?.type === 'punct' && token.value === value;
+/** @type {Record<string, boolean | null>} */
 const LITERAL_NAMES = { true: true, false: false, null: null };
 
 // A name, or a member chain such as `Date.now`, starting at tokens[j]: its
 // text and the index after it.
+/**
+ * @param {Token[]} tokens
+ * @param {number} j
+ * @returns {[string, number]}
+ */
 function chain(tokens, j) {
   let k = j + 1;
   while ((is(tokens[k], '.') || is(tokens[k], '?.')) && tokens[k + 1]?.type === 'name') k += 2;
@@ -234,10 +264,20 @@ function chain(tokens, j) {
 // The object literal that starts at tokens[j], as a value, when it holds only
 // literal values; otherwise it throws `{ what, line }`, naming the first thing
 // that isn't one.
+/**
+ * @param {Token[]} tokens
+ * @param {number} j
+ * @returns {Record<string, unknown>}
+ */
 function literalObject(tokens, j) {
+  /** @type {(what: string, token: Token | undefined) => never} */
   const fail = (what, token) => {
     throw { what, line: (token ?? tokens.at(-1))?.line ?? 1 };
   };
+  /**
+   * @param {number} k
+   * @returns {[number, unknown]}
+   */
   function value(k) {
     const t = tokens[k];
     if (!t) fail('nothing', t);
@@ -249,7 +289,7 @@ function literalObject(tokens, j) {
     }
     if ((is(t, '-') || is(t, '+')) && tokens[k + 1]?.type === 'number') {
       const [next, number] = value(k + 1);
-      return [next, t.value === '-' ? -number : number];
+      return [next, t.value === '-' ? -(/** @type {number} */ (number)) : number];
     }
     if (t.type === 'name') {
       if (t.value in LITERAL_NAMES) return [k + 1, LITERAL_NAMES[t.value]];
@@ -274,6 +314,11 @@ function literalObject(tokens, j) {
     return fail(`an expression, \`${t.value}\``, t);
   }
   // After a value, a comma or the closing bracket must follow.
+  /**
+   * @param {number} k
+   * @param {string} close
+   * @returns {[number, boolean]}
+   */
   function separator(k, close) {
     const t = tokens[k];
     if (is(t, ',')) return [k + 1, false];
@@ -281,7 +326,12 @@ function literalObject(tokens, j) {
     if (t && (is(t, '(') || is(t, '.') || is(t, '?.'))) fail('a function call or a property of a value', t);
     return fail(t ? `an expression, \`${t.value}\`` : 'nothing', t);
   }
+  /**
+   * @param {number} k
+   * @returns {[number, unknown[]]}
+   */
   function array(k) {
+    /** @type {unknown[]} */
     const list = [];
     let at = k + 1;
     while (!is(tokens[at], ']')) {
@@ -294,7 +344,12 @@ function literalObject(tokens, j) {
     }
     return [at + 1, list];
   }
+  /**
+   * @param {number} k
+   * @returns {[number, Record<string, unknown>]}
+   */
   function object(k) {
+    /** @type {Record<string, unknown>} */
     const fields = {};
     let at = k + 1;
     while (!is(tokens[at], '}')) {
@@ -321,6 +376,10 @@ function literalObject(tokens, j) {
 
 // Whether the name token at tokens[k] reads a variable of that name: not a
 // property (`x.args`), an object key (`{ args: 1 }`) or a declaration.
+/**
+ * @param {Token[]} tokens
+ * @param {number} k
+ */
 function reads(tokens, k) {
   const prev = tokens[k - 1];
   const next = tokens[k + 1];
@@ -331,19 +390,24 @@ function reads(tokens, k) {
 
 // Compiles the body as Claude Code runs it, inside an async function, and
 // returns null or `{ message, line }`. Nothing runs.
+/**
+ * @param {string} body
+ * @returns {{ message: string, line: number | null } | null}
+ */
 function compileError(body) {
   try {
     new AsyncFunction(body);
     return null;
   } catch (error) {
+    /** @type {number | null} */
     let line = null;
     try {
       new Script(`(async function () {\n${body}\n})`, { filename: 'workflow.js' });
     } catch (located) {
-      const m = /^workflow\.js:(\d+)/.exec(located.stack ?? '');
+      const m = /^workflow\.js:(\d+)/.exec(/** @type {Error} */ (located).stack ?? '');
       if (m) line = Number(m[1]) - 1;
     }
-    return { message: error.message, line };
+    return { message: /** @type {Error} */ (error).message, line };
   }
 }
 
@@ -358,33 +422,45 @@ export const STAGES = ['first', 'literal', 'fields', 'compile', 'args', 'agent']
 // (`declared`: a line, or `mentioned`: true when `args` shows up only in
 // comments, strings or property names) and 'agent'. Options: `needArgs`, the
 // script reads the `args` global; `needAgentCall`, it calls `agent()`.
+/**
+ * What readWorkflow returns: `ok` and `meta`, or `problem` and its fields.
+ * @typedef {{ ok?: true, meta?: Record<string, unknown>, problem?: string, found?: string, what?: string, line?: number | null | undefined, missing?: string[], message?: string, declared?: number, mentioned?: boolean }} Workflow
+ */
+
+/**
+ * @param {string} text
+ * @param {{ needArgs?: boolean, needAgentCall?: boolean }} [options]
+ * @returns {Workflow}
+ */
 export function readWorkflow(text, { needArgs = false, needAgentCall = false } = {}) {
   const source = text.replace(/^\uFEFF/, '');
   const tokens = tokenize(source);
   const [exp, decl, name, eq, open] = tokens;
-  const word = (t, value) => t?.type === 'name' && t.value === value;
+  const word = (/** @type {Token | undefined} */ t, /** @type {string} */ value) => t?.type === 'name' && t.value === value;
   if (!(word(exp, 'export') && word(decl, 'const') && word(name, 'meta') && is(eq, '='))) {
-    const found = exp ? source.slice(exp.start).split(/\r?\n/)[0].trim() : '';
+    const found = exp ? /** @type {string} */ (source.slice(exp.start).split(/\r?\n/)[0]).trim() : '';
     return { problem: 'first', found: found.length > 40 ? `${found.slice(0, 40)}...` : found };
   }
-  if (!is(open, '{')) return { problem: 'literal', what: 'something other than an object literal', line: eq.line };
+  if (!is(open, '{')) return { problem: 'literal', what: 'something other than an object literal', line: /** @type {Token} */ (eq).line };
   let meta;
   try {
     meta = literalObject(tokens, 4);
   } catch (failure) {
-    if (!failure?.what) throw failure;
-    return { problem: 'literal', what: failure.what, line: failure.line };
+    // literalObject throws `{ what, line }`; anything else goes on.
+    if (!(/** @type {{ what?: string } | undefined} */ (failure))?.what) throw failure;
+    const { what, line } = /** @type {{ what: string, line: number }} */ (failure);
+    return { problem: 'literal', what, line };
   }
-  const missing = ['name', 'description'].filter((f) => typeof meta[f] !== 'string' || !meta[f].trim());
+  const missing = ['name', 'description'].filter((f) => typeof meta[f] !== 'string' || !(/** @type {string} */ (meta[f])).trim());
   if (missing.length) return { problem: 'fields', missing };
-  const body = `${source.slice(0, exp.start)}${source.slice(exp.end)}`;
+  const body = `${source.slice(0, /** @type {Token} */ (exp).start)}${source.slice(/** @type {Token} */ (exp).end)}`;
   const error = compileError(body);
   if (error) return { problem: 'compile', ...error };
-  const named = (value) => tokens.flatMap((t, k) => (t.type === 'name' && t.value === value ? [k] : []));
+  const named = (/** @type {string} */ value) => tokens.flatMap((t, k) => (t.type === 'name' && t.value === value ? [k] : []));
   if (needArgs) {
     const args = named('args');
-    const declared = args.find((k) => tokens[k - 1]?.type === 'name' && ['const', 'let', 'var'].includes(tokens[k - 1].value));
-    if (declared !== undefined) return { problem: 'args', declared: tokens[declared].line };
+    const declared = args.find((k) => tokens[k - 1]?.type === 'name' && ['const', 'let', 'var'].includes(/** @type {Token} */ (tokens[k - 1]).value));
+    if (declared !== undefined) return { problem: 'args', declared: /** @type {Token} */ (tokens[declared]).line };
     if (!args.some((k) => reads(tokens, k))) return { problem: 'args', mentioned: /\bargs\b/.test(source) };
   }
   if (needAgentCall && !named('agent').some((k) => reads(tokens, k) && is(tokens[k + 1], '('))) return { problem: 'agent' };

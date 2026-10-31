@@ -1,14 +1,21 @@
-// Reads an event envelope from untrusted data: what arrives over the page's
-// own event source today, and over the stream once the connection layer
-// lands. Only the contract's fields are copied, each checked for its type, so
-// nothing else rides along into the director.
+// Reads what the server sends from untrusted data: the stream's frames and the
+// action and health answers. An event's fields are copied only as the contract
+// names them, each checked for its type, so nothing else rides along into the
+// director; a snapshot's header and pending milestones are checked the same way.
 import type {
+  ActionError,
+  ActionResponse,
   EventEnvelope,
   EventHeader,
+  FolderRefusal,
+  HealthResponse,
+  Heartbeat,
   HelpTier,
   LevelId,
+  Milestone,
   QuestEvent,
   QuestEventType,
+  Snapshot,
 } from "@quest/contract";
 
 type Fields = Record<string, unknown>;
@@ -82,4 +89,95 @@ export function readEventEnvelope(value: unknown): EventEnvelope | null {
   if (event === null) return null;
   const header: EventHeader = { id, revision, serverTime };
   return { ...header, ...event };
+}
+
+/** The event types a snapshot's pending milestones carry. */
+export const MILESTONE_TYPES: ReadonlySet<QuestEventType> = new Set([
+  "lesson.completed",
+  "level.completed",
+  "course.completed",
+  "notice",
+]);
+
+const isMilestone = (envelope: EventEnvelope): envelope is Milestone =>
+  MILESTONE_TYPES.has(envelope.type);
+
+const isRevision = (value: unknown): value is number =>
+  Number.isInteger(value) && (value as number) >= 0;
+
+/**
+ * A snapshot, or null when its header is wrong. Only the header and the
+ * pending milestones are checked: the rest is the screens' to read, and a
+ * milestone that is not well formed is dropped.
+ */
+export function readSnapshot(value: unknown): Snapshot | null {
+  if (!isRecord(value)) return null;
+  const { instance, revision, milestones } = value;
+  if (!isText(instance) || instance === "" || !isRevision(revision))
+    return null;
+  if (!Array.isArray(milestones)) return null;
+  const pending = (milestones as unknown[]).flatMap((item) => {
+    const envelope = readEventEnvelope(item);
+    return envelope !== null && isMilestone(envelope) ? [envelope] : [];
+  });
+  return {
+    ...(value as unknown as Snapshot),
+    instance,
+    revision,
+    milestones: pending,
+  };
+}
+
+/** A heartbeat, or null. */
+export function readHeartbeat(value: unknown): Heartbeat | null {
+  if (!isRecord(value)) return null;
+  const { serverTime, instance, revision } = value;
+  if (!isCount(serverTime) || !isText(instance) || !isRevision(revision))
+    return null;
+  return { serverTime, instance, revision };
+}
+
+/** The body of a `200` or a stale `409` action answer, or null. */
+export function readActionResponse(value: unknown): ActionResponse | null {
+  if (!isRecord(value)) return null;
+  const snapshot = readSnapshot(value.snapshot);
+  if (snapshot === null || snapshot.revision !== value.revision) return null;
+  return { revision: snapshot.revision, snapshot };
+}
+
+const SIMPLE_ERRORS = [
+  "forbidden",
+  "invalid",
+  "too large",
+  "busy",
+  "starting",
+] as const;
+const FOLDER_REFUSALS: readonly FolderRefusal[] = [
+  "missing",
+  "too-long",
+  "outside-home",
+  "is-copy",
+  "contains-copy",
+  "not-repo-root",
+];
+
+/** The body of a refused action, or null. */
+export function readActionError(value: unknown): ActionError | null {
+  if (!isRecord(value)) return null;
+  const { error, reason } = value;
+  if (error === "folder") {
+    const known = FOLDER_REFUSALS.find((refusal) => refusal === reason);
+    return known === undefined ? null : { error, reason: known };
+  }
+  const simple = SIMPLE_ERRORS.find((name) => name === error);
+  return simple === undefined ? null : { error: simple };
+}
+
+/** `GET /api/health`'s body, or null. */
+export function readHealth(value: unknown): HealthResponse | null {
+  if (!isRecord(value)) return null;
+  const { ok, instance } = value;
+  return ok === true && isText(instance) && instance !== ""
+    ? { ok, instance }
+    : null;
 }

@@ -2,8 +2,10 @@
 // the port, then the address, and a single shutdown on a signal.
 import type { Server } from "node:http";
 import { parseArgs } from "node:util";
+import type { CourseEntry } from "@quest/engine";
 import type { Adapters, Host, HostOptions, RealOptions } from "@quest/host";
 import { createApp } from "./app.ts";
+import { createStreams } from "./events.ts";
 import { codespaceUrl, localUrl, stopLine, type Env } from "./launch.ts";
 import { BASE_PORT, PORT_TRIES, listen, type TryListen } from "./listen.ts";
 import type { Statics } from "./statics.ts";
@@ -43,7 +45,7 @@ export interface StartOptions {
   openBrowser: (url: string) => void;
   createHost: (options: HostOptions) => Host;
   realAdapters: (options: RealOptions) => Adapters;
-  loadCourse: (root: string) => readonly object[];
+  loadCourse: (root: string) => readonly CourseEntry[];
   /** Replaces the real listen, for a test. */
   probe?: (server: Server) => TryListen;
 }
@@ -104,9 +106,21 @@ export async function start({
 
   // Listen before the host opens: open() waits on git, and the health check
   // and the static files never need the snapshot.
+  // Actions wait for open() to settle; the trust checks read the port once
+  // it is bound.
+  const opened = Promise.withResolvers<undefined>();
+  const bound: { port?: number } = {};
+  const streams = createStreams();
   const app = createApp({
     health: () => ({ ok: true, instance: host.instance }),
     statics,
+    env,
+    port: () => bound.port,
+    host,
+    ready: opened.promise,
+    root,
+    streams,
+    log: (line) => stderr.write(`${line}\n`),
   });
   const up = await listen({
     fetch: app.fetch,
@@ -122,6 +136,7 @@ export async function start({
     return null;
   }
   const { server, port } = up;
+  bound.port = port;
 
   const shutdown = { done: false };
   const stop = () => {
@@ -129,6 +144,8 @@ export async function start({
     shutdown.done = true;
     host.close();
     server.close();
+    // Each stream ends itself first; closeAllConnections is the backstop.
+    streams.closeAll();
     server.closeAllConnections();
     stdout.write(`${stopLine({ copy: root })}\n`);
     exit(0);
@@ -159,6 +176,8 @@ export async function start({
     stderr.write(
       `Claude Code Quest could not read the folder: ${error instanceof Error ? error.message : String(error)}\n`,
     );
+  } finally {
+    opened.resolve(undefined);
   }
   // A signal while git answered has already stopped everything.
   if (shutdown.done) return { ...up, host };

@@ -16,7 +16,6 @@ import {
   DEMO_B2,
   driver,
   EFFECT_TYPES,
-  FACTS,
   finished,
   finishedBefore,
   IDLE_MS,
@@ -28,6 +27,7 @@ import {
   parseLesson,
   pending,
   playUntil,
+  PROJECT,
   ruleTiers,
   rungsOf,
   save,
@@ -41,11 +41,11 @@ import {
   whileRunsOf,
   whileRunsOpen,
 } from "./drive.mjs";
-// The app's words a beat's fail hint or evidence is built from (status.mjs
-// and holds.mjs pick them), and the text measures E2 and E14 test.
+// The app's words a beat's fail hint or evidence is built from (status.ts
+// and holds.ts pick them), and the text measures E2 and E14 test.
 import { at, atStep, b1Done, missing, reopen } from "./flow-places.mjs";
-import { C } from "../src/copy.mjs";
-import { inline, width, wrapRuns } from "../src/text.mjs";
+import { C } from "../src/copy.ts";
+import { inline, width, wrapRuns } from "../src/text.ts";
 
 // ---- ways out when a check keeps failing for an earlier reason (ticket 192) --
 const AFTER = ".practice/b-2-after.txt";
@@ -354,9 +354,9 @@ test("the back key: the steps from there on check again as they are met, and a q
     type: "stamp",
     key: "W6.1",
     path: ".practice/b-2-before.txt",
-    dir: FACTS.root,
+    dir: PROJECT,
   });
-  r.send({ type: "stamp", key: "W6.1", stamp: "OLD", dir: FACTS.root });
+  r.send({ type: "stamp", key: "W6.1", stamp: "OLD", dir: PROJECT });
   const pass = [
     {
       index: 0,
@@ -551,7 +551,7 @@ test("parts and Tear down: the Check runs check all, and the lesson completes, b
       lesson: "b-2",
       items: null,
       evidence: null,
-      dir: FACTS.root,
+      dir: PROJECT,
     },
   );
   playUntil(d, atStep("D1"));
@@ -1107,7 +1107,7 @@ const probeResult = (name, args, pass, state, extra = {}) => ({
   state,
   hint: pass ? "" : `No ${name} yet.`,
   evidence: pass ? `${name} found` : null,
-  dir: FACTS.root,
+  dir: PROJECT,
   ...extra,
 });
 // The play reaches b-2's Check.
@@ -1186,11 +1186,11 @@ test("probes: the beat runs its probe in the work folder, on r too, and passes, 
     type: "probe",
     name: "worktrees",
     args: ["2"],
-    dir: FACTS.root,
+    dir: PROJECT,
   });
   assert.deepEqual(watching(d.state), {
     probe: { name: "worktrees", args: ["2"] },
-    dir: FACTS.root,
+    dir: PROJECT,
   });
   assert.equal(tierOf(d.state), "challenge", "a probe beat counts as checked");
   d.send(probeResult("worktrees", ["2"], false, "a"));
@@ -1205,7 +1205,7 @@ test("probes: the beat runs its probe in the work folder, on r too, and passes, 
     asked: d.state.beat.asked,
     name: "worktrees",
     args: ["2"],
-    dir: FACTS.root,
+    dir: PROJECT,
   });
   d.send(
     probeResult("worktrees", ["2"], false, "a", { asked: d.state.beat.asked }),
@@ -1229,7 +1229,7 @@ test("probes: the beat runs its probe in the work folder, on r too, and passes, 
   broken.send({
     type: "probe-error",
     message: "The probe could not run: git is not installed",
-    dir: FACTS.root,
+    dir: PROJECT,
   });
   assert.deepEqual(
     [broken.state.beat.status, broken.state.beat.error],
@@ -1248,10 +1248,10 @@ test("probes: a fresh probe stamps its state as its step opens, and passes only 
       type: "stamp",
       key: "Y1.0",
       probe: { name: "branch-ahead", args: ["docs-pass"] },
-      dir: FACTS.root,
+      dir: PROJECT,
     },
   );
-  d.send({ type: "stamp", key: "Y1.0", stamp: "sha-1", dir: FACTS.root });
+  d.send({ type: "stamp", key: "Y1.0", stamp: "sha-1", dir: PROJECT });
   d.send(probeResult("branch-ahead", ["docs-pass"], true, "sha-1"));
   assert.deepEqual(
     [d.state.beat.status, d.state.beat.stale],
@@ -1268,14 +1268,14 @@ test("head-moved: HEAD another commit than when its step opened, with git status
   const d = intoY1("head-moved");
   assert.deepEqual(
     d.effects.find((e) => e.type === "stamp"),
-    { type: "stamp", key: "Y1.0", git: "head", dir: FACTS.root },
+    { type: "stamp", key: "Y1.0", git: "head", dir: PROJECT },
   );
   assert.deepEqual(d.effects.filter((e) => e.type === "git").at(-1), {
     type: "git",
-    dir: FACTS.root,
+    dir: PROJECT,
     head: true,
   });
-  d.send({ type: "stamp", key: "Y1.0", stamp: "aaaaaaa1", dir: FACTS.root });
+  d.send({ type: "stamp", key: "Y1.0", stamp: "aaaaaaa1", dir: PROJECT });
   // A result that doesn't say where HEAD is decides nothing.
   d.send({ type: "git", paths: [] });
   assert.equal(d.state.beat.status, "opening");
@@ -1328,14 +1328,14 @@ test("git-unchanged: git status lists the same paths as when the step it names o
   assert.equal(stepOf(atW1.state).id, "W1");
   assert.deepEqual(
     out.find((e) => e.type === "stamp"),
-    { type: "stamp", key: "Y1.0", git: "status", dir: FACTS.root },
+    { type: "stamp", key: "Y1.0", git: "status", dir: PROJECT },
   );
   const d = onReading("git-unchanged since W1", {
     stamps: { "Y1.0": statusStamp(["notes.md"]) },
   });
   assert.deepEqual(
     watching(d.state),
-    { git: true, dir: FACTS.root },
+    { git: true, dir: PROJECT },
     "the whole tree, as git status shows it",
   );
   d.send({ type: "git", paths: ["notes.md", "src/a.js"] });
@@ -1709,7 +1709,7 @@ test('r27 E6: a watch that sees an earlier step\'s state says it turns green onc
   // was learn-flow:3300
   // dropped: T-render C.staleWatch's words
   const d = intoY1("probe branch-ahead docs-pass");
-  d.send({ type: "stamp", key: "Y1.0", stamp: "sha-1", dir: FACTS.root });
+  d.send({ type: "stamp", key: "Y1.0", stamp: "sha-1", dir: PROJECT });
   d.send(probeResult("branch-ahead", ["docs-pass"], true, "sha-1"));
   assert.deepEqual(
     [d.state.beat.status, d.state.beat.stale],
@@ -1842,7 +1842,7 @@ test("r27 E16: a fresh push beat that sees an earlier push says everything is pu
   // was learn-flow:3420
   // dropped: T-render C.stalePush's words
   const d = intoY1("probe pushed fresh");
-  d.send({ type: "stamp", key: "Y1.0", stamp: "pushed-1", dir: FACTS.root });
+  d.send({ type: "stamp", key: "Y1.0", stamp: "pushed-1", dir: PROJECT });
   d.send(probeResult("pushed", [], true, "pushed-1"));
   assert.deepEqual(
     [d.state.beat.status, d.state.beat.stale],
@@ -1851,7 +1851,7 @@ test("r27 E16: a fresh push beat that sees an earlier push says everything is pu
   // dropped: T-render the push line, not the earlier-step one
   // Another stale probe keeps its line.
   const other = intoY1("probe branch-ahead docs-pass");
-  other.send({ type: "stamp", key: "Y1.0", stamp: "sha-1", dir: FACTS.root });
+  other.send({ type: "stamp", key: "Y1.0", stamp: "sha-1", dir: PROJECT });
   other.send(probeResult("branch-ahead", ["docs-pass"], true, "sha-1"));
   assert.deepEqual(
     [other.state.beat.status, other.state.beat.stale],

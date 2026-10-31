@@ -17,7 +17,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
-import { loadCourse } from "../../engine/src/course.mjs";
+import { loadCourse } from "../../engine/src/course.ts";
 import { statusPaths } from "../../../practice-template/checks/paths.mjs";
 import {
   commit,
@@ -25,8 +25,8 @@ import {
   write,
 } from "../../../practice-template/checks/test/helpers.mjs";
 import { b1Only, finishedBefore } from "../../engine/test/drive.mjs";
-import { createHost, realAdapters } from "../src/index.mjs";
-import { storePath } from "../src/store.mjs";
+import { createHost, realAdapters } from "../src/index.ts";
+import { storePath } from "../src/store.ts";
 import { reducerCheck, reducerRepo } from "./repo.mjs";
 import { AT_W3, scripted, tap } from "./scripted.mjs";
 import { alive, holding, pidsOf, sweep } from "./tree.mjs";
@@ -85,6 +85,9 @@ test("a real copy: writing version.txt turns b-1's beat done, nothing changes ou
   rmSync(join(dir, ".practice"), { recursive: true, force: true });
   const before = outside(dir);
   mkdirSync(join(dir, ".practice"));
+  // b-1 runs in the copy's project/ (ticket 277).
+  const work = join(dir, "project");
+  mkdirSync(join(work, ".practice"), { recursive: true });
   const { host, adapters, heard, runs, state } = realHost(dir, {
     format: 1,
     welcomed: true,
@@ -102,7 +105,7 @@ test("a real copy: writing version.txt turns b-1's beat done, nothing changes ou
     assert.ok(await until(() => heard.some((i) => i.type === "check")));
     assert.notEqual(status(), "done");
     writeFileSync(
-      join(dir, ".practice", "version.txt"),
+      join(work, ".practice", "version.txt"),
       "2.1.285 (Claude Code)\n",
     );
     assert.ok(
@@ -122,15 +125,14 @@ test("a real copy: writing version.txt turns b-1's beat done, nothing changes ou
   await Promise.all(runs);
   try {
     assert.equal(adapters.children.size(), 0, "no child is left");
+    // The test's own write, the Learner's work, aside.
     assert.deepEqual(
-      outside(dir),
+      outside(dir).filter((p) => p !== "project/.practice/version.txt"),
       before,
       "the host changed something outside .practice/",
     );
-    assert.deepEqual(readdirSync(join(dir, ".practice")).sort(), [
-      "learn.json",
-      "version.txt",
-    ]);
+    assert.deepEqual(readdirSync(join(dir, ".practice")), ["learn.json"]);
+    assert.deepEqual(readdirSync(join(work, ".practice")), ["version.txt"]);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

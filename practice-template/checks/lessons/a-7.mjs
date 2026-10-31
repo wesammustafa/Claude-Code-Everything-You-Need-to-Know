@@ -1,3 +1,4 @@
+// @ts-check
 // Put bounds on autonomous runs (Advanced, lesson 7). The Learner commits
 // scripts/bounded-run.sh, which takes a task and a result path and starts
 // one `claude -p` run in dontAsk mode, with JSON output, a turn limit, a
@@ -20,6 +21,9 @@ import { parseClaudeArgs, ruleList, scriptCalls } from '../claude-args.mjs';
 import { committedMode, missingJq } from '../hooks.mjs';
 import { commitHint, headText, parseJson } from '../marketplace.mjs';
 import { notRun, runStubbed, scratchPath, stderrTail, STUB_SESSION, TIME_LIMIT } from '../stub-claude.mjs';
+/** @import { Ran, Stubbed } from '../stub-claude.mjs' */
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Put bounds on autonomous runs';
 
@@ -33,20 +37,38 @@ const SANDBOX = '`"sandbox": {"enabled": true, "failIfUnavailable": true, "allow
 const NARROW = 'Allow one folder or one command per rule, as in `Edit(./src/**)` or `Bash(npm test *)`.';
 const AMOUNT = /^(\d+(\.\d*)?|\.\d+)$/;
 
-const code = (text) => `\`${text}\``;
-const quoted = (text) => (text.length > 120 ? `${text.slice(0, 120)}...` : text).replace(/\s+/g, ' ').trim();
+const code = (/** @type {string} */ text) => `\`${text}\``;
+const quoted = (/** @type {string} */ text) => (text.length > 120 ? `${text.slice(0, 120)}...` : text).replace(/\s+/g, ' ').trim();
+/** @type {(value: unknown) => value is Record<string, any>} */
 const isObject = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-const usage = (script) => `\`${script} "<task>" <result.json>\``;
-const squash = (flag) => flag.split('=')[0].replace(/^-+/, '').replace(/[-_]/g, '').toLowerCase();
+const usage = (/** @type {string} */ script) => `\`${script} "<task>" <result.json>\``;
+const squash = (/** @type {string} */ flag) => /** @type {string} */ (flag.split('=')[0]).replace(/^-+/, '').replace(/[-_]/g, '').toLowerCase();
 
 // A sentence for an option Claude Code doesn't know, written like `flag`,
 // or ''.
+/**
+ * @typedef {ReturnType<typeof parseClaudeArgs>} Args
+ * A `claude` call: from the stand-in's run (with its stdin), or read from
+ * the script's text (`fromText`). `where` resolves a path it names.
+ * @typedef {{ argv: string[], args: Args, stdin?: string, where: (path: string) => string | null, fromText?: true }} Call
+ * @typedef {{ run: Ran & Stubbed, task: string, print: Call[], stray: Call[], calls: Call[] }} Analysis
+ * @typedef {{ value?: Record<string, any>, path?: string, label?: string, hint?: string, none?: true }} Loaded
+ */
+
+/**
+ * @param {Args} args
+ * @param {string} flag
+ */
 function misspelt(args, flag) {
   const typo = args.unknown.find((u) => squash(u) === squash(flag));
-  return typo ? ` Claude Code doesn't know ${code(typo.split('=')[0])}, so it stops with an error before the run starts: write ${code(flag)}.` : '';
+  return typo ? ` Claude Code doesn't know ${code(/** @type {string} */ (typo.split('=')[0]))}, so it stops with an error before the run starts: write ${code(flag)}.` : '';
 }
 
 // The note for a committed file whose working copy differs, or ''.
+/**
+ * @param {Repo} repo
+ * @param {string} path
+ */
 function pending(repo, path) {
   try {
     repo.git('diff', '--quiet', 'HEAD', '--', path);
@@ -57,14 +79,16 @@ function pending(repo, path) {
 }
 
 // Up to three problems, then how many more, then the notes.
+/** @param {string[]} problems */
 function report(problems, notes = '') {
   const more = problems.length > 3 ? ` And ${problems.length - 3} more: fix these and run the check again.` : '';
   return `${problems.slice(0, 3).join(' ')}${more}${notes}`;
 }
 
-const exitOf = (run) => run.status ?? run.signal;
+const exitOf = (/** @type {Ran} */ run) => run.status ?? run.signal;
 
 // How a run ended, for a hint.
+/** @param {Ran} run */
 function ended(run) {
   if (run.timedOut) return `It was still running after ${TIME_LIMIT / 1000} seconds, so the check stopped it.`;
   if (missingJq(run)) return 'It needs `jq`, which isn\'t installed: install it and run the check again.';
@@ -75,6 +99,10 @@ function ended(run) {
 // A path written in the script, relative to the Learner's repository, or
 // null when it points outside it. Used for calls read from the text, which
 // the check assumes run from the repository's root.
+/**
+ * @param {Repo} repo
+ * @param {string} path
+ */
 function inRepo(repo, path) {
   const roots = [repo.dir];
   try {
@@ -92,7 +120,12 @@ function inRepo(repo, path) {
 
 // The committed files the script may read before it calls `claude`: the
 // JSON files in .claude/, and any file a `--settings` in its text names.
+/**
+ * @param {Repo} repo
+ * @param {string} text
+ */
 function companions(repo, text) {
+  /** @type {string[]} */
   let listed = [];
   try {
     listed = repo.git('ls-tree', '-r', '-z', '--name-only', 'HEAD', '--', '.claude').split('\0');
@@ -103,6 +136,7 @@ function companions(repo, text) {
     .map((argv) => parseClaudeArgs(argv).flags.settings)
     .filter((v) => typeof v === 'string' && v && !v.includes('$') && !v.trim().startsWith('{') && !isAbsolute(v))
     .map((v) => posix.normalize(v));
+  /** @type {Record<string, string>} */
   const files = {};
   for (const path of [...listed.filter((p) => p.endsWith('.json') && !p.startsWith('.claude/worktrees/')), ...named]) {
     if (path.startsWith('..') || files[path] !== undefined) continue;
@@ -115,34 +149,51 @@ function companions(repo, text) {
 // What the items read about the script, once per repository: the stand-in
 // run with a task and a result path; its `claude -p` calls, or, when it
 // made none, the calls in the committed text.
+/** @type {WeakMap<Repo, Map<string, Analysis>>} */
 const cache = new WeakMap();
 
+/**
+ * @param {Repo} repo
+ * @param {string} script
+ * @returns {Analysis}
+ */
 function analysis(repo, script) {
   if (!cache.has(repo)) cache.set(repo, new Map());
-  const runs = cache.get(repo);
+  const runs = /** @type {Map<string, Analysis>} */ (cache.get(repo));
   if (!runs.has(script)) runs.set(script, analyze(repo, script));
-  return runs.get(script);
+  return /** @type {Analysis} */ (runs.get(script));
 }
 
+/**
+ * @param {Repo} repo
+ * @param {string} script
+ * @returns {Analysis}
+ */
 function analyze(repo, script) {
   const id = randomBytes(6).toString('hex');
   const task = `Add a test for one function (STUB-TASK-${id}), then run the tests.`;
   const text = headText(repo, script);
   const run = runStubbed(repo, script, {
     args: (out) => [task, join(out, OUT)],
-    commit: { 'README.md': '# Scratch repository for the practice check\n', 'src/example.js': 'export const answer = 42;\n', ...companions(repo, text) },
+    commit: { 'README.md': '# Scratch repository for the practice check\n', 'src/example.js': 'export const answer = 42;\n', ...companions(repo, /** @type {string} */ (text)) },
     reply: { type: 'result', subtype: 'success', is_error: false, num_turns: 1, result: `STUB-RESULT-${id}`, session_id: STUB_SESSION, total_cost_usd: 0, permission_denials: [] },
   });
-  const made = (run.calls ?? []).map((c) => ({ ...c, args: parseClaudeArgs(c.argv), where: (path) => scratchPath(run, c, path) }));
+  const made = (run.calls ?? []).map((c) => ({ ...c, args: parseClaudeArgs(c.argv), where: (/** @type {string} */ path) => scratchPath(run, c, path) }));
   const print = made.filter((c) => c.args.print);
   const stray = made.filter((c) => !c.args.print && !c.args.flags.version && !c.args.flags.help);
   const written = print.length || text === null ? [] : scriptCalls(text)
-    .map((argv) => ({ argv, args: parseClaudeArgs(argv), where: (path) => inRepo(repo, path), fromText: true }))
+    .map((argv) => ({ argv, args: parseClaudeArgs(argv), where: (/** @type {string} */ path) => inRepo(repo, path), fromText: /** @type {const} */ (true) }))
     .filter((c) => c.args.print);
-  return { run, task, print, stray, calls: print.length ? print : written };
+  // Callers pass `run` to notRun before they read its fields.
+  return { run: /** @type {Analysis['run']} */ (run), task, print, stray, calls: print.length ? print : written };
 }
 
 // The hint when the check has no `claude -p` call to read, or null.
+/**
+ * @param {Repo} repo
+ * @param {Analysis} a
+ * @param {string} script
+ */
 function noCall(repo, a, script) {
   if (a.calls.length) return null;
   const skipped = notRun(a.run, script);
@@ -152,13 +203,24 @@ function noCall(repo, a, script) {
 
 // The settings a call passes with --settings: `{ value, path, label }`, or
 // `{ hint }` when the check can't read them; `none` when there is no flag.
+/** @type {WeakMap<Call, Loaded>} */
 const loaded = new WeakMap();
 
+/**
+ * @param {Repo} repo
+ * @param {Call} call
+ * @returns {Loaded}
+ */
 function settingsOf(repo, call) {
   if (!loaded.has(call)) loaded.set(call, loadSettings(repo, call));
-  return loaded.get(call);
+  return /** @type {Loaded} */ (loaded.get(call));
 }
 
+/**
+ * @param {Repo} repo
+ * @param {Call} call
+ * @returns {Loaded}
+ */
 function loadSettings(repo, call) {
   const raw = call.args.flags.settings;
   const example = 'such as `--settings .claude/bounded-run.json`';
@@ -169,7 +231,7 @@ function loadSettings(repo, call) {
       const value = JSON.parse(raw);
       return isObject(value) ? { value, label: 'the inline `--settings` JSON' } : { hint: 'The inline `--settings` JSON isn\'t an object.' };
     } catch (error) {
-      return { hint: `The inline \`--settings\` JSON isn't valid JSON: ${error.message}` };
+      return { hint: `The inline \`--settings\` JSON isn't valid JSON: ${/** @type {Error} */ (error).message}` };
     }
   }
   if (call.fromText && raw.includes('$')) return { hint: `\`--settings ${raw}\` gets its file from a variable the check can't work out: write the path in the script, ${example}.` };
@@ -186,10 +248,15 @@ function loadSettings(repo, call) {
 }
 
 // What is wrong with one call's mode, output and settings file, for item 1.
+/**
+ * @param {Repo} repo
+ * @param {Call} call
+ */
 function callProblems(repo, call) {
   const { flags } = call.args;
+  /** @type {string[]} */
   const problems = [];
-  const spelling = (flag) => misspelt(call.args, flag);
+  const spelling = (/** @type {string} */ flag) => misspelt(call.args, flag);
   const mode = flags.permissionMode;
   if (flags.dangerouslySkipPermissions) problems.push('Drop `--dangerously-skip-permissions`: it is the same as `--permission-mode bypassPermissions`, which skips your permission checks.');
   if (flags.allowDangerouslySkipPermissions) problems.push('Drop `--allow-dangerously-skip-permissions`: a bounded run never switches to `bypassPermissions`.');
@@ -213,15 +280,19 @@ function callProblems(repo, call) {
 }
 
 // Whether the task reached the call as its prompt, and where it went if not.
+/**
+ * @param {Analysis} a
+ * @param {Call} call A call from the run, which has its stdin.
+ */
 function taskProblems(a, call) {
-  if (call.args.prompt?.includes(a.task) || call.stdin.includes(a.task)) return [];
+  if (call.args.prompt?.includes(a.task) || /** @type {string} */ (call.stdin).includes(a.task)) return [];
   if (call.args.operands.join(' ').includes(a.task)) return ['It passes the task without quotes, so the shell splits it into words and Claude gets only the first. Write `"$1"`, in double quotes.'];
   const flag = Object.entries(call.args.flags).find(([, v]) => [v].flat().some((x) => typeof x === 'string' && x.includes(a.task)));
   if (flag) return [`The task ends up in the value of \`--${flag[0].replace(/[A-Z]/g, (ch) => `-${ch.toLowerCase()}`)}\`, not in the prompt. Write the prompt right after \`-p\`, as in \`claude -p "$1" ...\`.`];
   return ['The task in its first argument never reaches `claude -p`. Pass it as the prompt, right after `-p`, as in `claude -p "$1" ...`.'];
 }
 
-const isStubJson = (text) => {
+const isStubJson = (/** @type {string} */ text) => {
   try {
     return JSON.parse(text)?.session_id === STUB_SESSION;
   } catch {
@@ -229,16 +300,21 @@ const isStubJson = (text) => {
   }
 };
 
+/** @param {Analysis} a */
 function savedProblems(a) {
   const saved = a.run.saved[`out/${OUT}`];
   const save = 'Redirect only its standard output to the path in the second argument: `claude -p "$1" ... > "$2"`.';
   if (saved === undefined) {
-    const elsewhere = Object.keys(a.run.saved).find((p) => isStubJson(a.run.saved[p]));
+    const elsewhere = Object.keys(a.run.saved).find((p) => isStubJson(/** @type {string} */ (a.run.saved[p])));
     return [elsewhere ? `It saved the JSON \`claude -p\` printed to ${code(elsewhere)}, not to the path in its second argument. ${save}` : `It didn't save the JSON \`claude -p\` printed to the path in its second argument. ${save}`];
   }
   return isStubJson(saved) ? [] : [`The file at the path in its second argument isn't the JSON \`claude -p\` printed. ${save}`];
 }
 
+/**
+ * @param {Repo} repo
+ * @param {string} script
+ */
 function modeHint(repo, script) {
   const mode = committedMode(repo, script);
   if (mode === null) return repo.exists(script) ? commitHint(repo, script) : `There is no ${code(script)}. Write it as the lesson shows, then commit it.`;
@@ -247,6 +323,7 @@ function modeHint(repo, script) {
   return `${code(script)} is committed as ${mode === '120000' ? 'a symbolic link' : 'something other than a file'}. Commit the script file itself, and make it executable.`;
 }
 
+/** @returns {Item} */
 export function boundedScript(script = SCRIPT) {
   return {
     text: `${code(script)} is committed and executable, takes a task and a result path, and starts \`claude -p\` in \`dontAsk\` mode with JSON output, no MCP server and a committed \`--settings\` file`,
@@ -262,10 +339,11 @@ export function boundedScript(script = SCRIPT) {
           : `never ran \`claude -p\`. ${ended(a.run)}`;
         return `Run as ${usage(script)}, ${code(script)} ${why}${pending(repo, script)}`;
       }
+      /** @type {string[]} */
       const problems = [];
       if (a.print.length > 1) problems.push(`With one task, it ran \`claude -p\` ${a.print.length} times. Run it once.`);
       if (a.stray.length) problems.push('It also ran `claude` without `-p`, which starts an interactive session and waits for you. Run only the `claude -p` call.');
-      problems.push(...taskProblems(a, a.print[0]), ...savedProblems(a));
+      problems.push(...taskProblems(a, /** @type {Call} */ (a.print[0])), ...savedProblems(a));
       problems.push(...new Set(a.print.flatMap((c) => callProblems(repo, c))));
       return problems.length ? report(problems, pending(repo, script)) : true;
     },
@@ -273,13 +351,15 @@ export function boundedScript(script = SCRIPT) {
 }
 
 // What is wrong with one call's turn and spend limits.
+/** @param {Call} call */
 function limitProblems(call) {
   const { flags } = call.args;
+  /** @type {string[]} */
   const problems = [];
-  const spelling = (flag) => misspelt(call.args, flag);
-  const variable = (flag, value) => `\`${flag} ${value}\` gets its value from a variable the check can't work out: write the number in the script.`;
-  const option = (value) => /^--?[A-Za-z]/.test(value);
-  const taken = (flag, value, what) => `\`${flag}\` has no ${what} after it, so it takes ${code(value)} as its value: write ${what === 'number' ? 'a whole number of 1 or more' : 'an amount in US dollars, above 0'}.`;
+  const spelling = (/** @type {string} */ flag) => misspelt(call.args, flag);
+  const variable = (/** @type {string} */ flag, /** @type {string} */ value) => `\`${flag} ${value}\` gets its value from a variable the check can't work out: write the number in the script.`;
+  const option = (/** @type {string} */ value) => /^--?[A-Za-z]/.test(value);
+  const taken = (/** @type {string} */ flag, /** @type {string} */ value, /** @type {string} */ what) => `\`${flag}\` has no ${what} after it, so it takes ${code(value)} as its value: write ${what === 'number' ? 'a whole number of 1 or more' : 'an amount in US dollars, above 0'}.`;
 
   const turns = flags.maxTurns;
   if (turns === undefined) problems.push(`It sets no turn limit: add \`--max-turns\` with a whole number of 1 or more.${spelling('--max-turns')}`);
@@ -299,6 +379,7 @@ function limitProblems(call) {
   return problems;
 }
 
+/** @returns {Item} */
 export function runLimits(script = SCRIPT) {
   return {
     text: 'it sets a turn limit and a spend limit',
@@ -313,22 +394,24 @@ export function runLimits(script = SCRIPT) {
 }
 
 // The spend limit the script passes, as a number, or null.
+/** @param {Analysis} a */
 function budgetOf(a) {
   const budget = a.calls[0]?.args.flags.maxBudgetUsd;
   return typeof budget === 'string' && AMOUNT.test(budget) && Number(budget) > 0 ? Number(budget) : null;
 }
 
 // Why an allow rule is wider than one folder or one command, or null.
+/** @param {string} rule */
 export function wideReason(rule) {
   const m = rule.trim().match(/^([^()\s]+)(?:\(([\s\S]*)\))?$/);
   if (!m) return null;
-  const [, tool, spec] = m;
+  const [, tool, spec] = /** @type {[string, string, string | undefined]} */ (/** @type {unknown} */ (m));
   if (tool.includes('*')) return 'matches every tool whose name fits it';
   if (tool.startsWith('mcp__')) return spec === undefined && tool.split('__').filter(Boolean).length < 3 ? 'lets every tool of that MCP server through' : null;
   const all = spec === undefined || /^\*+$/.test(spec.trim());
   if (tool === 'Bash') {
     if (all) return 'lets every command through';
-    const s = spec.trim();
+    const s = /** @type {string} */ (spec).trim();
     if (s.startsWith('*')) return 'starts with a wildcard, so it matches commands of every program';
     const program = s.match(/^([^\s*:]+)(?:\s+\*|:\*|\*)$/);
     return program ? `lets every \`${program[1]}\` command through, whatever its arguments` : null;
@@ -336,8 +419,8 @@ export function wideReason(rule) {
   if (PATH_TOOLS.has(tool)) {
     const verb = ['Read', 'Glob', 'Grep'].includes(tool) ? 'read' : 'edit';
     if (all) return `lets the run ${verb} any file`;
-    const s = spec.trim();
-    const anchor = s.match(/^(\/\/|~\/|\.\/|\/)?/)[1] ?? '';
+    const s = /** @type {string} */ (spec).trim();
+    const anchor = /** @type {RegExpMatchArray} */ (s.match(/^(\/\/|~\/|\.\/|\/)?/))[1] ?? '';
     const first = s.slice(anchor.length).split('/')[0];
     if (first && !first.includes('*') && first !== '.' && first !== '..') return null;
     if (first === '..') return `lets the run ${verb} files outside the project`;
@@ -346,14 +429,15 @@ export function wideReason(rule) {
     return `lets the run ${verb} files in every folder of the project`;
   }
   if (all) return `lets every use of \`${tool}\` through`;
-  if (tool === 'WebFetch' && spec.trim() === 'domain:*') return 'lets the run fetch from every domain';
+  if (tool === 'WebFetch' && /** @type {string} */ (spec).trim() === 'domain:*') return 'lets the run fetch from every domain';
   return null;
 }
 
 // The git command an allow rule lets through, `commit` or `push`, or null.
+/** @param {string} rule */
 function gitWrite(rule) {
   const m = rule.trim().match(/^Bash\(([\s\S]*)\)$/);
-  return m?.[1].match(/(?:^|[\s;&|(])git\s+(?:-\S+\s+)*(commit|push)\b/)?.[1] ?? null;
+  return /** @type {[string, string] | null} */ (m)?.[1].match(/(?:^|[\s;&|(])git\s+(?:-\S+\s+)*(commit|push)\b/)?.[1] ?? null;
 }
 
 // Whether a deny rule stops `command` with any arguments, and the bare
@@ -361,12 +445,16 @@ function gitWrite(rule) {
 // prefix of it, as in `Bash(git push *)`, `Bash(git push:*)` or `Bash(git *)`.
 // A rule with no wildcard, such as `Bash(git push)`, matches only the bare
 // command.
+/**
+ * @param {string} rule
+ * @param {string} command
+ */
 export function stops(rule, command) {
   const r = rule.trim();
   if (r === 'Bash' || r === '*') return true;
   const m = r.match(/^Bash\(([\s\S]*)\)$/);
   if (!m) return false;
-  const spec = m[1];
+  const spec = /** @type {string} */ (m[1]);
   if (/^\s*\*+\s*$/.test(spec)) return true;
   if ((spec.match(/\*/g) ?? []).length !== 1 || !spec.endsWith('*')) return false;
   const words = spec.match(/^(.*?)(?: \*|:\*)$/);
@@ -375,18 +463,29 @@ export function stops(rule, command) {
 }
 
 // The rules of a settings object, as `{ rule, label }`.
+/**
+ * @param {any} value
+ * @param {string} key
+ * @param {string | undefined} label
+ * @returns {{ rule: string, label: string | undefined }[]}
+ */
 function rulesOf(value, key, label) {
   const list = value?.permissions?.[key];
-  return Array.isArray(list) ? list.filter((r) => typeof r === 'string' && r.trim()).map((rule) => ({ rule: rule.trim(), label })) : [];
+  return Array.isArray(list) ? list.filter((/** @type {unknown} */ r) => typeof r === 'string' && r.trim()).map((/** @type {string} */ rule) => ({ rule: rule.trim(), label })) : [];
 }
 
 // Whether the call loads the project's settings files: it does unless
 // `--setting-sources` leaves `project` out.
+/** @param {Call} call */
 function loadsProject(call) {
   const sources = call.args.flags.settingSources;
   return typeof sources !== 'string' || sources.split(',').map((s) => s.trim()).includes('project');
 }
 
+/**
+ * @param {Repo} repo
+ * @returns {{ value?: Record<string, any>, hint?: string }}
+ */
 function projectSettings(repo) {
   const text = headText(repo, PROJECT);
   if (text === null) return {};
@@ -395,11 +494,17 @@ function projectSettings(repo) {
   return isObject(value) ? { value } : { hint: `The committed ${code(PROJECT)} isn't a JSON object.` };
 }
 
+/**
+ * @param {Repo} repo
+ * @param {Call} call
+ */
 function ruleProblems(repo, call) {
   const settings = settingsOf(repo, call);
   if (settings.hint && !settings.none) return [settings.hint];
   const { allowedTools, disallowedTools } = call.args.flags;
+  /** @type {{ rule: string, label: string | undefined }[]} */
   const allow = ruleList(allowedTools ?? []).map((rule) => ({ rule, label: '`--allowedTools`' }));
+  /** @type {{ rule: string, label: string | undefined }[]} */
   const deny = ruleList(disallowedTools ?? []).map((rule) => ({ rule, label: '`--disallowedTools`' }));
   if (settings.value) {
     allow.push(...rulesOf(settings.value, 'allow', settings.label));
@@ -415,6 +520,7 @@ function ruleProblems(repo, call) {
     deny.push(...rulesOf(project.value, 'deny', code(PROJECT)));
   }
 
+  /** @type {string[]} */
   const problems = [];
   const writes = allow.filter((a) => gitWrite(a.rule));
   for (const { rule, label } of writes.slice(0, 2)) problems.push(`${code(rule)} in ${label} lets the run use \`git ${gitWrite(rule)}\`. Take it out: the deny rules must stop it.`);
@@ -435,6 +541,7 @@ function ruleProblems(repo, call) {
   return problems.length && notes ? [...problems, notes.trim()] : problems;
 }
 
+/** @returns {Item} */
 export function narrowRules(script = SCRIPT) {
   return {
     text: 'every allow rule names one command or one folder, and the deny rules stop `git commit` and `git push`',
@@ -448,13 +555,19 @@ export function narrowRules(script = SCRIPT) {
   };
 }
 
+/**
+ * @param {Repo} repo
+ * @param {Call} call
+ */
 function sandboxProblems(repo, call) {
   const settings = settingsOf(repo, call);
   if (settings.none) return [`The run gets no settings file, so nothing turns the sandbox on: pass the bounds file with \`--settings\`, and put ${SANDBOX} in it.`];
   if (settings.hint) return [settings.hint];
-  const box = settings.value.sandbox;
+  // A settings file with no hint has its value and label.
+  const box = /** @type {Record<string, any>} */ (settings.value).sandbox;
   const notes = settings.path ? pending(repo, settings.path) : '';
-  if (!isObject(box)) return [`${settings.label[0].toUpperCase()}${settings.label.slice(1)} has no \`sandbox\` settings. Add ${SANDBOX}.${notes}`];
+  if (!isObject(box)) return [`${/** @type {string} */ (/** @type {string} */ (settings.label)[0]).toUpperCase()}${/** @type {string} */ (settings.label).slice(1)} has no \`sandbox\` settings. Add ${SANDBOX}.${notes}`];
+  /** @type {string[]} */
   const problems = [];
   if (box.enabled !== true) problems.push('Set `"enabled": true` under `sandbox`: the sandbox is off unless a settings file turns it on.');
   if (box.failIfUnavailable !== true) problems.push('Set `"failIfUnavailable": true`: without it, a run whose sandbox can\'t start runs commands unsandboxed.');
@@ -464,6 +577,7 @@ function sandboxProblems(repo, call) {
   return [`In ${settings.label}: ${problems.join(' ')}${notes}`];
 }
 
+/** @returns {Item} */
 export function strictSandbox(script = SCRIPT) {
   return {
     text: 'the settings file turns the sandbox on in strict mode without auto-allow, and makes the run refuse to start without it',
@@ -480,6 +594,11 @@ export function strictSandbox(script = SCRIPT) {
 // A saved run: the JSON `claude -p --output-format json` prints, or, from
 // `--output-format stream-json`, the last result among its lines. Returns
 // `{ value }`, or `{ missing }`, `{ text }` (not JSON) or `{ noResult }`.
+/**
+ * @param {Repo} repo
+ * @param {string} path
+ * @returns {{ value?: any, missing?: true, text?: true, noResult?: true }}
+ */
 function savedResult(repo, path) {
   const text = repo.read(path);
   if (text === null || !text.trim()) return { missing: true };
@@ -501,6 +620,11 @@ function savedResult(repo, path) {
 }
 
 // The hint for a saved run that isn't a real run's result, or null.
+/**
+ * @param {ReturnType<typeof savedResult>} saved
+ * @param {string} path
+ * @param {string} again
+ */
 function resultHint(saved, path, again) {
   if (saved.text) return `${code(path)} isn't JSON. Save only what \`claude -p --output-format json\` prints to its standard output there. ${again}`;
   if (saved.noResult) return `${code(path)} holds no result: the run didn't finish. ${again}`;
@@ -509,6 +633,7 @@ function resultHint(saved, path, again) {
   return null;
 }
 
+/** @returns {Item} */
 export function sliceRun(record = SLICE, script = SCRIPT) {
   const again = 'Then run the slice again.';
   return {
@@ -534,4 +659,5 @@ export function sliceRun(record = SLICE, script = SCRIPT) {
   };
 }
 
+/** @type {Item[]} */
 export const items = [boundedScript(), runLimits(), narrowRules(), strictSandbox(), sliceRun()];

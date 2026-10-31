@@ -72,6 +72,8 @@ export default defineConfig({
     // and the one dynamic import (Pip's runtime, after the first paint) is a
     // single chunk with nothing to preload (ownDynamicImportHelper).
     modulePreload: false,
+    // dist/app/.vite/manifest.json: the size budgets read it; statics does not ship it.
+    manifest: true,
   },
   server: { host: "127.0.0.1", port: 4318, strictPort: true },
   preview: {

@@ -23,8 +23,8 @@ import {
   reduce,
   stepOf,
   stepsOf,
-} from "../src/engine.mjs";
-import { loadCourse, parseLesson, WORK_LEVELS } from "../src/course.mjs";
+} from "../src/engine.ts";
+import { loadCourse, parseLesson, WORK_LEVELS } from "../src/course.ts";
 import { versionSaved } from "./fixtures/saved-version.mjs";
 import { openRepo } from "../../../practice-template/checks/repo.mjs";
 import {
@@ -85,6 +85,7 @@ export {
   offered,
   pickWarmups,
   pinOf,
+  projectDir,
   readFrom,
   recallOf,
   reduce,
@@ -103,20 +104,20 @@ export {
   watching,
   whileRunsOf,
   whileRunsOpen,
-} from "../src/engine.mjs";
-export { GIT, OWN_PARTS, READS } from "../src/content.mjs";
+} from "../src/engine.ts";
+export { GIT, OWN_PARTS, READS } from "../src/content.ts";
 export {
   loadCourse,
   parseLesson,
   PATH,
   SLOW,
   WORK_LEVELS,
-} from "../src/course.mjs";
+} from "../src/course.ts";
 // The store's format lives with the host since ticket 209.
-export { FORMAT, sanitize, snapshot } from "../../host/src/store.mjs";
-export { judge, stampFor } from "../src/holds.mjs";
-export { statusStamp } from "../src/status.mjs";
-export { mix, ruleTiers, TIERS } from "../src/tiers.mjs";
+export { FORMAT, sanitize, snapshot } from "../../host/src/store.ts";
+export { judge, stampFor } from "../src/holds.ts";
+export { statusStamp } from "../src/status.ts";
+export { mix, ruleTiers, TIERS } from "../src/tiers.ts";
 export {
   DEMO_B2,
   DEMO_I1,
@@ -172,6 +173,10 @@ export const FACTS = {
   codespace: false,
   win32: false,
 };
+// The Work folders a check runs in by default (ticket 277): the copy's
+// project/, and a new copy's.
+export const PROJECT = FACTS.root + "/project";
+export const NEW_PROJECT = NEW_COPY + "/project";
 
 // The b-1 item's real result for a version.txt holding `text` (null: no file).
 export function b1Item(text) {
@@ -184,7 +189,7 @@ export function b1Item(text) {
         index: 0,
         text: versionSaved.text,
         pass: outcome === true,
-        hint: outcome === true ? "" : outcome.replace(dir, FACTS.root),
+        hint: outcome === true ? "" : outcome.replace(dir, PROJECT),
       };
     },
   );

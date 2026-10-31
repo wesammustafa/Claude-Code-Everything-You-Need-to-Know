@@ -1,3 +1,4 @@
+// @ts-check
 // Runs a script the Learner committed with a stand-in for Claude Code, so a
 // check can see how the script calls `claude` without spending any usage.
 // Shared by the Advanced checks of lessons 4 and 7 and the Advanced capstone.
@@ -16,6 +17,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { devNull, tmpdir } from 'node:os';
 import { delimiter, dirname, isAbsolute, join, posix, relative, sep } from 'node:path';
+/** @import { Repo } from './repo.mjs' */
 
 // The session id of every stand-in reply, fixed so a check can tell the
 // stand-in's reply from a real run's.
@@ -28,6 +30,7 @@ const REMOVED = ['ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN', 'CLAUDE_CODE_OAUTH
 
 // Ways a script could call the real Claude Code. Whole-line comments are
 // skipped before these are tested.
+/** @type {[RegExp, (m: RegExpMatchArray) => string][]} */
 const REACHES = [
   [/(?:^|[\s;&|(`$])(npx|bunx|pnpx)\s+(?:-\S+\s+)*(?:@anthropic-ai\/claude-code|claude)\b/m, (m) => `runs Claude Code through \`${m[1]}\``],
   [/@anthropic-ai\/claude-code/, () => 'names the `@anthropic-ai/claude-code` package'],
@@ -40,6 +43,7 @@ const REACHES = [
 ];
 
 // Why the committed text can't run under the stand-in, or null.
+/** @param {string} text */
 function refusal(text) {
   const code = text.split(/\r?\n/).filter((line) => !/^\s*#/.test(line)).join('\n');
   for (const [pattern, why] of REACHES) {
@@ -49,12 +53,12 @@ function refusal(text) {
   return null;
 }
 
-const quote = (path) => `'${path.replace(/'/g, `'\\''`)}'`;
+const quote = (/** @type {string} */ path) => `'${path.replace(/'/g, `'\\''`)}'`;
 
 // The stand-in: it records its arguments, NUL-separated, the folder it runs
 // in and up to 1 MiB of stdin, answers `--version` and `-v` itself, and
 // otherwise prints the reply and the error text, if any, to stderr.
-const stub = (base) => `#!/bin/sh
+const stub = (/** @type {string} */ base) => `#!/bin/sh
 # Stands in for Claude Code while a practice check runs your script.
 d=${quote(base)}
 i=0
@@ -69,6 +73,7 @@ if [ -s "$d/stderr" ]; then cat "$d/stderr" >&2; fi
 exit "$(cat "$d/exit")"
 `;
 
+/** @param {Record<string, string>} [extra] */
 function scrubbed(extra) {
   const env = { ...process.env, ...extra };
   for (const key of Object.keys(env)) {
@@ -79,6 +84,10 @@ function scrubbed(extra) {
   return env;
 }
 
+/**
+ * @param {string} dir
+ * @param {Record<string, string | Buffer>} files
+ */
 function write(dir, files) {
   for (const [path, text] of Object.entries(files)) {
     mkdirSync(dirname(join(dir, path)), { recursive: true });
@@ -88,7 +97,13 @@ function write(dir, files) {
 
 // Every regular file under `dir`, by its path from `prefix`, as text. Links,
 // pipes and devices are left out.
+/**
+ * @param {string} dir
+ * @param {string} prefix
+ * @returns {Record<string, string>}
+ */
 function files(dir, prefix) {
+  /** @type {Record<string, string>} */
   const found = {};
   if (!existsSync(dir)) return found;
   for (const name of readdirSync(dir)) {
@@ -103,6 +118,10 @@ function files(dir, prefix) {
 
 // `path` relative to the first of `roots` it is inside, in POSIX form, or
 // null when it is inside none of them.
+/**
+ * @param {string[]} roots
+ * @param {string} path
+ */
 function within(roots, path) {
   for (const root of roots) {
     const rel = relative(root, path);
@@ -111,6 +130,13 @@ function within(roots, path) {
   return null;
 }
 
+/** @typedef {{ argv: string[], stdin: string, cwd: string | null }} Call */
+
+/**
+ * @param {string} dir
+ * @param {string[]} roots
+ * @returns {Call[]}
+ */
 function calls(dir, roots) {
   return readdirSync(dir)
     .filter((name) => name.endsWith('.argv'))
@@ -144,6 +170,26 @@ function calls(dir, roots) {
 // root, null outside it); `saved` the files left under `out/` and the
 // scratch `.practice/`, by those paths; and `roots` the scratch
 // repository's path, for `scratchPath`.
+/**
+ * A run that went ahead: every field but the skips.
+ * @typedef {{ status: number | null, signal: NodeJS.Signals | null, timedOut: boolean, error: NodeJS.ErrnoException | null, stdout: string, stderr: string, calls: Call[], saved: Record<string, string>, roots: string[] }} Ran
+ */
+
+/**
+ * What runStubbed returns: a skip, or a Ran. notRun returns null only for a Ran.
+ * @typedef {Partial<Ran> & { windows?: true, missing?: true, crlf?: true, refused?: string }} Stubbed
+ */
+
+/**
+ * @typedef {{ args?: (out: string) => string[], commit?: Record<string, string>, stage?: Record<string, string>, change?: Record<string, string>, reply?: unknown, stderr?: string | undefined, exit?: number, timeout?: number, practice?: boolean, platform?: string }} StubOptions
+ */
+
+/**
+ * @param {Repo} repo
+ * @param {string} script
+ * @param {StubOptions} [options]
+ * @returns {Stubbed}
+ */
 export function runStubbed(repo, script, { args = () => [], commit = {}, stage = {}, change = {}, reply = {}, stderr = '', exit = 0, timeout = TIME_LIMIT, practice = true, platform = process.platform } = {}) {
   if (platform === 'win32') return { windows: true };
   let text;
@@ -169,7 +215,7 @@ export function runStubbed(repo, script, { args = () => [], commit = {}, stage =
 
     // The script may see the repository's path with symlinks resolved.
     const roots = [...new Set([dir, realpathSync(dir)])];
-    const git = (...a) => execFileSync('git', ['-c', 'user.name=Practice check', '-c', 'user.email=check@example.invalid', '-c', 'commit.gpgsign=false', '-c', `core.hooksPath=${devNull}`, '-c', `core.excludesFile=${devNull}`, ...a], { cwd: dir, env: scrubbed(), stdio: ['ignore', 'pipe', 'pipe'] });
+    const git = (/** @type {string[]} */ ...a) => execFileSync('git', ['-c', 'user.name=Practice check', '-c', 'user.email=check@example.invalid', '-c', 'commit.gpgsign=false', '-c', `core.hooksPath=${devNull}`, '-c', `core.excludesFile=${devNull}`, ...a], { cwd: dir, env: scrubbed(), stdio: ['ignore', 'pipe', 'pipe'] });
     git('init', '-q');
     writeFileSync(join(dir, '.git', 'info', 'exclude'), '.practice/\n');
     write(dir, { ...commit, [script]: text });
@@ -180,7 +226,8 @@ export function runStubbed(repo, script, { args = () => [], commit = {}, stage =
     if (Object.keys(stage).length) git('add', '--', ...Object.keys(stage));
     write(dir, change);
 
-    const run = spawnSync('bash', [script, ...args(out)], {
+    // Node's types leave out spawnSync's `detached`, which it honours.
+    const run = spawnSync('bash', [script, ...args(out)], /** @type {{ encoding: 'utf8' }} */ ({
       cwd: dir,
       env: scrubbed({ HOME: join(base, 'home'), CLAUDE_CONFIG_DIR: join(base, 'config'), PATH: `${join(base, 'bin')}${delimiter}${process.env.PATH ?? ''}` }),
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -189,7 +236,7 @@ export function runStubbed(repo, script, { args = () => [], commit = {}, stage =
       killSignal: 'SIGKILL',
       // Its own process group, so whatever the script left running stops too.
       detached: true,
-    });
+    }));
     if (run.pid) {
       try {
         process.kill(-run.pid, 'SIGKILL');
@@ -200,8 +247,8 @@ export function runStubbed(repo, script, { args = () => [], commit = {}, stage =
     return {
       status: run.status,
       signal: run.signal,
-      timedOut: run.error?.code === 'ETIMEDOUT',
-      error: run.error && run.error.code !== 'ETIMEDOUT' ? run.error : null,
+      timedOut: /** @type {NodeJS.ErrnoException | undefined} */ (run.error)?.code === 'ETIMEDOUT',
+      error: run.error && /** @type {NodeJS.ErrnoException} */ (run.error).code !== 'ETIMEDOUT' ? run.error : null,
       stdout: run.stdout ?? '',
       stderr: run.stderr ?? '',
       calls: calls(join(base, 'calls'), roots),
@@ -216,14 +263,23 @@ export function runStubbed(repo, script, { args = () => [], commit = {}, stage =
 // The file in the scratch repository that `path`, an argument of `call`,
 // names, as the call would open it: relative to the repository's root, in
 // POSIX form, or null when it is outside the repository.
+/**
+ * @param {Stubbed} run
+ * @param {{ cwd?: string | null }} call
+ * @param {unknown} path
+ */
 export function scratchPath(run, call, path) {
   if (!run.roots || typeof path !== 'string' || !path) return null;
   if (isAbsolute(path)) return within(run.roots, path);
   if (call.cwd === null || call.cwd === undefined) return null;
-  return within(run.roots, join(run.roots[0], call.cwd, path));
+  return within(run.roots, join(/** @type {string} */ (run.roots[0]), call.cwd, path));
 }
 
 // The hint for a script the stand-in didn't run, or null when it ran.
+/**
+ * @param {Stubbed} run
+ * @param {string} script
+ */
 export function notRun(run, script) {
   if (run.windows) return `The check didn't run \`${script}\`: it runs scripts with bash and a stand-in for \`claude\` only from WSL 2, macOS or Linux, not from Windows itself. Run the check there.`;
   if (run.missing) return `Commit \`${script}\` first: the check runs the committed script.`;
@@ -235,6 +291,7 @@ export function notRun(run, script) {
 }
 
 // The last lines a run printed to stderr, for a hint.
+/** @param {{ stderr: string }} run */
 export function stderrTail(run, lines = 2) {
   const tail = run.stderr.trim().split(/\r?\n/).slice(-lines).join(' ').trim();
   return tail.length > 200 ? `${tail.slice(0, 200)}...` : tail;

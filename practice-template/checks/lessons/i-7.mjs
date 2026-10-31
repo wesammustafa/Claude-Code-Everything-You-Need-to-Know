@@ -1,3 +1,4 @@
+// @ts-check
 // Connect a tool with MCP (Intermediate, lesson 7). The Learner shares Chrome
 // DevTools MCP at project scope in a committed .mcp.json, pinned to one
 // version with the server's three outbound data flows turned off, and saves
@@ -7,6 +8,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Connect a tool with MCP';
 
@@ -15,13 +17,15 @@ const DEMO = '.practice/demo.html';
 const DEMO_RUNNER = fileURLToPath(new URL('./i-7-demo.mjs', import.meta.url));
 const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
+/** @param {any} value The parsed .mcp.json. */
 function server(value) {
   const servers = value?.mcpServers ?? {};
-  return Object.values(servers).find((s) => (s?.args ?? []).some((a) => /^chrome-devtools-mcp(@|$)/.test(String(a))));
+  return Object.values(servers).find((s) => (s?.args ?? []).some((/** @type {any} */ a) => /^chrome-devtools-mcp(@|$)/.test(String(a))));
 }
 
-const off = (args, name) => args.includes(`--no-${name}`) || args.includes(`--${name}=false`);
+const off = (/** @type {string[]} */ args, /** @type {string} */ name) => args.includes(`--no-${name}`) || args.includes(`--${name}=false`);
 
+/** @type {Item[]} */
 export const items = [
   {
     text: 'the committed `.mcp.json` runs chrome-devtools-mcp at an exact version, with usage statistics, CrUX lookups and update checks off',
@@ -36,13 +40,14 @@ export const items = [
       try {
         value = JSON.parse(text);
       } catch (error) {
-        return `The committed .mcp.json is not valid JSON: ${error.message}`;
+        return `The committed .mcp.json is not valid JSON: ${/** @type {Error} */ (error).message}`;
       }
       const s = server(value);
       if (!s) return 'No server in .mcp.json runs chrome-devtools-mcp. Add it under `mcpServers`, as in the lesson.';
+      /** @type {string[]} */
       const args = (s.args ?? []).map(String);
       const pkg = args.find((a) => a.startsWith('chrome-devtools-mcp'));
-      if (!/^chrome-devtools-mcp@\d+\.\d+\.\d+$/.test(pkg)) return `\`${pkg}\` isn't pinned. Name an exact version, such as \`chrome-devtools-mcp@1.10.1\`, so every teammate runs the code you reviewed.`;
+      if (!/^chrome-devtools-mcp@\d+\.\d+\.\d+$/.test(/** @type {string} */ (pkg))) return `\`${pkg}\` isn't pinned. Name an exact version, such as \`chrome-devtools-mcp@1.10.1\`, so every teammate runs the code you reviewed.`;
       if (!off(args, 'usage-statistics')) return 'Usage statistics are still on. Add `--no-usage-statistics` to the args.';
       if (!off(args, 'performance-crux')) return 'Performance traces can still send URLs to Google\'s CrUX API. Add `--no-performance-crux` to the args.';
       if (!String(s.env?.CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS ?? '').trim()) return 'Update checks are still on. Set `CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS` to `"1"` in the server\'s `env`.';

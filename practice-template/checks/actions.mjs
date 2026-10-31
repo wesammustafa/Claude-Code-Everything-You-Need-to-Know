@@ -1,3 +1,4 @@
+// @ts-check
 // GitHub Actions helpers shared by Advanced lesson 5's check and the Advanced
 // capstone: the workflows that run Claude Code through
 // anthropics/claude-code-action, read from the repository's history without a
@@ -8,17 +9,20 @@
 // never runs a workflow, `gh` or Claude Code.
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
+/** @import { Repo } from './repo.mjs' */
 
 export const WORKFLOWS = '.github/workflows';
 // GitHub reads workflow files only directly in .github/workflows/.
 const WORKFLOW_FILE = /^\.github\/workflows\/[^/]+\.ya?ml$/;
 const ACTION = /^anthropics\/claude-code-action(?:@(.*))?$/i;
 
-const indentOf = (raw) => raw.match(/^ */)[0].length;
-const isItem = (body) => /^-(\s|$)/.test(body);
+const indentOf = (/** @type {string} */ raw) => /** @type {RegExpMatchArray} */ (raw.match(/^ */))[0].length;
+const isItem = (/** @type {string} */ body) => /^-(\s|$)/.test(body);
 
 // A value without its ` # comment`. A `#` inside quotes stays.
+/** @param {string} text */
 function uncomment(text) {
+  /** @type {string | null} */
   let quote = null;
   for (let i = 0; i < text.length; i += 1) {
     const c = text[i];
@@ -26,23 +30,26 @@ function uncomment(text) {
     else if (quote && c === quote) {
       if (quote === "'" && text[i + 1] === "'") i += 1;
       else quote = null;
-    } else if (!quote && (c === '"' || c === "'") && (i === 0 || /[\s[{,:]/.test(text[i - 1]))) quote = c;
-    else if (!quote && c === '#' && (i === 0 || /\s/.test(text[i - 1]))) return text.slice(0, i);
+    } else if (!quote && (c === '"' || c === "'") && (i === 0 || /[\s[{,:]/.test(/** @type {string} */ (text[i - 1])))) quote = /** @type {string} */ (c);
+    else if (!quote && c === '#' && (i === 0 || /\s/.test(/** @type {string} */ (text[i - 1])))) return text.slice(0, i);
   }
   return text;
 }
 
+/** @type {Record<string, string | undefined>} */
 const DOUBLE_ESCAPES = { n: '\n', t: '\t', r: '\r', 0: '\0', '"': '"', '\\': '\\', '/': '/', ' ': ' ' };
 
 // A scalar as YAML reads it: quotes removed and escapes applied.
+/** @param {string} text */
 function unquote(text) {
   const t = text.trim();
-  if (/^"[\s\S]*"$/.test(t) && t.length > 1) return t.slice(1, -1).replace(/\\(.)/g, (_, c) => DOUBLE_ESCAPES[c] ?? c);
+  if (/^"[\s\S]*"$/.test(t) && t.length > 1) return t.slice(1, -1).replace(/\\(.)/g, (_, /** @type {string} */ c) => DOUBLE_ESCAPES[c] ?? c);
   if (/^'[\s\S]*'$/.test(t) && t.length > 1) return t.slice(1, -1).replace(/''/g, "'");
   return t;
 }
 
 // The index just past a quoted value's closing quote, or -1 while it is open.
+/** @param {string} text */
 function closing(text) {
   const quote = text[0];
   for (let i = 1; i < text.length; i += 1) {
@@ -58,18 +65,21 @@ function closing(text) {
 // `key: rest`, with the key unquoted, or null for a line that holds no key.
 const KEY = /^(?:"((?:[^"\\]|\\.)*)"|'((?:[^']|'')*)'|([^\s#'"[\]{},&*!|>%@`-][^:]*?|-[^\s:][^:]*?))[ \t]*:(?=\s|$)(.*)$/;
 
+/** @param {string} body */
 function keyOf(body) {
   const m = body.match(KEY);
   if (!m) return null;
-  const key = m[1] !== undefined ? unquote(`"${m[1]}"`) : m[2] !== undefined ? m[2].replace(/''/g, "'") : m[3].trim();
-  return { key, rest: m[4] };
+  const key = m[1] !== undefined ? unquote(`"${m[1]}"`) : m[2] !== undefined ? m[2].replace(/''/g, "'") : /** @type {string} */ (m[3]).trim();
+  return { key, rest: /** @type {string} */ (m[4]) };
 }
 
 // Folded block lines, as `>` joins them: lines of the block's own indent
 // join with a space, a blank line becomes a line break, and more indented
 // lines keep theirs.
+/** @param {string[]} lines */
 function fold(lines) {
   let out = '';
+  /** @type {'blank' | 'more' | 'text' | null} */
   let previous = null;
   for (const line of lines) {
     if (!line.trim()) {
@@ -87,10 +97,13 @@ function fold(lines) {
 }
 
 // The top-level items of a one-line flow list or map, as written.
+/** @param {string} text */
 function flowItems(text) {
   const inner = text.trim().slice(1, -1);
+  /** @type {string[]} */
   const items = [];
   let depth = 0;
+  /** @type {string | null} */
   let quote = null;
   let current = '';
   for (const c of inner) {
@@ -110,7 +123,7 @@ function flowItems(text) {
   return items;
 }
 
-const balanced = (text) => {
+const balanced = (/** @type {string} */ text) => {
   let depth = 0;
   for (const c of text.replace(/"(?:[^"\\]|\\.)*"|'(?:[^']|'')*'/g, '')) {
     if (c === '[' || c === '{') depth += 1;
@@ -120,6 +133,19 @@ const balanced = (text) => {
 };
 
 // A flow map as `{ key: { text, line } }` entries, or a flow list as items.
+/**
+ * @typedef {{ type: 'scalar', text: string, line: number, block?: boolean, empty?: boolean, quoted?: boolean }} Scalar
+ * @typedef {{ key: string, line: number, value: Node }} MapEntry
+ * @typedef {{ type: 'map', entries: MapEntry[], line?: number }} MapNode
+ * @typedef {{ type: 'seq', items: Node[], line?: number }} SeqNode
+ * @typedef {Scalar | MapNode | SeqNode} Node
+ */
+
+/**
+ * @param {string} text
+ * @param {number} line
+ * @returns {MapNode | SeqNode}
+ */
 function flowNode(text, line) {
   const t = text.trim();
   if (t.startsWith('{')) {
@@ -127,30 +153,43 @@ function flowNode(text, line) {
       const at = item.search(/:(\s|$)/);
       const key = unquote(at === -1 ? item : item.slice(0, at));
       const value = at === -1 ? '' : item.slice(at + 1).trim();
-      return { key, line, value: /^[[{]/.test(value) ? flowNode(value, line) : { type: 'scalar', text: unquote(value), line } };
+      return { key, line, value: /** @type {Node} */ (/^[[{]/.test(value) ? flowNode(value, line) : { type: 'scalar', text: unquote(value), line }) };
     });
     return { type: 'map', entries, line };
   }
-  return { type: 'seq', items: flowItems(t).map((item) => (/^[[{]/.test(item) ? flowNode(item, line) : { type: 'scalar', text: unquote(item), line })), line };
+  return { type: 'seq', items: flowItems(t).map((item) => /** @type {Node} */ (/^[[{]/.test(item) ? flowNode(item, line) : { type: 'scalar', text: unquote(item), line })), line };
 }
 
 // The document as nodes: `{ type: 'map', entries: [{ key, line, value }] }`,
 // `{ type: 'seq', items }` and `{ type: 'scalar', text, line, block }`, where
 // `line` counts from 1 and `block` marks a `|` or `>` value.
+/** @typedef {{ raw: string, n: number }} Line */
+
+/**
+ * @param {string | null | undefined} text
+ * @returns {Node}
+ */
 export function parseYaml(text) {
   const lines = String(text ?? '').replace(/^\uFEFF/, '').split('\n').map((raw, i) => ({ raw: raw.replace(/\r$/, '').replace(/\t/g, ' '), n: i + 1 }));
   let at = 0;
-  const skippable = (l) => !l.raw.trim() || /^\s*#/.test(l.raw);
+  const skippable = (/** @type {Line} */ l) => !l.raw.trim() || /^\s*#/.test(l.raw);
   const skip = () => {
-    while (at < lines.length && skippable(lines[at])) at += 1;
+    while (at < lines.length && skippable(/** @type {Line} */ (lines[at]))) at += 1;
   };
+  /** @type {(line: Line) => Scalar} */
   const empty = (line) => ({ type: 'scalar', text: '', line: line.n, empty: true });
 
   // A plain value goes on over the lines indented more than `parent`.
+  /**
+   * @param {string} first
+   * @param {number} parent
+   * @param {Line} line
+   * @returns {Scalar}
+   */
   function plain(first, parent, line) {
     const parts = [first.trim()];
     while (at < lines.length) {
-      const l = lines[at];
+      const l = /** @type {Line} */ (lines[at]);
       if (!l.raw.trim()) {
         const next = lines.slice(at).find((x) => x.raw.trim());
         if (!next || indentOf(next.raw) <= parent || /^\s*#/.test(next.raw)) break;
@@ -166,35 +205,53 @@ export function parseYaml(text) {
     return { type: 'scalar', text: joined, line: line.n };
   }
 
+  /**
+   * @param {boolean} folded
+   * @param {number} parent
+   * @param {Line} line
+   * @returns {Scalar}
+   */
   function blockScalar(folded, parent, line) {
+    /** @type {string[]} */
     const body = [];
     while (at < lines.length) {
-      const l = lines[at];
+      const l = /** @type {Line} */ (lines[at]);
       if (l.raw.trim() && indentOf(l.raw) <= parent) break;
       body.push(l.raw);
       at += 1;
     }
-    while (body.length && !body.at(-1).trim()) body.pop();
+    while (body.length && !/** @type {string} */ (body.at(-1)).trim()) body.pop();
     const filled = body.filter((s) => s.trim());
     const base = filled.length ? Math.min(...filled.map(indentOf)) : 0;
     const content = body.map((s) => (s.trim() ? s.slice(base) : ''));
     return { type: 'scalar', text: folded ? fold(content) : content.join('\n'), line: line.n, block: true };
   }
 
+  /**
+   * @param {string} first
+   * @param {number} parent
+   * @param {Line} line
+   * @returns {Scalar}
+   */
   function quoted(first, parent, line) {
     let text = first.trim();
-    while (closing(text) === -1 && at < lines.length && (!lines[at].raw.trim() || indentOf(lines[at].raw) > parent)) {
-      text += lines[at].raw.trim() ? ` ${lines[at].raw.trim()}` : '\n';
+    while (closing(text) === -1 && at < lines.length && (!/** @type {Line} */ (lines[at]).raw.trim() || indentOf(/** @type {Line} */ (lines[at]).raw) > parent)) {
+      text += /** @type {Line} */ (lines[at]).raw.trim() ? ` ${/** @type {Line} */ (lines[at]).raw.trim()}` : '\n';
       at += 1;
     }
     const end = closing(text);
     return { type: 'scalar', text: unquote(end === -1 ? text : text.slice(0, end)), line: line.n, quoted: true };
   }
 
+  /**
+   * @param {string} first
+   * @param {number} parent
+   * @param {Line} line
+   */
   function flow(first, parent, line) {
     let text = first;
-    while (!balanced(text) && at < lines.length && indentOf(lines[at].raw) > parent) {
-      text += ` ${uncomment(lines[at].raw).trim()}`;
+    while (!balanced(text) && at < lines.length && indentOf(/** @type {Line} */ (lines[at]).raw) > parent) {
+      text += ` ${uncomment(/** @type {Line} */ (lines[at]).raw).trim()}`;
       at += 1;
     }
     return flowNode(text, line.n);
@@ -202,12 +259,18 @@ export function parseYaml(text) {
 
   // The value after `key:` or `- `, whose own lines are indented more than
   // `parent`. A list may also sit at the key's own indent.
+  /**
+   * @param {string} rest
+   * @param {number} parent
+   * @param {Line} line
+   * @returns {Node}
+   */
   function value(rest, parent, line) {
     const text = uncomment(rest).trim();
     if (!text) {
       skip();
       if (at < lines.length) {
-        const next = lines[at];
+        const next = /** @type {Line} */ (lines[at]);
         const i = indentOf(next.raw);
         if (i > parent) return block(parent + 1) ?? empty(line);
         if (i === parent && isItem(next.raw.slice(i))) return sequence(parent);
@@ -220,12 +283,17 @@ export function parseYaml(text) {
     return plain(text, parent, line);
   }
 
+  /**
+   * @param {number} indent
+   * @returns {MapNode}
+   */
   function mapping(indent) {
+    /** @type {MapEntry[]} */
     const entries = [];
     while (true) {
       skip();
       if (at >= lines.length) break;
-      const line = lines[at];
+      const line = /** @type {Line} */ (lines[at]);
       const i = indentOf(line.raw);
       if (i < indent) break;
       if (i > indent) {
@@ -240,17 +308,22 @@ export function parseYaml(text) {
     return { type: 'map', entries };
   }
 
+  /**
+   * @param {number} indent
+   * @returns {SeqNode}
+   */
   function sequence(indent) {
+    /** @type {Node[]} */
     const items = [];
     while (true) {
       skip();
       if (at >= lines.length) break;
-      const line = lines[at];
+      const line = /** @type {Line} */ (lines[at]);
       const i = indentOf(line.raw);
       const body = line.raw.slice(i);
       if (i !== indent || !isItem(body)) break;
       const rest = body.slice(1);
-      const pad = rest.match(/^\s*/)[0].length;
+      const pad = /** @type {RegExpMatchArray} */ (rest.match(/^\s*/))[0].length;
       const inner = rest.slice(pad);
       if (!uncomment(inner).trim()) {
         at += 1;
@@ -267,10 +340,14 @@ export function parseYaml(text) {
     return { type: 'seq', items };
   }
 
+  /**
+   * @param {number} min
+   * @returns {Node | null}
+   */
   function block(min) {
     skip();
     if (at >= lines.length) return null;
-    const line = lines[at];
+    const line = /** @type {Line} */ (lines[at]);
     const i = indentOf(line.raw);
     if (i < min) return null;
     const body = line.raw.slice(i);
@@ -285,22 +362,35 @@ export function parseYaml(text) {
 
 // The last entry for `key` in a map node, as YAML keeps the last of a
 // repeated key.
+/** @type {(node: Node | null | undefined, key: string) => MapEntry | undefined} */
 export const entryOf = (node, key) => (node?.type === 'map' ? node.entries.findLast((e) => e.key === key) : undefined);
 
-const scalarText = (node) => (node?.type === 'scalar' ? node.text : null);
+const scalarText = (/** @type {Node | null | undefined} */ node) => (node?.type === 'scalar' ? node.text : null);
 
 // The events in `on:`: one name, a list of names, or a map of names.
+/**
+ * @param {Node} doc
+ * @returns {string[]}
+ */
 function triggersOf(doc) {
   const on = entryOf(doc, 'on')?.value;
   if (!on) return [];
   if (on.type === 'scalar') return on.text ? [on.text.trim()] : [];
-  if (on.type === 'seq') return on.items.map(scalarText).filter(Boolean).map((t) => t.trim());
+  if (on.type === 'seq') return on.items.map(scalarText).filter(Boolean).map((t) => /** @type {string} */ (t).trim());
   return on.entries.map((e) => e.key);
 }
 
 // Permissions as written, or null without a `permissions` key: `{ line,
 // all }` for `read-all` or `write-all`, else `{ line, scopes: [{ scope,
 // level, line }] }`.
+/**
+ * @typedef {{ line: number, all?: string, scopes?: { scope: string, level: string, line: number }[] }} Permissions
+ */
+
+/**
+ * @param {Node | undefined} node
+ * @returns {Permissions | null}
+ */
 function permissionsOf(node) {
   const entry = entryOf(node, 'permissions');
   if (!entry) return null;
@@ -310,10 +400,15 @@ function permissionsOf(node) {
   return { line: entry.line, scopes: [] };
 }
 
+/**
+ * @typedef {{ text: string | null, line: number, block: boolean, empty: boolean }} Value
+ */
+
+/** @type {(node: Node | undefined, key: string) => Value | null} */
 const valueAt = (node, key) => {
   const entry = entryOf(node, key);
   if (!entry) return null;
-  return { text: scalarText(entry.value), line: entry.line, block: Boolean(entry.value.block), empty: Boolean(entry.value.empty) };
+  return { text: scalarText(entry.value), line: entry.line, block: Boolean(/** @type {Partial<Scalar>} */ (entry.value).block), empty: Boolean(/** @type {Partial<Scalar>} */ (entry.value).empty) };
 };
 
 // Every step in a workflow that uses anthropics/claude-code-action, with
@@ -321,11 +416,20 @@ const valueAt = (node, key) => {
 // jobTimeout, permissions, triggers }`. `ref` is what follows the `@`, or
 // null; `inputs` maps each `with:` key to `{ text, line, block, empty }`;
 // `permissions` is the job's own, else the workflow's.
+/**
+ * @typedef {{ line: number, ref: string | null, inputs: Record<string, Value | null>, job: string, jobLine: number, stepTimeout: Value | null, jobTimeout: Value | null, permissions: Permissions | null, triggers: string[] }} Step
+ */
+
+/**
+ * @param {string} text
+ * @returns {{ triggers: string[], steps: Step[] }}
+ */
 export function readWorkflow(text) {
   const doc = parseYaml(text);
   const triggers = triggersOf(doc);
   const top = permissionsOf(doc);
   const jobs = entryOf(doc, 'jobs')?.value;
+  /** @type {Step[]} */
   const steps = [];
   for (const job of jobs?.type === 'map' ? jobs.entries : []) {
     const list = entryOf(job.value, 'steps')?.value;
@@ -334,10 +438,11 @@ export function readWorkflow(text) {
       const m = String(scalarText(uses?.value) ?? '').trim().match(ACTION);
       if (!m) continue;
       const withs = entryOf(step, 'with')?.value;
+      /** @type {Record<string, Value | null>} */
       const inputs = {};
       for (const e of withs?.type === 'map' ? withs.entries : []) inputs[e.key] = valueAt(withs, e.key);
       steps.push({
-        line: uses.line,
+        line: /** @type {MapEntry} */ (uses).line,
         ref: m[1] === undefined ? null : m[1],
         inputs,
         job: job.key,
@@ -352,28 +457,48 @@ export function readWorkflow(text) {
   return { triggers, steps };
 }
 
-const z = (text) => text.split('\0').filter(Boolean);
+const z = (/** @type {string} */ text) => text.split('\0').filter(Boolean);
 
+/**
+ * @param {Repo} repo
+ * @param {string} commit
+ * @returns {{ blob: string, path: string }[]}
+ */
 function listFiles(repo, commit) {
   try {
     return z(repo.gitLocal('ls-tree', '-z', commit, '--', `${WORKFLOWS}/`))
       .map((entry) => entry.match(/^\d+ (\w+) ([0-9a-f]+)\t(.*)$/s))
-      .filter((m) => m && m[1] === 'blob' && WORKFLOW_FILE.test(m[3]))
-      .map((m) => ({ blob: m[2], path: m[3] }));
+      .filter((m) => m && m[1] === 'blob' && WORKFLOW_FILE.test(/** @type {string} */ (m[3])))
+      .map((m) => ({ blob: /** @type {string} */ (/** @type {RegExpMatchArray} */ (m)[2]), path: /** @type {string} */ (/** @type {RegExpMatchArray} */ (m)[3]) }));
   } catch {
     return [];
   }
 }
 
+/**
+ * @typedef {{ commit: string, path: string, blob: string, text: string, steps: Step[] }} WorkflowFile
+ * @typedef {{ blobs: Map<string, { text: string, triggers: string[], steps: Step[] }>, commits: Map<string, WorkflowFile[]>, history: { commit: string, files: WorkflowFile[] }[] | null }} Cache
+ */
+
+/** @type {WeakMap<Repo, Cache>} */
 const caches = new WeakMap();
 
+/**
+ * @param {Repo} repo
+ * @returns {Cache}
+ */
 function cacheOf(repo) {
   if (!caches.has(repo)) caches.set(repo, { blobs: new Map(), commits: new Map(), history: null });
-  return caches.get(repo);
+  return /** @type {Cache} */ (caches.get(repo));
 }
 
 // The workflow files committed at `commit` that run the action, each `{
 // commit, path, blob, text, steps }`, sorted by path.
+/**
+ * @param {Repo} repo
+ * @param {string} commit
+ * @returns {WorkflowFile[]}
+ */
 export function claudeWorkflowsAt(repo, commit) {
   const cache = cacheOf(repo);
   if (!cache.commits.has(commit)) {
@@ -387,12 +512,12 @@ export function claudeWorkflowsAt(repo, commit) {
         }
         cache.blobs.set(blob, { text, ...readWorkflow(text) });
       }
-      const { text, steps } = cache.blobs.get(blob);
+      const { text, steps } = /** @type {{ text: string, steps: Step[] }} */ (cache.blobs.get(blob));
       return { commit, path, blob, text, steps };
     });
     cache.commits.set(commit, files.filter((f) => f.steps.length).sort((a, b) => (a.path < b.path ? -1 : 1)));
   }
-  return cache.commits.get(commit);
+  return /** @type {WorkflowFile[]} */ (cache.commits.get(commit));
 }
 
 // The commits in HEAD's history that changed .github/workflows/, newest
@@ -401,9 +526,11 @@ export function claudeWorkflowsAt(repo, commit) {
 // deleted the workflows doesn't hide the ones before it. `--full-history`
 // walks both sides of a merge: by default, git follows only the parent whose
 // workflows the merge kept, which can hide the other side's.
+/** @param {Repo} repo */
 export function claudeHistory(repo) {
   const cache = cacheOf(repo);
   if (!cache.history) {
+    /** @type {string[]} */
     let commits = [];
     try {
       commits = repo.gitLocal('log', '--full-history', '--format=%H', '--', WORKFLOWS).split('\n').filter(Boolean);
@@ -417,18 +544,22 @@ export function claudeHistory(repo) {
 
 // Workflow files in the working tree that run the action while HEAD's copy
 // doesn't (or HEAD has none), each `{ path, tracked }`.
+/** @param {Repo} repo */
 export function uncommittedWorkflows(repo) {
+  /** @type {string[]} */
   let names = [];
   try {
     names = readdirSync(join(repo.dir, WORKFLOWS)).filter((n) => /\.ya?ml$/.test(n)).sort();
   } catch {
     return [];
   }
+  /** @type {{ path: string, tracked: boolean }[]} */
   const out = [];
   for (const name of names) {
     const path = `${WORKFLOWS}/${name}`;
     const text = repo.read(path);
     if (text === null || !readWorkflow(text).steps.length) continue;
+    /** @type {string | null} */
     let committed = null;
     try {
       committed = repo.git('show', `HEAD:./${path}`);
@@ -441,6 +572,10 @@ export function uncommittedWorkflows(repo) {
 }
 
 // The blob HEAD holds at `path`, or null.
+/**
+ * @param {Repo} repo
+ * @param {string} path
+ */
 export function headBlob(repo, path) {
   try {
     return repo.git('rev-parse', '--verify', '--quiet', `HEAD:./${path}`) || null;
@@ -455,19 +590,26 @@ export function headBlob(repo, path) {
 // shell-quote, where an unquoted `#` starts a comment that runs to the end
 // of the whole value. Returns `{ words, comment }`, where `comment` is the
 // text the action skips, or null.
+/**
+ * @param {unknown} text
+ * @returns {{ words: string[], comment: string | null }}
+ */
 export function claudeArgWords(text) {
   const kept = String(text ?? '').split('\n').filter((line) => !line.trim().startsWith('#')).join('\n');
+  /** @type {string[]} */
   const words = [];
+  /** @type {string | null} */
   let current = null;
+  /** @type {string | null} */
   let quote = null;
   for (let i = 0; i < kept.length; i += 1) {
-    const c = kept[i];
+    const c = /** @type {string} */ (kept[i]);
     if (quote === "'") {
       if (c === "'") quote = null;
       else current += c;
     } else if (quote === '"') {
       if (c === '"') quote = null;
-      else if (c === '\\' && /["\\$`]/.test(kept[i + 1] ?? '')) current += kept[(i += 1)];
+      else if (c === '\\' && /["\\$`]/.test(kept[i + 1] ?? '')) current += /** @type {string} */ (kept[(i += 1)]);
       else current += c;
     } else if (c === "'" || c === '"') {
       quote = c;

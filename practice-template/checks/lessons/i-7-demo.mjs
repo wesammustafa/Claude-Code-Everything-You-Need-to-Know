@@ -1,3 +1,4 @@
+// @ts-check
 // A bounded adapter for this lesson's tiny inline-script demo, not a browser.
 import { readFileSync } from 'node:fs';
 import { createContext, runInContext } from 'node:vm';
@@ -8,6 +9,7 @@ try {
     .map((m) => [`#${m[1]}`, { textContent: m[2] }]));
   const links = [...html.matchAll(/<a\b[^>]*>/gi)].length;
   const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].map((m) => m[1]);
+  /** @type {{ counts: unknown[], errors: unknown[] }} */
   const observed = { counts: [], errors: [] };
   // Vary the input collection without inspecting or rewriting the learner's code.
   for (const extra of [0, 1]) {
@@ -27,12 +29,12 @@ try {
       globalThis.console = { log() {}, warn() {}, error(...values) { errors.push(values.map(String).join(' ')); } };
       })();
     `, context, { timeout: 100 });
-    for (const script of scripts) runInContext(script, context, { timeout: 100 });
+    for (const script of scripts) runInContext(/** @type {string} */ (script), context, { timeout: 100 });
     const result = JSON.parse(runInContext("JSON.stringify({ count: document.querySelector('#link-count')?.textContent, errors: __i7Errors })", context, { timeout: 100 }));
     observed.counts.push(result.count);
     observed.errors.push(...result.errors);
   }
   process.stdout.write(JSON.stringify(observed));
 } catch (error) {
-  process.stdout.write(JSON.stringify({ error: String(error.message).slice(0, 160) }));
+  process.stdout.write(JSON.stringify({ error: String(/** @type {{ message?: unknown }} */ (error).message).slice(0, 160) }));
 }

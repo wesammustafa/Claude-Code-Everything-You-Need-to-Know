@@ -12,8 +12,8 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { onPath } from "../src/path-lookup.mjs";
-import { realAdapters } from "../src/real.mjs";
+import { onPath } from "../src/path-lookup.ts";
+import { realAdapters } from "../src/real.ts";
 
 // spec: needs.path-lookup
 test("a command is a file that may run in one of the PATH folders, found with no process started; on Windows one PATHEXT names, under Path too", () => {

@@ -15,7 +15,6 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { build, type Rolldown } from "vite";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import { inlineCourse } from "../build/course-inline.ts";
 import {
   checkClientFresh,
   checkPagesBuilt,
@@ -128,6 +127,13 @@ describe("app.mjs", () => {
 
   test("has the compiled course and the listed client files beside it", () => {
     expect(existsSync(join(outDir, "course.json"))).toBe(true);
+    expect(readFileSync(join(outDir, "course.json"), "utf8")).toBe(
+      readFileSync(join(repoRoot, "quest/engine/dist/course.json"), "utf8"),
+    );
+    // The engine's own reader, loadCourse, is not in the bundle.
+    expect(readFileSync(join(outDir, "app.mjs"), "utf8")).not.toContain(
+      "../dist/course.json",
+    );
     for (const file of [
       "index.html",
       "assets/app-abc123.js",
@@ -169,35 +175,11 @@ describe("run-check.mjs", () => {
       "../checks/lessons/index.mjs",
     );
     expect(
-      checksSpecifier(join(repoRoot, "quest/host/src/probes.mjs")),
+      checksSpecifier(join(repoRoot, "quest/host/src/probes.ts")),
     ).toBeUndefined();
     expect(
       checksSpecifier(join(repoRoot, "practice-template/checks-extra/x.mjs")),
     ).toBeUndefined();
-  });
-});
-
-describe("the temporary course rewrite", () => {
-  const course = readFileSync(
-    join(repoRoot, "quest/engine/src/course.mjs"),
-    "utf8",
-  );
-
-  test("applies to today's course.mjs", () => {
-    const out = inlineCourse(course, repoRoot);
-    expect(out).toContain('new URL("./course.json", import.meta.url)');
-    expect(out).not.toContain('new URL("../../../course/manifest.json"');
-    expect(out).not.toContain('new URL("../../../practice-template"');
-    expect(out).toMatch(/resolve\(root\) ===\s+resolve\(root\)/);
-  });
-
-  test("fails, naming ticket 214, when a pattern matches no longer", () => {
-    expect(() =>
-      inlineCourse(
-        course.replace("../dist/course.json", "../x.json"),
-        repoRoot,
-      ),
-    ).toThrow(/the compiled course matched 0 times.*ticket 214/);
   });
 });
 

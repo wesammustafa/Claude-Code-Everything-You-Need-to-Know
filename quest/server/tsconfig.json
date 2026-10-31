@@ -5,7 +5,9 @@
     "types": ["node"],
     "tsBuildInfoFile": "dist/.tsbuildinfo",
     "allowImportingTsExtensions": true,
-    "erasableSyntaxOnly": true
+    "erasableSyntaxOnly": true,
+    "resolveJsonModule": true,
+    "allowJs": true
   },
   "include": [
     "src",

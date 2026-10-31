@@ -3,13 +3,15 @@
 // engine, the real one wrapped so a test can add effects to an input of a
 // real type and see each input it reduced, in order, with how deeply
 // reduces nested.
-import { initialState, reduce } from "../src/engine.mjs";
-import { createHost } from "../src/host.mjs";
-import { fakeAdapters, fakeClock } from "../src/fake.mjs";
+import { initialState, reduce } from "../src/engine.ts";
+import { createHost } from "../src/host.ts";
+import { fakeAdapters, fakeClock } from "../src/fake.ts";
 import { b1Only, FACTS } from "../../engine/test/drive.mjs";
 
 export const ROOT = FACTS.root;
 export const PRACTICE = `${ROOT}/.practice`;
+// The copy's project/, where its checks run (ticket 277).
+export const WORK = `${ROOT}/project`;
 export const VERSION = ".practice/version.txt";
 // Saved at b-1's W3, the check beat that waits for .practice/version.txt.
 export const AT_W3 = {

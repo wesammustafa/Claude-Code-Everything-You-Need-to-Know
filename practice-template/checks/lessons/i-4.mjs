@@ -1,3 +1,6 @@
+// @ts-check
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
 // Permissions, settings scopes and the sandbox (Intermediate, lesson 4). The
 // Learner commits team permission rules in the shared .claude/settings.json,
 // with an ask rule that keeps a checkpoint before a command such as a push,
@@ -9,14 +12,22 @@ export const title = 'Permissions, settings scopes and the sandbox';
 const SHARED = '.claude/settings.json';
 const LOCAL = '.claude/settings.local.json';
 
+/**
+ * @param {string} text
+ * @returns {{ value?: any, error?: string }}
+ */
 function parse(text) {
   try {
     return { value: JSON.parse(text) };
   } catch (error) {
-    return { error: error.message };
+    return { error: /** @type {Error} */ (error).message };
   }
 }
 
+/**
+ * @param {Repo} repo
+ * @param {string} path
+ */
 function committed(repo, path) {
   try {
     return repo.git('show', `HEAD:./${path}`);
@@ -27,6 +38,7 @@ function committed(repo, path) {
 
 // An allow rule that lets every command, or every use of a tool, through:
 // a bare tool name, `Bash(*)`, or one program with any arguments.
+/** @param {string} rule */
 function broad(rule) {
   const m = rule.match(/^(\w+)(?:\((.*)\))?$/);
   if (!m) return false;
@@ -38,6 +50,7 @@ function broad(rule) {
 const READ_ENV = /^Read\((\.\/|\/|\*\*\/)?\.env\)$/;
 const READ_ENV_ANY = /^Read\((\.\/|\/|\*\*\/)?\.env\.\*\)$/;
 
+/** @type {Item[]} */
 export const items = [
   {
     text: 'the committed `.claude/settings.json` denies reading `.env` files and allows a narrow test command',
@@ -50,11 +63,11 @@ export const items = [
       const deny = value?.permissions?.deny ?? [];
       const todo = [...allow, ...deny].filter((r) => /TODO/.test(r));
       if (todo.length) return `Replace each TODO with a rule: ${todo.join('; ')}.`;
-      if (!deny.some((r) => READ_ENV.test(r))) return 'Add `Read(./.env)` to `permissions.deny`.';
-      if (!deny.some((r) => READ_ENV_ANY.test(r))) return 'Add `Read(./.env.*)` to `permissions.deny`, for .env.local and the other .env.* files.';
+      if (!deny.some((/** @type {string} */ r) => READ_ENV.test(r))) return 'Add `Read(./.env)` to `permissions.deny`.';
+      if (!deny.some((/** @type {string} */ r) => READ_ENV_ANY.test(r))) return 'Add `Read(./.env.*)` to `permissions.deny`, for .env.local and the other .env.* files.';
       const wide = allow.filter(broad);
       if (wide.length) return `${wide.join(', ')} lets every command or every use of a tool through. Allow one command, such as \`Bash(npm test)\`.`;
-      if (!allow.some((r) => /^Bash\(.+\)$/.test(r))) return 'Add an allow rule for the command that runs your tests, such as `Bash(npm test)`.';
+      if (!allow.some((/** @type {string} */ r) => /^Bash\(.+\)$/.test(r))) return 'Add an allow rule for the command that runs your tests, such as `Bash(npm test)`.';
       return true;
     },
   },
@@ -82,8 +95,8 @@ export const items = [
       const { value } = parse(committed(repo, SHARED) ?? '');
       if (!value) return `Commit ${SHARED} as valid JSON, with the ask rule in \`permissions.ask\`.`;
       const ask = value?.permissions?.ask ?? [];
-      if (ask.some((r) => /TODO/.test(r))) return 'Replace the TODO in `permissions.ask` with a rule, such as `Bash(git push *)`, and commit again.';
-      return ask.some((r) => /^Bash\(.+\)$/.test(r)) ? true : 'Add an ask rule to `permissions.ask`, such as `Bash(git push *)`, so Claude Code prompts before a `git push`, even in auto mode.';
+      if (ask.some((/** @type {string} */ r) => /TODO/.test(r))) return 'Replace the TODO in `permissions.ask` with a rule, such as `Bash(git push *)`, and commit again.';
+      return ask.some((/** @type {string} */ r) => /^Bash\(.+\)$/.test(r)) ? true : 'Add an ask rule to `permissions.ask`, such as `Bash(git push *)`, so Claude Code prompts before a `git push`, even in auto mode.';
     },
   },
 ];

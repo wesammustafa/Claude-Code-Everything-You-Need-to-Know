@@ -54,10 +54,7 @@ export const SPEC = [
     "while-runs",
   ].map((k) => engine(`warmups.${k}`)),
   engine("folders.picked"),
-  engine(
-    "folders.default",
-    "today the practice copy's root (levelFolder); the spec's project/ default is a todo in spec-gaps",
-  ),
+  engine("folders.default"),
   engine("folders.asked-first-overview"),
   engine("folders.another-folder"),
   engine("folders.change-drops"),
@@ -67,19 +64,10 @@ export const SPEC = [
     "folders.progress-in-copy",
     "the store writes the practice copy's root .practice/",
   ),
-  engine(
-    "newcopy.by-lesson-id",
-    "today the new copy's root; the spec's project/ is a todo in spec-gaps",
-  ),
+  engine("newcopy.by-lesson-id"),
   engine("newcopy.no-check"),
-  engine(
-    "newcopy.copy-refused",
-    "today only the practice copy's root is refused; its project/ is a todo in spec-gaps",
-  ),
-  engine(
-    "newcopy.i-capstone-pinned",
-    "today pinned to the practice copy's root; the spec's project/ is a todo in spec-gaps",
-  ),
+  engine("newcopy.copy-refused"),
+  engine("newcopy.i-capstone-pinned"),
   engine("needs.requires"),
   engine("needs.needs-commands"),
   host(
@@ -95,7 +83,7 @@ export const SPEC = [
   engine("guards.7-baseline"),
   host(
     "guards.8-rerun",
-    "the host runs a check again when its evidence changed (host.mjs's check)",
+    "the host runs a check again when its evidence changed (host.ts's check)",
   ),
   host(
     "guards.9-single-flight",

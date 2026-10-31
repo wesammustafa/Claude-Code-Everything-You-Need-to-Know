@@ -1,5 +1,5 @@
 // The Check child's entry, learn/run-check.mjs in the template: the host
-// spawns it beside app.mjs (check-child.mjs). The template's own checks/
+// spawns it beside app.mjs (check-child.ts). The template's own checks/
 // stay files the copy holds, imported as ../checks/, so a lesson's check
 // runs the copy's code; the rest is bundled in.
 import { join, relative } from "node:path";
@@ -43,7 +43,7 @@ export function runCheckBuild({
     plugins: [templateChecksExternal()],
     ssr: { noExternal: true, target: "node" },
     build: {
-      ssr: join(repoRoot, "quest/host/src/run-check.mjs"),
+      ssr: join(repoRoot, "quest/host/src/run-check.ts"),
       target: "node22",
       outDir,
       emptyOutDir: false,

@@ -23,7 +23,7 @@ import {
   save,
   stepOf,
 } from "./drive.mjs";
-import { C } from "../src/copy.mjs";
+import { C } from "../src/copy.ts";
 
 const lesson = (id) => course.find((l) => l.id === id);
 const types = (last) => last.events.map((e) => e.type);

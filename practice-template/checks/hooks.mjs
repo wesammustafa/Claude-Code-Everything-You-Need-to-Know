@@ -1,3 +1,4 @@
+// @ts-check
 // Hook helpers shared by lesson 5's check and the Intermediate capstone: which
 // scripts the committed settings run before Edit and Write, and how to run the
 // committed copy of a script with the JSON a tool call sends.
@@ -5,18 +6,24 @@ import { spawnSync } from 'node:child_process';
 import { chmodSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, posix } from 'node:path';
+/** @import { Repo } from './repo.mjs' */
 
-const editWrite = (matcher) => matcher === '' || matcher === '*' || (/\bEdit\b/.test(matcher) && /\bWrite\b/.test(matcher));
+const editWrite = (/** @type {string} */ matcher) => matcher === '' || matcher === '*' || (/\bEdit\b/.test(matcher) && /\bWrite\b/.test(matcher));
 
 // A script path as a hook command or argument writes it, made relative to the
 // repository: `${CLAUDE_PROJECT_DIR}/.claude/hooks/x.sh`, `"$CLAUDE_PROJECT_DIR"/.claude/hooks/x.sh`
 // and `./.claude/hooks/x.sh` all become `.claude/hooks/x.sh`.
+/** @param {string} token */
 function relative(token) {
   return token.replace(/["']/g, '').replace(/^\$\{?CLAUDE_PROJECT_DIR\}?\/?/, '').replace(/^\.\//, '');
 }
 
 // The scripts under .claude/hooks/ that the settings run as PreToolUse hooks
 // for Edit and Write, whether exec form (`command` plus `args`) or shell form.
+/**
+ * @param {any} settings The parsed settings file, of any shape.
+ * @returns {string[]}
+ */
 export function editWriteScripts(settings) {
   const groups = settings?.hooks?.PreToolUse;
   if (!Array.isArray(groups)) return [];
@@ -31,10 +38,14 @@ export function editWriteScripts(settings) {
 }
 
 // The committed mode of a file, such as '100755', or null when HEAD lacks it.
+/**
+ * @param {Repo} repo
+ * @param {string} path
+ */
 export function committedMode(repo, path) {
   try {
     const line = repo.git('ls-tree', 'HEAD', '--', path);
-    return line ? line.split(/\s+/)[0] : null;
+    return line ? /** @type {string} */ (line.split(/\s+/)[0]) : null;
   } catch {
     return null;
   }
@@ -42,6 +53,11 @@ export function committedMode(repo, path) {
 
 // Runs the committed copy of a hook script, as Claude Code would for a tool
 // call on `path`, and returns spawnSync's result, or null when HEAD lacks it.
+/**
+ * @param {Repo} repo
+ * @param {string} script
+ * @param {string} path
+ */
 export function runCommitted(repo, script, path, tool = 'Edit') {
   let text;
   try {
@@ -66,4 +82,4 @@ export function runCommitted(repo, script, path, tool = 'Edit') {
   }
 }
 
-export const missingJq = (run) => /jq: (command )?not found/.test(run?.stderr ?? '');
+export const missingJq = (/** @type {{ stderr?: string } | null | undefined} */ run) => /jq: (command )?not found/.test(run?.stderr ?? '');

@@ -1,3 +1,4 @@
+// @ts-check
 // The Advanced capstone: add CI review your team can share, as
 // capstone/advanced-brief.md asks, in a new copy of the template. It reuses
 // the Advanced lessons' items with the capstone's own files: the worktree
@@ -26,6 +27,10 @@ import { committedScript, savedRun, SCRIPT, scriptBehavior, scriptCall } from '.
 import { boundedWorkflow, chosenWorkflow, originRepo } from './a-5.mjs';
 import { marketplaceItem, settingsItem } from './a-6.mjs';
 import { testsPass, nothingUncommitted } from './b-3.mjs';
+/** @import { Repo } from '../repo.mjs' */
+/** @import { Item } from './index.mjs' */
+/** @import { Worktree } from '../worktrees.mjs' */
+/** @import { Node } from '../actions.mjs' */
 
 export const title = 'Advanced capstone';
 
@@ -57,24 +62,29 @@ const PLUGIN = {
 const KEY = 'sk-ant-[A-Za-z0-9_-]{20,}';
 const OWN = ':(exclude)checks/';
 
-const short = (sha) => sha.slice(0, 7);
+const short = (/** @type {string} */ sha) => sha.slice(0, 7);
 
 // Where `commit` holds a key, each `{ path, line }`, by path. The key itself
 // is never kept, so no hint can print it.
+/**
+ * @param {Repo} repo
+ * @param {string} commit
+ */
 function keysAt(repo, commit) {
   let out;
   try {
     out = repo.gitLocal('grep', '--no-color', '-I', '-n', '-z', '-E', KEY, commit, '--', '.', OWN);
   } catch (error) {
-    if (error.status === 1) return [];
+    if (/** @type {{ status?: number | null }} */ (error).status === 1) return [];
     throw error;
   }
   return out.split('\n').filter(Boolean).map((record) => {
     const [where, line] = record.split('\0');
-    return { path: where.slice(commit.length + 1), line: Number(line) };
+    return { path: /** @type {string} */ (where).slice(commit.length + 1), line: Number(line) };
   });
 }
 
+/** @param {Repo} repo */
 function headCommit(repo) {
   try {
     return repo.git('rev-parse', '--verify', '--quiet', 'HEAD^{commit}');
@@ -83,13 +93,14 @@ function headCommit(repo) {
   }
 }
 
+/** @type {Item} */
 export const noCommittedKey = {
   text: 'no Claude API key or token is committed, at `HEAD` or in the commit the workflow item reads',
   check(repo) {
     const head = headCommit(repo);
     if (!head) return true;
     const read = chosenWorkflow(repo, CI.triggers, CI)?.file.commit;
-    for (const commit of [head, read].filter((c, i, all) => c && all.indexOf(c) === i)) {
+    for (const commit of /** @type {string[]} */ ([head, read].filter((c, i, all) => c && all.indexOf(c) === i))) {
       const found = keysAt(repo, commit);
       if (!found.length) continue;
       const places = found.slice(0, 3).map((f) => `line ${f.line} of \`${f.path}\``);
@@ -107,6 +118,7 @@ export const noCommittedKey = {
 // fields are the run item's to report.
 const AMOUNT = /^(\d+(\.\d*)?|\.\d+)$/;
 
+/** @type {Item} */
 export const spendCap = {
   text: `the review script's \`claude -p\` call caps spend with \`--max-budget-usd\`, and \`${RUN}\` cost less than that cap`,
   local: true,
@@ -139,12 +151,13 @@ export const spendCap = {
 // repository must be ignored by a committed rule, which hides nothing else
 // of .claude/. With no listing yet, lesson 1's rule for .claude/worktrees/,
 // where `claude --worktree` makes them.
+/** @type {Item} */
 export const ignoredWorktrees = {
   text: `a committed \`.gitignore\` keeps the worktrees \`${SNAPSHOT}\` lists inside the repository out of git, and not the rest of \`.claude/\``,
   check(repo) {
     const records = parseWorktrees(repo.read(SNAPSHOT) ?? '');
     if (!records.length) return ignoresWorktrees.check(repo);
-    const main = records[0].path.replace(/\/+$/, '');
+    const main = /** @type {Worktree} */ (records[0]).path.replace(/\/+$/, '');
     const inside = [...new Set(records.slice(1).filter((r) => !r.bare && r.path.startsWith(`${main}/`)).map((r) => r.path.slice(main.length + 1)))];
     // git prints paths from the root, which may sit above repo.dir.
     for (const path of inside.map((p) => repo.local(p))) {
@@ -158,11 +171,12 @@ export const ignoredWorktrees = {
 };
 
 // The `/<name>` a prompt starts with, or null.
-const skillOf = (prompt) => (typeof prompt === 'string' ? prompt.trim().match(/^\/([\w:.-]+)/)?.[1] ?? null : null);
+const skillOf = (/** @type {string | null | undefined} */ prompt) => (typeof prompt === 'string' ? prompt.trim().match(/^\/([\w:.-]+)/)?.[1] ?? null : null);
 
 // The script and CI run one review: both prompts start with the same
 // `/<name>`, a skill committed in .claude/skills/<name>/SKILL.md, which a
 // CI checkout loads, unlike a plugin from the repository's marketplace.
+/** @type {Item} */
 export const sameReview = {
   text: 'the review script\'s `claude -p` prompt and the CI workflow\'s `prompt` both run one skill committed in `.claude/skills/`',
   check(repo) {
@@ -184,11 +198,13 @@ export const sameReview = {
 };
 
 // A key's value in a parsed YAML map, or undefined.
+/** @type {(node: Node | null | undefined, key: string) => any} */
 const entry = (node, key) => (node?.type === 'map' ? node.entries.find((e) => e.key === key)?.value : undefined);
 
 // A new push replaces CI's review of an older one: a `concurrency` group,
 // for the workflow or for the job that runs the action, with
 // `cancel-in-progress: true`.
+/** @type {Item} */
 export const reviewConcurrency = {
   text: 'the CI workflow sets a `concurrency` group with `cancel-in-progress: true`, so a new push cancels the review still running',
   check(repo) {
@@ -219,10 +235,13 @@ const RUN_URL = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/actions\/runs\/\d+/i;
 const FAILED = new Set(['failure', 'timed_out', 'startup_failure']);
 
 // The names GitHub shows for the review workflow in any commit that held it.
+/** @param {Repo} repo */
 function reviewNames(repo) {
+  /** @type {Set<string>} */
   const names = new Set();
   for (const { files } of claudeHistory(repo)) {
     for (const f of files.filter((x) => x.path === REVIEW)) {
+      /** @type {string | undefined} */
       let name;
       try {
         name = entry(parseYaml(f.text), 'name')?.text?.trim();
@@ -235,6 +254,7 @@ function reviewNames(repo) {
   return [...names];
 }
 
+/** @type {Item} */
 export const ciRun = {
   text: `\`${CI_RUNS}\` shows a completed, successful \`pull_request\` run of the review workflow`,
   local: true,
@@ -263,6 +283,7 @@ export const ciRun = {
     if (!prs.length) return `\`${CI_RUNS}\` lists no run of \`${names[0]}\` that a pull request started (\`pull_request\`). Push a change on a new branch and open a pull request, wait for the review to finish, ${again}.`;
     const origin = originRepo(repo);
     // gh lists the newest run first: report on the first that got furthest.
+    /** @type {(r: any) => { n: number, hint?: string }} */
     const stage = (r) => {
       const id = /^\d+$/.test(String(r.databaseId ?? '')) ? String(r.databaseId) : '<run-id>';
       const which = id === '<run-id>' ? 'The run' : `Run ${id}`;
@@ -280,10 +301,11 @@ export const ciRun = {
       return { n: 3 };
     };
     const best = prs.map(stage).reduce((a, b) => (b.n > a.n ? b : a));
-    return best.n === 3 ? true : best.hint;
+    return best.n === 3 ? true : /** @type {string} */ (best.hint);
   },
 };
 
+/** @type {Item[]} */
 export const items = [
   ignoredWorktrees,
   mergedWorktrees(SNAPSHOT, { anywhere: true }),

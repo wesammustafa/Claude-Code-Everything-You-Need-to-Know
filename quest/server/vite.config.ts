@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { defineConfig, type UserConfig } from "vite";
 import { shippedPackages } from "../release/src/licenses.ts";
 import { shippedPackagesOnly } from "../client/build/shipped-packages.ts";
-import { courseInline } from "./build/course-inline.ts";
+import { courseJson } from "./build/course-json.ts";
 import { questStatics } from "./build/statics.ts";
 
 export const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
@@ -28,7 +28,7 @@ export function serverBuild({
     root: serverRoot,
     logLevel: "warn",
     plugins: [
-      courseInline({ repoRoot }),
+      courseJson({ repoRoot }),
       questStatics({
         repoRoot,
         clientDir,

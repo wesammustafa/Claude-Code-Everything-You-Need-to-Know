@@ -19,13 +19,38 @@ import {
 import {
   FORMAT,
   loadState,
+  preparePractice,
   sanitize,
   saveState,
   storePath,
-} from "../src/store.mjs";
-import { realAdapters } from "../src/real.mjs";
+} from "../src/store.ts";
+import { realAdapters } from "../src/real.ts";
 
 const MINE = "/home/sam/code/my-app";
+
+// spec: folders.progress-in-copy
+test("the first start makes root .practice/ (ticket 277); where a file holds its name, it stays missing and nothing saves", () => {
+  withRepo(
+    () => repo(),
+    (dir) => {
+      preparePractice(dir);
+      assert.ok(existsSync(join(dir, ".practice")));
+      preparePractice(dir);
+      assert.deepEqual(readdirSync(join(dir, ".practice")), []);
+    },
+  );
+  withRepo(
+    () => repo(),
+    (dir) => {
+      writeFileSync(join(dir, ".practice"), "not a folder\n");
+      preparePractice(dir);
+      assert.equal(
+        readFileSync(join(dir, ".practice"), "utf8"),
+        "not a folder\n",
+      );
+    },
+  );
+});
 
 test("saved state: round trip, nothing written before .practice/ exists, junk ignored", () => {
   withRepo(
@@ -47,7 +72,7 @@ test("saved state: round trip, nothing written before .practice/ exists, junk ig
       assert.equal(
         existsSync(join(dir, ".practice")),
         false,
-        "the app never creates .practice/",
+        "a save never creates .practice/",
       );
       mkdirSync(join(dir, ".practice"));
       assert.equal(saveState(dir, data), true);

@@ -1,4 +1,19 @@
+// @ts-check
 // Every lesson and capstone with a check, in course order.
+
+/**
+ * What a check returns: true when the item passes, or the hint to show.
+ * @typedef {true | string} Result
+ */
+
+/**
+ * One item of a lesson's check: `local` when it reads the Learner's
+ * machine (the installed CLI or files under .practice/).
+ * @typedef {{ text: string, local?: boolean, check: (repo: Repo) => Result }} Item
+ */
+
+/** @typedef {{ title: string, items: readonly Item[] }} Lesson */
+
 import * as b1 from './b-1.mjs';
 import * as b2 from './b-2.mjs';
 import * as b3 from './b-3.mjs';
@@ -22,5 +37,7 @@ import * as a5 from './a-5.mjs';
 import * as a6 from './a-6.mjs';
 import * as a7 from './a-7.mjs';
 import * as aCapstone from './a-capstone.mjs';
+/** @import { Repo } from '../repo.mjs' */
 
+/** @type {Record<string, Lesson | undefined>} */
 export const lessons = { 'b-1': b1, 'b-2': b2, 'b-3': b3, 'b-4': b4, 'b-5': b5, 'b-capstone': bCapstone, 'i-1': i1, 'i-2': i2, 'i-3': i3, 'i-4': i4, 'i-5': i5, 'i-6': i6, 'i-7': i7, 'i-8': i8, 'i-capstone': iCapstone, 'a-1': a1, 'a-2': a2, 'a-3': a3, 'a-4': a4, 'a-5': a5, 'a-6': a6, 'a-7': a7, 'a-capstone': aCapstone };

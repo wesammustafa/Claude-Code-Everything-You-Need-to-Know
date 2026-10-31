@@ -247,6 +247,25 @@ describe("the build", () => {
     ).toBe("lesson");
   });
 
+  test("ships the course with its example URLs at the ref and no indentation", () => {
+    const dir = tempDir("quest-pages-course-");
+    const from = join(repoRoot, "quest/engine/dist/course.json");
+    const to = join(dir, "course.json");
+    buildPages({
+      root: repoRoot,
+      ref,
+      outDir: join(dir, "pages"),
+      diagramsDir,
+      course: { from, to },
+    });
+    const text = readFileSync(to, "utf8");
+    expect(JSON.parse(text)).toEqual(
+      JSON.parse(rewriteExampleUrls(readFileSync(from, "utf8"), ref)),
+    );
+    expect(text.trimEnd()).not.toContain("\n");
+    expect(text.endsWith("\n")).toBe(true);
+  });
+
   test("keeps every page under 100 KB", () => {
     for (const [file, body] of Object.entries(tree(first.outDir)))
       if (file.endsWith(".html"))

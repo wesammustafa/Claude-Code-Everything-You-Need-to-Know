@@ -4,8 +4,8 @@
 // the tapped engine: the host gives a client only the snapshot.
 import { test } from "vitest";
 import assert from "node:assert/strict";
-import { ACTION_TYPES } from "../src/engine.mjs";
-import { HOST_ACTION_TYPES } from "../src/host.mjs";
+import { ACTION_TYPES } from "../src/engine.ts";
+import { HOST_ACTION_TYPES } from "../src/host.ts";
 import {
   AT_W3,
   fakeHost,
@@ -15,6 +15,7 @@ import {
   turn,
   typesOf,
   w3,
+  WORK,
 } from "./scripted.mjs";
 
 const MINE = "/home/sam/mine";
@@ -176,7 +177,13 @@ test("open: git's answers and the copy make the facts, and the client's facts go
     saveKept: false,
     clipboard: true,
   });
+  // Root .practice/ is made on open; where it can't be, nothing saves.
+  const made = fakeHost({ saved: AT_W3, tree: {} });
+  await made.host.open();
+  assert.equal(made.state().facts.practiceDir, true);
+  assert.ok(made.adapters.files.isFolder(PRACTICE));
   const none = fakeHost({ saved: AT_W3, tree: {} });
+  none.adapters.files.fail(PRACTICE, "EACCES");
   await none.host.open();
   assert.equal(none.state().facts.practiceDir, false);
 });
@@ -194,7 +201,7 @@ test("start arms the copy's watcher, then the tick, then the poll; saves the fol
     "open starts nothing",
   );
   host.start();
-  assert.deepEqual(adapters.armed(), [ROOT]);
+  assert.deepEqual(adapters.armed(), [ROOT, WORK]);
   assert.deepEqual(clock.pending(), [
     { ms: 1_000, every: 1_000 },
     { ms: 500, every: 500 },
@@ -223,7 +230,7 @@ test("firstLook: a Learner welcomed back runs the lesson's check, then what its 
   back.host.firstLook();
   assert.deepEqual(
     back.adapters.checks.calls.map((c) => [c.dir, c.lesson, c.items, c.slow]),
-    [[ROOT, "b-1", null, false]],
+    [[WORK, "b-1", null, false]],
   );
   const fresh = fakeHost();
   await fresh.host.open();
@@ -304,11 +311,13 @@ test("a clock whose intervals have no id still closes", async () => {
 
 test("the practice copy without .practice/ saves nothing, and says nothing about it", async () => {
   const { host, adapters, heard } = fakeHost({ saved: AT_W3, tree: {} });
+  adapters.files.fail(PRACTICE, "EACCES");
   await host.open();
   host.dispatch({ type: "lesson.open", lesson: "b-1" });
   await turn();
   assert.deepEqual(adapters.store.saves, []);
   assert.ok(!typesOf(heard).includes("notice"));
+  adapters.files.fail(PRACTICE, null);
   adapters.files.folder(PRACTICE);
   host.dispatch({ type: "lesson.restart", lesson: "b-1" });
   assert.equal(adapters.store.saves.length, 1);

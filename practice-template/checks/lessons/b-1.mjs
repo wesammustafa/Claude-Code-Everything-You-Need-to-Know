@@ -1,7 +1,9 @@
+// @ts-check
 // Install, sign in and look around (Beginner, lesson 1). The check runs
 // `claude --version` itself, and reads the onboarding note the Learner
 // corrects against the code in Your turn.
 import { spawnSync } from 'node:child_process';
+/** @import { Item } from './index.mjs' */
 
 export const title = 'Install, sign in and look around';
 
@@ -11,6 +13,7 @@ export const VERSION_LIMIT = 30_000;
 const VERSION = /^\d+\.\d+\.\d+ \(Claude Code\)/m;
 const FIX_PATH = 'Open a new terminal. If it still fails, use lesson 1, Worked example step 2 to fix PATH, then retry.';
 
+/** @type {Item} */
 export const claudeVersion = {
   text: '`claude --version` prints a Claude Code version',
   // It runs on the Learner's machine: a GitHub runner has no Claude Code.
@@ -18,8 +21,8 @@ export const claudeVersion = {
   check(repo) {
     // On Windows, `claude` can be an npm shim, which only a shell can start.
     const run = spawnSync('claude', ['--version'], { cwd: repo.dir, encoding: 'utf8', shell: process.platform === 'win32', timeout: VERSION_LIMIT });
-    if (run.error?.code === 'ENOENT') return `The check couldn't find \`claude\` on the PATH of the shell it ran in. ${FIX_PATH}`;
-    if (run.error?.code === 'ETIMEDOUT') return `\`claude --version\` didn't finish within ${VERSION_LIMIT / 1000} seconds. Run it on its own and see what it waits for.`;
+    if (/** @type {NodeJS.ErrnoException | undefined} */ (run.error)?.code === 'ENOENT') return `The check couldn't find \`claude\` on the PATH of the shell it ran in. ${FIX_PATH}`;
+    if (/** @type {NodeJS.ErrnoException | undefined} */ (run.error)?.code === 'ETIMEDOUT') return `\`claude --version\` didn't finish within ${VERSION_LIMIT / 1000} seconds. Run it on its own and see what it waits for.`;
     if (run.error) return `The check couldn't run \`claude --version\`: ${run.error.message}`;
     const out = `${run.stdout ?? ''}`;
     if (run.status === 0 && VERSION.test(out)) return true;
@@ -57,6 +60,7 @@ const PART = /[;:!?()\[\]–—]|\.(?=\s|$)|,(?=\s*`?(?:\d+|zero|code|exit)\b)|\
 // The note's claims, one per list item or paragraph, each on one line, so a
 // claim wrapped over several lines still reads as one. Struck-through text
 // (`~~like this~~`) is left out: it is what the claim no longer says.
+/** @param {string} text */
 function claims(text) {
   return text
     .split(/\r?\n(?=\s*(?:[-*+]|\d+[.)])\s)|\r?\n\s*\r?\n/)
@@ -68,6 +72,7 @@ function claims(text) {
 // them 0 or the claim says linkcheck can't fail CI, 'right' if a part gives
 // them 1 or a non-zero code, or gives 0 only to a run with none, otherwise
 // null.
+/** @param {string} claim */
 export function exitClaim(claim) {
   if (CANT_FAIL.test(claim)) return 'stale';
   let right = false;
@@ -91,6 +96,7 @@ export function exitClaim(claim) {
   return right ? 'right' : null;
 }
 
+/** @type {Item} */
 export const noteCorrected = {
   text: 'the claim in `practice/b-1/onboarding.md` that the code contradicts is corrected',
   check(repo) {
@@ -107,4 +113,5 @@ export const noteCorrected = {
   },
 };
 
+/** @type {Item[]} */
 export const items = [claudeVersion, noteCorrected];

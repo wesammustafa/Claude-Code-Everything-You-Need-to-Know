@@ -2,11 +2,14 @@ import type { EventEnvelope } from "@quest/contract";
 import { act, render, screen } from "@testing-library/react";
 import { useState, type ReactNode } from "react";
 import { MemoryRouter, Route, Routes, useNavigate } from "react-router";
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import type { PipModel } from "../../pip/contract";
 import { envelope } from "../../test/events";
+import { FakeEventSource } from "../../test/live";
 import { Command } from "../components/Command";
-import { LOCAL_EVENTS } from "../live/events";
+import { LiveProvider } from "../live/LiveProvider";
+import { BATCH_MS } from "../live/store";
+import { NOTICE_MS } from "../live/stream";
 import { Pip } from "./Pip";
 import { HINT_UNUSED_MS } from "./help";
 import {
@@ -42,36 +45,44 @@ function Go({ to }: { to: string }) {
 function stageAt(path: string, extra: ReactNode = null) {
   return render(
     <MemoryRouter initialEntries={[path]}>
-      <PipStageProvider>
-        <Probe />
-        {extra}
-        <Routes>
-          <Route path="/" element={<Go to="/lesson/b-1/step" />} />
-          <Route
-            path="/lesson/:id/step"
-            element={
-              <>
-                <Pip size="beside" />
-                <Go to="/journey" />
-              </>
-            }
-          />
-          <Route path="/journey" element={<Go to="/" />} />
-        </Routes>
-      </PipStageProvider>
+      <LiveProvider>
+        <PipStageProvider>
+          <Probe />
+          {extra}
+          <Routes>
+            <Route path="/" element={<Go to="/lesson/b-1/step" />} />
+            <Route
+              path="/lesson/:id/step"
+              element={
+                <>
+                  <Pip size="beside" />
+                  <Go to="/journey" />
+                </>
+              }
+            />
+            <Route path="/journey" element={<Go to="/" />} />
+          </Routes>
+        </PipStageProvider>
+      </LiveProvider>
     </MemoryRouter>,
   );
 }
 
-/** One batch through the page's local source, delivered once claimed. */
+/** One revision's events on the stream, delivered once batched and claimed. */
 async function dispatch(...events: EventEnvelope[]) {
   await act(async () => {
-    window.dispatchEvent(new CustomEvent(LOCAL_EVENTS, { detail: events }));
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    for (const event of events)
+      FakeEventSource.last.emit("event", event, event.id);
+    await new Promise((resolve) => setTimeout(resolve, BATCH_MS + 1));
   });
 }
 
+beforeEach(() => {
+  FakeEventSource.reset();
+  vi.stubGlobal("EventSource", FakeEventSource);
+});
 afterEach(() => {
+  vi.unstubAllGlobals();
   delete document.documentElement.dataset.motion;
 });
 
@@ -92,7 +103,7 @@ describe("Pip's stage in the app", () => {
     expect(current().size).toBe("beside");
   });
 
-  test("events from the page's local source reach the director, each ID once", async () => {
+  test("events from the stream reach the director, each ID once", async () => {
     stageAt("/lesson/b-1/step");
     const passed = envelope({ type: "check.passed", firstTime: true });
     await dispatch(passed);
@@ -120,6 +131,38 @@ describe("Pip's stage in the app", () => {
       mode: "idle",
       reaction: { kind: "retry", intensity: 0.5 },
     });
+  });
+
+  test("Pip rests while the connection is lost, not while the page waits for its first snapshot", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      stageAt("/lesson/b-1/step");
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(NOTICE_MS * 2);
+      });
+      expect(current().mode).toBe("idle");
+      await act(async () => {
+        FakeEventSource.last.emit("snapshot", {
+          instance: "a",
+          revision: 1,
+          milestones: [],
+        });
+        FakeEventSource.last.fail();
+        await vi.advanceTimersByTimeAsync(NOTICE_MS);
+      });
+      expect(current().mode).toBe("rest");
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5000);
+        FakeEventSource.last.emit("snapshot", {
+          instance: "a",
+          revision: 1,
+          milestones: [],
+        });
+      });
+      expect(current().mode).toBe("idle");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   test("reduced motion, from the Settings choice on <html>, rests Pip at his resting gaze", async () => {

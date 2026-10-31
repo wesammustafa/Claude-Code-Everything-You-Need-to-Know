@@ -14,7 +14,7 @@ import assert from "node:assert/strict";
 import { chmodSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseLesson } from "../../src/course.mjs";
+import { parseLesson } from "../../src/course.ts";
 import { lessons } from "../../../../practice-template/checks/lessons/index.mjs";
 import { openRepo } from "../../../../practice-template/checks/repo.mjs";
 import {
