@@ -237,7 +237,12 @@ const server = http.createServer((req, res) => {
 server.listen(0, HOST, () =>
   console.log(\`http://127.0.0.1:\${server.address().port}\`),
 );
-process.on("SIGTERM", () => server.close(() => process.exit(0)));
+process.on("SIGTERM", () =>
+  server.close(() => {
+    console.log("Claude Code Quest stopped.");
+    process.exit(0);
+  }),
+);
 `;
 
 function learnTree(app: string, extra: Record<string, string> = {}): string {
@@ -259,6 +264,38 @@ describe("step 4: serves, without Chromium", () => {
     expect(result.ok).toBe(true);
     expect(result.note).toMatch(/^listening at http:\/\/127\.0\.0\.1:\d+/);
   });
+
+  test("an app that dies on SIGTERM without its stop line fails it", async () => {
+    const result = await serves(
+      learnTree(
+        good.replace(
+          /process\.on\("SIGTERM"[\s\S]*$/,
+          'process.on("SIGTERM", () => process.exit(1));\n',
+        ),
+      ),
+      { chromium: false },
+    );
+    expect(result.ok).toBe(false);
+    expect(result.problems).toContain(
+      "npm run learn printed no stop line on SIGTERM",
+    );
+  });
+
+  test("an app that ignores SIGTERM fails it and is ended", async () => {
+    const result = await serves(
+      learnTree(
+        good.replace(
+          /process\.on\("SIGTERM"[\s\S]*$/,
+          'process.on("SIGTERM", () => {});\n',
+        ),
+      ),
+      { chromium: false },
+    );
+    expect(result.ok).toBe(false);
+    expect(result.problems).toContain(
+      "npm run learn left a process running after SIGTERM",
+    );
+  }, 30_000);
 
   test("an app that exits at once fails it", async () => {
     const result = await serves(learnTree("process.exit(0);\n"), {

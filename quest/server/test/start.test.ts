@@ -197,6 +197,16 @@ describe("a signal", () => {
     },
   );
 
+  test.each(["SIGTERM", "SIGINT", "SIGHUP"])(
+    "%s keeps its handler, so a second signal cannot take the default action",
+    async (signal) => {
+      const kit = await launch({ root: "/home/l/practice" });
+      kit.signals.emit(signal);
+      for (const each of ["SIGTERM", "SIGINT", "SIGHUP"])
+        expect(kit.signals.listenerCount(each)).toBeGreaterThan(0);
+    },
+  );
+
   test("the process's exit closes the host too", async () => {
     const kit = await launch();
     kit.signals.emit("exit");

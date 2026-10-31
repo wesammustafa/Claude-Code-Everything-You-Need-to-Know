@@ -13,10 +13,20 @@ export interface ProofResult extends StepResult {
   ms?: number;
 }
 
+export interface Stopped {
+  code: number | null;
+  signal: NodeJS.Signals | null;
+  timedOut: boolean;
+  stopLine: boolean;
+  portFree: boolean;
+}
+
+export function stopProblems(stopped: Stopped): string[];
+
 export interface Learn {
   url: string;
   ms: number;
-  stop(waitMs?: number): Promise<number | null>;
+  stop(waitMs?: number): Promise<Stopped>;
   output(): string;
 }
 

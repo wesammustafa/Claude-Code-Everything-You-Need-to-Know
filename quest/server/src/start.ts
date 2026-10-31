@@ -18,10 +18,7 @@ export interface Output {
 
 /** What delivers the signals and the exit: the process, or a test's emitter. */
 export interface Signals {
-  once(
-    event: "SIGINT" | "SIGTERM" | "SIGHUP" | "exit",
-    fn: () => void,
-  ): unknown;
+  on(event: "SIGINT" | "SIGTERM" | "SIGHUP" | "exit", fn: () => void): unknown;
 }
 
 export interface StartOptions {
@@ -150,11 +147,15 @@ export async function start({
     stdout.write(`${stopLine({ copy: root })}\n`);
     exit(0);
   };
+  // `on`, not `once`: Node restores a signal's default action when its last
+  // listener goes, so a second signal during shutdown (Ctrl+C reaches the
+  // server from the terminal and again through npm) would kill it before the
+  // stop line and exit 0. stop() runs once.
   for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"] as const)
-    signals.once(signal, stop);
+    signals.on(signal, stop);
   // close() is sync and idempotent: it ends each Check child's process group
   // on any exit, a crash included.
-  signals.once("exit", () => {
+  signals.on("exit", () => {
     host.close();
   });
 

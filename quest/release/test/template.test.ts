@@ -2,13 +2,13 @@
 // the checks every assembled tree must pass, a byte-identical second run, and
 // a tree assembled from a real server bundle that `npm run learn` serves with
 // no node_modules.
-import { spawn } from "node:child_process";
 import {
   existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
+  realpathSync,
   rmSync,
   statSync,
   writeFileSync,
@@ -28,6 +28,7 @@ import {
   templateReadme,
   type Manifest,
 } from "../src/template.mjs";
+import { startLearn } from "../src/proof.mjs";
 import { removeTemp, repoRoot, tempDir } from "./pages-fixture";
 import {
   REF,
@@ -467,40 +468,25 @@ describe("a tree from a real server bundle", () => {
 
   test("npm run learn serves on 127.0.0.1 with no node_modules and stops on SIGTERM", async () => {
     expect(existsSync(join(out, "node_modules"))).toBe(false);
-    const child = spawn("npm", ["run", "--silent", "learn"], {
-      cwd: out,
-      env: { ...process.env, QUEST_BASE_PORT: "0" },
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-    const exited = new Promise<number | null>((done) =>
-      child.on("exit", (code) => {
-        done(code);
-      }),
-    );
-    let stdout = "";
-    let stderr = "";
-    child.stderr.on("data", (chunk: Buffer) => (stderr += chunk.toString()));
-    const address = await new Promise<string>((done, fail) => {
-      child.stdout.on("data", (chunk: Buffer) => {
-        stdout += chunk.toString();
-        const match = /http:\/\/127\.0\.0\.1:(\d+)/.exec(stdout);
-        if (match) done(match[0]);
-      });
-      void exited.then((code) => {
-        fail(
-          new Error(
-            `exited ${String(code)} before listening.\n${stdout}\n${stderr}`,
-          ),
-        );
-      });
-    });
-    const health = await fetch(`${address}/api/health`);
+    const app = await startLearn(out);
+    const health = await fetch(`${app.url}/api/health`);
     expect(health.status).toBe(200);
-    const page = await fetch(`${address}/`);
+    const page = await fetch(`${app.url}/`);
     await page.arrayBuffer();
     expect(page.status).toBe(200);
     expect(page.headers.get("content-type")).toMatch(/^text\/html/);
-    child.kill("SIGTERM");
-    expect(await exited).toBe(0);
+    // npm re-raises the SIGTERM on itself, so the server proves the clean
+    // stop: its stop line (written only before exit 0) and a freed port.
+    const stopped = await app.stop();
+    if (process.platform === "win32") return;
+    expect(stopped).toMatchObject({
+      timedOut: false,
+      stopLine: true,
+      portFree: true,
+    });
+    expect(stopped.code === 0 || stopped.signal === "SIGTERM").toBe(true);
+    expect(app.output()).toContain(
+      `Claude Code Quest stopped. To start it again, run npm run learn in ${realpathSync(out)}.`,
+    );
   }, 30_000);
 });

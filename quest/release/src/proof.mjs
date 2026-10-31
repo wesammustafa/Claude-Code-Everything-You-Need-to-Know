@@ -24,6 +24,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
+import { connect } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -219,11 +220,73 @@ export function replayPasses({
 /**
  * Starts `npm run --silent learn` in `dir` with QUEST_BASE_PORT=0 and piped
  * stdio (no TTY, so no browser opens), and resolves at the first
- * http://127.0.0.1:<port> on stdout. stop() sends SIGTERM and resolves with the
- * exit code. Windows delivers no SIGTERM: the whole tree is ended with taskkill
- * and no exit code is expected.
+ * http://127.0.0.1:<port> on stdout. stop() sends SIGTERM to the whole process
+ * group, as Ctrl+C does, because npm forwards a signal only to its own child:
+ * on Linux that child is dash, which dies without passing it on and leaves the
+ * server running. npm then re-raises the signal on itself, so its exit code
+ * says nothing about the server; stop() resolves with what npm reported plus
+ * whether the server printed its stop line (written only on its exit-0 path)
+ * and whether the port refuses connections afterwards. Windows delivers no
+ * SIGTERM: the whole tree is ended with taskkill and no clean stop is expected.
  * Ticket 230 reuses it.
  */
+// The start of the line the server writes on its exit-0 shutdown path
+// (stopLine in quest/server/src/launch.ts).
+const STOPPED = "Claude Code Quest stopped.";
+
+/** Resolves true once no process is left in process group `pgid`. */
+async function groupGone(pgid, waitMs) {
+  const deadline = performance.now() + waitMs;
+  for (;;) {
+    try {
+      process.kill(-pgid, 0);
+    } catch {
+      return true;
+    }
+    if (performance.now() > deadline) return false;
+    await new Promise((r) => setTimeout(r, 50));
+  }
+}
+
+/** Resolves true once nothing accepts connections at `url`. */
+function refuses(url, waitMs = 5_000) {
+  const { hostname, port } = new URL(url);
+  const deadline = performance.now() + waitMs;
+  const attempt = () =>
+    new Promise((done) => {
+      const socket = connect(Number(port), hostname);
+      socket.once("connect", () => {
+        socket.destroy();
+        done(false);
+      });
+      socket.once("error", () => done(true));
+    });
+  return (async () => {
+    for (;;) {
+      if (await attempt()) return true;
+      if (performance.now() > deadline) return false;
+      await new Promise((r) => setTimeout(r, 50));
+    }
+  })();
+}
+
+/**
+ * Why a SIGTERM stop was not clean, judged on the server: its stop line, its
+ * port, and npm ended by that SIGTERM (or 0), not by a timeout's SIGKILL.
+ */
+export function stopProblems({ code, signal, timedOut, stopLine, portFree }) {
+  const problems = [];
+  if (timedOut)
+    problems.push("npm run learn left a process running after SIGTERM");
+  else if (code !== 0 && signal !== "SIGTERM")
+    problems.push(
+      `npm run learn ended with ${signal ?? `exit ${String(code)}`} on SIGTERM`,
+    );
+  if (!stopLine) problems.push("npm run learn printed no stop line on SIGTERM");
+  if (!portFree) problems.push("npm run learn still holds its port");
+  return problems;
+}
+
 export function startLearn(
   dir,
   { env = process.env, deadlineMs = 10_000 } = {},
@@ -235,33 +298,62 @@ export function startLearn(
       env: { ...env, QUEST_BASE_PORT: "0" },
       stdio: ["ignore", "pipe", "pipe"],
       shell: WINDOWS,
+      // Its own process group, so killTree reaches npm, sh and the server.
+      detached: !WINDOWS,
     });
     // With shell: WINDOWS the child is cmd.exe, so ending it alone would leave
     // npm and the server holding the port and the folder.
     const killTree = (signal) => {
       if (WINDOWS)
         spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"]);
-      else child.kill(signal);
+      else {
+        try {
+          process.kill(-child.pid, signal);
+        } catch {
+          // The group is already gone.
+        }
+      }
     };
     let output = "";
     let listening = false;
+    let url;
     const exited = new Promise((resolveExit) =>
-      child.on("exit", (code) => resolveExit(code)),
+      child.on("exit", (code, signal) => resolveExit({ code, signal })),
     );
+    const outputClosed = new Promise((r) => child.stdout.once("close", r));
     const stop = async (waitMs = 10_000) => {
-      if (child.exitCode !== null) return child.exitCode;
-      killTree("SIGTERM");
-      let timer;
-      const code = await Promise.race([
-        exited,
-        new Promise((r) => (timer = setTimeout(() => r("timeout"), waitMs))),
-      ]);
-      clearTimeout(timer);
-      if (code === "timeout") {
-        killTree("SIGKILL");
-        return null;
+      let timedOut = false;
+      let ended;
+      if (child.exitCode !== null || child.signalCode !== null)
+        ended = { code: child.exitCode, signal: child.signalCode };
+      else {
+        killTree("SIGTERM");
+        let timer;
+        ended = await Promise.race([
+          exited,
+          new Promise((r) => (timer = setTimeout(() => r(null), waitMs))),
+        ]);
+        clearTimeout(timer);
+        if (!ended) {
+          timedOut = true;
+          killTree("SIGKILL");
+          ended = await exited;
+        }
       }
-      return code;
+      // npm can end before the server finishes its own shutdown, so wait for
+      // the rest of the group (and its last output) before judging it.
+      const leftover = !WINDOWS && !(await groupGone(child.pid, 5_000));
+      if (leftover) killTree("SIGKILL");
+      await Promise.race([
+        outputClosed,
+        new Promise((r) => setTimeout(r, 2_000).unref()),
+      ]);
+      return {
+        ...ended,
+        timedOut: timedOut || leftover,
+        stopLine: output.includes(STOPPED),
+        portFree: url ? await refuses(url) : true,
+      };
     };
     const timer = setTimeout(() => {
       killTree("SIGKILL");
@@ -274,6 +366,7 @@ export function startLearn(
       const match = /http:\/\/127\.0\.0\.1:\d+/.exec(output);
       if (match && !listening) {
         listening = true;
+        url = match[0];
         clearTimeout(timer);
         done({
           url: match[0],
@@ -288,7 +381,7 @@ export function startLearn(
       clearTimeout(timer);
       fail(error);
     });
-    exited.then((code) => {
+    exited.then(({ code }) => {
       if (listening) return;
       clearTimeout(timer);
       fail(new Error(`exited ${String(code)} before listening\n${output}`));
@@ -459,9 +552,8 @@ export async function serves(
       } catch (error) {
         problems.push(error instanceof Error ? error.message : String(error));
       } finally {
-        const code = await app.stop();
-        if (!WINDOWS && code !== 0)
-          problems.push(`npm run learn exited ${String(code)} on SIGTERM`);
+        const stopped = await app.stop();
+        if (!WINDOWS) problems.push(...stopProblems(stopped));
       }
     }
     problems.push(
