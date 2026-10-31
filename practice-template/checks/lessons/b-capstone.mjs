@@ -9,6 +9,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { runCommand } from '../command.mjs';
 import { NPM_TEST_LIMIT, testRunError, testsPass, nothingUncommitted } from './b-3.mjs';
 import { isTestFile, planPaths, statusPaths } from '../paths.mjs';
 /** @import { Repo } from '../repo.mjs' */
@@ -64,7 +65,7 @@ function testsWithoutFix(repo, sha, files) {
       if (before) git(work, 'checkout', '--quiet', `${sha}^`, '--', file);
       else rmSync(join(work, file), { force: true });
     }
-    const run = spawnSync('npm', ['test', '--silent'], { cwd: work, encoding: 'utf8', shell: process.platform === 'win32', timeout: NPM_TEST_LIMIT });
+    const run = runCommand('npm', ['test', '--silent'], { cwd: work, encoding: 'utf8', timeout: NPM_TEST_LIMIT });
     const error = testRunError(run, { requireFailure: true });
     return error ? { error } : { passed: run.status === 0 };
   } finally {

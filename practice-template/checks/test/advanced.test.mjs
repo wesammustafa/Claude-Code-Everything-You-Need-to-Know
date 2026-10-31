@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, statSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { setTimeout as wait } from 'node:timers/promises';
@@ -20,7 +20,7 @@ import { openRepo } from '../repo.mjs';
 import { notRun, runStubbed, scratchPath, STUB_SESSION } from '../stub-claude.mjs';
 import { readWorkflow } from '../workflow-script.mjs';
 import { parseWorktrees } from '../worktrees.mjs';
-import { check, commit, repo, withRepo, write } from './helpers.mjs';
+import { check, commit, POSIX_ONLY, repo, setMode, withRepo, write } from './helpers.mjs';
 
 const git = (dir, ...args) => execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', ...args], { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 
@@ -1034,7 +1034,7 @@ function reviewRepo({ script = REVIEW, mode = 0o755, commitScript = true, result
     commit(dir, 'Start');
     if (script !== null) {
       write(dir, { [SCRIPT]: script });
-      chmodSync(join(dir, SCRIPT), mode);
+      setMode(dir, SCRIPT, mode);
       if (commitScript) commit(dir, 'Add the review script', [SCRIPT]);
     }
     if (result !== null) write(dir, { [RESULT]: typeof result === 'string' || Buffer.isBuffer(result) ? result : JSON.stringify(result, null, 2) });
@@ -1049,7 +1049,7 @@ const callHint = (dir) => scriptCall(SCRIPT).check(openRepo(dir));
 const behaviorHint = (dir) => scriptBehavior(SCRIPT).check(openRepo(dir));
 const runHint = (dir) => savedRun(RESULT, SCRIPT).check(openRepo(dir));
 
-test('a-4 passes for the lesson\'s script, committed and executable, and a real run saved', () => {
+test('a-4 passes for the lesson\'s script, committed and executable, and a real run saved', POSIX_ONLY, () => {
   withRepo(reviewRepo(), (dir) => {
     const { code, out } = a4(dir);
     assert.equal(code, 0, out);
@@ -1057,7 +1057,7 @@ test('a-4 passes for the lesson\'s script, committed and executable, and a real 
   });
 });
 
-test('a-4 says to write the script, commit it or make it executable', () => {
+test('a-4 says to write the script, commit it or make it executable', POSIX_ONLY, () => {
   withRepo(reviewRepo({ script: null }), (dir) => {
     const { code, out } = a4(dir);
     assert.equal(code, 1, out);
@@ -1077,7 +1077,7 @@ test('a-4 says to write the script, commit it or make it executable', () => {
   });
 });
 
-test('a-4 runs the committed script, not the working copy, and points out uncommitted changes', () => {
+test('a-4 runs the committed script, not the working copy, and points out uncommitted changes', POSIX_ONLY, () => {
   withRepo(reviewRepo({ script: withFlags(FLAGS.replace('--output-format json ', '')), after: (dir) => write(dir, { [SCRIPT]: REVIEW }) }), (dir) => {
     const hint = callHint(dir);
     assert.match(String(hint), /It doesn't ask for JSON/);
@@ -1092,7 +1092,7 @@ test('a-4 runs the committed script, not the working copy, and points out uncomm
 const argvOf = (flags) => [...flags.matchAll(/'([^']*)'|"([^"]*)"|(\S+)/g)].map((m) => m[1] ?? m[2] ?? m[3]);
 const flagHints = (flags, prompt = ['-p', PROMPT]) => callHints([...prompt, ...argvOf(flags)]).join(' ');
 
-test('a-4 accepts the flags written in other forms, and the prompt after -p wherever -p is', () => {
+test('a-4 accepts the flags written in other forms, and the prompt after -p wherever -p is', POSIX_ONLY, () => {
   for (const flags of [
     FLAGS.replace('--max-turns 5', '--max-turns=5'),
     FLAGS.replace('--permission-mode dontAsk', '--permission-mode=dontAsk'),
@@ -1119,7 +1119,7 @@ test('a-4 accepts the flags written in other forms, and the prompt after -p wher
   }
 });
 
-test('a-4 names each flag the call lacks or gets wrong', () => {
+test('a-4 names each flag the call lacks or gets wrong', POSIX_ONLY, () => {
   for (const [flags, hint] of [
     [FLAGS.replace('--output-format json ', ''), /It doesn't ask for JSON: add `--output-format json`\./],
     [FLAGS.replace('--output-format json', '--output-format text'), /It asks for `--output-format text`: use `json`/],
@@ -1161,7 +1161,7 @@ test('a-4 wants --tools that keeps exactly the three read tools, and names any o
   assert.match(callHints([...base.filter((a) => a !== '--strict-mcp-config'), '--Tools', 'Read,Grep,Glob', '--strict-mcp-config']).join(' '), /It doesn't restrict the tools: .* Claude Code doesn't know `--Tools`, so it stops with an error before the run starts: write `--tools`\./);
 });
 
-test('a-4 wants hooks off with --settings \'{"disableAllHooks": true}\' and no MCP server but the ones passed, and says what is missing', () => {
+test('a-4 wants hooks off with --settings \'{"disableAllHooks": true}\' and no MCP server but the ones passed, and says what is missing', POSIX_ONLY, () => {
   const base = ['-p', 'Review this diff.', '--output-format', 'json', '--permission-mode', 'dontAsk', '--allowedTools', 'Read,Grep,Glob', '--tools', 'Read,Grep,Glob', '--max-turns', '5'];
   const hooksOff = ['--settings', '{"disableAllHooks": true}'];
   assert.deepEqual(callHints([...base, ...hooksOff, '--strict-mcp-config']), []);
@@ -1188,7 +1188,7 @@ test('a-4 wants hooks off with --settings \'{"disableAllHooks": true}\' and no M
   });
 });
 
-test('a-4 fails a prompt that isn\'t right after -p, naming a word the tool list took', () => {
+test('a-4 fails a prompt that isn\'t right after -p, naming a word the tool list took', POSIX_ONLY, () => {
   withRepo(reviewRepo({ script: withCall(`claude -p --output-format json --permission-mode dontAsk --max-turns 5 --allowedTools "Read,Grep,Glob" "${PROMPT}"`) }), (dir) => {
     const hint = String(callHint(dir));
     assert.match(hint, /`--output-format` comes right after `-p`\. Write the prompt right after `-p`, as in `claude -p "<prompt>" --output-format json \.\.\.`\./);
@@ -1202,7 +1202,7 @@ test('a-4 fails a prompt that isn\'t right after -p, naming a word the tool list
   assert.match(flagHints(FLAGS, ['-p', ' ']), /The prompt after `-p` is empty/);
 });
 
-test('a-4 fails a script that runs claude without -p, or never runs it, and says how it ended', () => {
+test('a-4 fails a script that runs claude without -p, or never runs it, and says how it ended', POSIX_ONLY, () => {
   withRepo(reviewRepo({ script: withCall(`claude "${PROMPT}" ${FLAGS}`) }), (dir) => {
     assert.match(String(callHint(dir)), /With a staged change, `scripts\/review-staged\.sh` ran `claude` without `-p` \(or `--print`\), which starts an interactive session\./);
   });
@@ -1211,7 +1211,7 @@ test('a-4 fails a script that runs claude without -p, or never runs it, and says
   });
 });
 
-test('a-4 checks that the script pipes in the staged diff and nothing else', () => {
+test('a-4 checks that the script pipes in the staged diff and nothing else', POSIX_ONLY, () => {
   for (const [script, hint] of [
     [edited([`git diff --cached | ${CALL}`, `git diff | ${CALL}`]), /What it piped into `claude -p` doesn't hold the staged change\. Pipe the staged diff in: `git diff --cached \| claude -p "<prompt>" \.\.\.`\./],
     [edited([`git diff --cached | ${CALL}`, `git diff HEAD | ${CALL}`]), /The diff it piped into `claude -p` also holds a change that isn't staged\. Pipe `git diff --cached`/],
@@ -1223,7 +1223,7 @@ test('a-4 checks that the script pipes in the staged diff and nothing else', () 
   }
 });
 
-test('a-4 checks where the script saves the JSON, and that it prints the review', () => {
+test('a-4 checks where the script saves the JSON, and that it prints the review', POSIX_ONLY, () => {
   withRepo(reviewRepo({ script: edited(['out="${1:-.practice/a-4-result.json}"', 'out=".practice/a-4-result.json"']) }), (dir) => {
     assert.match(String(behaviorHint(dir)), /It saved the JSON to `\.practice\/a-4-result\.json`, though its first argument named another path\. Use the argument when there is one: `out="\$\{1:-\.practice\/a-4-result\.json\}"`\./);
   });
@@ -1238,7 +1238,7 @@ test('a-4 checks where the script saves the JSON, and that it prints the review'
   });
 });
 
-test('a-4 checks both exit rules apart: claude exiting non-zero, and is_error', () => {
+test('a-4 checks both exit rules apart: claude exiting non-zero, and is_error', POSIX_ONLY, () => {
   withRepo(reviewRepo({ script: edited(['> "$out"\nstatus=$?', '> "$out" || true\nstatus=$?'], ['if [ "$status" -ne 0 ] || [ "$(jq -r \'.is_error\' "$out")" != "false" ]; then', 'if [ "$(jq -r \'.is_error\' "$out")" = "true" ]; then']) }), (dir) => {
     const hint = String(behaviorHint(dir));
     assert.match(hint, /When `claude -p` exits non-zero and prints no JSON, as it does for a flag it can't read, it exited 0\. Exit non-zero whenever `claude -p` does\./);
@@ -1251,7 +1251,7 @@ test('a-4 checks both exit rules apart: claude exiting non-zero, and is_error', 
   });
 });
 
-test('a-4 fails a script that calls Claude, exits 0 or says nothing when nothing is staged', () => {
+test('a-4 fails a script that calls Claude, exits 0 or says nothing when nothing is staged', POSIX_ONLY, () => {
   withRepo(reviewRepo({ script: edited(['if git diff --cached --quiet; then echo "Nothing is staged." >&2; exit 2; fi\n', '']) }), (dir) => {
     const hint = String(behaviorHint(dir));
     assert.match(hint, /With nothing staged, it still ran `claude -p`\. Test for a staged change first, as `git diff --cached --quiet` does/);
@@ -1268,7 +1268,7 @@ test('a-4 fails a script that calls Claude, exits 0 or says nothing when nothing
   });
 });
 
-test('a-4 wants one claude -p call, and lets the script ask for the version first', () => {
+test('a-4 wants one claude -p call, and lets the script ask for the version first', POSIX_ONLY, () => {
   withRepo(reviewRepo({ script: edited(['status=$?\n', `status=$?\ngit diff --cached | ${CALL} > /dev/null\n`]) }), (dir) => {
     assert.match(String(behaviorHint(dir)), /With one staged change, it ran `claude -p` 2 times\. Run it once/);
   });
@@ -1278,7 +1278,7 @@ test('a-4 wants one claude -p call, and lets the script ask for the version firs
   });
 });
 
-test('a-4 refuses to run a script that could reach the real Claude Code, and runs nothing', () => {
+test('a-4 refuses to run a script that could reach the real Claude Code, and runs nothing', POSIX_ONLY, () => {
   const outside = mkdtempSync(join(tmpdir(), 'a4-ran-'));
   const ran = join(outside, 'ran');
   try {
@@ -1315,7 +1315,7 @@ test('a-4 refuses to run a script that could reach the real Claude Code, and run
   });
 });
 
-test('a-4 runs the script without an argument in a copy that has no .practice/ yet, and wants it to create the folder', () => {
+test('a-4 runs the script without an argument in a copy that has no .practice/ yet, and wants it to create the folder', POSIX_ONLY, () => {
   withRepo(reviewRepo({ script: edited(['mkdir -p "$(dirname "$out")"\n', '']) }), (dir) => {
     assert.equal(behaviorHint(dir), 'Run without an argument in a fresh copy, where `.practice/` doesn\'t exist yet, it couldn\'t write `.practice/a-4-result.json`. Create the folder first, as `mkdir -p "$(dirname "$out")"` does.');
   });
@@ -1324,7 +1324,7 @@ test('a-4 runs the script without an argument in a copy that has no .practice/ y
   });
 });
 
-test('a-4 fails a script with Windows line ends, and points at jq when it is missing', () => {
+test('a-4 fails a script with Windows line ends, and points at jq when it is missing', POSIX_ONLY, () => {
   withRepo(reviewRepo({ script: REVIEW.replace(/\n/g, '\r\n') }), (dir) => {
     const { code, out } = a4(dir);
     assert.equal(code, 1, out);
@@ -1335,7 +1335,7 @@ test('a-4 fails a script with Windows line ends, and points at jq when it is mis
   });
 });
 
-test('a-4 reads the saved run, and says what is wrong with it', () => {
+test('a-4 reads the saved run, and says what is wrong with it', POSIX_ONLY, () => {
   const utf16 = (text) => Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(text.replace(/\n/g, '\r\n'), 'utf16le')]);
   for (const result of [{ ...REAL_RUN, num_turns: 6 }, utf16(JSON.stringify(REAL_RUN, null, 2)), `﻿${JSON.stringify(REAL_RUN)}`]) {
     withRepo(reviewRepo({ result }), (dir) => {
@@ -1362,7 +1362,7 @@ test('a-4 reads the saved run, and says what is wrong with it', () => {
   });
 });
 
-test('the stand-in records each call\'s arguments and stdin as they were, and answers --version', () => {
+test('the stand-in records each call\'s arguments and stdin as they were, and answers --version', POSIX_ONLY, () => {
   const script = '#!/usr/bin/env bash\nv=$(claude --version)\nprintf \'staged\\n\' | claude -p "$(printf \'two\\nlines\')" --model "x y" > "$1"\necho "$v"\n';
   withRepo(reviewRepo({ script }), (dir) => {
     const run = runStubbed(openRepo(dir), SCRIPT, { args: (out) => [join(out, 'reply.json')], reply: { type: 'result', session_id: STUB_SESSION } });
@@ -1374,7 +1374,7 @@ test('the stand-in records each call\'s arguments and stdin as they were, and an
   });
 });
 
-test('the stand-in runs the script without the sign-in variables, with a HOME of its own', () => {
+test('the stand-in runs the script without the sign-in variables, with a HOME of its own', POSIX_ONLY, () => {
   const script = '#!/usr/bin/env bash\nprintf "%s|%s|%s|%s|%s|%s" "${ANTHROPIC_API_KEY-unset}" "${ANTHROPIC_AUTH_TOKEN-unset}" "${CLAUDE_CODE_OAUTH_TOKEN-unset}" "${ANTHROPIC_BASE_URL-unset}" "$HOME" "$CLAUDE_CONFIG_DIR" > "$1"\n';
   const fake = { ANTHROPIC_API_KEY: 'not-a-key', ANTHROPIC_AUTH_TOKEN: 'not-a-token', CLAUDE_CODE_OAUTH_TOKEN: 'not-a-token', ANTHROPIC_BASE_URL: 'http://127.0.0.1:9' };
   const before = Object.fromEntries(Object.keys(fake).map((k) => [k, process.env[k]]));
@@ -1396,7 +1396,7 @@ test('the stand-in runs the script without the sign-in variables, with a HOME of
   });
 });
 
-test('the stand-in stops a script at the time limit, with whatever the script left running', async () => {
+test('the stand-in stops a script at the time limit, with whatever the script left running', POSIX_ONLY, async () => {
   const outside = mkdtempSync(join(tmpdir(), 'a4-beat-'));
   const beat = join(outside, 'beat');
   const dir = reviewRepo({ script: '#!/usr/bin/env bash\n( while :; do date > "$1"; sleep 0.1; done ) &\nsleep 30\n' })();
@@ -1455,7 +1455,7 @@ test('the argv reader takes values and lists as Claude Code does', () => {
   assert.deepEqual(ruleList(['Read, Grep', 'Bash(git diff *) Glob', ' ']), ['Read', 'Grep', 'Bash(git diff *)', 'Glob']);
 });
 
-test('a-4 fails on an unsolved repository and passes on a solved one, as the template\'s assertions expect', () => {
+test('a-4 fails on an unsolved repository and passes on a solved one, as the template\'s assertions expect', POSIX_ONLY, () => {
   withRepo(reviewRepo({ script: null, result: null }), (dir) => {
     const { code, out } = check(['a-4', '--assert', 'fail', '--dir', dir]);
     assert.equal(code, 0, out);
@@ -2512,7 +2512,7 @@ function boundedRepo({ script = BOUNDED, mode = 0o755, commitScript = true, boun
     }
     if (script !== null) {
       write(dir, { [RUNNER]: script });
-      chmodSync(join(dir, RUNNER), mode);
+      setMode(dir, RUNNER, mode);
       if (commitScript) commit(dir, 'Add the bounded runner', [RUNNER]);
     }
     if (slice !== null) write(dir, { [SLICE]: typeof slice === 'string' || Buffer.isBuffer(slice) ? slice : JSON.stringify(slice, null, 2) });
@@ -2535,7 +2535,7 @@ const committedHints = (dir) => {
   return [boundedScript(), runLimits(), narrowRules(), strictSandbox()].map((item) => item.check(opened));
 };
 
-test('a-7 passes for the lesson\'s runner and bounds, committed, and a slice run saved', () => {
+test('a-7 passes for the lesson\'s runner and bounds, committed, and a slice run saved', POSIX_ONLY, () => {
   withRepo(boundedRepo(), (dir) => {
     const { code, out } = a7(dir);
     assert.equal(code, 0, out);
@@ -2543,7 +2543,7 @@ test('a-7 passes for the lesson\'s runner and bounds, committed, and a slice run
   });
 });
 
-test('a-7 says to write the runner, commit it or make it executable', () => {
+test('a-7 says to write the runner, commit it or make it executable', POSIX_ONLY, () => {
   withRepo(boundedRepo({ script: null }), (dir) => {
     const { code, out } = a7(dir);
     assert.equal(code, 1, out);
@@ -2561,7 +2561,7 @@ test('a-7 says to write the runner, commit it or make it executable', () => {
   });
 });
 
-test('a-7 runs the committed runner, not the working copy, and points out uncommitted changes', () => {
+test('a-7 runs the committed runner, not the working copy, and points out uncommitted changes', POSIX_ONLY, () => {
   withRepo(boundedRepo({ script: runner(['--permission-mode dontAsk', '--permission-mode auto']), after: (dir) => write(dir, { [RUNNER]: BOUNDED }) }), (dir) => {
     assert.match(String(runnerHint(dir)), /It runs in `auto` mode: use `--permission-mode dontAsk`, so every call that would ask for permission is denied\. Your copy of `scripts\/bounded-run\.sh` has changes that aren't committed: if they fix this, commit them\./);
   });
@@ -2570,7 +2570,7 @@ test('a-7 runs the committed runner, not the working copy, and points out uncomm
   });
 });
 
-test('a-7 accepts the call written in other ways', () => {
+test('a-7 accepts the call written in other ways', POSIX_ONLY, () => {
   const inline = `'${JSON.stringify(BOUNDS)}'`;
   for (const script of [
     // --flag=value, and the flags in another order.
@@ -2598,7 +2598,7 @@ test('a-7 accepts the call written in other ways', () => {
   }
 });
 
-test('a-7 names what the first item finds wrong with the call', () => {
+test('a-7 names what the first item finds wrong with the call', POSIX_ONLY, () => {
   for (const [from, to, hint] of [
     ['--permission-mode dontAsk', '--permission-mode bypassPermissions', /It runs in `bypassPermissions` mode: use `--permission-mode dontAsk`/],
     ['--permission-mode dontAsk', '--permission-mode dontask', /Write `dontAsk` as Claude Code spells it, not `dontask`\./],
@@ -2621,7 +2621,7 @@ test('a-7 names what the first item finds wrong with the call', () => {
   }
 });
 
-test('a-7 checks that the task reaches claude -p as its prompt, and the JSON lands where the second argument says', () => {
+test('a-7 checks that the task reaches claude -p as its prompt, and the JSON lands where the second argument says', POSIX_ONLY, () => {
   for (const [script, hint] of [
     [runner(['claude -p "$1"', 'claude -p $1']), /It passes the task without quotes, so the shell splits it into words and Claude gets only the first\. Write `"\$1"`, in double quotes\./],
     [runner(['claude -p "$1"', 'claude -p "Add the missing tests."']), /The task in its first argument never reaches `claude -p`\. Pass it as the prompt, right after `-p`/],
@@ -2636,7 +2636,7 @@ test('a-7 checks that the task reaches claude -p as its prompt, and the JSON lan
   }
 });
 
-test('a-7 wants one claude -p call, and says how a runner that never makes one ended', () => {
+test('a-7 wants one claude -p call, and says how a runner that never makes one ended', POSIX_ONLY, () => {
   withRepo(boundedRepo({ script: runner(['status=$?\n', `status=$?\n${BOUNDED_CALL.replace('> "$2"', '> /dev/null')}\n`]) }), (dir) => {
     assert.match(String(runnerHint(dir)), /With one task, it ran `claude -p` 2 times\. Run it once\./);
   });
@@ -2662,7 +2662,7 @@ test('a-7 wants one claude -p call, and says how a runner that never makes one e
   });
 });
 
-test('a-7 refuses to run a runner that could reach the real Claude Code, and reads its call from the text', () => {
+test('a-7 refuses to run a runner that could reach the real Claude Code, and reads its call from the text', POSIX_ONLY, () => {
   const outside = mkdtempSync(join(tmpdir(), 'a7-ran-'));
   const ran = join(outside, 'ran');
   try {
@@ -2688,7 +2688,7 @@ test('a-7 refuses to run a runner that could reach the real Claude Code, and rea
   });
 });
 
-test('a-7 says what is wrong with the settings file the call names', () => {
+test('a-7 says what is wrong with the settings file the call names', POSIX_ONLY, () => {
   withRepo(boundedRepo({ script: runner([`  --settings ${BOUNDS_PATH} \\\n`, '']) }), (dir) => {
     assert.match(String(runnerHint(dir)), /It passes no settings file: add `--settings` with the committed file that holds the bounds, such as `--settings \.claude\/bounded-run\.json`\./);
     assert.match(String(sandboxHint(dir)), /The run gets no settings file, so nothing turns the sandbox on: pass the bounds file with `--settings`/);
@@ -2725,7 +2725,7 @@ test('a-7 names a byte-order mark at the start of the bounds file or the project
   });
 });
 
-test('a-7 names each turn and spend limit that is missing or not a usable number', () => {
+test('a-7 names each turn and spend limit that is missing or not a usable number', POSIX_ONLY, () => {
   for (const [from, to, hint] of [
     ['  --max-turns 15 \\\n', '', /^It sets no turn limit: add `--max-turns` with a whole number of 1 or more\.$/],
     ['  --max-budget-usd 2 \\\n', '', /^It sets no spend limit: add `--max-budget-usd` with an amount in US dollars, above what a slice of the task costs\.$/],
@@ -2936,7 +2936,7 @@ test('the script reader finds each claude call as the shell would pass it', () =
   assert.deepEqual(scriptCalls('claude -p "$(cat prompt.txt)" --max-turns=$N\r\n'), [['-p', '$(cat prompt.txt)', '--max-turns=$N']]);
 });
 
-test('the stand-in records the folder each call ran in, and maps a path argument into the scratch repository', () => {
+test('the stand-in records the folder each call ran in, and maps a path argument into the scratch repository', POSIX_ONLY, () => {
   const script = '#!/usr/bin/env bash\nclaude -p a --settings .claude/x.json\ncd src && claude -p b --settings ../.claude/x.json --add-dir "$PWD/.."\nclaude -p c --settings /etc/hosts\n';
   withRepo(boundedRepo({ script }), (dir) => {
     const run = runStubbed(openRepo(dir), RUNNER, { commit: { 'src/a.js': '' } });
@@ -2946,7 +2946,7 @@ test('the stand-in records the folder each call ran in, and maps a path argument
   });
 });
 
-test('a-7 fails on an unsolved repository and passes on a solved one, as the template\'s assertions expect', () => {
+test('a-7 fails on an unsolved repository and passes on a solved one, as the template\'s assertions expect', POSIX_ONLY, () => {
   withRepo(boundedRepo({ script: null, bounds: null, slice: null }), (dir) => {
     const { code, out } = check(['a-7', '--assert', 'fail', '--dir', dir]);
     assert.equal(code, 0, out);
@@ -3065,7 +3065,7 @@ function capstoneRepo({
     for (const [name] of sessions) git(dir, 'worktree', 'add', '-q', '-b', `worktree-${name}`, `.claude/worktrees/${name}`);
     for (const [name, made] of sessions) {
       write(at(name), made);
-      if (made[SCRIPT]) chmodSync(join(at(name), SCRIPT), 0o755);
+      if (made[SCRIPT]) setMode(at(name), SCRIPT, 0o755);
       commit(at(name), `Build ${name}`);
     }
     const saved = listing(`${git(dir, 'worktree', 'list', '--porcelain')}\n`);
@@ -3107,7 +3107,7 @@ const capstoneHint = (dir, pattern) => {
 };
 const CI_ITEM = /^a committed workflow runs `anthropics\/claude-code-action` on `pull_request`/;
 
-test('the Advanced capstone passes for everything the brief asks for, committed, with the worktree listing and one run saved', () => {
+test('the Advanced capstone passes for everything the brief asks for, committed, with the worktree listing and one run saved', POSIX_ONLY, () => {
   withRepo(capstoneRepo(), (dir) => {
     const { code, out } = aCapstone(dir);
     assert.equal(code, 0, out);
@@ -3115,7 +3115,7 @@ test('the Advanced capstone passes for everything the brief asks for, committed,
   });
 });
 
-test('the Advanced capstone still passes after the teardown deletes the review workflow, since it reads the history', () => {
+test('the Advanced capstone still passes after the teardown deletes the review workflow, since it reads the history', POSIX_ONLY, () => {
   withRepo(capstoneRepo({ teardown: true }), (dir) => {
     assert.equal(existsSync(join(dir, REVIEW_WORKFLOW)), false);
     const { code, out } = aCapstone(dir);
@@ -3161,7 +3161,7 @@ test('the Advanced capstone wants the saved record of CI\'s review run: a comple
   assert.match(String(hint([CI_RUN], { ci: null })), /without a committed review workflow/);
 });
 
-test('the Advanced capstone reads its own saved files, not the ones the lessons save', () => {
+test('the Advanced capstone reads its own saved files, not the ones the lessons save', POSIX_ONLY, () => {
   const lessonPaths = (dir) => {
     renameSync(join(dir, CAPSTONE_LISTING), join(dir, LISTING));
     renameSync(join(dir, CAPSTONE_RUN), join(dir, RESULT));
@@ -3304,7 +3304,7 @@ test('the Advanced capstone wants a saved workflow whose second agent checks the
   });
 });
 
-test('the Advanced capstone holds the review script to lesson 4\'s rules', () => {
+test('the Advanced capstone holds the review script to lesson 4\'s rules', POSIX_ONLY, () => {
   withRepo(capstoneRepo({ script: null }), (dir) => {
     assert.match(String(capstoneHint(dir, /is committed and executable/)), /There is no `scripts\/review-staged\.sh`/);
   });
@@ -3518,7 +3518,7 @@ test('the capstone brief names the files the Advanced capstone\'s check reads', 
   assert.doesNotMatch(brief, /\u2014/, 'the brief has an em dash');
 });
 
-test('the Advanced capstone fails on an unsolved repository and passes on a solved one, as the template\'s assertions expect', () => {
+test('the Advanced capstone fails on an unsolved repository and passes on a solved one, as the template\'s assertions expect', POSIX_ONLY, () => {
   withRepo(() => {
     const dir = repo({ '.gitignore': '.practice/\nnode_modules/\n', ...CAPSTONE_START });
     commit(dir, 'Start');

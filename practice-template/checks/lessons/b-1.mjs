@@ -2,7 +2,7 @@
 // Install, sign in and look around (Beginner, lesson 1). The check runs
 // `claude --version` itself, and reads the onboarding note the Learner
 // corrects against the code in Your turn.
-import { spawnSync } from 'node:child_process';
+import { runCommand, shellNotFound } from '../command.mjs';
 /** @import { Item } from './index.mjs' */
 
 export const title = 'Install, sign in and look around';
@@ -19,9 +19,8 @@ export const claudeVersion = {
   // It runs on the Learner's machine: a GitHub runner has no Claude Code.
   local: true,
   check(repo) {
-    // On Windows, `claude` can be an npm shim, which only a shell can start.
-    const run = spawnSync('claude', ['--version'], { cwd: repo.dir, encoding: 'utf8', shell: process.platform === 'win32', timeout: VERSION_LIMIT });
-    if (/** @type {NodeJS.ErrnoException | undefined} */ (run.error)?.code === 'ENOENT') return `The check couldn't find \`claude\` on the PATH of the shell it ran in. ${FIX_PATH}`;
+    const run = runCommand('claude', ['--version'], { cwd: repo.dir, encoding: 'utf8', timeout: VERSION_LIMIT });
+    if (/** @type {NodeJS.ErrnoException | undefined} */ (run.error)?.code === 'ENOENT' || (!run.error && run.status !== 0 && shellNotFound(run))) return `The check couldn't find \`claude\` on the PATH of the shell it ran in. ${FIX_PATH}`;
     if (/** @type {NodeJS.ErrnoException | undefined} */ (run.error)?.code === 'ETIMEDOUT') return `\`claude --version\` didn't finish within ${VERSION_LIMIT / 1000} seconds. Run it on its own and see what it waits for.`;
     if (run.error) return `The check couldn't run \`claude --version\`: ${run.error.message}`;
     const out = `${run.stdout ?? ''}`;

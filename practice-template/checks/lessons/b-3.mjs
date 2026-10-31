@@ -4,6 +4,7 @@
 // Markdown it writes to a temporary folder, runs the Learner's tests against
 // the planted patch's flaw, and reads the last commit and the working tree.
 import { spawnSync } from 'node:child_process';
+import { runCommand } from '../command.mjs';
 import { cpSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -17,7 +18,7 @@ export const title = 'Your first change, from request to commit';
 // The longest `npm test` may run, in milliseconds.
 export const NPM_TEST_LIMIT = 120_000;
 
-const npmTest = (/** @type {string} */ dir) => spawnSync('npm', ['test', '--silent'], { cwd: dir, encoding: 'utf8', shell: process.platform === 'win32', timeout: NPM_TEST_LIMIT });
+const npmTest = (/** @type {string} */ dir) => runCommand('npm', ['test', '--silent'], { cwd: dir, encoding: 'utf8', timeout: NPM_TEST_LIMIT });
 
 // A shell lookup or script failure is not evidence of a failing Node test.
 // Mutation checks require its TAP/spec failure summary as well as an exit.

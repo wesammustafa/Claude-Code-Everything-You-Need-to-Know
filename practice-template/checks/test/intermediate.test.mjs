@@ -2,9 +2,9 @@
 // repository with --dir.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chmodSync, realpathSync, utimesSync } from 'node:fs';
+import { realpathSync, utimesSync } from 'node:fs';
 import { join } from 'node:path';
-import { check, commit, repo, withRepo, write } from './helpers.mjs';
+import { check, commit, repo, setMode, withRepo, write } from './helpers.mjs';
 import { buggyApp, fixedApp } from './fixtures/intermediate-app.mjs';
 
 // The tdd skill as lesson i-1's Your turn leaves it once finished.
@@ -426,8 +426,8 @@ const REGISTERED = { hooks: {
 function hookRepo({ gate = GATE, mode = 0o755, settings = REGISTERED } = {}) {
   return () => {
     const dir = repo({ '.claude/hooks/protect-files.sh': PROTECT, '.claude/hooks/test-gate.sh': gate, '.claude/settings.json': JSON.stringify(settings, null, 2) });
-    chmodSync(join(dir, '.claude/hooks/protect-files.sh'), 0o755);
-    chmodSync(join(dir, '.claude/hooks/test-gate.sh'), mode);
+    setMode(dir, '.claude/hooks/protect-files.sh', 0o755);
+    setMode(dir, '.claude/hooks/test-gate.sh', mode);
     commit(dir, 'Protect files and gate the end of a turn on the tests');
     return dir;
   };
@@ -795,7 +795,7 @@ function capstoneRepo({ omit = [], hook = SAMPLES_HOOK, files: extra = {}, setti
     };
     for (const path of omit) delete files[path];
     const dir = repo(files);
-    if (files['.claude/hooks/protect-samples.sh']) chmodSync(join(dir, '.claude/hooks/protect-samples.sh'), 0o755);
+    if (files['.claude/hooks/protect-samples.sh']) setMode(dir, '.claude/hooks/protect-samples.sh', 0o755);
     commit(dir, 'Get linkcheck ready for a new teammate');
     // The log of the review the fix got, in the ignored .practice/ folder.
     if (log !== null) write(dir, { '.practice/i-capstone-agents.txt': log });

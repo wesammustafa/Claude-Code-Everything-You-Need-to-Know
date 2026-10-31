@@ -23,7 +23,7 @@ function runItem(lesson, item, outcomes) {
     const original = childProcess.spawnSync;
     let calls = 0;
     childProcess.spawnSync = (command, args, options) => {
-      if (command !== 'npm') return original(command, args, options);
+      if (command.split(' ')[0] !== 'npm') return original(command, args, options);
       calls++;
       if (outcomes === null) return original(command, args, options);
       const result = outcomes[calls - 1];

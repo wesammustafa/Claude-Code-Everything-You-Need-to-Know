@@ -1,7 +1,7 @@
 // Shared by the checks' tests: a throwaway git repository to point a check at,
 // and the check command run the way a Learner runs it.
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, rmdirSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, rmdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -29,6 +29,19 @@ export function write(dir, files) {
     mkdirSync(dirname(join(dir, path)), { recursive: true });
     writeFileSync(join(dir, path), text);
   }
+}
+
+// Options for a test that needs a Learner's script to run: the checks run one
+// with the stand-in for `claude` only from WSL 2, macOS or Linux, and say so on
+// Windows itself (a test pins that message), so there it is skipped.
+export const POSIX_ONLY = { skip: process.platform === 'win32' && 'the checks run scripts only from WSL 2, macOS or Linux' };
+
+// Gives `path` the mode `mode` on disk and in git's index. Windows keeps no
+// executable bit on disk and git there ignores file modes, so only the index
+// carries it; a later `git add` keeps the staged mode.
+export function setMode(dir, path, mode) {
+  chmodSync(join(dir, path), mode);
+  execFileSync('git', ['add', `--chmod=${mode & 0o111 ? '+' : '-'}x`, '--', path], { cwd: dir });
 }
 
 // Stages `paths`, or everything when `paths` is omitted, and commits; returns
