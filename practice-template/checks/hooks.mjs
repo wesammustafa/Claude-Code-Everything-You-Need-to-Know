@@ -6,6 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { chmodSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, posix } from 'node:path';
+import { findBash } from './stub-claude.mjs';
 /** @import { Repo } from './repo.mjs' */
 
 const editWrite = (/** @type {string} */ matcher) => matcher === '' || matcher === '*' || (/\bEdit\b/.test(matcher) && /\bWrite\b/.test(matcher));
@@ -53,6 +54,8 @@ export function committedMode(repo, path) {
 
 // Runs the committed copy of a hook script, as Claude Code would for a tool
 // call on `path`, and returns spawnSync's result, or null when HEAD lacks it.
+// On Windows it runs with Git Bash, as runStubbed does: the `bash` on PATH
+// can be WSL's launcher, which can't open a Windows path.
 /**
  * @param {Repo} repo
  * @param {string} script
@@ -70,9 +73,9 @@ export function runCommitted(repo, script, path, tool = 'Edit') {
     const file = join(dir, posix.basename(script));
     writeFileSync(file, text);
     chmodSync(file, 0o755);
-    return spawnSync('bash', [file], {
+    return spawnSync(findBash() ?? 'bash', [file.replace(/\\/g, '/')], {
       cwd: repo.dir,
-      env: { ...process.env, CLAUDE_PROJECT_DIR: repo.dir },
+      env: { ...process.env, CLAUDE_PROJECT_DIR: repo.dir.replace(/\\/g, '/') },
       input: JSON.stringify({ hook_event_name: 'PreToolUse', tool_name: tool, tool_input: { file_path: posix.join(repo.dir.replace(/\\/g, '/'), path) } }),
       encoding: 'utf8',
       timeout: 10_000,

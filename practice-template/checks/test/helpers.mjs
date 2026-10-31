@@ -10,13 +10,16 @@ const runner = join(dirname(fileURLToPath(import.meta.url)), '..', 'run.mjs');
 
 // A git repository in a temporary folder, holding `files` (path to text),
 // with `.practice/` ignored as a Learner's own repository would have it. It
-// ignores the machine's global excludes file, which may list `.claude`.
+// ignores the machine's global excludes file, which may list `.claude`, and
+// turns core.autocrlf off, which Git for Windows sets, so a fixture with
+// Windows line ends is committed with them, as a Learner's editor would.
 // `nested` lays it out as a copy is: the git root holds `project/`, where
 // the files go, and the project folder is returned.
 export function repo(files = {}, { nested = false } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'practice-'));
   execFileSync('git', ['init', '-q'], { cwd: root });
   execFileSync('git', ['config', 'core.excludesFile', '/dev/null'], { cwd: root });
+  execFileSync('git', ['config', 'core.autocrlf', 'false'], { cwd: root });
   writeFileSync(join(root, '.git', 'info', 'exclude'), '.practice/\n');
   const dir = nested ? join(root, 'project') : root;
   mkdirSync(dir, { recursive: true });

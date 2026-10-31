@@ -255,7 +255,10 @@ export function runStubbed(repo, script, { args = () => [], commit = {}, stage =
 
     // The script may see the repository's path with symlinks resolved, or
     // on Windows with 8.3 names expanded.
-    const roots = [...new Set([dir, realpathSync(dir), realpathSync.native(dir)])];
+    // Git Bash names it through its mounts too, as `/tmp/...` for the
+    // temporary folder, so its own `pwd` is a root as well.
+    const named = win ? [execFileSync(/** @type {string} */ (shell), ['-c', 'pwd'], { cwd: dir, env: scrubbed(), encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], windowsHide: true }).trim()] : [];
+    const roots = [...new Set([dir, realpathSync(dir), realpathSync.native(dir), ...named])];
     const git = (/** @type {string[]} */ ...a) => execFileSync('git', ['-c', 'core.autocrlf=false', '-c', 'user.name=Practice check', '-c', 'user.email=check@example.invalid', '-c', 'commit.gpgsign=false', '-c', `core.hooksPath=${devNull}`, '-c', `core.excludesFile=${devNull}`, ...a], { cwd: dir, env: scrubbed(), stdio: ['ignore', 'pipe', 'pipe'] });
     git('init', '-q');
     writeFileSync(join(dir, '.git', 'info', 'exclude'), '.practice/\n');
