@@ -4,7 +4,7 @@
 // prints every number, appends them to $GITHUB_STEP_SUMMARY when it is set,
 // and exits 1 when a budget that is on is over its limit.
 //   npm run budgets -w @quest/release -- <template-dir> [--manifest <file>]
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import {
   appendFileSync,
   existsSync,
@@ -252,8 +252,30 @@ export function measureTree(dir, { manifestFile, on = {} } = {}) {
   }));
 }
 
-/** Milliseconds from spawning `command` in `dir` to its address on stdout. */
-function startOnce(dir, command, deadline) {
+const WINDOWS = process.platform === "win32";
+
+/** Resolves true once no process is left in process group `pgid`. */
+async function groupGone(pgid, waitMs) {
+  const deadline = performance.now() + waitMs;
+  for (;;) {
+    try {
+      process.kill(-pgid, 0);
+    } catch {
+      return true;
+    }
+    if (performance.now() > deadline) return false;
+    await new Promise((r) => setTimeout(r, 50));
+  }
+}
+
+/**
+ * Milliseconds from spawning `command` in `dir` to its address on stdout.
+ * The command runs in its own process group, and the whole group is ended
+ * before this settles: on Linux npm's child is dash, which dies on SIGTERM
+ * without passing it on, so ending npm alone left the server running with
+ * our stdout pipe open, and the event loop never emptied (CI hung).
+ */
+function startOnce(dir, command, deadline, stopMs = 5_000) {
   return new Promise((done, fail) => {
     const started = performance.now();
     const [file, ...args] = command;
@@ -263,29 +285,52 @@ function startOnce(dir, command, deadline) {
       // Piped, not a TTY, so the app opens no browser.
       stdio: ["ignore", "pipe", "pipe"],
       // npm is npm.cmd on Windows, which only a shell can start.
-      shell: process.platform === "win32",
+      shell: WINDOWS,
+      // Its own process group, so killTree reaches npm, sh and the server.
+      detached: !WINDOWS,
     });
+    const killTree = (signal) => {
+      if (WINDOWS)
+        spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"]);
+      else {
+        try {
+          process.kill(-child.pid, signal);
+        } catch {
+          // The group is already gone.
+        }
+      }
+    };
     let stdout = "";
     let settled = false;
-    const finish = (error, ms) => {
+    const finish = async (error, ms) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      if (child.exitCode === null) child.kill("SIGTERM");
+      if (child.pid !== undefined) {
+        killTree("SIGTERM");
+        if (!WINDOWS && !(await groupGone(child.pid, stopMs))) {
+          killTree("SIGKILL");
+          await groupGone(child.pid, stopMs);
+        }
+      }
+      // Nothing of the child may keep this process alive.
+      child.stdout.destroy();
+      child.stderr.destroy();
+      child.unref();
       if (error) fail(error);
       else done(ms);
     };
     const timer = setTimeout(() => {
-      finish(new Error(`not listening after ${String(deadline)} ms`));
+      void finish(new Error(`not listening after ${String(deadline)} ms`));
     }, deadline);
     child.stdout.on("data", (chunk) => {
       stdout += chunk.toString();
       if (/http:\/\/127\.0\.0\.1:(\d+)/.test(stdout))
-        finish(null, performance.now() - started);
+        void finish(null, performance.now() - started);
     });
-    child.on("error", (error) => finish(error));
+    child.on("error", (error) => void finish(error));
     child.on("exit", (code) => {
-      finish(new Error(`exited ${String(code)} before listening`));
+      void finish(new Error(`exited ${String(code)} before listening`));
     });
   });
 }

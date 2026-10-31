@@ -238,6 +238,8 @@ describe("npm run budgets", () => {
     delete clean.INIT_CWD;
     return spawnSync(process.execPath, [script, ...args], {
       encoding: "utf8",
+      // A hang fails the test instead of the run: the CI step once hung.
+      timeout: 20_000,
       env: {
         ...clean,
         QUEST_BUDGETS_START_COMMAND: JSON.stringify(node),
@@ -275,5 +277,41 @@ describe("npm run budgets", () => {
       /^before\n### Size budgets\n\n\| Budget \| Measured \| Limit \| Result \|/,
     );
     expect(written).toMatch(/\| Server bundle \| .* \| FAIL \|/);
+  }, 30_000);
+
+  // On Linux npm's child is dash, which dies on SIGTERM without passing it on
+  // (run 41230844036 hung after its table). This wrapper does the same on
+  // every platform: it starts the server and leaves it running when ended.
+  test("exits and leaves no server when a wrapper does not pass SIGTERM on", () => {
+    put(
+      "learn/app.mjs",
+      `import { appendFileSync } from "node:fs";\nappendFileSync("pids", \`\${String(process.pid)}\\n\`);\n${appMjs()}`,
+    );
+    put(
+      "wrapper.mjs",
+      `import { spawn } from "node:child_process";\nspawn(process.execPath, ["learn/app.mjs"], { stdio: "inherit" });\nprocess.on("SIGTERM", () => process.exit(0));\n`,
+    );
+    const wrapper = [process.execPath, "wrapper.mjs"];
+    const result = run([dir, "--manifest", manifestFile], {
+      QUEST_BUDGETS_START_COMMAND: JSON.stringify(wrapper),
+    });
+    const pids = readFileSync(join(dir, "pids"), "utf8")
+      .split("\n")
+      .filter(Boolean)
+      .map(Number);
+    const alive = pids.filter((pid) => {
+      try {
+        process.kill(pid, 0);
+      } catch {
+        return false;
+      }
+      process.kill(pid, "SIGKILL");
+      return true;
+    });
+    // It ended by itself; 0 or 1 hangs on the machine's speed, not on this.
+    expect(result.error).toBeUndefined();
+    expect(result.stdout).toMatch(/Start-up \(median of 3\) +\d+ ms/);
+    expect(pids).toHaveLength(3);
+    expect(alive).toEqual([]);
   }, 30_000);
 });
