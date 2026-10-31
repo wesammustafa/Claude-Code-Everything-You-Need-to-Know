@@ -17,5 +17,10 @@ export function LessonGate() {
   if (unknown) return <NotFound />;
   if (snapshot && lessonId !== undefined && lessonId !== snapshot.lesson.id)
     return <LessonPreview id={lessonId} />;
+  return <Waiting />;
+}
+
+/** The quiet, empty column a screen shows while the engine gets there. */
+export function Waiting() {
   return <main className={COLUMN} aria-busy="true" data-lesson-waiting="" />;
 }

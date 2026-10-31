@@ -69,6 +69,11 @@ export function githubBlob(ref: string, path: string): string {
   return `${GUIDE_REPO}/blob/${ref}/${path}`;
 }
 
+/** The folder on GitHub at `ref`. */
+export function githubTree(ref: string, path: string): string {
+  return `${GUIDE_REPO}/tree/${ref}/${path}`;
+}
+
 /** Forgets every request, for tests. */
 export function resetPageCache(): void {
   index = null;

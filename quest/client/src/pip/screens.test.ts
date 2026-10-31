@@ -9,6 +9,9 @@ test.each([
   ["/lesson/b-1/step", "step"],
   ["/lesson/a-capstone/complete", "complete"],
   ["/progress", "progress"],
+  ["/level/b/complete", "levelComplete"],
+  ["/level/a/complete/", "levelComplete"],
+  ["/course/complete", "courseComplete"],
   ["/lesson/b-1/elsewhere", "other"],
   ["/nowhere", "other"],
 ])("%s is the %s screen", (path, screen) => {

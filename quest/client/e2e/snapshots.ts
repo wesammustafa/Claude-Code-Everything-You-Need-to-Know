@@ -964,6 +964,88 @@ export const courseDone: CourseView = {
   next: null,
 };
 
+/** fullCourse with the Beginner Level complete, its capstone too, and i-1 next (249). */
+export const beginnerDone: CourseView = {
+  levels: fullCourse.levels.map((level) =>
+    level.id === "beginner"
+      ? {
+          ...level,
+          complete: true,
+          lessons: level.lessons.map((lesson) => ({
+            ...lesson,
+            complete: true,
+          })),
+        }
+      : level,
+  ),
+  next: "i-1",
+};
+
+/** The Beginner capstone completed for the first time, with no next in the Level (249). */
+export const completeCapstone: CompleteLesson = {
+  ...complete,
+  id: "b-capstone",
+  title: "Beginner capstone",
+  capstone: true,
+  badge: "Beginner",
+  handover: true,
+  invitation: true,
+  next: {
+    id: "i-1",
+    title: "Turn a repeated workflow into a skill",
+    notchHarder: false,
+  },
+};
+
+/** The capstone's first completion and the Level complete it brought (249). */
+export const levelCompleted: Milestone[] = [
+  {
+    id: "e2e.40",
+    revision: 1,
+    serverTime: 1793380000000,
+    type: "lesson.completed",
+    badge: "Beginner",
+    capstone: true,
+    firstTime: true,
+  },
+  {
+    id: "e2e.41",
+    revision: 1,
+    serverTime: 1793380000000,
+    type: "level.completed",
+    level: "beginner",
+  },
+];
+
+/** The last Level and the course complete, waiting together (249). */
+export const courseCompleted: Milestone[] = [
+  {
+    id: "e2e.50",
+    revision: 1,
+    serverTime: 1793380000000,
+    type: "level.completed",
+    level: "advanced",
+  },
+  {
+    id: "e2e.51",
+    revision: 1,
+    serverTime: 1793380000000,
+    type: "course.completed",
+  },
+];
+
+/** An unreadable-save notice ahead of b-1's first completion (249). */
+export const noticeFirst: Milestone[] = [
+  {
+    id: "e2e.30",
+    revision: 1,
+    serverTime: 1793380000000,
+    type: "notice",
+    kind: "unreadable",
+  },
+  ...completed,
+];
+
 /** Three of b-1's skills with a step finished, in course order. */
 export const someMastery: Record<string, Mastery> = {
   install: { used: "commands", at: 1793380000000 },
