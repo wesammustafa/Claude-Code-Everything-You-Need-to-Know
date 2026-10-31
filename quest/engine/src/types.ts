@@ -73,6 +73,9 @@ export interface LessonProgress {
   complete: boolean;
   warm: StepId[];
   recalled: StepId[];
+  // The warm-ups a long wait's box showed in this lesson (TRIAGE-2 Q3),
+  // saved so a resume does not ask them again (ticket 287).
+  whileShown: StepId[];
   stamps: Record<string, string>;
   bottomAt: StepId | null;
   fingerprint?: string;
@@ -194,7 +197,6 @@ export interface EngineState {
   missed: string[];
   missedNow: string[];
   answeredNow: string[];
-  whileShown: string[];
   welcomed: boolean;
   lesson: LessonId;
   phase: "overview" | "playing" | "step-down" | "complete";
