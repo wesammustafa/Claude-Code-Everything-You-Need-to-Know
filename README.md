@@ -32,6 +32,19 @@ The app teaches every core lesson and capstone, at all three levels. It has no A
 
 If you prefer to read, every lesson works from its page alone. Each core lesson ends with a check you run from your practice copy, for example `npm run check -- b-1`: each item prints `PASS` or `FAIL`, with a hint for what to fix.
 
+## Already have a practice copy?
+
+If you made your copy before the app moved to the browser, run these in your copy's folder, in a terminal or in PowerShell. The fetch saves the template's latest version as [`FETCH_HEAD`](https://git-scm.com/docs/git-fetch), and [`--no-overlay`](https://git-scm.com/docs/git-checkout) replaces `checks/`, `capstone/` and `learn/` as wholes:
+
+```shell
+git fetch https://github.com/wesammustafa/claude-code-practice main
+git checkout --no-overlay FETCH_HEAD -- checks capstone learn
+git checkout FETCH_HEAD -- .github/workflows/progress.yml .gitattributes
+node checks/upgrade.mjs
+```
+
+The template's `progress.yml` workflow and `.gitattributes` replace yours. Your work moves into `project/`, with every file's contents kept (an untracked file left in `checks/`, `capstone/` or `learn/` moves to `.practice/upgrade-kept/`), and your saved progress stays where it is, so `npm run learn` opens where you left off. Run checks from `project/` now: `cd project`, then `npm run check -- b-1`. Review the change with `git status`, then commit it.
+
 ## Help that fades as you learn
 
 The help shrinks each time a skill comes back: GUIDED shows every command, HINTED gives the goal and a hint each time you press `h`, and CHALLENGE gives just the goal.

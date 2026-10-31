@@ -1,8 +1,9 @@
 // The CI template job runs the whole fresh-copy proof on Node 22 and on the
 // .nvmrc line, with Claude Code at the CHANGELOG baseline and Chromium
-// installed, and the required checks job fails when it does. A skip flag, a
-// dropped leg, a dropped install or a dropped need would let the proof go
-// partial or quiet.
+// installed, and the upgrade proof on every row: Ubuntu, macOS, and Windows
+// in Git Bash, pwsh and Windows PowerShell. The required checks job fails
+// when it does. A skip flag, a dropped leg, a dropped install or a dropped
+// need would let a proof go partial or quiet.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -51,6 +52,31 @@ test('the template job installs Claude Code at the CHANGELOG baseline, and Chrom
     /v=\$\(sed -n 's\/\^Baseline: Claude Code v\\\(\[0-9\.\]\*\\\) \.\*\/\\1\/p' CHANGELOG\.md\) && test -n "\$v" && npm i -g "@anthropic-ai\/claude-code@\$v" && claude --version/,
   );
   assert.match(template, /^\s+- run: npx playwright install --with-deps chromium$/m);
+});
+
+test('the template job runs the upgrade proof on every platform and shell, on every row', () => {
+  const template = job('template');
+  assert.match(template, /^\s+runs-on: \$\{\{ matrix\.os \}\}$/m);
+  const rows = [...template.matchAll(/^\s+- os: (\S+)\n\s+leg: (\S+)\n\s+node-version(?:-file)?: \S+\n\s+shell: (\S+)$/gm)].map((m) => m.slice(1).join(' '));
+  assert.deepEqual(rows, [
+    'ubuntu-latest node-22 bash',
+    'ubuntu-latest nvmrc bash',
+    'macos-latest nvmrc bash',
+    'windows-latest nvmrc bash',
+    'windows-latest nvmrc pwsh',
+    'windows-latest nvmrc powershell',
+  ]);
+  const lines = template.split('\n');
+  const upgrade = lines.findIndex((l) => /^\s+- run: npm run upgrade:verify -- --template "\$RUNNER_TEMP\/tpl" --shell \$\{\{ matrix\.shell \}\}$/.test(l));
+  assert.notEqual(upgrade, -1, 'no upgrade:verify step');
+  assert.doesNotMatch(lines[upgrade - 1], /^\s+- if:/);
+  assert.match(template, /^\s+- run: npm run template -- "\$RUNNER_TEMP\/tpl"$/m);
+  assert.doesNotMatch(template, /continue-on-error/);
+});
+
+test('npm run upgrade:verify is the upgrade proof with nothing added', () => {
+  assert.equal(pkg.scripts['upgrade:verify'], 'npm run upgrade:verify --workspace @quest/release --');
+  assert.equal(release.scripts['upgrade:verify'], 'node src/upgrade.mjs');
 });
 
 test('the required checks job needs template and fails unless it succeeded', () => {
