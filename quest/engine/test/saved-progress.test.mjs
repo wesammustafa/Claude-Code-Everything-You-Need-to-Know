@@ -3,7 +3,10 @@
 // the help each finished step used; and each skill's Mastery from it.
 import { test } from "vitest";
 import assert from "node:assert/strict";
+import { isDeepStrictEqual } from "node:util";
 import {
+  ACTION_TYPES,
+  cardOf,
   course,
   driver,
   finished,
@@ -450,4 +453,74 @@ test("learner.saving follows root .practice/, and its coming saves the place", (
     facts: { practiceDir: true, saveKept: true },
   });
   assert.equal(learner(kept).saving, false);
+});
+
+// ---- Your card ----------------------------------------------------------------
+// Rehoming row 174: opening the card is local in the browser (244), so the
+// engine side is that reading it changes nothing and its entries move only
+// with a finished step's save.
+test("Your card reads the saved done list: reading it changes nothing and asks for no save, there is no card action, and an entry joins the save only with a finished step", () => {
+  assert.deepEqual(
+    ACTION_TYPES.filter((t) => /card/i.test(t)),
+    [],
+  );
+  const d = driver({ course });
+  let prev = null;
+  let grew = 0;
+  const look = (s) => {
+    const clone = structuredClone(s);
+    const n = d.effects.length;
+    project(s);
+    cardOf(s);
+    assert.ok(isDeepStrictEqual(s, clone), "reading the card changed state");
+    assert.equal(d.effects.length, n, "reading the card asked for effects");
+    const card = project(s).learner.card;
+    if (prev) {
+      // A step is finished when it joins the done list (by a pass, a click
+      // or going on: going on marks no step.completed), in a save.
+      const saved = d.effects
+        .slice(prev.effects)
+        .some((e) => e.type === "save");
+      const doneOf = (x) => x.progress["b-1"]?.done ?? [];
+      const finishedNow = doneOf(s).filter(
+        (id) => !doneOf(prev.state).includes(id),
+      );
+      if (card.length > prev.card.length) {
+        grew += 1;
+        assert.ok(saved, "the card grew with no save");
+        assert.deepEqual(finishedNow, [stepOf(prev.state).id]);
+        for (const e of card.slice(prev.card.length))
+          assert.equal(e.skill, stepOf(prev.state).skill);
+      } else {
+        assert.deepEqual(card, prev.card);
+        // A step that finishes with no new entry is one whose skill has no
+        // card line or is on the card already.
+        for (const id of finishedNow) {
+          const { skill } = stepOf(prev.state);
+          assert.equal(id, stepOf(prev.state).id);
+          assert.ok(
+            !s.course
+              .find((l) => l.id === "b-1")
+              .content.card.some((e) => e.skill === skill) ||
+              prev.card.some((e) => e.skill === skill),
+            "a step finished with no card entry",
+          );
+        }
+        // Any other save (a place save) leaves the done list as it was.
+        if (finishedNow.length === 0)
+          assert.deepEqual(doneOf(s), doneOf(prev.state));
+      }
+    }
+    prev = {
+      state: s,
+      card,
+      effects: d.effects.length,
+    };
+  };
+  playUntil(d, (s) => s.phase === "complete", { look });
+  assert.ok(grew > 0, "b-1 adds no card entry");
+  assert.deepEqual(
+    learner(driver({ course, saved: toSave(d.state) })).card,
+    learner(d).card,
+  );
 });
