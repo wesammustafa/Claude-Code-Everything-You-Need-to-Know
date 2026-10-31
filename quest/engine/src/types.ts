@@ -158,6 +158,10 @@ export interface BeatState {
   // The first answer the beat started from: undefined until there is one.
   baseline?: string | null | undefined;
   slowWait?: boolean;
+  // The folder the beat's last result ran in (ticket 285).
+  ranIn?: string | null;
+  // s.asks when the beat opened: an r numbered at or below it is older.
+  asksAtOpen?: number;
   fail?: Failing | Dirty | null | undefined;
   error?: string | null;
   same?: boolean;

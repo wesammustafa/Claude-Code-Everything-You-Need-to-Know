@@ -293,6 +293,9 @@ export interface CodeView {
   copy: string;
 }
 
+/** The one place that decides a beat (ticket 285). */
+export type DecidedBy = "check" | "watch" | "learner" | "session" | "answer";
+
 export interface BeatView {
   /** Its place in the step, from 0. */
   index: number;
@@ -311,6 +314,10 @@ export interface BeatView {
   self: string | null;
   /** The label of the button that says the session ended, or null. */
   doneLabel: string | null;
+  /** What decides the beat: check and watch take check.run, learner step.markDone, session session.ended, answer the question's own. */
+  decidedBy: DecidedBy;
+  /** The Work folder the beat's last result ran in; null in the Practice copy or before any run. */
+  ranIn: string | null;
   /** A long wait: its words, or null for the app's own. Null when none. */
   wait: { text: string | null } | null;
   /** Why it matters: the line on the card at Guided, and all its reasons. */

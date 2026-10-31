@@ -37,6 +37,7 @@ import type {
   StepView,
 } from "@quest/contract";
 import {
+  decidedBy,
   must,
   READS,
   type Beat,
@@ -63,6 +64,7 @@ import {
   hidesRuns,
   hintAvailable,
   hintStatus,
+  inCopy,
   isDone,
   isLastBeat,
   lessonIn,
@@ -544,6 +546,8 @@ function beatView(s: EngineState): BeatView {
     ask: beat.ask ?? null,
     self: beat.self ?? null,
     doneLabel: beat.doneLabel ?? null,
+    decidedBy: decidedBy(beat),
+    ranIn: st.ranIn && !inCopy(s, st.ranIn) ? st.ranIn : null,
     wait: beat.wait ? { text: beat.wait.text ?? null } : null,
     why: {
       onCard:
