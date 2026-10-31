@@ -9,6 +9,7 @@
     "render:diagrams": "node src/render-diagrams.mjs",
     "template": "node src/template.mjs",
     "replay": "node src/replay.mjs",
-    "budgets": "node src/budgets.mjs"
+    "budgets": "node src/budgets.mjs",
+    "proof": "node src/proof.mjs"
   }
 }

@@ -15,6 +15,7 @@ const ALERTS = {
   CAUTION: "Caution",
 };
 const ALERT = /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\][ \t]*(?:\n|$)/;
+const TASK = /^\[[ xX]\] /;
 const HREF = /(\bhref\s*=\s*)(["'])(.*?)\2/gi;
 const SRC =
   /(?<![\w-])src\s*=\s*(["'])(.*?)\1|(?<![\w-])src\s*=\s*([^\s"'>]+)/gi;
@@ -70,6 +71,24 @@ function alerts(state) {
     );
     inline.content = inline.content.slice(m[0].length);
     if (inline.content.trim() === "") tokens.splice(i + 1, 3);
+  }
+}
+
+// A task-list item's leading [ ] , [x] or [X] is dropped, so self-check
+// lists render as plain lists with no box. Runs after inline parsing, on the
+// first text child of each item's first paragraph, before text_join merges a
+// backslash escape into it, so \[ ] stays literal as on GitHub.
+function taskMarkers(state) {
+  const tokens = state.tokens;
+  for (let i = 0; i < tokens.length; i++) {
+    if (tokens[i].type !== "list_item_open") continue;
+    const inline = tokens[i + 2];
+    if (tokens[i + 1]?.type !== "paragraph_open" || inline?.type !== "inline")
+      continue;
+    const child = inline.children?.[0];
+    if (child?.type !== "text" || !TASK.test(child.content)) continue;
+    child.content = child.content.replace(TASK, "");
+    inline.content = inline.content.replace(TASK, "");
   }
 }
 
@@ -140,6 +159,7 @@ export function markdown() {
     langPrefix: "language-",
   });
   md.core.ruler.after("block", "github_alerts", alerts);
+  md.core.ruler.before("text_join", "task_markers", taskMarkers);
   md.core.ruler.push("heading_ids", headingIds);
   md.core.ruler.push("release_links", links);
   const fence = md.renderer.rules.fence;

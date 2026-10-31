@@ -227,12 +227,30 @@ describe("the tree checks", () => {
     ["project/test/.practice", true],
     ["checks/.scratch", true],
     ["project/src/.scratch", false],
+    ["capstone/steps", true],
+    ["capstone/steps/x.md", false],
+    ["checks/steps.sh", false],
+    ["checks/solutions", true],
   ];
   test.each(plants)("%s is one problem", (path, asDir) => {
     const dir = cleanTree();
     plant(dir, path, asDir);
     expect(templateProblems(dir)).toHaveLength(1);
   });
+
+  test.each([
+    ["learn/app/b-1.md", "---\nlesson: b-1\n---\n# Step\n", 1],
+    ["capstone/README.md", "# Capstone\n\n---\nlesson: b-1\n", 0],
+    ["checks/notes.md", "---\ntitle: x\n---\n", 0],
+  ] as [string, string, number][])(
+    "%s with its front matter is %i step file",
+    (path, body, count) => {
+      const dir = cleanTree();
+      plant(dir, path);
+      writeFileSync(join(dir, path), body);
+      expect(templateProblems(dir)).toHaveLength(count);
+    },
+  );
 
   test.each([
     ["project/checks", true],
