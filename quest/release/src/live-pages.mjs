@@ -1,13 +1,18 @@
 // Which docs/ pages are live, and so rendered: every tracked page except the
-// Stubs (as the Guide's checks identify them), the READMEs and the ADRs.
+// Stubs (as the Guide's checks identify them), the READMEs other than the
+// three Level indexes, and the ADRs.
 import { listFiles, readText } from "../../../.github/scripts/lib/tree.mjs";
 import { STUBS, isStub } from "../../../.github/scripts/lib/stamps.mjs";
+
+const LEVELS = ["beginner", "intermediate", "advanced"];
+const LEVEL_INDEXES = LEVELS.map((level) => `docs/${level}/README.md`);
 
 export function classifyDocs(root, files = listFiles(root)) {
   const docs = files.filter((f) => f.startsWith("docs/") && f.endsWith(".md"));
   const out = { live: [], stubs: [], readmes: [], unpublished: [] };
   for (const path of docs) {
-    if (path.endsWith("/README.md")) out.readmes.push(path);
+    if (LEVEL_INDEXES.includes(path)) out.live.push(path);
+    else if (path.endsWith("/README.md")) out.readmes.push(path);
     else if (STUBS.includes(path) || isStub(readText(root, path)))
       out.stubs.push(path);
     else if (path.startsWith("docs/adr/")) out.unpublished.push(path);
@@ -15,8 +20,6 @@ export function classifyDocs(root, files = listFiles(root)) {
   }
   return out;
 }
-
-const LEVELS = ["beginner", "intermediate", "advanced"];
 
 // A page's name under pages/: its path less docs/ and .md.
 export function pageName(path) {
@@ -29,6 +32,7 @@ export function pageKind(path) {
   if (folder === "reference") return { kind: "reference" };
   if (folder === "topics") return { kind: "topic" };
   if (!LEVELS.includes(folder)) return { kind: "reference" };
+  if (second === "README") return { kind: "index", level: folder };
   if (second === "electives") return { kind: "elective", level: folder };
   if (second === "capstone") return { kind: "capstone", level: folder };
   return { kind: "lesson", level: folder };
