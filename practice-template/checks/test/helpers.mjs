@@ -31,11 +31,6 @@ export function write(dir, files) {
   }
 }
 
-// Options for a test that needs a Learner's script to run: the checks run one
-// with the stand-in for `claude` only from WSL 2, macOS or Linux, and say so on
-// Windows itself (a test pins that message), so there it is skipped.
-export const POSIX_ONLY = { skip: process.platform === 'win32' && 'the checks run scripts only from WSL 2, macOS or Linux' };
-
 // Gives `path` the mode `mode` on disk and in git's index. Windows keeps no
 // executable bit on disk and git there ignores file modes, so only the index
 // carries it; a later `git add` keeps the staged mode.
