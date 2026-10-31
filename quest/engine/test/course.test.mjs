@@ -5,6 +5,7 @@ import { lessons } from "../../../practice-template/checks/lessons/index.mjs";
 import { PROBES, probeError } from "../src/probes.ts";
 import {
   compileCourse,
+  fingerprint,
   generateCheckIndex,
   parseLesson,
   parseManifest,
@@ -42,7 +43,7 @@ describe("course manifest", () => {
       minutes: "about 20 minutes",
       next: "b-2",
       folder: "copy",
-      fingerprint: course.lessons[0].legacyFingerprint,
+      fingerprint: fingerprint(course.lessons[0].content),
     });
     expect(course.lessons[0].content.lesson).toBe("b-1");
     expect(course.lessons.at(-1).next).toBeNull();
@@ -76,6 +77,59 @@ describe("course manifest", () => {
       expect(entry.legacyFingerprint).toBe(lesson.legacyFingerprint);
       expect(entry.legacyFingerprint).toMatch(/^[0-9a-f]{64}$/);
     }
+  });
+
+  // The legacy fingerprints come from the template's last Terminal app commit
+  // (course/legacy-fingerprints.json, ticket 256).
+  test("carries the legacy fingerprints from the template commit", () => {
+    const data = JSON.parse(
+      readFileSync(`${root}course/legacy-fingerprints.json`, "utf8"),
+    );
+    expect(data.commit).toMatch(/^[0-9a-f]{40}$/);
+    expect(data.template).toBe(
+      "https://github.com/wesammustafa/claude-code-practice",
+    );
+    const course = compileCourse(manifestValue, stepFiles, pages, {
+      ...checks,
+      legacy: data,
+    });
+    const dist = JSON.parse(
+      readFileSync(`${root}quest/engine/dist/course.json`, "utf8"),
+    );
+    expect(Object.keys(data.lessons)).toEqual(
+      course.lessons.map((lesson) => lesson.id),
+    );
+    for (const [at, lesson] of course.lessons.entries()) {
+      expect(lesson.legacyFingerprint).toBe(data.lessons[lesson.id]);
+      expect(dist.lessons[at].legacyFingerprint).toBe(data.lessons[lesson.id]);
+    }
+    // Unchanged since that commit: relax this for a Lesson whose Steps change.
+    for (const lesson of course.lessons)
+      expect(
+        lesson.legacyFingerprint,
+        `${lesson.id} unchanged since ${data.commit}`,
+      ).toBe(lesson.fingerprint);
+  });
+
+  test("rejects malformed legacy fingerprints with their file and line", () => {
+    const data = JSON.parse(
+      readFileSync(`${root}course/legacy-fingerprints.json`, "utf8"),
+    );
+    for (const legacy of [
+      { ...data, lessons: { ...data.lessons, "b-99": "0".repeat(64) } },
+      { ...data, lessons: { ...data.lessons, "b-1": "not a print" } },
+      { ...data, commit: "0e90e55" },
+    ])
+      expect(() =>
+        compileCourse(manifestValue, stepFiles, pages, { ...checks, legacy }),
+      ).toThrow(/^course\/legacy-fingerprints\.json:1:/);
+    const { "b-1": _dropped, ...rest } = data.lessons;
+    expect(() =>
+      compileCourse(manifestValue, stepFiles, pages, {
+        ...checks,
+        legacy: { ...data, lessons: rest },
+      }),
+    ).toThrow(/b-1 has no legacy fingerprint/);
   });
 
   test("rejects a malformed manifest with its file and line", () => {

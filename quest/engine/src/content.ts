@@ -1593,6 +1593,24 @@ export interface CompiledCourse {
   lessons: CompiledLesson[];
 }
 
+// The legacy fingerprints (course/legacy-fingerprints.json): each Lesson's
+// fingerprint at the template commit the Terminal app last shipped, so a save
+// from that app, which has none, counts as changed only where the Steps did.
+export const legacyFingerprintsSchema = z.strictObject({
+  template: z.string(),
+  commit: z.string().regex(/^[0-9a-f]{40}$/),
+  lessons: z.record(z.string(), z.string().regex(/^[0-9a-f]{64}$/)),
+});
+export type LegacyFingerprints = z.infer<typeof legacyFingerprintsSchema>;
+
+export function parseLegacyFingerprints(value: unknown): LegacyFingerprints {
+  const file = "course/legacy-fingerprints.json";
+  const result = legacyFingerprintsSchema.safeParse(value);
+  if (result.success) return result.data;
+  const issue = must(result.error.issues[0], `${file}:1: invalid`);
+  throw new Error(`${file}:1: ${issue.path.join(".")}: ${issue.message}`);
+}
+
 export function compileCourse(
   value: unknown,
   stepFiles: Readonly<Record<string, string | undefined>>,
@@ -1600,13 +1618,28 @@ export function compileCourse(
   {
     lessons: checks,
     probes,
+    legacy: legacyValue,
   }: {
     lessons: Readonly<Record<string, CheckModule | undefined>>;
     probes: NonNullable<ParseContext["probes"]>;
+    legacy?: unknown;
   },
 ): CompiledCourse {
   const manifest = parseManifest(value);
   const path = coursePath(manifest);
+  const legacy =
+    legacyValue === undefined ? null : parseLegacyFingerprints(legacyValue);
+  for (const id of Object.keys(legacy?.lessons ?? {})) {
+    if (!path.some((entry) => entry.id === id))
+      throw new Error(
+        `course/legacy-fingerprints.json:1: ${id} is no lesson on the path`,
+      );
+  }
+  const missing = legacy && path.find((entry) => !legacy.lessons[entry.id]);
+  if (missing)
+    throw new Error(
+      `course/legacy-fingerprints.json:1: ${missing.id} has no legacy fingerprint`,
+    );
   const compiled = {
     levels: manifest.levels,
     lessons: path.map((entry, at) => {
@@ -1668,7 +1701,7 @@ export function compileCourse(
         items: check.items.map((item) => item.text),
         content,
         fingerprint: print,
-        legacyFingerprint: print,
+        legacyFingerprint: legacy?.lessons[entry.id] ?? print,
       };
     }),
   };

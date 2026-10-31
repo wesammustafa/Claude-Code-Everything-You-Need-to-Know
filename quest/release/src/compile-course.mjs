@@ -9,6 +9,9 @@ const root = fileURLToPath(new URL("../../../", import.meta.url));
 const manifest = JSON.parse(
   readFileSync(join(root, "course/manifest.json"), "utf8"),
 );
+const legacy = JSON.parse(
+  readFileSync(join(root, "course/legacy-fingerprints.json"), "utf8"),
+);
 const stepFiles = Object.fromEntries(
   manifest.lessons.map((lesson) => [
     lesson.steps,
@@ -24,6 +27,7 @@ const pages = Object.fromEntries(
 const course = compileCourse(manifest, stepFiles, pages, {
   lessons,
   probes: { PROBES, probeError },
+  legacy,
 });
 const output = join(root, "quest/engine/dist/course.json");
 mkdirSync(dirname(output), { recursive: true });
