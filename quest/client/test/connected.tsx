@@ -44,6 +44,12 @@ export const PAGE_INDEX = {
       kind: "reference",
     },
     {
+      path: "docs/reference/glossary.md",
+      url: "/pages/reference/glossary.html",
+      title: "Glossary",
+      kind: "reference",
+    },
+    {
       path: "docs/beginner/electives/notes.md",
       url: "/pages/beginner/electives/notes.html",
       title: "Keep notes with Claude",
@@ -59,6 +65,8 @@ const PAGES: Record<string, string> = {
     '<h1 id="install">Install, sign in and look around</h1><p>The lesson.</p>',
   "/pages/reference/commands.html":
     '<h1 id="commands">Commands by level</h1><p>Every command.</p>',
+  "/pages/reference/glossary.html":
+    '<h1 id="glossary">Glossary</h1><p>Every term.</p>',
   "/pages/beginner/electives/notes.html":
     '<h1 id="notes">Keep notes with Claude</h1><p>An elective.</p>',
 };

@@ -293,3 +293,31 @@ test("Your card opens during a check, the check's result still lands, and Comman
   await expect(page.getByRole("button", { name: "Your card" })).toBeFocused();
   await expect(page.getByText("That step is done.")).toBeVisible();
 });
+
+test("Settings Help opens Commands by level and the Glossary in the panel, and shows the release the pages came from", async ({
+  page,
+  context,
+}) => {
+  await servePages(context);
+  await openAt(page, "/#/journey", overviewAt("b-1"));
+  const gear = page.getByRole("button", { name: "Settings" });
+  for (const path of [
+    "docs/reference/commands.md",
+    "docs/reference/glossary.md",
+  ]) {
+    await gear.click();
+    const settings = page.getByRole("dialog", { name: "Settings" });
+    await expect(settings.locator("[data-ref]")).toHaveAttribute(
+      "data-ref",
+      pageIndex.ref,
+    );
+    await settings.getByRole("button", { name: titleOf(path) }).click();
+    const panel = page.getByRole("dialog", { name: titleOf(path) });
+    await expect(
+      panel.getByRole("heading", { level: 1, name: titleOf(path) }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(panel).toBeHidden();
+    await expect(gear).toBeFocused();
+  }
+});

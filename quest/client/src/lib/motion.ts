@@ -1,8 +1,8 @@
 // The motion tokens as Motion for React reads them: tokens.css declares every
 // duration, easing and travel on :root, and reduced motion (the system
-// setting or the Settings switch) overrides them there, so a component that
-// animates through Motion reads them back from the page rather than writing
-// a number of its own.
+// setting or the Settings motion choice) overrides them there, so a
+// component that animates through Motion reads them back from the page
+// rather than writing a number of its own.
 import type { Transition } from "motion/react";
 import { useMemo } from "react";
 import { useReducedMotion } from "./page";
