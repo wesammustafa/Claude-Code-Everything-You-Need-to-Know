@@ -2,7 +2,9 @@
 //   node gen-overviews.ts
 // It ran project(initialState(loadCourse)) and lesson.open for every Lesson,
 // each Level's Work folder saved so `start` is set, and added `check` from
-// CourseEntry.items (ticket 283's field). Regenerate when the course changes.
+// CourseEntry.items. Ticket 283 added `check` and `needs` (by hand, each need
+// line `missing: null` as before the host answers) and i1Asking's `check`.
+// Regenerate when the course changes.
 import type { CourseView, OverviewLesson } from "@quest/contract";
 
 /** The compiled course, as the overviews' snapshots carry it. */
@@ -509,6 +511,7 @@ export const overviews = [
       "`claude --version` prints a Claude Code version",
       "the claim in `practice/b-1/onboarding.md` that the code contradicts is corrected",
     ],
+    needs: [],
   },
   {
     id: "b-2",
@@ -675,6 +678,7 @@ export const overviews = [
       "An unknown key in `linkcheck.json`, such as `ignores`, makes the tool exit with code 2 and name the key",
       "A broken link still makes the tool exit with code 1 and report the link",
     ],
+    needs: [],
   },
   {
     id: "b-3",
@@ -818,6 +822,7 @@ export const overviews = [
       "the tests pass",
       "nothing is left uncommitted",
     ],
+    needs: [],
   },
   {
     id: "b-4",
@@ -959,6 +964,7 @@ export const overviews = [
       "`.practice/b-4-after-rewind.txt` lists `src/links.js` and no other file in `src/` or `test/`",
       "`src/` and `test/` have no uncommitted changes, your last commit's `src/links.js` still exports `findLinks`, and `npm run linkcheck -- samples` runs without an error",
     ],
+    needs: [],
   },
   {
     id: "b-5",
@@ -1092,6 +1098,7 @@ export const overviews = [
       "the committed CLAUDE.md holds the notes' rule for CLI errors, and every `npm run` script it names is in `package.json`",
       "a committed `.gitignore` keeps `CLAUDE.local.md` out, git tracks no `CLAUDE.local.md`, and the committed CLAUDE.md holds neither personal note",
     ],
+    needs: [],
   },
   {
     id: "b-capstone",
@@ -1163,6 +1170,7 @@ export const overviews = [
       "a committed CLAUDE.md names the test command, `npm test`",
       "nothing is left uncommitted",
     ],
+    needs: [],
   },
   {
     id: "i-1",
@@ -1290,6 +1298,7 @@ export const overviews = [
       "the tdd skill can run as `/tdd` and load on its own: a description, and no `disable-model-invocation: true`",
       "the commit in `.practice/i-1-commit.txt` changes a test and the code it tests",
     ],
+    needs: [],
   },
   {
     id: "i-2",
@@ -1414,6 +1423,12 @@ export const overviews = [
       "a committed rule in `.claude/rules/` is scoped with `paths:`, and every scoped rule matches a file in the repository",
       "`.practice/i-2-loaded.txt` shows the imported file and a scoped rule loading",
     ],
+    needs: [
+      {
+        quote: "`jq`, for the load log in the Worked example.",
+        missing: null,
+      },
+    ],
   },
   {
     id: "i-3",
@@ -1521,6 +1536,7 @@ export const overviews = [
       "the committed changelog skill runs a smaller model at low or medium effort",
       "a committed CHANGELOG.md has an entry under `## Unreleased`",
     ],
+    needs: [],
   },
   {
     id: "i-4",
@@ -1641,6 +1657,7 @@ export const overviews = [
       "the sandbox is on, and `.claude/settings.local.json` stays out of git",
       "the committed `.claude/settings.json` asks before a command the team approves each time, such as `git push`",
     ],
+    needs: [],
   },
   {
     id: "i-5",
@@ -1770,6 +1787,13 @@ export const overviews = [
       "the committed test gate exits 2 with a reason while the tests fail, and 0 once they pass or after one retry",
       "the committed `.claude/settings.json` runs test-gate.sh as a `Stop` hook",
     ],
+    needs: [
+      {
+        quote:
+          "`jq`, which the hook scripts use, and `python3`, which `format-after-edit.sh` uses.",
+        missing: null,
+      },
+    ],
   },
   {
     id: "i-6",
@@ -1889,6 +1913,12 @@ export const overviews = [
       "`.claude/agents/test-gaps.md` is committed with its name and a description of when to use it",
       "its `tools` list only reads code: no tool that edits files, runs commands or reaches the web",
       "`.practice/i-6-agents.txt` shows Claude delegating to test-gaps",
+    ],
+    needs: [
+      {
+        quote: "`jq`, for the delegation log in Your turn.",
+        missing: null,
+      },
     ],
   },
   {
@@ -2010,6 +2040,13 @@ export const overviews = [
       "`.practice/i-7-page.png` holds a PNG image of the repaired page",
       "the demo script displays `2 links ready` without a script error",
     ],
+    needs: [
+      {
+        quote:
+          "Chrome, and npm, which comes with Node.js: the server runs through `npx`",
+        missing: null,
+      },
+    ],
   },
   {
     id: "i-8",
@@ -2117,6 +2154,7 @@ export const overviews = [
       "`.practice/i-8-plugins.json`, saved in this repository, shows that plugin installed at project scope and enabled",
       "a code intelligence plugin you trialled is installed at local scope here, and the committed settings leave it off",
     ],
+    needs: [],
   },
   {
     id: "i-capstone",
@@ -2198,6 +2236,13 @@ export const overviews = [
       "the committed CLI reports malformed percent escapes as broken links and still resolves valid encoded paths",
       "`.practice/i-capstone-agents.txt` shows Claude delegating to the committed reviewer",
       "the committed `.claude/settings.json` asks before a command the team approves each time, such as `git push`",
+    ],
+    needs: [
+      {
+        quote:
+          "`jq` and `python3` for hook scripts, and Chrome for the MCP server.",
+        missing: null,
+      },
     ],
   },
   {
@@ -2350,6 +2395,7 @@ export const overviews = [
       "`.practice/a-1-worktrees.txt` lists two worktrees under `.claude/worktrees/` whose commits split from each other, and both changes are in your branch",
       "neither of those worktrees still exists",
     ],
+    needs: [],
   },
   {
     id: "a-2",
@@ -2453,6 +2499,13 @@ export const overviews = [
     check: [
       "`.practice/a-2-choices.md` picks the cheapest pattern that fits each job",
       "`.practice/i-6-agents.txt` shows at least two subagents other than `test-gaps` starting for job 1",
+    ],
+    needs: [
+      {
+        quote:
+          "`jq`: the delegation log from [Intermediate lesson 6](../intermediate/06-subagents.md) uses it",
+        missing: null,
+      },
     ],
   },
   {
@@ -2574,6 +2627,7 @@ export const overviews = [
       "a committed script in `.claude/workflows/` has a literal `export const meta`, with a `name` and a `description`, as its first statement, and reads its input from `args` and calls `agent()` at least twice",
       "the `git grep -E` pattern in `.practice/a-3-pattern.txt` matched in a folder at an earlier commit and matches nothing in that folder at `HEAD`",
     ],
+    needs: [],
   },
   {
     id: "a-4",
@@ -2684,6 +2738,12 @@ export const overviews = [
       "its `claude -p` call asks for JSON in `dontAsk` mode, allows only `Read`, `Grep` and `Glob`, with no hook or MCP server, caps turns at 10 or fewer, and has the prompt right after `-p`",
       "it pipes the staged diff in, saves the JSON where its argument says, prints the result, exits non-zero when the run fails, and doesn't call Claude when nothing is staged",
       "`.practice/a-4-result.json` holds a run that succeeded within your cap",
+    ],
+    needs: [
+      {
+        quote: "bash and `jq`, on macOS, Linux or WSL 2.",
+        missing: null,
+      },
     ],
   },
   {
@@ -2819,6 +2879,13 @@ export const overviews = [
       "a committed workflow runs `anthropics/claude-code-action` pinned to a release or a commit SHA, in automation mode, with its credential from a secret and none in the file",
       "its limits are in the file: `--max-turns` of at most 10, an `--allowedTools` list without unrestricted `Bash`, a read-only job token and `timeout-minutes`",
       "`.practice/a-5-runs.json` shows a completed, successful manual run on a commit that holds the workflow",
+    ],
+    needs: [
+      {
+        quote:
+          "The [GitHub CLI](https://cli.github.com), signed in with `gh auth login`.",
+        missing: null,
+      },
     ],
   },
   {
@@ -2957,6 +3024,12 @@ export const overviews = [
       "a component you moved is in the plugin and gone from `.claude/`",
       "a committed `.gitignore` keeps `.claude/settings.local.json` and `CLAUDE.local.md` out, and git tracks neither",
     ],
+    needs: [
+      {
+        quote: "bash, `curl` and git, on macOS, Linux or WSL 2.",
+        missing: null,
+      },
+    ],
   },
   {
     id: "a-7",
@@ -3079,6 +3152,12 @@ export const overviews = [
       "the settings file turns the sandbox on in strict mode without auto-allow, and makes the run refuse to start without it",
       "`.practice/a-7-slice.json` holds a slice run whose cost is under your spend limit",
     ],
+    needs: [
+      {
+        quote: "bash and `jq`, on macOS, Linux or WSL 2.",
+        missing: null,
+      },
+    ],
   },
   {
     id: "a-capstone",
@@ -3167,8 +3246,15 @@ export const overviews = [
       "the CI workflow sets a `concurrency` group with `cancel-in-progress: true`, so a new push cancels the review still running",
       "`.practice/a-capstone-ci.json` shows a completed, successful `pull_request` run of the review workflow",
     ],
+    needs: [
+      {
+        quote:
+          "Node.js LTS, git, `jq`, and the GitHub CLI signed in with `gh auth login`.",
+        missing: null,
+      },
+    ],
   },
-] as (OverviewLesson & { check: string[] })[];
+] as OverviewLesson[];
 
 /** i-1's overview with no Work folder saved: the folder question asks. */
 export const i1Asking = {
@@ -3272,6 +3358,12 @@ export const i1Asking = {
       },
     ],
   },
+  check: [
+    "`.claude/skills/tdd/SKILL.md` is committed, with no TODO left",
+    "the tdd skill can run as `/tdd` and load on its own: a description, and no `disable-model-invocation: true`",
+    "the commit in `.practice/i-1-commit.txt` changes a test and the code it tests",
+  ],
+  needs: [],
   notes: [],
   folderQuestion: {
     key: "intermediate",

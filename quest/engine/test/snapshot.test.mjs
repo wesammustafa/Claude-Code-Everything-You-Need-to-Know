@@ -336,6 +336,27 @@ test("overview: the page's Windows note shows on native Windows only", () => {
   }
 });
 
+test("overview: every Lesson's overview lists its Check items in order, slow items kept", () => {
+  const check = (id) => {
+    const d = driver({
+      course,
+      saved: save({ lessons: finishedBefore(id) }),
+    });
+    d.open(id);
+    assert.deepEqual([d.state.phase, d.state.lesson], ["overview", id]);
+    return view(d).check;
+  };
+  for (const { id } of course) assert.deepEqual(check(id), lesson(id).items);
+  // Slow items stay where the Lesson lists them.
+  assert.deepEqual(lesson("b-3").slow, [1]);
+  assert.equal(check("b-3")[1], lesson("b-3").items[1]);
+  assert.deepEqual(lesson("b-capstone").slow, [3, 4]);
+  assert.deepEqual(
+    check("b-capstone").slice(3, 5),
+    lesson("b-capstone").items.slice(3, 5),
+  );
+});
+
 test("overview: a lesson with no lesson file is never opened, and its overview, where the app opens on it, says nothing", () => {
   const b1Only = course.map((l) =>
     l.id === "b-1" ? l : { ...l, content: null },
@@ -347,8 +368,16 @@ test("overview: a lesson with no lesson file is never opened, and its overview, 
   assert.deepEqual([d.state.lesson, d.state.phase], ["b-2", "overview"]);
   const v = view(d);
   assert.deepEqual(
-    [v.intro, v.staircase, v.notes, v.folderQuestion, v.start],
-    [null, { planned: [], less: null }, [], null, null],
+    [
+      v.intro,
+      v.staircase,
+      v.check,
+      v.needs,
+      v.notes,
+      v.folderQuestion,
+      v.start,
+    ],
+    [null, { planned: [], less: null }, [], [], [], null, null],
   );
   assert.equal(project(d.state).course.next, null);
 });

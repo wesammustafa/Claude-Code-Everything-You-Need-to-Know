@@ -75,6 +75,9 @@ const APP_WORDS: readonly RegExp[] = [
   /^What the check looks for$/,
   /^, (1 check|\d+ checks)$/,
   /^Not found on your PATH:$/,
+  /^Found on your PATH\.$/,
+  /^Looking on your PATH\.\.\.$/,
+  /^What you need$/,
   /^Open $/,
   /^ first$/,
   /^(Start over|Keep my place)$/,
@@ -181,9 +184,9 @@ describe("Welcome", () => {
   });
 });
 
-/** An overview with ticket 283's check items. */
+/** An overview with these check items. */
 function withCheck(lesson: OverviewLesson, check: string[]): OverviewLesson {
-  return { ...lesson, check } as OverviewLesson;
+  return { ...lesson, check };
 }
 
 describe("Lesson overview", () => {
@@ -243,8 +246,8 @@ describe("Lesson overview", () => {
       "/lesson/b-1",
       snapshotOf({
         ...overview,
+        needs: [{ quote: "You need `jq` installed.", missing: ["jq"] }],
         notes: [
-          { kind: "need", quote: "You need `jq` installed.", missing: ["jq"] },
           { kind: "unmet", line: "", lesson: null },
           {
             kind: "unmet",
@@ -255,14 +258,46 @@ describe("Lesson overview", () => {
         start: { planned: true, less: true, first: "b-2" },
       }),
     );
+    expect(
+      document.querySelector("[data-overview-needs] li"),
+    ).toHaveTextContent("Not found on your PATH: jq");
     const notes = document.querySelectorAll("[data-overview-notes] > li");
-    expect(notes).toHaveLength(2);
-    expect(notes[0]).toHaveTextContent("Not found on your PATH: jq");
-    const offer = within(notes[1] as HTMLElement).getByRole("button", {
+    expect(notes).toHaveLength(1);
+    const offer = within(notes[0] as HTMLElement).getByRole("button", {
       name: "Open Permission modes and plan mode first",
     });
     await user.click(offer);
     expect(page.posts).toEqual([{ type: "lesson.open", lesson: "b-2" }]);
+  });
+
+  test("each You need line shows once, found, missing or still looked for", () => {
+    renderConnected(
+      "/lesson/b-1",
+      snapshotOf({
+        ...overview,
+        needs: [
+          { quote: "You need `python3`.", missing: [] },
+          { quote: "You need `jq` and `yq`.", missing: ["jq", "yq"] },
+          { quote: "You need `bwrap` on Linux.", missing: null },
+        ],
+        // A need note left in the snapshot does not say a line again.
+        notes: [
+          { kind: "need", quote: "You need `jq` and `yq`.", missing: ["jq"] },
+        ],
+      }),
+    );
+    const lines = document.querySelectorAll("[data-overview-needs] li");
+    expect([...lines].map((li) => li.textContent)).toEqual([
+      "You need python3.Found on your PATH.",
+      "You need jq and yq.Not found on your PATH: jq yq",
+      "You need bwrap on Linux.Looking on your PATH...",
+    ]);
+    expect(document.querySelector("[data-overview-notes]")).toBeNull();
+  });
+
+  test("no needs here, no What you need list", () => {
+    renderConnected("/lesson/b-1", snapshotOf(overview));
+    expect(document.querySelector("[data-overview-needs]")).toBeNull();
   });
 
   test("Start over is only for a saved place, and asks first", async () => {
@@ -433,8 +468,12 @@ describe("Lesson overview", () => {
             "read **every** line of [the docs](https://code.claude.com/docs/en/overview)",
           ],
         },
+        needs: [
+          { quote: "You need `jq` installed.", missing: ["jq"] },
+          { quote: "You need `python3`.", missing: [] },
+          { quote: "You need `bwrap` on Linux.", missing: null },
+        ],
         notes: [
-          { kind: "need", quote: "You need `jq` installed.", missing: ["jq"] },
           { kind: "win-note", text: "" },
           {
             kind: "unmet",

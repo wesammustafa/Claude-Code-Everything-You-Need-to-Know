@@ -181,6 +181,8 @@ export const overview: OverviewLesson = {
       },
     ],
   },
+  check: [],
+  needs: [],
   notes: [],
   folderQuestion: null,
   start: {
@@ -317,6 +319,8 @@ export const playing: PlayingLesson = {
     ask: null,
     self: null,
     doneLabel: null,
+    decidedBy: "check",
+    ranIn: null,
     wait: null,
     why: {
       onCard: null,

@@ -37,6 +37,7 @@ import type {
   StepView,
 } from "@quest/contract";
 import {
+  decidedBy,
   must,
   READS,
   type Beat,
@@ -63,6 +64,7 @@ import {
   hidesRuns,
   hintAvailable,
   hintStatus,
+  inCopy,
   isDone,
   isLastBeat,
   lessonIn,
@@ -74,6 +76,7 @@ import {
   levelsOf,
   missingNeeds,
   moreHelpGives,
+  needLines,
   nextLessonOf,
   offered,
   pickWarmups,
@@ -258,6 +261,8 @@ function overviewOf(s: EngineState, head: LessonHead): OverviewLesson {
       phase: "overview",
       intro: null,
       staircase: { planned: [], less: null },
+      check: [],
+      needs: [],
       notes: [],
       folderQuestion: null,
       start: null,
@@ -277,6 +282,8 @@ function overviewOf(s: EngineState, head: LessonHead): OverviewLesson {
       read: c.intro.read ?? null,
     },
     staircase: { planned, less: lessDiffers ? less : null },
+    check: [...lessonIn(s).items],
+    needs: needLines(s),
     notes: notesOf(s, c),
     folderQuestion: folderQuestionOf(s),
     start: asksFolder(s)
@@ -539,6 +546,8 @@ function beatView(s: EngineState): BeatView {
     ask: beat.ask ?? null,
     self: beat.self ?? null,
     doneLabel: beat.doneLabel ?? null,
+    decidedBy: decidedBy(beat),
+    ranIn: st.ranIn && !inCopy(s, st.ranIn) ? st.ranIn : null,
     wait: beat.wait ? { text: beat.wait.text ?? null } : null,
     why: {
       onCard:

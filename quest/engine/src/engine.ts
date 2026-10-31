@@ -15,6 +15,7 @@ import type {
   LessonId,
 } from "@quest/contract";
 import {
+  decidedBy,
   fingerprint,
   GIT,
   isChoice,
@@ -822,15 +823,24 @@ export const introOptions = (s: EngineState) => [
   "less",
   ...(offered(s) ? ["first"] : []),
 ];
+// The commands a You need line names that the host found on no PATH folder.
+const absent = (s: EngineState, commands: string[]) =>
+  commands.filter((c) => s.commands[c] === false);
 // Each You need line with the commands it names that the host found on no PATH
 // folder. Nothing until the host has looked.
 export const missingNeeds = (s: EngineState) =>
   needsHere(s)
-    .map((n) => ({
-      quote: n.quote,
-      names: n.commands.filter((c) => s.commands[c] === false),
-    }))
+    .map((n) => ({ quote: n.quote, names: absent(s, n.commands) }))
     .filter((n) => n.names.length);
+// Each You need line here with the commands the host found on no PATH
+// folder: [] when it found them all, null until it has answered for each.
+export const needLines = (s: EngineState) =>
+  needsHere(s).map((n) => ({
+    quote: n.quote,
+    missing: n.commands.some((c) => s.commands[c] === undefined)
+      ? null
+      : absent(s, n.commands),
+  }));
 // What the host found wrong with the lesson's work folder, where it isn't the
 // copy (ticket 86): 'missing', 'gitBroken', 'notGit' or 'noPractice'. Null
 // until the host has looked, and where all is well.
@@ -1091,6 +1101,7 @@ function openBeat(s: EngineState, effects: Effect[]) {
     run: null,
     look: null,
     touched: false,
+    asksAtOpen: s.asks,
   };
   s.beat = st;
   const offer = beat.wait ? whileRunsPick(s) : null;
@@ -2075,8 +2086,7 @@ const ACTIONS: ActionHandlers = {
   "step.markDone"(s, _a, effects) {
     if (!answering(s) || openQuestion(s)) return false;
     const beat = currentBeat(s);
-    const v = beat.verify.kind;
-    if (v !== "self" && v !== "none" && beat.kind !== "self") return false;
+    if (decidedBy(beat) !== "learner") return false;
     beatState(s).status = "done";
     advance(s, effects);
     return true;
@@ -2086,7 +2096,7 @@ const ACTIONS: ActionHandlers = {
   "session.ended"(s, _a, effects) {
     if (!answering(s) || openQuestion(s)) return false;
     const beat = currentBeat(s);
-    if (beat.verify.kind !== "git-clean" || !beat.doneLabel) return false;
+    if (decidedBy(beat) !== "session") return false;
     const st = beatState(s);
     st.ended = true;
     st.explicit = true;
@@ -2275,6 +2285,17 @@ function apply(
     ev.dir !== resultFolder(s, ev)
   )
     ev = { ...ev, type: "stale" };
+  // The folder this beat's last result ran in (ticket 285). An r's result
+  // asked for before the beat opened is an earlier beat's run.
+  if (
+    result &&
+    s.beat &&
+    !(ev.asked && ev.asked <= (s.beat.asksAtOpen ?? 0)) &&
+    ev.type !== "stale" &&
+    ev.dir != null &&
+    (ev.lesson ?? s.lesson) === s.lesson
+  )
+    s.beat.ranIn = ev.dir;
   const look = lookAt(s, ev);
   switch (ev.type) {
     case "check":

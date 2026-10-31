@@ -38,6 +38,7 @@ import {
   threeLevels,
   unmet,
 } from "./drive.mjs";
+import { project } from "../src/index.ts";
 
 // The guide's own You need lines, as the lessons that need them quote them.
 const NEED_JQ =
@@ -201,6 +202,36 @@ test("the intro asks main to look up the commands its page needs, the Linux-only
   ]);
   // A lesson that needs nothing asks nothing.
   assert.deepEqual(introAsks(atIntro().state), []);
+});
+
+// spec: needs.needs-commands
+test("the overview's needs read each You need line in three states: null until main answers for every command, the missing ones, then [] once all are found", () => {
+  const linux = atIntro(NEEDS, { linux: true });
+  const needs = () => project(linux.state).lesson.needs;
+  assert.deepEqual(needs(), [
+    { quote: NEED_JQ, missing: null },
+    { quote: NEED_SANDBOX, missing: null },
+  ]);
+  // One command of a line answered: the line still waits.
+  linux.send({ type: "commands", found: { jq: true } });
+  assert.deepEqual(needs()[0], { quote: NEED_JQ, missing: null });
+  linux.send({ type: "commands", found: { python3: false } });
+  assert.deepEqual(needs(), [
+    { quote: NEED_JQ, missing: ["python3"] },
+    { quote: NEED_SANDBOX, missing: null },
+  ]);
+  linux.send({
+    type: "commands",
+    found: { python3: true, bwrap: true, socat: true },
+  });
+  assert.deepEqual(needs(), [
+    { quote: NEED_JQ, missing: [] },
+    { quote: NEED_SANDBOX, missing: [] },
+  ]);
+  // Off Linux the Linux-only line is not there.
+  assert.deepEqual(project(atIntro(NEEDS).state).lesson.needs, [
+    { quote: NEED_JQ, missing: null },
+  ]);
 });
 
 // The guide's NOTE, on Intermediate lesson 1's page.

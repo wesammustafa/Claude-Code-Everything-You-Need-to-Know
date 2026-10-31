@@ -62,6 +62,13 @@ for (const lesson of overviews)
         lesson.check.length,
       );
     }
+    // Before the host answers, each You need line is still looked for.
+    const needs = page.getByRole("region", { name: "What you need" });
+    if (lesson.needs.length === 0) await expect(needs).toHaveCount(0);
+    else
+      await expect(needs.getByText("Looking on your PATH...")).toHaveCount(
+        lesson.needs.length,
+      );
     await expect(
       page.getByRole("button", { name: "Start", exact: true }),
     ).toBeVisible();
