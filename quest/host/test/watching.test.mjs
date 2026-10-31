@@ -250,7 +250,6 @@ test("the work folder has its own watcher, armed again as the Learner moves to a
 });
 
 // spec: watching
-// spec: folders.worked-copy
 test("a worked: copy fresh json beat with the Work folder in another repository decides on the copy's file, never on the Work folder's", async () => {
   const settings = ".claude/settings.json";
   const rules = (deny) =>
