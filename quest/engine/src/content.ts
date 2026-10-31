@@ -209,7 +209,6 @@ export interface LessonContent {
   terminals: Record<string, number> | null;
   title?: string;
   next?: string | null;
-  stuck?: string;
   page?: string;
 }
 // The lesson as parseLesson builds it, line by line: a beat's verify is its
@@ -1595,7 +1594,6 @@ const compiledCourseSchema = z.strictObject({
       stamp: z.string(),
       next: z.string().nullable(),
       url: z.url(),
-      stuck: z.url(),
       items: z.array(z.string()),
       content: z.unknown(),
       fingerprint: z.string().length(64),
@@ -1614,7 +1612,6 @@ export type CompiledLesson = ManifestLesson & {
   newCopy: boolean;
   next: string | null;
   url: string;
-  stuck: string;
   items: string[];
   content: LessonContent;
   fingerprint: string;
@@ -1729,7 +1726,6 @@ export function compileCourse(
         newCopy: entry.folder === "new-copy",
         next: path[at + 1]?.id ?? null,
         url: `${GUIDE}/blob/main/${entry.page}`,
-        stuck: `${GUIDE}/issues/new?template=lesson-feedback.yml&lesson=${entry.id}`,
         items: check.items.map((item) => item.text),
         content,
         fingerprint: print,
