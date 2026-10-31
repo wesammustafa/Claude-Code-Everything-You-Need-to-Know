@@ -394,6 +394,7 @@ export const overviews = [
     level: "beginner",
     capstone: false,
     phase: "overview",
+    steps: [],
     intro: {
       can: [
         "start it safely in a repository",
@@ -519,6 +520,7 @@ export const overviews = [
     level: "beginner",
     capstone: false,
     phase: "overview",
+    steps: [],
     intro: {
       can: [
         "pick a permission mode for a task",
@@ -686,6 +688,7 @@ export const overviews = [
     level: "beginner",
     capstone: false,
     phase: "overview",
+    steps: [],
     intro: {
       can: [
         "take a change from request to commit",
@@ -830,6 +833,7 @@ export const overviews = [
     level: "beginner",
     capstone: false,
     phase: "overview",
+    steps: [],
     intro: {
       can: [
         "stop or rewind a change that went the wrong way",
@@ -972,6 +976,7 @@ export const overviews = [
     level: "beginner",
     capstone: false,
     phase: "overview",
+    steps: [],
     intro: {
       can: [
         "write a short, true project CLAUDE.md",
@@ -1106,6 +1111,7 @@ export const overviews = [
     level: "beginner",
     capstone: true,
     phase: "overview",
+    steps: [],
     intro: {
       can: ["fix a reported bug, from plan to commit"],
       payoff: "fix a reported bug, from plan to commit",
@@ -1178,6 +1184,7 @@ export const overviews = [
     level: "intermediate",
     capstone: false,
     phase: "overview",
+    steps: [],
     intro: {
       can: [
         "turn a workflow you keep repeating into a project skill, choose which requests should load it, and review the change it produces.",
@@ -1306,6 +1313,7 @@ export const overviews = [
     level: "intermediate",
     capstone: false,
     phase: "overview",
+    steps: [],
     intro: {
       can: [
         "split a project's instructions into imports and scoped rules",
@@ -1436,6 +1444,7 @@ export const overviews = [
     level: "intermediate",
     capstone: false,
     phase: "overview",
+    steps: [],
     intro: {
       can: [
         "diagnose a weak result before changing models",
@@ -1544,6 +1553,7 @@ export const overviews = [
     level: "intermediate",
     capstone: false,
     phase: "overview",
+    steps: [],
     intro: {
       can: [
         "choose a narrow permission rule, put it in the right settings scope, and verify the sandbox's boundary.",
@@ -1665,6 +1675,7 @@ export const overviews = [
     level: "intermediate",
     capstone: false,
     phase: "overview",
+    steps: [],
     intro: {
       can: [
         "enforce a rule with a hook that fails closed, and send Claude back to work when it stops while your tests fail.",
@@ -1801,6 +1812,7 @@ export const overviews = [
     level: "intermediate",
     capstone: false,
     phase: "overview",
+    steps: [],
     intro: {
       can: [
         "write a subagent that has only the tools its task needs",
@@ -1927,6 +1939,7 @@ export const overviews = [
     level: "intermediate",
     capstone: false,
     phase: "overview",
+    steps: [],
     intro: {
       can: [
         "connect a version-pinned MCP server at the right scope and use its browser evidence to find and fix a page error.",
@@ -2054,6 +2067,7 @@ export const overviews = [
     level: "intermediate",
     capstone: false,
     phase: "overview",
+    steps: [],
     intro: {
       can: [
         "judge a plugin before you install it, trial code intelligence locally on your own code, and share only the plugin your team chose.",
@@ -2162,6 +2176,7 @@ export const overviews = [
     level: "intermediate",
     capstone: true,
     phase: "overview",
+    steps: [],
     intro: {
       can: [
         "get a repository ready for a new teammate",
@@ -2251,6 +2266,7 @@ export const overviews = [
     level: "advanced",
     capstone: false,
     phase: "overview",
+    steps: [],
     intro: {
       can: [
         "run two Claude Code sessions at once, each in its own git worktree, and merge their work into one branch",
@@ -2403,6 +2419,7 @@ export const overviews = [
     level: "advanced",
     capstone: false,
     phase: "overview",
+    steps: [],
     intro: {
       can: [
         "choose between the main conversation, subagents, a dynamic workflow, `/batch` and an agent team by what a job needs and what it costs",
@@ -2514,6 +2531,7 @@ export const overviews = [
     level: "advanced",
     capstone: false,
     phase: "overview",
+    steps: [],
     intro: {
       can: [
         "keep one session working until a check you can run passes",
@@ -2635,6 +2653,7 @@ export const overviews = [
     level: "advanced",
     capstone: false,
     phase: "overview",
+    steps: [],
     intro: {
       can: ["write a script that runs Claude Code with no one at the keyboard"],
       payoff:
@@ -2752,6 +2771,7 @@ export const overviews = [
     level: "advanced",
     capstone: false,
     phase: "overview",
+    steps: [],
     intro: {
       can: ["run Claude Code unattended in a GitHub Actions workflow"],
       payoff: "run Claude Code unattended in a GitHub Actions workflow",
@@ -2894,6 +2914,7 @@ export const overviews = [
     level: "advanced",
     capstone: false,
     phase: "overview",
+    steps: [],
     intro: {
       can: [
         "commit the settings everyone should get, keep your personal files out of git, and give the team a plugin that loads from a marketplace inside the repository",
@@ -3037,6 +3058,7 @@ export const overviews = [
     level: "advanced",
     capstone: false,
     phase: "overview",
+    steps: [],
     intro: {
       can: [
         "Bound a real task from your backlog that is bigger than one slice",
@@ -3165,6 +3187,7 @@ export const overviews = [
     level: "advanced",
     capstone: true,
     phase: "overview",
+    steps: [],
     intro: {
       can: ["add CI review your team can share"],
       payoff: "add CI review your team can share",
@@ -3263,6 +3286,7 @@ export const i1Asking = {
   level: "intermediate",
   capstone: false,
   phase: "overview",
+  steps: [],
   intro: {
     can: [
       "turn a workflow you keep repeating into a project skill, choose which requests should load it, and review the change it produces.",

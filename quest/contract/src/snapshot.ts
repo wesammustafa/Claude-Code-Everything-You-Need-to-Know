@@ -133,6 +133,8 @@ export interface StairStep {
 /** The overview, before the Lesson starts. */
 export interface OverviewLesson extends LessonHead {
   phase: "overview";
+  /** Every step Start will play, in play order, warm-ups first: the planned help, no step current. */
+  steps: StepSummary[];
   /** The page's intro, or null for a Lesson with no step file. */
   intro: {
     /** What the Lesson teaches the Learner to do. */
@@ -205,7 +207,7 @@ export interface FolderQuestion {
   checking: boolean;
 }
 
-/** A step in the playing Lesson's list. */
+/** A step in an active Lesson's outline (overview, playing, step-down). */
 export interface StepSummary {
   id: StepId;
   part: string;
@@ -407,6 +409,8 @@ export interface StepDownLesson extends LessonHead {
   to: HelpTier;
   /** The step it opens on: its place in play order, from 0, of every step, warm-ups first. */
   step: { id: StepId; title: string; index: number; of: number };
+  /** Every step in play order, warm-ups first; the step it opens on is current. */
+  steps: StepSummary[];
   /** The steps from this one on, counted by tier. */
   toCome: { tier: HelpTier; count: number }[];
   /** More help would give a step more help (never at the Check). */

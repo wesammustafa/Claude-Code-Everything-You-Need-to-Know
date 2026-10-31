@@ -14,6 +14,7 @@ import type {
   PlayingLesson,
   Snapshot,
   StepDownLesson,
+  StepSummary,
 } from "@quest/contract";
 
 export const FIXTURE_INSTANCE = "e2e";
@@ -70,12 +71,111 @@ export const learner: LearnerView = {
   saving: true,
 };
 
+// b-1's outline: every step to do, as the overview lists it.
+const b1Outline: StepSummary[] = [
+  {
+    id: "W1",
+    part: "Worked example",
+    title: "Run the installer",
+    tier: "guided",
+    state: "todo",
+    optional: false,
+  },
+  {
+    id: "W2",
+    part: "Worked example",
+    title: "Check the install",
+    tier: "guided",
+    state: "todo",
+    optional: false,
+  },
+  {
+    id: "W3",
+    part: "Worked example",
+    title: "Start, sign in and trust",
+    tier: "guided",
+    state: "todo",
+    optional: false,
+  },
+  {
+    id: "W4",
+    part: "Worked example",
+    title: "Compare the session",
+    tier: "guided",
+    state: "todo",
+    optional: false,
+  },
+  {
+    id: "W5",
+    part: "Worked example",
+    title: "Ask, stop and ask again",
+    tier: "guided",
+    state: "todo",
+    optional: false,
+  },
+  {
+    id: "W6",
+    part: "Worked example",
+    title: "Check the source",
+    tier: "guided",
+    state: "todo",
+    optional: false,
+  },
+  {
+    id: "Y1",
+    part: "Your turn",
+    title: "Check the onboarding notes",
+    tier: "hinted",
+    state: "todo",
+    optional: false,
+  },
+  {
+    id: "Y2",
+    part: "Your turn",
+    title: "Read the cited lines",
+    tier: "hinted",
+    state: "todo",
+    optional: false,
+  },
+  {
+    id: "Y3",
+    part: "Your turn",
+    title: "Correct one claim",
+    tier: "challenge",
+    state: "todo",
+    optional: false,
+  },
+  {
+    id: "Y4",
+    part: "Your turn",
+    title: "Finish from a clean tree",
+    tier: "hinted",
+    state: "todo",
+    optional: false,
+  },
+  {
+    id: "C",
+    part: "Check",
+    title: "Check",
+    tier: "challenge",
+    state: "todo",
+    optional: false,
+  },
+];
+// b-1's outline on the step at `current`: the steps before it done.
+const b1At = (current: number): StepSummary[] =>
+  b1Outline.map((step, i) => ({
+    ...step,
+    state: i < current ? "done" : i === current ? "current" : "todo",
+  }));
+
 export const overview: OverviewLesson = {
   id: "b-1",
   title: "Install, sign in and look around",
   level: "beginner",
   capstone: false,
   phase: "overview",
+  steps: b1Outline,
   intro: {
     can: [
       "start it safely in a repository",
@@ -199,96 +299,7 @@ export const playing: PlayingLesson = {
   level: "beginner",
   capstone: false,
   phase: "playing",
-  steps: [
-    {
-      id: "W1",
-      part: "Worked example",
-      title: "Run the installer",
-      tier: "guided",
-      state: "done",
-      optional: false,
-    },
-    {
-      id: "W2",
-      part: "Worked example",
-      title: "Check the install",
-      tier: "guided",
-      state: "done",
-      optional: false,
-    },
-    {
-      id: "W3",
-      part: "Worked example",
-      title: "Start, sign in and trust",
-      tier: "guided",
-      state: "done",
-      optional: false,
-    },
-    {
-      id: "W4",
-      part: "Worked example",
-      title: "Compare the session",
-      tier: "guided",
-      state: "done",
-      optional: false,
-    },
-    {
-      id: "W5",
-      part: "Worked example",
-      title: "Ask, stop and ask again",
-      tier: "guided",
-      state: "done",
-      optional: false,
-    },
-    {
-      id: "W6",
-      part: "Worked example",
-      title: "Check the source",
-      tier: "guided",
-      state: "done",
-      optional: false,
-    },
-    {
-      id: "Y1",
-      part: "Your turn",
-      title: "Check the onboarding notes",
-      tier: "hinted",
-      state: "done",
-      optional: false,
-    },
-    {
-      id: "Y2",
-      part: "Your turn",
-      title: "Read the cited lines",
-      tier: "hinted",
-      state: "done",
-      optional: false,
-    },
-    {
-      id: "Y3",
-      part: "Your turn",
-      title: "Correct one claim",
-      tier: "challenge",
-      state: "done",
-      optional: false,
-    },
-    {
-      id: "Y4",
-      part: "Your turn",
-      title: "Finish from a clean tree",
-      tier: "hinted",
-      state: "done",
-      optional: false,
-    },
-    {
-      id: "C",
-      part: "Check",
-      title: "Check",
-      tier: "challenge",
-      state: "current",
-      optional: false,
-    },
-  ],
+  steps: b1At(10),
   step: {
     index: 10,
     id: "C",
@@ -416,6 +427,7 @@ export const stepDown: StepDownLesson = {
   from: "hinted",
   to: "challenge",
   step: { id: "C", title: "Check", index: 10, of: 11 },
+  steps: b1At(10),
   toCome: [
     {
       tier: "challenge",
@@ -431,6 +443,7 @@ export const stepDownGuided: StepDownLesson = {
   from: "guided",
   to: "hinted",
   step: { id: "Y1", title: "Check the onboarding notes", index: 6, of: 11 },
+  steps: b1At(6),
   moreHelp: true,
 };
 

@@ -10,6 +10,7 @@ import {
   overviewAt,
   playing,
   snapshotOf,
+  stepDown,
 } from "../../e2e/snapshots";
 import { renderConnected } from "../../test/connected";
 import { routes } from "../routes";
@@ -398,13 +399,38 @@ describe("the Steps outline", () => {
     expect(current[0]).toHaveTextContent(/^Check.*current$/);
   });
 
-  test("before the Lesson starts, the outline says when it shows", async () => {
+  test("on the overview, the outline lists the steps to come", async () => {
     const user = userEvent.setup();
     renderConnected("/lesson/b-4", atB4);
     await user.click(screen.getByRole("button", { name: "Steps" }));
+    const dialog = screen.getByRole("dialog", { name: "Steps" });
+    const items = within(dialog).getAllByRole("listitem");
+    const { steps } = overviewAt("b-4");
+    expect(items).toHaveLength(steps.length);
+    expect(items[0]).toHaveTextContent(steps[0]?.title ?? "");
+    expect(items[0]).toHaveTextContent("to do");
+    expect(dialog.querySelector('[aria-current="step"]')).toBeNull();
+  });
+
+  test("on a Step-down, the step it opens on is current", async () => {
+    const user = userEvent.setup();
+    renderConnected("/lesson/b-1/step", snapshotOf(stepDown));
+    await user.click(screen.getByRole("button", { name: "Steps" }));
+    const dialog = screen.getByRole("dialog", { name: "Steps" });
+    const current = within(dialog)
+      .getAllByRole("listitem")
+      .filter((item) => item.getAttribute("aria-current") === "step");
+    expect(current).toHaveLength(1);
+    expect(current[0]).toHaveTextContent(/^Check.*current$/);
+  });
+
+  test("on a complete Lesson, the outline says there is none", async () => {
+    const user = userEvent.setup();
+    renderConnected("/lesson/b-1/complete", snapshotOf(complete));
+    await user.click(screen.getByRole("button", { name: "Steps" }));
     expect(
       within(screen.getByRole("dialog", { name: "Steps" })).getByText(
-        "The step outline shows once the Lesson starts.",
+        "No step outline for this Lesson.",
       ),
     ).toBeInTheDocument();
   });
