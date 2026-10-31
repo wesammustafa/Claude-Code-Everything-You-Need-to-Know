@@ -37,13 +37,13 @@ describe("lessonPageOf", () => {
     });
   });
 
-  test("a Level index warm-up opens the Level's README on GitHub", () => {
+  test("a Level index warm-up opens the Level's README in the panel", () => {
     const snapshot = snapshotOf(
       playingAt("i-1", { from: "beginner-index", explainer: false }),
       { course: fullCourse },
     );
     expect(lessonPageOf(snapshot)).toEqual({
-      github: "docs/beginner/README.md",
+      page: "docs/beginner/README.md",
     });
   });
 

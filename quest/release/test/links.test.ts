@@ -55,7 +55,8 @@ describe("rewriteHref", () => {
       kind: "stub",
       attrs: {},
     });
-    expect(at("README.md").kind).toBe("readme");
+    expect(at("../topics/README.md").kind).toBe("readme");
+    expect(at("README.md").kind).toBe("page");
     expect(at("../../examples/intermediate/05-hooks/README.md").kind).toBe(
       "readme",
     );
