@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type {
   BeatLine,
   BeatView,
   HintView,
   PlayingLesson,
+  Snapshot,
   StepDownLesson,
   StepView,
 } from "@quest/contract";
@@ -19,7 +20,7 @@ import { Says } from "../components/Says";
 import { StepDots } from "../components/StepDots";
 import { Tier } from "../components/Tier";
 import { Where } from "../components/Where";
-import { lessonEyebrow } from "../course/labels";
+import { LEVEL_NAMES, lessonEyebrow } from "../course/labels";
 import { useAct, useActionsEnabled } from "../live/LiveProvider";
 import { useActionProps, useSend } from "../live/useAction";
 import { ReadLesson } from "../pages/ReadLesson";
@@ -35,16 +36,18 @@ import { PageTitle } from "../shell/PageTitle";
 import { LessonGate } from "./LessonGate";
 import { EYEBROW, MOMENT, WORKSPACE_COLUMN } from "./layout";
 import {
+  answerMarks,
   checkLines,
   decidedByOf,
   isDone,
   isTearDown,
   primaryAction,
   ranInOf,
+  revealable,
   statusOf,
   type BeatCheckLine,
 } from "./beat";
-import { useActiveLesson } from "./lesson";
+import { summaryOf, useActiveLesson } from "./lesson";
 import { useCheckClock } from "./useCheckClock";
 
 type Status = BeatView["status"];
@@ -66,16 +69,33 @@ const TEAR_DOWN_LINE =
 const RUN_IT_TOO =
   "Run it in your practice copy too: you will see the same result.";
 
-/** A hint rung as one line of text. */
-function hintText(hint: HintView): string {
+/** Why no hint opens yet, at Challenge before a first try. */
+const UNAVAILABLE: Record<
+  NonNullable<PlayingLesson["hints"]["unavailable"]>,
+  string
+> = {
+  "run-check": "Hints open once you have run Check again.",
+  "pick-answer": "Hints open once you have tried an answer.",
+};
+
+/** The line under a warm-up's card when the engine explains warm-ups. */
+const WARMUP_EXPLAINER =
+  "Warm-ups bring back a skill from before, so it sticks.";
+
+/** A hint rung: the page's words, or the exact command with Copy. */
+function hintRung(hint: HintView): ReactNode {
   if (hint.kind !== "exact") return hint.text;
-  return hint.commands
-    .map((command) =>
-      command.leadIn
-        ? `${command.leadIn} \`${command.text}\``
-        : `\`${command.text}\``,
-    )
-    .join(" ");
+  return hint.commands.map((command, i) => (
+    <div key={i} className="grid gap-2">
+      {command.leadIn && (
+        <p>
+          <InlineText text={command.leadIn} />
+        </p>
+      )}
+      <Command text={command.text} />
+      {command.code && <CodeBlock code={command.code} />}
+    </div>
+  ));
 }
 
 /** A new key for each Check run, so its lines stagger in again (241 D13). */
@@ -113,6 +133,7 @@ export function Workspace() {
       beat={lesson.beat}
       number={number}
       tearDownLeft={active.summary?.tearDownLeft ?? false}
+      snapshot={active.snapshot}
     />
   );
 }
@@ -123,12 +144,14 @@ function Play({
   beat,
   number,
   tearDownLeft,
+  snapshot,
 }: {
   lesson: PlayingLesson;
   step: StepView;
   beat: BeatView;
   number: number | null;
   tearDownLeft: boolean;
+  snapshot: Snapshot;
 }) {
   const main = useRef<HTMLElement>(null);
   const newestHint = useRef<HTMLDivElement>(null);
@@ -169,7 +192,11 @@ function Play({
   const seconds = useCheckClock(beat.status);
   const status = statusOf(beat);
   const at = lesson.steps.findIndex((s) => s.id === step.id);
-  const hints = lesson.hints.shown.map(hintText);
+  const hints = lesson.hints.shown.map(hintRung);
+  const { available, unavailable, confirmExact } = lesson.hints;
+  const takeExact = (take: boolean) => {
+    send("hint.takeExact", { type: "hint.takeExact", take });
+  };
   const tearDown = isTearDown(step);
   const tearDowns = lesson.steps.filter(isTearDown);
   const firstTearDown = tearDown && tearDowns[0]?.id === step.id;
@@ -209,7 +236,7 @@ function Play({
           }
         >
           <span>
-            {beat.status === "waiting" && (
+            {beat.status === "waiting" && decidedByOf(beat) !== "answer" && (
               <span
                 className="mr-2 inline-block size-2 animate-breathe rounded-full bg-teal align-middle"
                 aria-hidden="true"
@@ -256,6 +283,7 @@ function Play({
               )}
               <ReadLesson size="sm" className="ml-auto" />
             </div>
+            {step.warmup && <Warmup warmup={step.warmup} snapshot={snapshot} />}
             {priorNote && (
               <p data-step-note="" className="text-sm text-muted">
                 {priorNote}
@@ -276,6 +304,7 @@ function Play({
             </p>
           )}
           <BeatBody beat={beat} />
+          <WaitQuestion lesson={lesson} step={step} />
           {lines.length > 0 && (
             <CheckLines
               key={runKey}
@@ -298,14 +327,33 @@ function Play({
             </p>
           )}
         </article>
-        {(hints.length > 0 || lesson.hints.available) && (
+        {(hints.length > 0 ||
+          available ||
+          unavailable !== null ||
+          confirmExact) && (
           <Hints
-            // One more entry than is shown, while another can open: Hints
-            // offers the next rung while it has one, and the engine words it.
-            hints={lesson.hints.available ? [...hints, ""] : hints}
+            // One more entry than is shown, while another can open or waits
+            // for a first try: Hints offers the next rung, or says why not,
+            // and the engine words it.
+            hints={available || unavailable !== null ? [...hints, ""] : hints}
             shown={hints.length}
             onShowNext={showNextHint}
             newestRef={newestHint}
+            {...(unavailable !== null
+              ? { unavailable: UNAVAILABLE[unavailable] }
+              : {})}
+            {...(confirmExact
+              ? {
+                  confirm: {
+                    onTake: () => {
+                      takeExact(true);
+                    },
+                    onDecline: () => {
+                      takeExact(false);
+                    },
+                  },
+                }
+              : {})}
           />
         )}
         <Offers lesson={lesson} />
@@ -401,10 +449,10 @@ function Line({ line }: { line: BeatLine }): ReactNode {
 
 /**
  * The beat's body. `do` and `self` beats show their lines, the code with
- * Copy, and why. The question kinds (predict, ask, type) get a plain
- * fallback here, their lines and choices, until 247 builds them. A watched
- * beat's "Done when" line is its Check line instead, and a done beat with
- * evidence hides it.
+ * Copy, and why. The question kinds (predict, ask, type) show their lines,
+ * the question (answers to pick, or a box to type in), what to look for and
+ * the words after the answer. A watched beat's "Done when" line is its
+ * Check line instead, and a done beat with evidence hides it.
  */
 function BeatBody({ beat }: { beat: BeatView }) {
   const watched = decidedByOf(beat) === "watch";
@@ -437,75 +485,325 @@ function BeatBody({ beat }: { beat: BeatView }) {
   const closing = after.map((line, i) => (
     <Line key={`after-${String(i)}`} line={line} />
   ));
+  const why = beat.why.onCard && (
+    <p data-why="">
+      <span className="font-semibold text-accent-text">Why: </span>
+      <InlineText text={beat.why.onCard} />
+    </p>
+  );
   switch (beat.kind) {
     case "do":
     case "self":
       return (
         <div className="grid justify-items-start gap-3.5 [&>*]:max-w-full">
           {lines}
-          {beat.why.onCard && (
-            <p data-why="">
-              <span className="font-semibold text-accent-text">Why: </span>
-              <InlineText text={beat.why.onCard} />
-            </p>
-          )}
+          {why}
           {closing}
         </div>
       );
-    default:
+    default: {
+      const { answer } = beat;
+      // An answer's own reason shows under it; the beat's reason shows here
+      // only when no marked answer carries one (a typed answer, a typed miss).
+      const marked = answerMarks(beat).map((mark) => Number(mark.id));
+      const underAnswer = marked.some(
+        (i) => beat.options[i]?.because !== undefined,
+      );
       return (
         <div className="grid justify-items-start gap-3.5 [&>*]:max-w-full">
           {lines}
-          {beat.options.length > 0 && <Question beat={beat} />}
-          {beat.answer.reveal && (
-            <p>
-              <InlineText text={beat.answer.reveal} />
+          {beat.kind === "type" ? (
+            <TypedAnswer beat={beat} />
+          ) : (
+            beat.options.length > 0 && <Question beat={beat} />
+          )}
+          {answer.because && !underAnswer && (
+            <p data-answer-because="">
+              <InlineText text={answer.because} />
             </p>
           )}
+          {answer.point && (
+            <p data-answer-point="" className="text-muted">
+              <InlineText text={answer.point} />
+            </p>
+          )}
+          {answer.recall && (
+            <p data-answer-recall="" className="text-muted">
+              <InlineText text={answer.recall} />
+            </p>
+          )}
+          {answer.reveal && (
+            <p>
+              <InlineText text={answer.reveal} />
+            </p>
+          )}
+          {why}
           {closing}
         </div>
       );
+    }
   }
 }
 
-/** The beat's question: its answers, each pick sent as `answer.pick`. */
+/** A predict is a guess; every other question is checked. */
+const SUBMIT: Record<"predict" | "ask", string> = {
+  predict: "That's my guess",
+  ask: "Check my answer",
+};
+
+/**
+ * The beat's question: its answers to select, the selection sent as one
+ * `answer.pick` by the button under them, and Show the answer once a wrong
+ * one was tried. The selection is the Learner's until sent: it clears on a
+ * new beat and after each judged pick.
+ */
 function Question({ beat }: { beat: BeatView }) {
   const send = useSend();
   const { pending } = useAct();
   const enabled = useActionsEnabled();
+  const done = isDone(beat);
+  const [selected, setSelected] = useState<string | null>(null);
+  const judged = `${String(beat.index)}:${beat.answer.feedback ?? ""}:${String(beat.options.filter((o) => o.kind !== undefined).length)}`;
+  const [seen, setSeen] = useState(judged);
+  if (judged !== seen) {
+    setSeen(judged);
+    setSelected(null);
+  }
+  const marks = answerMarks(beat);
   const picked = beat.answer.picked;
-  const done = beat.status === "done" || beat.status === "already";
-  // The answer to mark: the one picked once judged, else the last wrong one
-  // tried (an ask beat keeps no pick after a wrong one, only its kind).
-  const tried = beat.options.findLastIndex((option) => option.kind === "wrong");
-  const marked: { id: string; state: "right" | "notYet" } | null =
-    picked !== null && beat.answer.feedback !== null
-      ? {
-          id: String(picked),
-          state: beat.answer.feedback === "right" ? "right" : "notYet",
-        }
-      : tried >= 0
-        ? { id: String(tried), state: "notYet" }
-        : null;
+  const reveal = useActionProps("answer.reveal", { type: "answer.reveal" });
   return (
-    <div className="w-full">
+    <div className="grid w-full justify-items-start gap-2.5">
+      <div className="w-full">
+        <Choice
+          legend={<InlineText text={beat.ask ?? ""} />}
+          options={beat.options.map((option, i) => ({
+            id: String(i),
+            text: <InlineText text={option.text} />,
+            ...(option.because
+              ? { because: <InlineText text={option.because} /> }
+              : {}),
+          }))}
+          value={done && picked !== null ? String(picked) : selected}
+          {...(marks.length > 0 ? { result: marks } : {})}
+          disabled={done || !enabled}
+          onChange={setSelected}
+          {...(done
+            ? {}
+            : {
+                submit: {
+                  label: SUBMIT[beat.kind === "predict" ? "predict" : "ask"],
+                  pending: pending("answer.pick"),
+                  onSubmit: (id: string) => {
+                    send("answer.pick", {
+                      type: "answer.pick",
+                      option: Number(id),
+                    });
+                  },
+                },
+              })}
+        />
+      </div>
+      {revealable(beat) && (
+        <Button variant="ghost" size="sm" {...reveal}>
+          Show the answer
+        </Button>
+      )}
+    </div>
+  );
+}
+
+/**
+ * A typed answer, at most 200 characters, sent as `answer.type`; an empty
+ * one shows the answer. It stays after a miss, to edit, and clears on a new
+ * beat.
+ */
+function TypedAnswer({ beat }: { beat: BeatView }) {
+  const send = useSend();
+  const { pending } = useAct();
+  const enabled = useActionsEnabled();
+  const id = useId();
+  const [text, setText] = useState("");
+  const [seen, setSeen] = useState(beat.index);
+  if (beat.index !== seen) {
+    setSeen(beat.index);
+    setText("");
+  }
+  const done = isDone(beat);
+  const busy = pending("answer.type");
+  const ready = !done && enabled && !busy;
+  return (
+    <form
+      className="grid w-full justify-items-start gap-2.5"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (ready) send("answer.type", { type: "answer.type", text });
+      }}
+    >
+      <label htmlFor={id} className="font-semibold">
+        <InlineText text={beat.ask ?? ""} />
+      </label>
+      <input
+        id={id}
+        type="text"
+        value={text}
+        maxLength={200}
+        autoComplete="off"
+        spellCheck={false}
+        disabled={done || busy}
+        onChange={(event) => {
+          setText(event.target.value);
+        }}
+        className="h-10 w-full rounded-md border border-line-2 bg-surface px-3 font-mono text-control focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-disabled"
+      />
+      {!done && (
+        <Button
+          type="submit"
+          variant="primary"
+          pending={busy}
+          {...(ready ? {} : { "aria-disabled": true })}
+        >
+          Check my answer
+        </Button>
+      )}
+    </form>
+  );
+}
+
+/** The warm-up's line: the Lesson it looks back at, and why warm-ups come. */
+function Warmup({
+  warmup,
+  snapshot,
+}: {
+  warmup: NonNullable<StepView["warmup"]>;
+  snapshot: Snapshot;
+}) {
+  const level = /^(beginner|intermediate|advanced)-index$/.exec(
+    warmup.from,
+  )?.[1] as keyof typeof LEVEL_NAMES | undefined;
+  const title = summaryOf(snapshot, warmup.from)?.title;
+  return (
+    <div data-warmup="" className="grid gap-1 text-sm text-muted">
+      <p>
+        {level !== undefined ? (
+          `A quick look back at the ${LEVEL_NAMES[level]} level.`
+        ) : title !== undefined ? (
+          <>
+            {"A quick look back at "}
+            <InlineText text={title} />
+            {"."}
+          </>
+        ) : (
+          "A quick look back at an earlier lesson."
+        )}
+      </p>
+      {warmup.explainer && <p>{WARMUP_EXPLAINER}</p>}
+    </div>
+  );
+}
+
+type WaitQuestionView = NonNullable<PlayingLesson["waitQuestion"]>;
+
+/**
+ * The question a long wait offers, held on the card until it is answered or
+ * dismissed: the Terminal app removed it when the result landed, which the
+ * spec turns down (ticket 27, Q2). Once the wait ends it stays, read only.
+ */
+function useHeldWaitQuestion(
+  lesson: PlayingLesson,
+  step: StepView,
+): {
+  question: WaitQuestionView | null;
+  ended: boolean;
+  dismiss: () => void;
+} {
+  const place = `${lesson.id}:${step.id}`;
+  const live = lesson.waitQuestion;
+  const [held, setHeld] = useState<{
+    place: string;
+    question: WaitQuestionView;
+  } | null>(null);
+  const [dismissed, setDismissed] = useState<string | null>(null);
+  if (live !== null && (held?.place !== place || held.question !== live))
+    setHeld({ place, question: live });
+  if (held !== null && held.place !== place) setHeld(null);
+  const question =
+    live ?? (held !== null && held.place === place ? held.question : null);
+  return {
+    question: dismissed === place ? null : question,
+    ended: live === null,
+    dismiss: () => {
+      setDismissed(place);
+    },
+  };
+}
+
+/** The waiting question: never scored, answered or put away. */
+function WaitQuestion({
+  lesson,
+  step,
+}: {
+  lesson: PlayingLesson;
+  step: StepView;
+}) {
+  const { question, ended, dismiss } = useHeldWaitQuestion(lesson, step);
+  const send = useSend();
+  const { pending } = useAct();
+  const enabled = useActionsEnabled();
+  const [selected, setSelected] = useState<string | null>(null);
+  if (question === null) return null;
+  const answered = question.answered;
+  const closed = answered !== null || ended;
+  return (
+    <section
+      data-wait-question=""
+      aria-labelledby="wait-question-heading"
+      className="grid justify-items-start gap-2.5 rounded-lg border border-line bg-surface-2 p-4.5 [&>*]:w-full"
+    >
+      <h2 id="wait-question-heading" className={EYEBROW}>
+        While you wait
+      </h2>
       <Choice
-        legend={<InlineText text={beat.ask ?? ""} />}
-        options={beat.options.map((option, i) => ({
+        legend={<InlineText text={question.prompt} />}
+        options={question.options.map((option, i) => ({
           id: String(i),
           text: <InlineText text={option.text} />,
-          ...(option.because
-            ? { because: <InlineText text={option.because} /> }
-            : {}),
         }))}
-        value={picked === null ? null : String(picked)}
-        {...(marked === null ? {} : { result: marked })}
-        disabled={done || !enabled || pending("answer.pick")}
-        onChange={(id) => {
-          send("answer.pick", { type: "answer.pick", option: Number(id) });
-        }}
+        value={answered !== null ? String(answered) : selected}
+        {...(answered !== null
+          ? { result: [{ id: String(answered), state: "chosen" as const }] }
+          : {})}
+        disabled={closed || !enabled}
+        onChange={setSelected}
+        {...(closed
+          ? {}
+          : {
+              submit: {
+                label: "Check my answer",
+                pending: pending("waitQuestion.answer"),
+                onSubmit: (id: string) => {
+                  send("waitQuestion.answer", {
+                    type: "waitQuestion.answer",
+                    option: Number(id),
+                  });
+                },
+              },
+            })}
       />
-    </div>
+      {question.words && (
+        <p data-wait-words="">
+          <InlineText text={question.words} />
+        </p>
+      )}
+      {ended && <p className="text-sm text-muted">Your result is in.</p>}
+      {!closed && (
+        <div>
+          <Button variant="ghost" size="sm" onClick={dismiss}>
+            Not now
+          </Button>
+        </div>
+      )}
+    </section>
   );
 }
 

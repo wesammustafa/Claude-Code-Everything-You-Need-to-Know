@@ -3,11 +3,13 @@ import type { BeatView } from "@quest/contract";
 import { playing } from "../../e2e/snapshots";
 import {
   WATCH_FALLBACK,
+  answerMarks,
   checkLines,
   decidedByOf,
   isTearDown,
   primaryAction,
   ranInOf,
+  revealable,
   statusOf,
 } from "./beat";
 
@@ -197,6 +199,57 @@ describe("statusOf", () => {
       "Already done, so this step counts.",
     ],
     ["done", { status: "done" }, "passed", "That step is done."],
+    ...(
+      [
+        ["a predict", { kind: "predict" }, "idle", "Make your guess."],
+        ["an ask", { kind: "ask" }, "idle", "Pick an answer."],
+        ["a typed answer", { kind: "type" }, "idle", "Type your answer."],
+        [
+          "a wrong answer",
+          { kind: "ask", answer: { ...base.answer, feedback: "wrong" } },
+          "notYet",
+          "Not yet. Try another answer.",
+        ],
+        [
+          "a right answer",
+          {
+            kind: "ask",
+            status: "done",
+            answer: { ...base.answer, picked: 1, feedback: "right" },
+          },
+          "passed",
+          "That's right.",
+        ],
+        [
+          "the answer shown",
+          {
+            kind: "ask",
+            status: "done",
+            answer: { ...base.answer, picked: 1, feedback: "revealed" },
+          },
+          "idle",
+          "Here is the answer.",
+        ],
+        [
+          "a guess made",
+          {
+            kind: "predict",
+            status: "done",
+            answer: { ...base.answer, picked: 0 },
+          },
+          "passed",
+          "That step is done.",
+        ],
+      ] as const
+    ).map(
+      ([name, over, tone, words]) =>
+        [
+          `answer: ${name}`,
+          { decidedBy: "answer", options: [{ text: "x" }], ...over },
+          tone,
+          words,
+        ] as [string, Partial<BeatView>, string, string],
+    ),
     [
       "not yet",
       { status: "fail" },
@@ -343,5 +396,117 @@ describe("ranInOf and isTearDown", () => {
   test("a Tear down step is told by its part", () => {
     expect(isTearDown({ part: "Tear down" })).toBe(true);
     expect(isTearDown({ part: "Check" })).toBe(false);
+  });
+});
+
+describe("answerMarks and revealable (247)", () => {
+  const options: BeatView["options"] = [
+    { text: "a", kind: "wrong", because: "No." },
+    { text: "b", kind: "decoy", because: "Close." },
+    { text: "c", kind: "right" },
+    { text: "d" },
+  ];
+  const ask = (
+    answer: Partial<BeatView["answer"]>,
+    over: Partial<BeatView> = {},
+  ) =>
+    beat({
+      kind: "ask",
+      decidedBy: "answer",
+      options,
+      answer: { ...base.answer, ...answer },
+      ...over,
+    });
+
+  test.each<[string, BeatView, { id: string; state: string }[]]>([
+    ["nothing tried", ask({}, { options: [{ text: "a" }, { text: "b" }] }), []],
+    [
+      "a wrong and a decoy tried",
+      ask({ feedback: "wrong" }),
+      [
+        { id: "0", state: "notYet" },
+        { id: "1", state: "notYet" },
+      ],
+    ],
+    [
+      "right after a wrong",
+      ask(
+        { picked: 2, feedback: "right" },
+        {
+          status: "done",
+          options: [
+            { text: "a", kind: "wrong", because: "No." },
+            { text: "b" },
+            { text: "c", kind: "right" },
+            { text: "d" },
+          ],
+        },
+      ),
+      [
+        { id: "0", state: "notYet" },
+        { id: "2", state: "right" },
+      ],
+    ],
+    [
+      "revealed",
+      ask({ picked: 2, feedback: "revealed" }, { status: "done" }),
+      [
+        { id: "0", state: "notYet" },
+        { id: "1", state: "notYet" },
+        { id: "2", state: "shown" },
+      ],
+    ],
+    [
+      "a choice that shows later beats",
+      ask(
+        { picked: 3, feedback: "option" },
+        {
+          status: "done",
+          options: [
+            { text: "a" },
+            { text: "b" },
+            { text: "c" },
+            { text: "d", kind: "option" },
+          ],
+        },
+      ),
+      [{ id: "3", state: "chosen" }],
+    ],
+    [
+      "a predict",
+      ask(
+        { picked: 1 },
+        {
+          kind: "predict",
+          status: "done",
+          options: [{ text: "a" }, { text: "b" }],
+        },
+      ),
+      [{ id: "1", state: "chosen" }],
+    ],
+    [
+      "stuck",
+      ask(
+        { feedback: "stuck", because: "Ask for help." },
+        { options: [{ text: "a" }] },
+      ),
+      [],
+    ],
+  ])("%s", (_name, b, marks) => {
+    expect(answerMarks(b)).toEqual(marks);
+  });
+
+  test("Show the answer waits for a wrong pick on an open ask beat", () => {
+    expect(revealable(ask({}))).toBe(false);
+    expect(revealable(ask({ feedback: "wrong" }))).toBe(true);
+    expect(revealable(ask({ feedback: "wrong" }, { kind: "predict" }))).toBe(
+      false,
+    );
+    expect(revealable(ask({ feedback: "wrong" }, { kind: "type" }))).toBe(
+      false,
+    );
+    expect(revealable(ask({ feedback: "revealed" }, { status: "done" }))).toBe(
+      false,
+    );
   });
 });

@@ -128,6 +128,22 @@ export function statusOf(beat: BeatView): StatusWords {
       beat.checking ? `Checking ${beat.checking}…` : "Checking…",
     );
   }
+  if (decidedByOf(beat) === "answer") {
+    const { feedback } = beat.answer;
+    if (feedback === "right")
+      return say("passed", "answer-right", "That's right.");
+    if (feedback === "revealed")
+      return say("idle", "answer-revealed", "Here is the answer.");
+    if (!isDone(beat)) {
+      if (feedback === "wrong")
+        return say("notYet", "answer-wrong", "Not yet. Try another answer.");
+      if (beat.kind === "predict")
+        return say("idle", "asking-predict", "Make your guess.");
+      if (beat.kind === "type")
+        return say("idle", "asking-type", "Type your answer.");
+      return say("idle", "asking-ask", "Pick an answer.");
+    }
+  }
   if (beat.status === "waiting") {
     if (decidedByOf(beat) === "session")
       return say("watching", "waiting", "Waiting for the session to end.");
@@ -218,4 +234,47 @@ export function isTearDown(
   step: Pick<StepView | StepSummary, "part">,
 ): boolean {
   return step.part === "Tear down";
+}
+
+/** How a marked answer is drawn (Choice's marks). */
+export type AnswerMark = "right" | "notYet" | "chosen" | "shown";
+
+/**
+ * The marks on a question's answers, from the snapshot: every wrong answer
+ * tried (a decoy too) says Not yet, and the one picked is drawn by its
+ * feedback: right, the answer shown, or a guess with no right answer
+ * (a predict, or a choice that shows later beats). A "stuck" pick names no
+ * option in the snapshot, so it marks none; its words still show.
+ */
+export function answerMarks(
+  beat: BeatView,
+): { id: string; state: AnswerMark }[] {
+  const { picked, feedback } = beat.answer;
+  const marks = beat.options.flatMap((option, i) =>
+    (option.kind === "wrong" || option.kind === "decoy") && i !== picked
+      ? [{ id: String(i), state: "notYet" as const }]
+      : [],
+  );
+  if (picked === null) return marks;
+  const state: AnswerMark =
+    feedback === "right"
+      ? "right"
+      : feedback === "revealed"
+        ? "shown"
+        : feedback === "wrong"
+          ? "notYet"
+          : "chosen";
+  return [...marks, { id: String(picked), state }];
+}
+
+/**
+ * Show the answer is offered once a wrong pick has been tried on an ask
+ * beat: a judged wrong pick means the beat has a right answer, which the
+ * engine needs before it reveals one. A predict has none, and a typed
+ * answer shows it on an empty send.
+ */
+export function revealable(beat: BeatView): boolean {
+  return (
+    beat.kind === "ask" && !isDone(beat) && beat.answer.feedback === "wrong"
+  );
 }
