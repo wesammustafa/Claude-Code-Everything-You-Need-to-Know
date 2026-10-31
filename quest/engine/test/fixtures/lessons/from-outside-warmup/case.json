@@ -1,0 +1,9 @@
+{
+  "origin": "lesson-quotes-from-outside-warmup",
+  "was": "fail",
+  "expect": "fail",
+  "about": "A Worked example step with a from line: only a warm-up quotes an earlier Lesson, and the parser rejects the line.",
+  "problems": [
+    "course/steps/b-2\\.md:27: only a warm-up names the lesson it comes from"
+  ]
+}

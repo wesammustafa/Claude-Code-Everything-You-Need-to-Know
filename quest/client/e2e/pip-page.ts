@@ -11,15 +11,17 @@ export const RIG = /\/assets\/pip-[\w-]+\.riv$/;
 /** Pip on the page, at the beside or hero size. */
 export const pip = (page: Page) => page.locator("[data-pip]");
 
-/** The Lesson's controls answer: the step outline opens and closes, and Next step moves on. */
+/** The Lesson's controls answer: the step outline opens and closes, and Check again sends its action. */
 export async function lessonUsable(page: Page) {
   await page.getByRole("button", { name: "Steps" }).click();
   const outline = page.getByRole("dialog", { name: "Steps" });
   await expect(outline).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(outline).toBeHidden();
-  await page.getByRole("link", { name: "Next step" }).click();
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Install, sign in and look around",
-  );
+  // The step's main action sends its action (the page's fake answers it).
+  const sent = page.waitForRequest("**/api/actions");
+  await page.getByRole("button", { name: "Check again" }).click();
+  expect((await sent).postDataJSON()).toMatchObject({
+    action: { type: "check.run" },
+  });
 }

@@ -1,0 +1,88 @@
+{
+ "format": 1,
+ "welcomed": true,
+ "eased": [
+  "plan-mode"
+ ],
+ "missed": [
+  "exit"
+ ],
+ "lessons": {
+  "b-1": {
+   "step": null,
+   "beat": 0,
+   "done": [
+    "W1",
+    "W2",
+    "W3",
+    "W4",
+    "W5",
+    "W6",
+    "Y1",
+    "Y2",
+    "Y3",
+    "Y4",
+    "C"
+   ],
+   "answers": {
+    "W4.0": "Yes"
+   },
+   "levels": [
+    "hinted",
+    "challenge"
+   ],
+   "lessHelp": false,
+   "moreHelpAt": null,
+   "easedSteps": {},
+   "complete": true,
+   "warm": [],
+   "recalled": [],
+   "stamps": {},
+   "bottomAt": "Y2"
+  },
+  "b-2": {
+   "step": "W2",
+   "beat": 1,
+   "done": [
+    "R1",
+    "W1"
+   ],
+   "answers": {},
+   "levels": [],
+   "lessHelp": true,
+   "moreHelpAt": null,
+   "easedSteps": {
+    "W1": true
+   },
+   "complete": false,
+   "warm": [
+    "R1",
+    "R2"
+   ],
+   "recalled": [
+    "R1"
+   ],
+   "stamps": {
+    "W1.0": "1:2:abc"
+   },
+   "bottomAt": null
+  },
+  "b-3": {
+   "step": "R1",
+   "beat": 0,
+   "done": [],
+   "answers": {},
+   "levels": [],
+   "lessHelp": false,
+   "moreHelpAt": null,
+   "easedSteps": {},
+   "complete": false,
+   "warm": [
+    "R1"
+   ],
+   "recalled": [],
+   "stamps": {},
+   "bottomAt": null
+  }
+ }
+}

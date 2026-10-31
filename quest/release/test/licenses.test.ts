@@ -450,9 +450,12 @@ describe("Claude Code Quest's bundled packages", () => {
   const shipped = shippedPackages(repoRoot);
   const names = shipped.map((p) => p.name);
 
-  test("include the client's runtime and fonts, and no dev tool", () => {
+  test("include the client's runtime and fonts, the server's, and no dev tool", () => {
     expect(names).toEqual(
       expect.arrayContaining([
+        "hono",
+        "@hono/node-server",
+        "zod",
         "react",
         "react-dom",
         "scheduler",
@@ -462,6 +465,7 @@ describe("Claude Code Quest's bundled packages", () => {
         "@fontsource-variable/inter",
         "@fontsource-variable/jetbrains-mono",
         "tailwindcss",
+        "motion",
         "rolldown",
       ]),
     );
@@ -471,6 +475,9 @@ describe("Claude Code Quest's bundled packages", () => {
       "typescript",
       "@testing-library/react",
       "jsdom",
+      "markdown-it",
+      "sanitize-html",
+      "mermaid",
     ]) {
       expect(names).not.toContain(devTool);
     }

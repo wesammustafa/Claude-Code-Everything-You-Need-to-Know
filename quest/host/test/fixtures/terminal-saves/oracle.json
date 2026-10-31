@@ -1,0 +1,43 @@
+{
+ "welcome-only": {
+  "lesson": "b-1",
+  "view": "intro",
+  "step": null,
+  "beat": 0
+ },
+ "mid-lesson": {
+  "lesson": "b-2",
+  "view": "resume",
+  "step": "W2",
+  "beat": 1,
+  "opened": {
+   "step": "W2",
+   "beat": 1,
+   "view": "step"
+  }
+ },
+ "completed": {
+  "lesson": "i-1",
+  "view": "intro",
+  "step": null,
+  "beat": 0
+ },
+ "folders": {
+  "lesson": "i-1",
+  "view": "intro",
+  "step": null,
+  "beat": 0
+ },
+ "keep-guided": {
+  "lesson": "b-2",
+  "view": "resume",
+  "step": "Y1",
+  "beat": 0,
+  "opened": {
+   "step": "Y1",
+   "beat": 0,
+   "view": "step"
+  },
+  "moreHelpAt": "Y1"
+ }
+}

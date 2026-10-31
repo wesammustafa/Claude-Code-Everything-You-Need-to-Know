@@ -1,0 +1,9 @@
+{
+  "origin": "lesson-quotes-any-key",
+  "was": "fail",
+  "expect": "fail",
+  "about": "A quote under any key counts: a because line the page no longer holds fails.",
+  "problems": [
+    "course/steps/b-1\\.md:28: quotes \"Ask two questions of your own\\.\""
+  ]
+}

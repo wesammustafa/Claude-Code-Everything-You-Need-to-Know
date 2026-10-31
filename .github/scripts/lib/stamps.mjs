@@ -48,6 +48,13 @@ export function headerLine(markdown) {
   return lines.slice(h1 + 1).find((l) => l.trim() !== '') ?? '';
 }
 
+// Whether a page is a Stub: the line under its H1 opens the way
+// CONTRIBUTING.md#anchor-compatibility words one, "This page moved" or, for a
+// maintainer-only page, "This maintainer-only page moved".
+export function isStub(markdown) {
+  return /^This (?:maintainer-only )?page moved\b/.test(headerLine(markdown) ?? '');
+}
+
 // Parses a page's Stamp: { version, date } or { error }.
 export function readStamp(markdown) {
   const line = headerLine(markdown);

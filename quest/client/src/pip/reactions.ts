@@ -61,9 +61,11 @@ const row = (
 function rowFor(event: QuestEvent, context: ReactionContext): Row | null {
   switch (event.type) {
     // Thinking is a mode, not a Reaction: the director holds it from
-    // check.started to the Check's result. check.progress changes nothing.
+    // check.started to the Check's result. check.progress changes nothing,
+    // and check.ended, a run with no verdict to show, only ends Thinking.
     case "check.started":
     case "check.progress":
+    case "check.ended":
       return null;
     // A step that already passed gets only a nod, so repeated Check clicks
     // are never rewarded.

@@ -17,3 +17,21 @@ test("reads each step as done, current or to do, and marks the current one", () 
   expect(items.filter((li) => li.hasAttribute("aria-current"))).toHaveLength(1);
   for (const li of items) expectStylesFromTokens(li.className);
 });
+
+test("takes each step's state as given, where it is not simply the order", () => {
+  render(
+    <StepDots
+      steps={["Look around", "Plan", "Check"]}
+      at={0}
+      states={["current", "done", "todo"]}
+    />,
+  );
+  const items = screen.getAllByRole("listitem");
+  expect(items.map((li) => li.getAttribute("data-state"))).toEqual([
+    "now",
+    "done",
+    "todo",
+  ]);
+  expect(items[0]).toHaveAttribute("aria-current", "step");
+  expect(items[1]).toHaveTextContent("Step 2, Plan: done");
+});

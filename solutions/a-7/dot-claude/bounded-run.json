@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Edit(./test/**)",
+      "Bash(npm test)"
+    ],
+    "deny": [
+      "Bash(git commit *)",
+      "Bash(git push *)"
+    ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "allowUnsandboxedCommands": false,
+    "autoAllowBashIfSandboxed": false
+  }
+}

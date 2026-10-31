@@ -204,12 +204,12 @@ describe("the Playground's scenarios through the director", () => {
     ]);
   });
 
-  test("5 minutes without input put Pip to sleep; input wakes him", () => {
-    expect(played("sleep").slice(1)).toEqual([
+  test("5 minutes without input rest Pip; input wakes him", () => {
+    expect(played("rest").slice(1)).toEqual([
       {
         input: "The clock jumps 5 min ahead",
         outcome: "none",
-        result: "No Reaction; mode sleep",
+        result: "No Reaction; mode rest",
       },
       {
         input: "The Learner types",
@@ -309,6 +309,7 @@ describe("the Playground's event buttons", () => {
       "check.passed": true,
       "check.notYet": true,
       "check.broken": true,
+      "check.ended": true,
       "answer.right": true,
       "answer.wrong": true,
       "hint.shown": true,

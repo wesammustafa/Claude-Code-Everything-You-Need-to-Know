@@ -1,0 +1,26 @@
+Treat protocol-relative links as external
+
+A link such as [app](//cdn.example.com/app.js) points to another site, but
+the checker reports it as a broken file. This change skips such links, as it
+skips https: and mailto: links. Every other link is checked as before.
+
+diff --git a/src/links.js b/src/links.js
+--- a/src/links.js
++++ b/src/links.js
+@@ -19,3 +19,3 @@ export function findLinks(markdown) {
+ export function isExternal(target) {
+-  return /^[a-z][a-z0-9+.-]*:/i.test(target);
++  return target.startsWith('/') || /^[a-z][a-z0-9+.-]*:/i.test(target);
+ }
+diff --git a/test/external.test.js b/test/external.test.js
+new file mode 100644
+--- /dev/null
++++ b/test/external.test.js
+@@ -0,0 +1,7 @@
++import { test } from 'node:test';
++import assert from 'node:assert/strict';
++import { isExternal } from '../src/links.js';
++
++test('treats protocol-relative links as external', () => {
++  assert.equal(isExternal('//cdn.example.com/app.js'), true);
++});

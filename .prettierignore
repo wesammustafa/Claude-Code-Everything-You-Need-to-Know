@@ -2,3 +2,9 @@
 /*
 !/quest/
 /quest/*/dist/
+# The lesson test's cases hold pages and step files word for word, as the
+# Guide and course/ hold theirs.
+/quest/engine/test/fixtures/lessons/
+/quest/engine/test/fixtures/reducer-course/
+# Real Terminal app saves, byte for byte as the Terminal app wrote them.
+/quest/host/test/fixtures/terminal-saves/

@@ -1,0 +1,9 @@
+{
+  "origin": "lesson-quotes-stamp-changed",
+  "was": "fail",
+  "expect": "fail",
+  "about": "The page was re-stamped, so the step file must be re-verified and re-stamped too.",
+  "problems": [
+    "course/steps/b-1\\.md:3: is stamped \"Verified against Claude Code v2\\.1\\.285 \\(stable\\) on 2026-10-05\", but docs/beginner/01-demo\\.md is stamped \"Verified against Claude Code v2\\.1\\.285 \\(stable\\) on 2026-11-02\""
+  ]
+}

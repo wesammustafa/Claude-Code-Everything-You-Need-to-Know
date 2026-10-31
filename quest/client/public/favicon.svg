@@ -3,12 +3,12 @@
        dark theme's, and the light theme's when the system asks for light. -->
   <style>
     .body { fill: #ff784e; }
-    .shade { fill: #d16340; }
-    .eye { fill: #1a0f0a; }
+    .shade { fill: #d95a3a; }
+    .eye { fill: #1e1e1e; }
     @media (prefers-color-scheme: light) {
-      .body { fill: #d9592f; }
-      .shade { fill: #b34a28; }
-      .eye { fill: #1a0f0a; }
+      .body { fill: #d95a3a; }
+      .shade { fill: #b44e34; }
+      .eye { fill: #1e1e1e; }
     }
   </style>
   <path class="shade" d="M12 4h2v4h-2zM22 4h2v4h-2z"/>

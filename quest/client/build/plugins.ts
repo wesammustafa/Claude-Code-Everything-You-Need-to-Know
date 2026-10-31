@@ -49,9 +49,8 @@ const VITE_PRELOAD_HELPER = "\0vite/preload-helper.js";
  * Wraps each dynamic import in the app's own helper (src/lib/dynamic-import.ts)
  * instead of Vite's, so no Vite code ships and the bundle check above stays
  * strict. Vite's helper preloads a dynamic chunk's dependencies; with
- * `build.modulePreload` off it preloads no JavaScript but still loads the
- * chunk's stylesheets. The app's helper only runs the import, so the build
- * fails on a dynamic chunk that brings stylesheets (generateBundle below).
+ * `build.modulePreload` off there are none to preload, so the app's helper
+ * only runs the import.
  */
 export function ownDynamicImportHelper(): Plugin {
   const helper = join(clientRoot, "src/lib/dynamic-import.ts");

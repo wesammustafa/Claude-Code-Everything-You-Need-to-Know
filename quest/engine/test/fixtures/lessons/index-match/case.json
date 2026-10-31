@@ -1,0 +1,11 @@
+{
+  "origin": "lesson-quotes-index-match",
+  "was": "pass",
+  "expect": "pass",
+  "about": "A warm-up whose from line names a Level index quotes the index page and shows one of its code blocks; the index has no step file of its own.",
+  "problems": [],
+  "compared": {
+    "from": 2,
+    "blocks": 1
+  }
+}

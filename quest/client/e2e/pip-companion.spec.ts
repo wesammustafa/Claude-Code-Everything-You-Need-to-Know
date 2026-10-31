@@ -2,7 +2,8 @@
 // facing the Learner when centred, watches a copied command, offers the
 // step's hint when the step seems stuck, and sits beside the Next band on the
 // Learning journey and beside the skills on Progress, covering nothing.
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect, sendEvents, test } from "./live.ts";
 import { STEP, pip } from "./pip-page.ts";
 import { watch } from "./watch.ts";
 
@@ -19,19 +20,15 @@ async function gaze(page: Page): Promise<[number, number]> {
 
 let sequence = 0;
 
-/** One revision's events, through the page's local event source. */
-async function send(page: Page, ...events: Record<string, unknown>[]) {
-  await page.evaluate((batch) => {
-    window.dispatchEvent(
-      new CustomEvent("quest:events", {
-        detail: batch.map((event) => ({
-          revision: 1,
-          serverTime: Date.now(),
-          ...event,
-        })),
-      }),
-    );
-  }, events);
+/** One revision's events, on the page's stream. */
+async function send(
+  page: Page,
+  ...events: { id: string; [field: string]: unknown }[]
+) {
+  await sendEvents(
+    page,
+    events.map((event) => ({ revision: 1, serverTime: Date.now(), ...event })),
+  );
 }
 
 const notYet = () => ({

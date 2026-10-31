@@ -34,10 +34,14 @@ const PAIRS: readonly (readonly [fg: string, bg: string, need: number])[] = [
   ...["bg", "surface", "surface-2", "accent-soft"].map(
     (bg) => ["accent-mark", bg, NON_TEXT] as const,
   ),
+  // An unearned Badge is drawn in mark, so it never sits on accent-soft.
   ...["bg", "surface", "surface-2"].map(
     (bg) => ["mark", bg, NON_TEXT] as const,
   ),
   ["pass", "bg", NON_TEXT],
+  // A ProgressBar's pass fill, and a Switch's thumb on its coral track.
+  ["pass", "surface-2", NON_TEXT],
+  ["accent-ink", "accent-mark", NON_TEXT],
   ["code-text", "code-bg", CODE],
   ["code-text", "code-control", TEXT],
   ["code-text", "code-control-hover", TEXT],

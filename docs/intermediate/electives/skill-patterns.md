@@ -55,7 +55,6 @@ Keep `SKILL.md` short: once a skill runs, its whole text stays in the conversati
    ```
 
 3. Make a small change in a source file, start `claude` and run `/changes-review`. Claude Code runs `git diff HEAD` and puts its output in the skill, then starts a subagent with it. The subagent reads the checklist, and its report arrives in your conversation when it finishes. The `allowed-tools` rule pre-approves `git diff` commands. `git diff HEAD` is read-only and would run without it, but outside auto mode an injected command your permission rules don't allow stops the skill.
-4. For another skill that pre-approves tools, read this guide's [`claude-md-review`](../../../.claude/skills/claude-md-review/SKILL.md). Its `allowed-tools: Read, Glob, Grep` lets it read files without prompts; it doesn't stop Claude from using other tools ([Pre-approve tools for a skill](https://code.claude.com/docs/en/skills#pre-approve-tools-for-a-skill)).
 
 ## Your turn
 

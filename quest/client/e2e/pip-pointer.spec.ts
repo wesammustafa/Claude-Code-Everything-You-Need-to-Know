@@ -4,7 +4,8 @@
 // the content; never under reduced motion or for touch and pen; and at most
 // one gaze change per frame however fast the mouse moves. The gaze is read
 // back as the adapter writes it to the rig's view model.
-import { expect, test, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "./live.ts";
 import { STEP, WASM, pip } from "./pip-page.ts";
 import { watch } from "./watch.ts";
 
@@ -195,13 +196,25 @@ for (const [name, path] of [
       await page.goto(path);
       await pointTo(page, -320, 0, LEFT);
       const gazes = await noteGazes(page);
-      const start = await page.evaluate(() => performance.now());
+      // When the mouse left the window, as the page heard it: the clock
+      // starts there, not before the test's own round trips.
+      await page.evaluate(() => {
+        document.documentElement.addEventListener("pointerleave", (event) => {
+          Object.assign(window, { left: event.timeStamp });
+        });
+      });
       // Out past the window's top edge.
       const c = await centre(page);
       await page.mouse.move(c.x - 320, -20, { steps: 4 });
       await expect(pip(page)).toHaveAttribute("data-pip-gaze", FORWARD);
+      const left = await page.evaluate(
+        () => (window as unknown as { left?: number }).left,
+      );
+      expect(left).toBeDefined();
       const released = (await gazes()).find((g) => g.value === FORWARD);
-      expect((released?.at ?? Infinity) - start).toBeLessThan(1_000);
+      expect((released?.at ?? Infinity) - (left ?? Infinity)).toBeLessThan(
+        1_000,
+      );
     });
 
     test("at most one gaze change per frame, however fast the mouse moves", async ({
@@ -228,9 +241,10 @@ for (const [name, path] of [
           changed.push(...records.map(() => frame));
         });
         observer.observe(el, { attributeFilter: ["data-pip-gaze"] });
-        // A move in a task of its own, many tasks a frame, for 400 ms.
+        // A move in a task of its own, many tasks a frame, for 30 frames:
+        // counted in frames, so a slow renderer still gives enough of them.
         const channel = new MessageChannel();
-        const end = performance.now() + 400;
+        const end = frame + 30;
         let i = 0;
         await new Promise<void>((resolve) => {
           channel.port1.onmessage = () => {
@@ -246,7 +260,7 @@ for (const [name, path] of [
                 bubbles: true,
               }),
             );
-            if (performance.now() < end) channel.port2.postMessage(null);
+            if (frame < end) channel.port2.postMessage(null);
             else resolve();
           };
           channel.port2.postMessage(null);

@@ -1,0 +1,9 @@
+{
+  "origin": "lesson-quotes-task-step-added",
+  "was": "fail",
+  "expect": "fail",
+  "about": "The capstone gained a step in The task.",
+  "problems": [
+    "course/steps/b-capstone\\.md:8: counts 2 steps in The task, but docs/beginner/capstone\\.md has 3\\."
+  ]
+}

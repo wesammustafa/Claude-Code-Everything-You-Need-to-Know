@@ -2,5 +2,17 @@
   "name": "@quest/release",
   "version": "0.0.0",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "compile:course": "node src/compile-course.mjs",
+    "build": "node src/render-pages.mjs",
+    "render:diagrams": "node src/render-diagrams.mjs",
+    "template": "node src/template.mjs",
+    "replay": "node src/replay.mjs",
+    "budgets": "node src/budgets.mjs",
+    "proof": "node src/proof.mjs",
+    "startup": "node src/startup.mjs",
+    "publish:template": "node src/publish.mjs",
+    "legacy:fingerprints": "node src/legacy-fingerprints.mjs"
+  }
 }

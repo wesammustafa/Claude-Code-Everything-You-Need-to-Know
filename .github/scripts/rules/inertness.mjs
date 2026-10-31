@@ -19,7 +19,7 @@ export const modes = ['pr', 'release'];
 
 const INERT = ['examples', 'practice-template', 'solutions'];
 const LIVE = new Set(['.claude', '.mcp.json', 'CLAUDE.md', 'CLAUDE.local.md', 'AGENTS.md']);
-const RENAME = { '.claude': 'dot-claude/', '.mcp.json': 'dot-mcp.json', 'CLAUDE.md': 'CLAUDE.example.md', 'CLAUDE.local.md': 'CLAUDE.example.md', 'AGENTS.md': 'AGENTS.example.md' };
+export const RENAME = { '.claude': 'dot-claude/', '.mcp.json': 'dot-mcp.json', 'CLAUDE.md': 'CLAUDE.example.md', 'CLAUDE.local.md': 'CLAUDE.local.example.md', 'AGENTS.md': 'AGENTS.example.md' };
 
 function walk(root, rel, out) {
   for (const entry of readdirSync(join(root, rel))) {

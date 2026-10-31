@@ -27,7 +27,7 @@
   }
 
   body {
-    min-height: 100dvh;
+    min-height: var(--page-min-height);
     background-color: var(--color-bg);
     color: var(--color-text);
     font-family: var(--font-sans);
@@ -61,20 +61,134 @@
   a {
     color: var(--color-accent-text);
     text-decoration-line: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 3px;
+    text-decoration-thickness: var(--underline);
+    text-underline-offset: var(--underline-offset);
   }
 
   a:hover {
-    text-decoration-thickness: 2px;
+    text-decoration-thickness: var(--underline-hover);
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-focus);
-    outline-offset: 2px;
+    outline: var(--focus-ring) solid var(--color-focus);
+    outline-offset: var(--focus-offset);
   }
 
   ::selection {
-    background-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
+    background-color: var(--selection);
+  }
+}
+
+/* A rendered Guide page in the page panel (src/pages/PagePanel.tsx): the
+   release build's sanitized HTML, so the elements are styled here rather
+   than by utilities. */
+@layer components {
+  .page-prose {
+    display: grid;
+    gap: calc(var(--spacing) * 4);
+    line-height: var(--text-base--line-height);
+
+    & :where(h1, h2, h3, h4) {
+      scroll-margin-top: calc(var(--spacing) * 4);
+    }
+    & h1 {
+      font-size: var(--text-2xl);
+      line-height: var(--text-2xl--line-height);
+    }
+    & h2 {
+      margin-top: calc(var(--spacing) * 3);
+      font-size: var(--text-xl);
+      line-height: var(--text-xl--line-height);
+    }
+    & :where(h3, h4) {
+      margin-top: calc(var(--spacing) * 2);
+      font-size: var(--text-lg);
+      line-height: var(--text-lg--line-height);
+    }
+    & :where(ul, ol) {
+      display: grid;
+      gap: calc(var(--spacing) * 1.5);
+      padding-left: calc(var(--spacing) * 5.5);
+    }
+    & ul {
+      list-style: disc;
+    }
+    & ol {
+      list-style: decimal;
+    }
+    & :where(li > ul, li > ol) {
+      margin-top: calc(var(--spacing) * 1.5);
+    }
+    & :not(pre) > code,
+    & kbd {
+      border: var(--underline) solid var(--color-line);
+      border-radius: var(--radius-sm);
+      background-color: var(--color-surface-2);
+      padding: 0 calc(var(--spacing) * 1.5);
+      font-size: var(--text-code);
+    }
+    & pre {
+      overflow-x: auto;
+      border-radius: var(--radius-md);
+      background-color: var(--color-code-bg);
+      padding: calc(var(--spacing) * 3) calc(var(--spacing) * 4);
+      color: var(--color-code-text);
+      font-size: var(--text-code);
+    }
+    & table {
+      display: block;
+      overflow-x: auto;
+      border-collapse: collapse;
+      font-size: var(--text-sm);
+    }
+    & :where(th, td) {
+      border: var(--underline) solid var(--color-line);
+      padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 2.5);
+      text-align: left;
+      vertical-align: top;
+    }
+    & th {
+      background-color: var(--color-surface-2);
+      font-weight: var(--font-weight-semibold);
+    }
+    & blockquote {
+      border-left: calc(var(--underline) * 3) solid var(--color-line-2);
+      padding-left: calc(var(--spacing) * 4);
+      color: var(--color-muted);
+    }
+    & picture.diagram img {
+      max-width: 100%;
+      height: auto;
+    }
+    & img {
+      max-width: 100%;
+    }
+
+    /* GitHub's callouts, each edged in a status hue; the title stays in
+       the text colour, since not every hue meets text contrast. */
+    & .markdown-alert {
+      --alert: var(--color-teal);
+      display: grid;
+      gap: calc(var(--spacing) * 2);
+      border-left: calc(var(--underline) * 3) solid var(--alert);
+      border-radius: var(--radius-sm);
+      background-color: var(--color-surface-2);
+      padding: calc(var(--spacing) * 3) calc(var(--spacing) * 4);
+    }
+    & .markdown-alert-title {
+      font-weight: var(--font-weight-semibold);
+    }
+    & .markdown-alert-tip {
+      --alert: var(--color-pass);
+    }
+    & .markdown-alert-important {
+      --alert: var(--color-accent-text);
+    }
+    & .markdown-alert-warning {
+      --alert: var(--color-wait);
+    }
+    & .markdown-alert-caution {
+      --alert: var(--color-broken);
+    }
   }
 }

@@ -1,0 +1,14 @@
+{
+  "name": "@quest/host",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./fake": "./src/fake.ts"
+  },
+  "dependencies": {
+    "@quest/contract": "0.0.0",
+    "@quest/engine": "0.0.0"
+  }
+}

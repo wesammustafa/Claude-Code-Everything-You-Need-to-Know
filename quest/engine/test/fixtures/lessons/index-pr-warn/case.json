@@ -1,0 +1,9 @@
+{
+  "origin": "lesson-quotes-index-pr-warn",
+  "was": "warn",
+  "expect": "fail",
+  "about": "The Level index changed a line a warm-up quotes. lesson-quotes only warned offline, since the step files lived in the template; the lesson test has them here and fails.",
+  "problems": [
+    "course/steps/i-1\\.md:17: quotes \"One developer's setup\\.\" \\(R1 \\| Warm-up \\| Whose setup\\), which is not in docs/intermediate/README\\.md"
+  ]
+}

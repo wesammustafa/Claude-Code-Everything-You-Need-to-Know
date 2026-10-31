@@ -1,0 +1,20 @@
+{
+  "levels": [
+    {
+      "id": "advanced",
+      "index": "docs/advanced/README.md"
+    }
+  ],
+  "lessons": [
+    {
+      "id": "a-capstone",
+      "level": "advanced",
+      "order": 1,
+      "page": "docs/advanced/capstone.md",
+      "steps": "course/steps/a-capstone.md",
+      "check": "a-capstone",
+      "folder": "copy",
+      "slow": []
+    }
+  ]
+}
