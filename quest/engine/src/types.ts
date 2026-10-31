@@ -44,7 +44,6 @@ export interface CourseEntry {
   work?: true;
   title?: string;
   url?: string;
-  stuck?: string;
   items: string[];
   slow?: number[];
   content?: LessonContent | null;
