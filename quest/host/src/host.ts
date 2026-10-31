@@ -683,6 +683,7 @@ export function createHost({
         facts,
         now: clock.now(),
         epoch: clock.epoch(),
+        dir: ahead?.path,
       });
       state = first;
       revision = 1;
@@ -726,7 +727,9 @@ export function createHost({
           poke();
         }, POLL_MS),
       );
-      if (ahead) save();
+      // The engine took --dir's folder only where the app opens on a level
+      // with a work folder.
+      if (ahead && Object.values(state.folders).includes(ahead.path)) save();
       for (const dir of new Set(Object.values(state.folders))) {
         if (dir === root) continue;
         if (ahead && dir === ahead.path) input(probed(ahead));

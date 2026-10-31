@@ -288,13 +288,17 @@ test.describe("a notice first", () => {
     },
   });
 
-  test("still celebrates the Lesson, and leaves the notice", async ({
+  // The celebration claims only its own milestone; the notice is claimed
+  // by the save notices strip (252), so both ids are shown once each.
+  test("still celebrates the Lesson, and leaves the notice to its strip", async ({
     page,
     context,
   }) => {
     const shown = shownPosts(context);
     await page.goto("/#/lesson/b-1/complete");
     await expect(page.getByText("New badge: Explorer")).toBeAttached();
-    await expect.poll(() => shown).toEqual([completed[0]?.id]);
+    await expect
+      .poll(() => [...shown].sort())
+      .toEqual(["e2e.30", completed[0]?.id].sort());
   });
 });

@@ -25,6 +25,7 @@ import {
   folderOptions,
   folderProblem,
   gitLists,
+  initialState,
   introAsks,
   introNotes,
   introOptions,
@@ -1371,4 +1372,61 @@ test("a check all on a Worked example step names no --dir: it runs in the copy i
   d.send({ type: "check", lesson: "i-1", items, dir: PROJECT });
   assert.ok(isDone(d.state.beat), d.state.beat.status);
   // dropped: T-render "npm run check -- i-1 passes" with no --dir, and fitsAll
+});
+
+// --dir (ticket 252): the folder the app starts with answers the opening
+// level's folder question as folder.choose would.
+const startWith = (dir, saved, lessons = withI1()) =>
+  initialState({ course: lessons, saved: save(saved), facts: FACTS, dir });
+
+test("--dir sets the work folder of the level the app opens on, and the intro shows it as answered", () => {
+  const s = startWith(MINE, { lessons: finishedBefore("i-1") });
+  assert.equal(s.lesson, "i-1");
+  assert.deepEqual(s.folders, { intermediate: MINE });
+  assert.equal(s.folderAnswered, "i-1");
+  assert.ok(!asksFolder(s));
+  assert.ok(asksHere(s));
+  assert.equal(introOptions(s)[0], "start");
+});
+
+test("--dir on i-capstone sets Intermediate's folder; i-capstone itself stays in the copy", () => {
+  const s = startWith(MINE, { lessons: finishedBefore("i-capstone") });
+  assert.equal(s.lesson, "i-capstone");
+  assert.deepEqual(s.folders, { intermediate: MINE });
+  assert.equal(folderOf(s), PROJECT);
+});
+
+test("--dir on a-5 sets Advanced's folder and leaves a-5's saved new copy alone", () => {
+  const COPY_A5 = "/home/sam/claude-actions-practice";
+  const s = startWith(MINE, {
+    lessons: finishedBefore("a-5"),
+    folders: { "a-5": COPY_A5 },
+  });
+  assert.equal(s.lesson, "a-5");
+  assert.deepEqual(s.folders, { "a-5": COPY_A5, advanced: MINE });
+});
+
+test("--dir on a Beginner lesson changes nothing", () => {
+  const s = startWith(MINE, {});
+  assert.equal(s.lesson, "b-1");
+  assert.deepEqual(s.folders, {});
+  assert.equal(s.folderAnswered, null);
+});
+
+test("--dir over a saved folder drops the old folder's stamps and keeps a Worked example's in the copy", () => {
+  const OTHER = "/home/sam/code/other-app";
+  const lessons = worked();
+  const s = startWith(
+    OTHER,
+    {
+      lessons: {
+        ...finishedBefore("i-1", lessons),
+        "i-1": { stamps: { "W1.0": "copy-1", "Y1.0": "mine-1" } },
+      },
+      folders: { intermediate: MINE },
+    },
+    lessons,
+  );
+  assert.deepEqual(s.folders, { intermediate: OTHER });
+  assert.deepEqual(s.progress["i-1"].stamps, { "W1.0": "copy-1" });
 });

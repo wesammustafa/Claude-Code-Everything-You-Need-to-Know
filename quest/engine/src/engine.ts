@@ -165,12 +165,15 @@ export function initialState({
   facts,
   now = 0,
   epoch = 0,
+  dir,
 }: {
   course: CourseEntry[];
   saved?: SavedProgress | null;
   facts: Facts;
   now?: number;
   epoch?: number;
+  /** The folder --dir gave: the opening lesson's level's work folder. */
+  dir?: string | undefined;
 }): EngineState {
   const progress: Record<LessonId, LessonProgress> = {};
   // The lessons whose steps changed since the Learner started them, and of
@@ -253,7 +256,7 @@ export function initialState({
       answeredNow.push(`${l.id}.${w.id}`);
   }
   const p = of(next);
-  return {
+  const s: EngineState = {
     course,
     facts,
     progress,
@@ -312,6 +315,13 @@ export function initialState({
     // overview's note until it starts again, in memory.
     changed,
   };
+  // --dir answers the folder question of the level the app opens on, as a
+  // folder.choose would: the old folder's results and fresh stamps go. A
+  // Beginner lesson has no level folder, and a lesson in a new copy keeps
+  // the copy it was given.
+  const level = levelKey(s);
+  if (dir !== undefined && level) setFolder(s, level, dir, []);
+  return s;
 }
 
 // Where the Learner is (ticket 207): on a step card or on an overview. The
