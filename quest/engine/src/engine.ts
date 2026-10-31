@@ -812,15 +812,24 @@ export const introOptions = (s: EngineState) => [
   "less",
   ...(offered(s) ? ["first"] : []),
 ];
+// The commands a You need line names that the host found on no PATH folder.
+const absent = (s: EngineState, commands: string[]) =>
+  commands.filter((c) => s.commands[c] === false);
 // Each You need line with the commands it names that the host found on no PATH
 // folder. Nothing until the host has looked.
 export const missingNeeds = (s: EngineState) =>
   needsHere(s)
-    .map((n) => ({
-      quote: n.quote,
-      names: n.commands.filter((c) => s.commands[c] === false),
-    }))
+    .map((n) => ({ quote: n.quote, names: absent(s, n.commands) }))
     .filter((n) => n.names.length);
+// Each You need line here with the commands the host found on no PATH
+// folder: [] when it found them all, null until it has answered for each.
+export const needLines = (s: EngineState) =>
+  needsHere(s).map((n) => ({
+    quote: n.quote,
+    missing: n.commands.some((c) => s.commands[c] === undefined)
+      ? null
+      : absent(s, n.commands),
+  }));
 // What the host found wrong with the lesson's work folder, where it isn't the
 // copy (ticket 86): 'missing', 'gitBroken', 'notGit' or 'noPractice'. Null
 // until the host has looked, and where all is well.
