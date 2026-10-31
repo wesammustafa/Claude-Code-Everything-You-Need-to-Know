@@ -47,6 +47,46 @@ const stepFile = (id) => `course/steps/${id}.md`;
 const pageOf = (id) =>
   repo.manifest.lessons.find((lesson) => lesson.id === id).page;
 const flat = (text) => text.replace(/\s+/g, " ").trim();
+// The app lines of each step file that name a key or a control only the old
+// Terminal app had; quoted values are the page's words and stay as they are.
+const STRUCTURAL = new Set([
+  "where",
+  "terminals",
+  "run",
+  "code",
+  "tier",
+  "skill",
+  "from",
+  "verify",
+  "tick",
+  "watching",
+  "optional",
+]);
+const KEY_WORDS =
+  /\b(press(es|ed|ing)?|keystroke|key ?press|shortcut|scrollback|scroll up|backspace|space ?bar|this window|this pane|the pane)\b|\b(in|use) (a|the|this|your) terminal\b|\bthe terminal (running|you start)\b|\b(arrow|enter|return|tab|esc) keys?\b/i;
+const KEY_NAMES = /\b(Ctrl|Cmd|Shift|Alt|Option)\+|\bEsc(ape)?\b/;
+const appWords = (stepFiles) =>
+  Object.entries(stepFiles).flatMap(([file, text]) => {
+    const found = [];
+    let fenced = false;
+    let front = false;
+    text.split(/\r?\n/).forEach((line, index) => {
+      if (index === 0 && line === "---") return void (front = true);
+      if (front) return void (front = line !== "---");
+      if (line.startsWith("```")) return void (fenced = !fenced);
+      if (fenced) return;
+      const heading = line.match(/^###? (.+)$/);
+      const entry = line.match(/^- (?:narrow "[^"]*"|([a-z-]+)): (.+)$/);
+      const value = heading
+        ? heading[1]
+        : entry && !STRUCTURAL.has(entry[1]) && !/^".*"$/.test(entry[2])
+          ? entry[2]
+          : null;
+      if (value && (KEY_WORDS.test(value) || KEY_NAMES.test(value)))
+        found.push(`${file}:${index + 1}: ${value}`);
+    });
+    return found;
+  });
 // The problems a change to this repo's course adds, so that each change below
 // is judged on its own even while the repo itself fails.
 const added = (course) => {
@@ -188,6 +228,24 @@ describe("the lesson test on this repo", () => {
     expect(added({ ...repo, pages, stepFiles: without("stamp") })).toEqual([
       problem,
     ]);
+  });
+
+  test("no unquoted app line in a step file names a key or a terminal-only control", () => {
+    expect(appWords(repo.stepFiles)).toEqual([]);
+  });
+
+  test("a planted Press p fails, naming its line", () => {
+    const file = stepFile("i-5");
+    const line = "- say: Save valid JSON: close the block after this entry.";
+    const at = repo.stepFiles[file].split("\n").indexOf(line) + 1;
+    expect(at).toBeGreaterThan(0);
+    const planted = (say) => ({
+      [file]: repo.stepFiles[file].replace(line, `- say: ${say}`),
+    });
+    expect(appWords(planted("Press p for the lesson page."))).toEqual([
+      `course/steps/i-5.md:${at}: Press p for the lesson page.`,
+    ]);
+    expect(appWords(planted('"Press p for the lesson page."'))).toEqual([]);
   });
 });
 
