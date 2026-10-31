@@ -160,6 +160,29 @@ describe("the generated files", () => {
   });
 });
 
+// Codespaces keeps a forwarded port private by default (docs.github.com
+// forwarding-ports page); containers.dev defines no visibility key, so none is set.
+describe("the dev container", () => {
+  const config = JSON.parse(
+    readFileSync(
+      join(repoRoot, "practice-template/.devcontainer/devcontainer.json"),
+      "utf8",
+    ),
+  ) as {
+    forwardPorts: number[];
+    portsAttributes: Record<string, Record<string, unknown>>;
+  };
+
+  test("forwards 4747 with its label and no override of the private default", () => {
+    expect(config.forwardPorts).toEqual([4747]);
+    expect(Object.keys(config.portsAttributes)).toEqual(["4747"]);
+    expect(config.portsAttributes["4747"]).toEqual({
+      label: "Claude Code Quest",
+    });
+    expect(JSON.stringify(config)).not.toMatch(/"visibility"/i);
+  });
+});
+
 /** A minimal tree that passes both checks. */
 function cleanTree(): string {
   const dir = tempDir("quest-tpl-clean-");
@@ -348,6 +371,14 @@ describe("assembleTemplate", () => {
     );
     expect(readFileSync(join(a, "learn/THIRD-PARTY-NOTICES.txt"), "utf8")).toBe(
       "notices\n",
+    );
+  });
+
+  test("the dev container is copied byte for byte", () => {
+    expect(readFileSync(join(a, ".devcontainer/devcontainer.json"))).toEqual(
+      readFileSync(
+        join(repoRoot, "practice-template/.devcontainer/devcontainer.json"),
+      ),
     );
   });
 
