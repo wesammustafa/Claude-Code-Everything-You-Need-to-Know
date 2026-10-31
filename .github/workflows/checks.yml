@@ -79,13 +79,29 @@ jobs:
         env:
           QUEST_E2E_REAL_CLAUDE: "1"
 
+  # The Practice template, assembled from the build, held to its size and
+  # start-up budgets; the numbers go to the job summary. No Chromium: the
+  # template is checked from the files and `npm run learn`. Ticket 229 extends
+  # this job with the Node 22 matrix and the proof.
+  template:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci
+      - run: npm run build
+      - run: npm run template -- "$RUNNER_TEMP/tpl"
+      - run: npm run budgets -- "$RUNNER_TEMP/tpl"
+
   # The ruleset on main requires this job's check run, which GitHub names after
   # the job id. Renaming the job, or giving it a name:, would block every merge.
   # GitHub reports a skipped job as success and lets a skipped required check
   # through, so this job always runs and fails unless every job it needs
   # succeeded.
   checks:
-    needs: [guide, quest, e2e]
+    needs: [guide, quest, e2e, template]
     if: always()
     runs-on: ubuntu-latest
     steps:

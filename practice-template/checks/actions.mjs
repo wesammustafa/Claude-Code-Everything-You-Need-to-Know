@@ -562,7 +562,7 @@ export function uncommittedWorkflows(repo) {
     /** @type {string | null} */
     let committed = null;
     try {
-      committed = repo.git('show', `HEAD:${path}`);
+      committed = repo.git('show', `HEAD:./${path}`);
     } catch {
       // Not in HEAD.
     }
@@ -578,7 +578,7 @@ export function uncommittedWorkflows(repo) {
  */
 export function headBlob(repo, path) {
   try {
-    return repo.git('rev-parse', '--verify', '--quiet', `HEAD:${path}`) || null;
+    return repo.git('rev-parse', '--verify', '--quiet', `HEAD:./${path}`) || null;
   } catch {
     return null;
   }

@@ -1,0 +1,8 @@
+<!doctype html>
+<title>Linkcheck demo</title>
+<a href="#guide">Guide</a> <a href="#reference">Reference</a>
+<p id="link-count">Counting links...</p>
+<script>
+const links = document.querySelectorAll('a');
+document.querySelector('#link-count').textContent = `${links.length} links ready`;
+</script>

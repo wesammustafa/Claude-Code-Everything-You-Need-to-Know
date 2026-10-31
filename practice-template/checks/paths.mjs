@@ -3,30 +3,33 @@
 // from a plan file the Learner wrote, and test files by their names.
 import { realpathSync } from 'node:fs';
 import { isAbsolute, relative } from 'node:path';
+import { localPath } from './repo.mjs';
 
 // `git status --porcelain` lines: each one's path (a rename's new name), the
 // old name a rename or copy had (`from`) and the two status letters, leaving
-// out the checks' own saved state under .practice/.
+// out the checks' own saved state under .practice/. Paths are made relative
+// to `prefix`, the checked folder's path from the git root (repo.prefix).
 /** @typedef {{ xy: string, path: string, from?: string }} StatusEntry */
 
 /**
  * @param {string | null | undefined} text
+ * @param {string} [prefix]
  * @returns {StatusEntry[]}
  */
-export function statusEntries(text) {
+export function statusEntries(text, prefix = '') {
   const unquote = (/** @type {string} */ path) => path.replace(/^"|"$/g, '').trim();
   return (text ?? '').split(/\r?\n/)
     .filter((line) => line.trim())
     .map((line) => {
       const names = line.slice(3).split(' -> ');
-      const path = unquote(/** @type {string} */ (names.pop()));
-      return names.length ? { xy: line.slice(0, 2), path, from: unquote(names.join(' -> ')) } : { xy: line.slice(0, 2), path };
+      const path = localPath(unquote(/** @type {string} */ (names.pop())), prefix);
+      return names.length ? { xy: line.slice(0, 2), path, from: localPath(unquote(names.join(' -> ')), prefix) } : { xy: line.slice(0, 2), path };
     })
     .filter((e) => !e.path.startsWith('.practice/'));
 }
 
 // Paths from `git status --porcelain` lines, without the two status letters.
-export const statusPaths = (/** @type {string | null | undefined} */ text) => statusEntries(text).map((e) => e.path);
+export const statusPaths = (/** @type {string | null | undefined} */ text, prefix = '') => statusEntries(text, prefix).map((e) => e.path);
 
 const real = (/** @type {string} */ path) => {
   try {

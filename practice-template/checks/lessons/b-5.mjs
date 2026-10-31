@@ -29,7 +29,7 @@ const NPM_RUN = /npm run(?:-script)?(?:\s+--?[\w-]+(?:=\S+)?)*\s+([A-Za-z0-9:._]
 function committedMemory(repo) {
   for (const path of MEMORY_PATHS) {
     try {
-      return { path, text: repo.git('show', `HEAD:${path}`) };
+      return { path, text: repo.git('show', `HEAD:./${path}`) };
     } catch { /* not in the last commit */ }
   }
   return null;
@@ -68,17 +68,17 @@ function addingSources(repo, since) {
   const log = repo.git('log', '--diff-filter=A', '--name-only', '--format=%x00%H', `${since}..HEAD`);
   return log.split('\0').filter((c) => c.trim())
     .map((c) => c.split('\n').map((l) => l.trim()).filter(Boolean))
-    .map(([sha, ...files]) => ({ sha: /** @type {string} */ (sha), sources: files.filter(isSource) }))
+    .map(([sha, ...files]) => ({ sha: /** @type {string} */ (sha), sources: files.map(repo.local).filter(isSource) }))
     .filter((c) => c.sources.length);
 }
 
-const firstLine = (/** @type {Repo} */ repo, /** @type {string} */ sha, /** @type {string} */ path) => /** @type {string} */ (repo.git('show', `${sha}:${path}`).replace(/^﻿/, '').split(/\r?\n/)[0]).trim();
+const firstLine = (/** @type {Repo} */ repo, /** @type {string} */ sha, /** @type {string} */ path) => /** @type {string} */ (repo.git('show', `${sha}:./${path}`).replace(/^﻿/, '').split(/\r?\n/)[0]).trim();
 
 /** @param {Repo} repo */
 function scripts(repo) {
   let text;
   try {
-    text = repo.git('show', 'HEAD:package.json');
+    text = repo.git('show', 'HEAD:./package.json');
   } catch {
     text = repo.read('package.json');
   }
@@ -123,7 +123,7 @@ export const items = [
       if (commits.some((c) => !wrongIn(c).length)) return true;
       if (!commits.length) {
         const waiting = repo.git('status', '--porcelain', '--untracked-files=all').split('\n')
-          .filter((l) => /^(\?\?|A.) /.test(l)).map((l) => l.slice(3))
+          .filter((l) => /^(\?\?|A.) /.test(l)).map((l) => repo.local(l.slice(3)))
           .filter(isSource);
         if (waiting.length) return `No commit after the rule adds a JavaScript file to \`src/\`, and these new files are not committed yet: ${waiting.join(', ')}. Ask Claude to commit them.`;
         return 'No commit after the rule adds a JavaScript file to `src/`. In a new session, ask for a change that creates one, such as `src/stats.js` with a test, and to commit it.';

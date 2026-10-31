@@ -21,4 +21,5 @@ jobs:
         with:
           node-version: lts/*
       - name: Check every exercise
+        working-directory: project
         run: npm run --silent check -- all --summary >> "$GITHUB_STEP_SUMMARY"

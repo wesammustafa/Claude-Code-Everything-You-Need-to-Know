@@ -21,7 +21,7 @@ const START = 'Start the session with `claude --settings .practice/i-2-hook.json
  */
 function committed(repo, path) {
   try {
-    return repo.git('show', `HEAD:${path}`);
+    return repo.git('show', `HEAD:./${path}`);
   } catch {
     return null;
   }

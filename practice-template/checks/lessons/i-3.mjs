@@ -20,7 +20,7 @@ const LEVELS = ['low', 'medium', 'high', 'xhigh', 'max'];
  */
 function committed(repo, path) {
   try {
-    return repo.git('show', `HEAD:${path}`);
+    return repo.git('show', `HEAD:./${path}`);
   } catch {
     return null;
   }

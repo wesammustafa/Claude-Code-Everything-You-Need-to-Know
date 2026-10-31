@@ -194,7 +194,7 @@ export function runStubbed(repo, script, { args = () => [], commit = {}, stage =
   if (platform === 'win32') return { windows: true };
   let text;
   try {
-    text = execFileSync('git', ['show', `HEAD:${script}`], { cwd: repo.dir, stdio: ['ignore', 'pipe', 'pipe'] });
+    text = execFileSync('git', ['show', `HEAD:./${script}`], { cwd: repo.dir, stdio: ['ignore', 'pipe', 'pipe'] });
   } catch {
     return { missing: true };
   }

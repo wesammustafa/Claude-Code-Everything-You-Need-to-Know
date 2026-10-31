@@ -17,7 +17,7 @@ const SAVE_COMMIT = '`git rev-parse HEAD > .practice/i-1-commit.txt`';
 /** @param {Repo} repo */
 function committedSkill(repo) {
   try {
-    return repo.git('show', `HEAD:${SKILL}`);
+    return repo.git('show', `HEAD:./${SKILL}`);
   } catch {
     return null;
   }
@@ -67,7 +67,7 @@ export const items = [
       const sha = /** @type {string} */ (saved.trim().split(/\s+/)[0]);
       let files;
       try {
-        files = repo.git('show', '--name-only', '--format=', sha).split('\n').filter(Boolean);
+        files = repo.git('show', '--name-only', '--format=', sha).split('\n').filter(Boolean).map((f) => repo.local(f));
       } catch {
         return `\`.practice/i-1-commit.txt\` names ${sha}, which is not a commit in this repository.`;
       }
