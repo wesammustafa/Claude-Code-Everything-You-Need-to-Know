@@ -56,7 +56,7 @@ test('npm run startup is the proof\'s start-up step without Chromium', () => {
 
 test('the scripts the platforms job runs guard main() with isMain', () => {
   // A raw argv[1] string compare can miss on Windows and exit 0 unchecked.
-  for (const file of ['startup.mjs', 'template.mjs']) {
+  for (const file of ['startup.mjs', 'template.mjs', 'upgrade.mjs']) {
     const source = readFileSync(join(root, 'quest/release/src', file), 'utf8');
     assert.match(source, /^if \(isMain\(import\.meta\.url\)\)/m, file);
     assert.doesNotMatch(source, /process\.argv\[1\] ===/, file);

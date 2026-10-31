@@ -83,20 +83,47 @@ jobs:
   # one build, the Starter project's and the Checks' tests, every Check failing
   # on the fresh copy and passing after the full replay with Claude Code at the
   # CHANGELOG baseline, `npm run learn` offline on 127.0.0.1 with Chromium
-  # loading a Lesson, the tree's layout, and identical bytes. It runs on Node
-  # 22, the oldest the copy supports, and on the .nvmrc line. The build always
-  # runs on the .nvmrc line; the size and start-up budgets run only there, and
-  # their numbers go to the job summary.
+  # loading a Lesson, the tree's layout, and identical bytes. It runs on
+  # Ubuntu, on Node 22, the oldest the copy supports, and on the .nvmrc line.
+  # Every row runs the upgrade proof (npm run upgrade:verify): README's
+  # upgrade commands on a copy from the template's last Terminal app commit,
+  # in bash on Ubuntu and macOS, and in Git Bash, pwsh and Windows PowerShell
+  # on Windows. The build always runs on the .nvmrc line; the size and
+  # start-up budgets run only on Ubuntu's, and their numbers go to the job
+  # summary.
   template:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - leg: node-22
+          - os: ubuntu-latest
+            leg: node-22
             node-version: '22'
-          - leg: nvmrc
+            shell: bash
+          - os: ubuntu-latest
+            leg: nvmrc
             node-version-file: .nvmrc
+            shell: bash
+          - os: macos-latest
+            leg: nvmrc
+            node-version-file: .nvmrc
+            shell: bash
+          - os: windows-latest
+            leg: nvmrc
+            node-version-file: .nvmrc
+            shell: bash
+          - os: windows-latest
+            leg: nvmrc
+            node-version-file: .nvmrc
+            shell: pwsh
+          - os: windows-latest
+            leg: nvmrc
+            node-version-file: .nvmrc
+            shell: powershell
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -104,24 +131,28 @@ jobs:
           node-version-file: .nvmrc
       - run: npm ci
       - run: npm run build
-      - if: matrix.leg == 'nvmrc'
-        run: npm run template -- "$RUNNER_TEMP/tpl"
-      - if: matrix.leg == 'nvmrc'
+      - run: npm run template -- "$RUNNER_TEMP/tpl"
+      - if: matrix.os == 'ubuntu-latest' && matrix.leg == 'nvmrc'
         run: npm run budgets -- "$RUNNER_TEMP/tpl"
       - uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
           node-version-file: ${{ matrix.node-version-file }}
+      - run: npm run upgrade:verify -- --template "$RUNNER_TEMP/tpl" --shell ${{ matrix.shell }}
       - name: Install Claude Code at the CHANGELOG baseline
+        if: matrix.os == 'ubuntu-latest'
         run: |
           v=$(sed -n 's/^Baseline: Claude Code v\([0-9.]*\) .*/\1/p' CHANGELOG.md) && test -n "$v" && npm i -g "@anthropic-ai/claude-code@$v" && claude --version
       - run: npx playwright install --with-deps chromium
+        if: matrix.os == 'ubuntu-latest'
       - run: npm run proof
+        if: matrix.os == 'ubuntu-latest'
 
   # The Checks' tests, and `npm run learn` starting on an assembled copy with
   # no node_modules, offline, on 127.0.0.1, answering GET /api/health, on macOS
   # and on Windows in Git Bash. The full proof stays on Ubuntu: it needs the
   # replay, Chromium and an exit code on SIGTERM, which Windows never gives.
+  # The upgrade proof runs on all three, in the template job.
   platforms:
     runs-on: ${{ matrix.os }}
     strategy:

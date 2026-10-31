@@ -24,6 +24,7 @@
     "budgets": "npm run budgets --workspace @quest/release --",
     "replay": "npm run replay --workspace @quest/release --",
     "startup": "npm run startup --workspace @quest/release --",
+    "upgrade:verify": "npm run upgrade:verify --workspace @quest/release --",
     "proof": "npm run proof --workspace @quest/release --",
     "publish:template": "npm run publish:template --workspace @quest/release --",
     "course:legacy": "npm run legacy:fingerprints --workspace @quest/release --"

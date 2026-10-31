@@ -80,6 +80,31 @@ export function fencedBlocks(markdown) {
   return blocks;
 }
 
+// The fenced code blocks under the H2 whose slug is `id`, up to the next H2,
+// each as its info string's first word (`lang`, '' when none) and its lines
+// as fencedBlocks reads them. An unknown slug gives no blocks.
+export function sectionBlocks(markdown, id) {
+  const blocks = [];
+  let fence = null;
+  let inside = false;
+  for (const line of markdown.split(/\r?\n/)) {
+    const f = line.match(FENCE);
+    if (fence) {
+      if (f && f[1][0] === fence.mark[0] && f[1].length >= fence.mark.length && /^\s*[`~]+\s*$/.test(line)) fence = null;
+      else fence.lines.push(line.replace(new RegExp(`^ {0,${fence.indent}}`), ''));
+      continue;
+    }
+    if (f) {
+      fence = { mark: f[1], indent: line.length - line.trimStart().length, lines: [] };
+      if (inside) blocks.push({ lang: line.trim().slice(f[1].length).trim().split(/\s+/)[0] ?? '', lines: fence.lines });
+      continue;
+    }
+    const atx = line.match(ATX);
+    if (atx && atx[1].length === 2) inside = slug(atx[2] ?? '') === id;
+  }
+  return blocks;
+}
+
 export function pageIds(markdown) {
   const ids = [];
   const seen = new Map();
