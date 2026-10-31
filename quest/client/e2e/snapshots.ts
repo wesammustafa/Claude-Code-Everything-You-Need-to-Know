@@ -418,6 +418,14 @@ export const stepDown: StepDownLesson = {
   moreHelp: false,
 };
 
+/** The first Step-down, from Guided to Hinted, with more help on offer. */
+export const stepDownGuided: StepDownLesson = {
+  ...stepDown,
+  from: "guided",
+  to: "hinted",
+  moreHelp: true,
+};
+
 export const complete: CompleteLesson = {
   id: "b-1",
   title: "Install, sign in and look around",

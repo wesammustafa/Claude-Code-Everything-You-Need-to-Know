@@ -11,6 +11,7 @@ import {
   playing,
   snapshotOf,
   stepDown,
+  stepDownGuided,
 } from "../../e2e/snapshots";
 import { renderConnected } from "../../test/connected";
 import { WAITING_LINE } from "./Welcome";
@@ -454,9 +455,51 @@ describe("Lesson workspace", () => {
       screen.getByRole("heading", { level: 1, name: "Less help from here" }),
     ).toBeInTheDocument();
     expect(unquoted(snapshotOf(stepDown))).toEqual([]);
+    expect(
+      screen.queryByRole("button", { name: /^Keep / }),
+    ).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Go on on your own" }));
     expect(page.posts).toEqual([{ type: "stepDown.accept" }]);
   });
+
+  test("Guided to Hinted offers going on with hints or keeping every command", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected(
+      "/lesson/b-1/step",
+      snapshotOf(stepDownGuided),
+    );
+    expect(unquoted(snapshotOf(stepDownGuided))).toEqual([]);
+    await user.click(screen.getByRole("button", { name: "Go on with hints" }));
+    await user.click(
+      screen.getByRole("button", { name: "Keep every command shown" }),
+    );
+    expect(page.posts).toEqual([
+      { type: "stepDown.accept" },
+      { type: "stepDown.moreHelp" },
+    ]);
+  });
+
+  test("a Step-down's Back goes back", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected("/lesson/b-1/step", snapshotOf(stepDown));
+    await user.click(screen.getByRole("button", { name: "Back" }));
+    expect(page.posts).toEqual([{ type: "stepDown.back" }]);
+  });
+
+  test.each([
+    ["Guided to Hinted", stepDownGuided, "Guided", "Hinted"],
+    ["Hinted to Challenge", stepDown, "Hinted", "Challenge"],
+  ] as const)(
+    "%s shows both tiers where Pip looks, and never says level up",
+    (_, lesson, from, to) => {
+      renderConnected("/lesson/b-1/step", snapshotOf(lesson));
+      const tiers = document.querySelector("[data-pip-target=tiers]");
+      expect(tiers).not.toBeNull();
+      expect(tiers?.textContent).toContain(from);
+      expect(tiers?.textContent).toContain(to);
+      expect(document.body.textContent).not.toMatch(/level.?up/i);
+    },
+  );
 
   test("a new step or a Step-down on the same route moves focus to its heading", async () => {
     const user = userEvent.setup();

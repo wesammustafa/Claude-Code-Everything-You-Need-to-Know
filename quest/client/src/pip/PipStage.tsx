@@ -10,6 +10,7 @@ import {
 import { useLocation } from "react-router";
 import type { PipModel } from "../../pip/contract";
 import { useConnection, useLiveFeed } from "../live/LiveProvider";
+import { useCourseSnapshot } from "../screens/lesson";
 import { motionReduced, pageHidden, useReducedMotion } from "../lib/page";
 import type { DirectorInput, LookTarget } from "./director";
 import { followPointer } from "./pointer";
@@ -133,17 +134,19 @@ const ACTIVITY_MS = 1000;
  */
 export function PipStageProvider({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
+  // A Step-down shares the step's route: the phase tells them apart.
+  const phase = useCourseSnapshot()?.lesson.phase;
   const [stage] = useState(() =>
     createPipStage(pageClock, {
-      screen: screenFor(pathname),
+      screen: screenFor(pathname, phase),
       reducedMotion: motionReduced(),
       hidden: pageHidden(),
     }),
   );
 
   useEffect(() => {
-    stage.send({ type: "screen", screen: screenFor(pathname) });
-  }, [stage, pathname]);
+    stage.send({ type: "screen", screen: screenFor(pathname, phase) });
+  }, [stage, pathname, phase]);
 
   const reducedMotion = useReducedMotion();
   useEffect(() => {
