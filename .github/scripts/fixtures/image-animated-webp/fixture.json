@@ -1,0 +1,8 @@
+{
+  "rule": "images",
+  "expect": "fail",
+  "about": "An animated WebP under assets/: VP8X with the animation flag, ANIM and ANMF chunks. generate.mjs builds it from bytes.",
+  "output": [
+    "assets/readme/quest-step\\.webp: an animated image; the only animation is README's Pip GIFs, assets/readme/pip-\\*\\.gif"
+  ]
+}

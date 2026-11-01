@@ -1,0 +1,8 @@
+{
+  "rule": "images",
+  "expect": "pass",
+  "about": "A light and dark capture pair in a <picture> that follows the reader's theme.",
+  "output": [
+    "PASS images"
+  ]
+}

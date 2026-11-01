@@ -1,0 +1,8 @@
+{
+  "rule": "images",
+  "expect": "fail",
+  "about": "A GIF in assets/readme/ not named pip-*.gif: the only animation is README's Pip GIFs.",
+  "output": [
+    "assets/readme/learn-demo\\.gif: only SVG, PNG, JPEG and WebP files belong under assets/; the only animation is README's Pip GIFs, assets/readme/pip-\\*\\.gif"
+  ]
+}

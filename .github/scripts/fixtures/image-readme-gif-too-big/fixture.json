@@ -1,8 +1,8 @@
 {
   "rule": "images",
   "expect": "fail",
-  "about": "README's animated capture over its 1000 KB budget.",
+  "about": "A Pip GIF over its budget (PIP_GIF_BUDGET, 900 KB).",
   "output": [
-    "assets/readme/learn-big\\.gif: 1002 KB; README's animated capture may be up to 1000 KB"
+    "assets/readme/pip-big\\.gif: 902 KB; a Pip GIF may be up to 900 KB"
   ]
 }

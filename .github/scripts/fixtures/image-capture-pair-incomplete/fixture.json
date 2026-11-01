@@ -1,0 +1,8 @@
+{
+  "rule": "images",
+  "expect": "fail",
+  "about": "A dark capture with no light capture beside it.",
+  "output": [
+    "assets/readme/step-done-dark\\.png: a dark capture needs its light pair beside it"
+  ]
+}

@@ -45,3 +45,26 @@ test('sectionBlocks gives nothing for an unknown slug, and a ## inside a fence i
   assert.deepEqual(sectionBlocks(page, 'missing'), []);
   assert.deepEqual(sectionBlocks('```\n## Fake\n```\n```sh\nx\n```', 'fake'), []);
 });
+
+test('sectionBlocks starts a section at a line of <a id> anchors and ends it at the next such line', () => {
+  const details = [
+    '## Try it now',
+    '<a id="already-have-a-practice-copy"></a>',
+    '<details>',
+    '<summary>Already have a practice copy?</summary>',
+    '',
+    '```shell',
+    'git fetch x',
+    '```',
+    '',
+    '</details>',
+    '',
+    '<a id="help-that-fades-as-you-learn"></a>',
+    '## Meet Pip',
+    '```sh',
+    'after',
+    '```',
+  ].join('\n');
+  assert.deepEqual(sectionBlocks(details, 'already-have-a-practice-copy'), [{ lang: 'shell', lines: ['git fetch x'] }]);
+  assert.deepEqual(sectionBlocks(details, 'try-it-now'), []);
+});

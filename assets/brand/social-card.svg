@@ -1,26 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640" role="img" aria-label="Claude Code: Everything You Need to Know. Learn it in three levels, with cited facts and checked exercises: Beginner, Intermediate, Advanced. Independent community guide, not affiliated with Anthropic. Beside the title, the Claude mascot jumps with its arms up.">
-  <!-- Source for social-card.png. Faces: Zilla Slab and Atkinson Hyperlegible Next (SIL OFL 1.1). The mascot is drawn from claude-jumping.svg, Copyright (c) 2025-2026 Shayan Rais, used under the MIT License (full text in that file). -->
-  <rect width="1280" height="640" fill="#1d2b36"/>
-  <g transform="translate(60 185) scale(2.8)">
-    <ellipse cx="50" cy="82" rx="16" ry="4" fill="#000" opacity="0.3"/>
-    <g transform="translate(0 -10)" fill="#E07C4C">
-      <rect x="22" y="8" width="8" height="16"/>
-      <rect x="70" y="8" width="8" height="16"/>
-      <rect x="18" y="24" width="64" height="4"/>
-      <rect x="14" y="28" width="72" height="32"/>
-      <rect x="2" y="36" width="12" height="8" transform="rotate(25 14 40)"/>
-      <rect x="86" y="36" width="12" height="8" transform="rotate(-25 86 40)"/>
-      <rect x="24" y="60" width="12" height="14"/>
-      <rect x="64" y="60" width="12" height="14"/>
-      <rect x="30" y="34" width="8" height="10" fill="#000"/>
-      <rect x="62" y="34" width="8" height="10" fill="#000"/>
-    </g>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1280 640" width="1280" height="640" role="img" aria-label="Claude Code Quest. Claude Code: Everything You Need to Know. Learn Claude Code in three levels, from your first session to unattended multi-agent runs. Beside the title, Pip, the Claude Code Quest mascot, cheers with his arms up under falling confetti.">
+  <!-- Source for social-card.png, rendered at 1280 by 640. Pip (social-card-pip.png) is a frame of his Celebration rendered from the rig, quest/client/pip/pip.riv, in the app's own web runtime; never redraw him by hand. Face: Inter (SIL OFL 1.1). Colors: the app's dark theme tokens. -->
+  <defs>
+    <radialGradient id="glow" cx="985" cy="330" r="360" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff784e" stop-opacity="0.30"/>
+      <stop offset="0.55" stop-color="#ff784e" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#ff784e" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1280" height="640" fill="#0b1020"/>
+  <rect width="1280" height="640" fill="url(#glow)"/>
+  <image href="social-card-pip.png" xlink:href="social-card-pip.png" x="740" y="70" width="500" height="500"/>
+  <g font-family="Inter Variable, Inter, Segoe UI, system-ui, sans-serif">
+    <rect x="80" y="122" width="44" height="6" rx="3" fill="#ff784e"/>
+    <text x="140" y="132" fill="#ff784e" font-weight="700" font-size="26" letter-spacing="3">CLAUDE CODE QUEST</text>
+    <text x="78" y="232" fill="#eef1f8" font-weight="800" font-size="68" letter-spacing="-1.5">Claude Code:</text>
+    <text x="78" y="312" fill="#eef1f8" font-weight="800" font-size="68" letter-spacing="-1.5">Everything You</text>
+    <text x="78" y="392" fill="#eef1f8" font-weight="800" font-size="68" letter-spacing="-1.5">Need to Know</text>
+    <text x="80" y="460" fill="#a9b3cc" font-weight="500" font-size="29">Learn Claude Code in three levels, from your</text>
+    <text x="80" y="500" fill="#a9b3cc" font-weight="500" font-size="29">first session to unattended multi-agent runs.</text>
   </g>
-  <text x="380" y="210" fill="#ffffff" font-family="Zilla Slab, Rockwell, Georgia, serif" font-weight="700" font-size="74">Claude Code:</text>
-  <text x="380" y="292" fill="#ffffff" font-family="Zilla Slab, Rockwell, Georgia, serif" font-weight="700" font-size="74">Everything You Need</text>
-  <text x="380" y="374" fill="#ffffff" font-family="Zilla Slab, Rockwell, Georgia, serif" font-weight="700" font-size="74">to Know</text>
-  <text x="382" y="440" fill="#d5dde2" font-family="Atkinson Hyperlegible Next, Segoe UI, sans-serif" font-size="36">Learn it in three levels, with cited facts</text>
-  <text x="382" y="486" fill="#d5dde2" font-family="Atkinson Hyperlegible Next, Segoe UI, sans-serif" font-size="36">and checked exercises.</text>
-  <text x="382" y="560" fill="#f2c230" font-family="Atkinson Hyperlegible Next, Segoe UI, sans-serif" font-weight="700" font-size="28">Beginner   /   Intermediate   /   Advanced</text>
-  <text x="1220" y="610" text-anchor="end" fill="#8b9aa5" font-family="Atkinson Hyperlegible Next, Segoe UI, sans-serif" font-size="20">Independent community guide. Not affiliated with Anthropic.</text>
 </svg>

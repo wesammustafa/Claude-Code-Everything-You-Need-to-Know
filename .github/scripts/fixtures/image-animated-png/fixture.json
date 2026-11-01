@@ -1,0 +1,8 @@
+{
+  "rule": "images",
+  "expect": "fail",
+  "about": "An APNG under assets/: acTL before the first IDAT. generate.mjs builds it from bytes.",
+  "output": [
+    "assets/readme/quest-step\\.png: an animated image; the only animation is README's Pip GIFs, assets/readme/pip-\\*\\.gif"
+  ]
+}

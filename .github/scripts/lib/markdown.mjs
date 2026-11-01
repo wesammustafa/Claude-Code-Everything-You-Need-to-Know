@@ -8,6 +8,7 @@ const FENCE = /^ {0,3}(`{3,}|~{3,})/;
 const ATX = /^ {0,3}(#{1,6})(?:[ \t]+(.*?))?(?:[ \t]+#+)?[ \t]*$/;
 const SETEXT = /^ {0,3}(=+|-+)[ \t]*$/;
 const ANCHOR = /<a\s[^>]*?\b(?:id|name)\s*=\s*["']([^"']+)["']/gi;
+const ANCHOR_LINE = /^ {0,3}(?:<a\s[^>]*?\b(?:id|name)\s*=\s*["'][^"']+["'][^>]*>\s*<\/a>\s*)+$/i;
 
 const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
 
@@ -82,7 +83,11 @@ export function fencedBlocks(markdown) {
 
 // The fenced code blocks under the H2 whose slug is `id`, up to the next H2,
 // each as its info string's first word (`lang`, '' when none) and its lines
-// as fencedBlocks reads them. An unknown slug gives no blocks.
+// as fencedBlocks reads them. A line holding only <a id> anchors also starts
+// a section, for the one whose id it names, so a section kept as an anchor
+// above a <details> block (README's upgrade commands) still resolves; such a
+// line ends the section before it, as an H2 does. An unknown slug gives no
+// blocks.
 export function sectionBlocks(markdown, id) {
   const blocks = [];
   let fence = null;
@@ -101,6 +106,7 @@ export function sectionBlocks(markdown, id) {
     }
     const atx = line.match(ATX);
     if (atx && atx[1].length === 2) inside = slug(atx[2] ?? '') === id;
+    else if (ANCHOR_LINE.test(line)) inside = [...line.matchAll(ANCHOR)].some((m) => m[1] === id);
   }
   return blocks;
 }
