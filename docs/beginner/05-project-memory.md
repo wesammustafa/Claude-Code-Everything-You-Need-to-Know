@@ -29,7 +29,7 @@ Each session starts with a fresh context window. Your instruction files load at 
 
 ## Worked example
 
-1. Start `claude` in your practice copy and run:
+1. Start `claude` in your copy's `project/` folder and run:
 
    ```text
    /init
@@ -37,7 +37,7 @@ Each session starts with a fresh context window. Your instruction files load at 
 
    Claude reads the code and writes a `CLAUDE.md` with the commands and conventions it found. In a second terminal, read the file with `cat CLAUDE.md`.
 2. Edit it as you would before your team sees it. Open `CLAUDE.md` in your editor, or type `/memory` and select the project's `./CLAUDE.md` ([View and edit with `/memory`](https://code.claude.com/docs/en/memory#view-and-edit-with-%2Fmemory)).
-   - Cut what Claude can learn by reading the code, such as a tour of each file, and what describes the course rather than linkcheck: `checks/`, `learn/`, `capstone/`, `.github/`, the `npm run check`, `npm run learn` and `npm run test:checks` lines, and any rule to keep your work off `main` (that rule is for the template repository).
+   - Cut what Claude can learn by reading the code, such as a tour of each file, and what describes the course rather than linkcheck: the `npm run check` line, and any rule to keep your work off `main` (that rule is for the template repository).
    - Compare each command that's left with the `scripts` in `package.json`. Keep `npm test`, which the [capstone](capstone.md) checks for.
    - Add a convention that shows up in files. Put it under a `## Conventions` heading, and add that heading at the end of the file if `/init` didn't write one:
 
