@@ -27,13 +27,13 @@ In VS Code:
 
 1. Open the Extensions view with `Cmd+Shift+X` (Mac) or `Ctrl+Shift+X` (Windows and Linux), search for "Claude Code", and click **Install**. The extension doesn't work in Restricted Mode, so if VS Code shows a Restricted Mode banner or asks whether to trust the folder, trust it: this copy is your own code ([Workspace Trust](https://code.visualstudio.com/docs/editing/workspaces/workspace-trust)).
 2. Open `src/config.js`. Click the Spark icon at the top right of the editor to open Claude Code, and sign in if it asks. No icon? Click `✻ Claude Code` in the status bar at the bottom right instead.
-3. Select the body of `parseConfig` and press `Option+K` (Mac) or `Alt+K` (Windows and Linux). The prompt box gets a reference with the file path and line numbers, such as `@src/config.js#7-17`. Ask:
+3. Select the body of `parseConfig` and press `Option+K` (Mac) or `Alt+K` (Windows and Linux). The prompt box footer shows how many lines are selected, and the shortcut adds a reference with the file name and line numbers, such as `config.js#7-17` ([VS Code](https://code.claude.com/docs/en/vs-code#automatic-context-from-your-selection-and-open-file)). Ask:
 
    ```text
    What happens if linkcheck.json holds an array instead of an object?
    ```
 
-4. Switch the mode at the bottom of the prompt box to Manual, then ask for a small edit, such as a comment above `parseConfig`. The edit opens side by side with the original, and Claude asks for permission in the chat panel. Reject the edit there ([VS Code](https://code.claude.com/docs/en/vs-code)). The **Reject this change** buttons inside the diff only revert one change in the proposal; they don't finish the review.
+4. Switch the mode at the bottom of the prompt box to Manual, then ask for a small edit that the file doesn't have yet: `Add a JSDoc comment with @param and @returns tags above parseConfig`. The edit opens side by side with the original, and Claude asks for permission in the chat panel. Reject the edit there: click **No** ([VS Code](https://code.claude.com/docs/en/vs-code), [Configure permissions](https://code.claude.com/docs/en/permissions#add-a-comment-when-you-answer-a-permission-prompt)). The **Reject this change** buttons inside the diff only revert one change in the proposal; they don't finish the review.
 
 In a JetBrains IDE:
 
@@ -46,7 +46,7 @@ In a JetBrains IDE:
 
 1. Install the extension or the plugin for the editor you use.
 2. Open `src/links.js`, select the whole `findLinks` function, and press the reference shortcut: `Option+K` (Mac) or `Alt+K` (Windows and Linux) in VS Code, `Cmd+Option+K` (Mac) or `Alt+Ctrl+K` (Windows and Linux) in JetBrains. Then ask what kinds of links it finds.
-3. Switch to Manual mode as in the Worked example, ask for a small edit, and look it over in the diff view. Then reject the edit at Claude's permission prompt: in the chat panel in VS Code, or by choosing **No** in the terminal in JetBrains.
+3. Switch to Manual mode as in the Worked example, ask `Add a JSDoc comment with @param and @returns tags above findLinks`, and look it over in the diff view. Then reject the edit at Claude's permission prompt by choosing **No**: click it in the chat panel in VS Code, or choose it in the terminal in JetBrains.
 
 ## Check
 

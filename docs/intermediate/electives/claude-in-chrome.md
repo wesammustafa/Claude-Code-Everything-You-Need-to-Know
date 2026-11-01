@@ -39,7 +39,7 @@ Unlike [lesson 7](../07-mcp.md)'s Chrome DevTools MCP server, which you ran with
    ```
 
 2. In a second terminal, start Claude Code with Chrome: `claude --chrome`. The first time, a dialog explains the integration; press `Enter`.
-3. Run `/chrome`. When it shows `Status: Enabled` and `Extension: Installed`, the integration works. If not, quit Claude Code, restart Chrome, and run `claude --chrome` again: the first time, Claude Code installs a connection file that Chrome reads only at startup ([Extension not detected](https://code.claude.com/docs/en/chrome#extension-not-detected)).
+3. Run `/chrome`. When it shows `Status: Enabled` and `Extension: Installed`, the integration works. If more than one browser is connected, choose the one Claude uses with **Select browser…** there ([Get started in the CLI](https://code.claude.com/docs/en/chrome#get-started-in-the-cli)). If not, quit Claude Code, restart Chrome, and run `claude --chrome` again: the first time, Claude Code installs a connection file that Chrome reads only at startup ([Extension not detected](https://code.claude.com/docs/en/chrome#extension-not-detected)).
 4. Ask:
 
    ```text
