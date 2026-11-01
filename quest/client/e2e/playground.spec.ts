@@ -226,6 +226,17 @@ test("the director's controls work with the keyboard", async ({ page }) => {
   test.setTimeout(90_000);
   await open(page);
   const keys = page.keyboard;
+  // The controls, not the rig, are under test: the three live rigs would
+  // draw every frame and slow each keyboard round trip about thirtyfold
+  // under load. The switch is itself flipped by keyboard; the rig's own
+  // behaviour is covered by the test above.
+  const rive = page.getByRole("switch", { name: /Rive available/ });
+  await rive.focus();
+  await keys.press("Space");
+  await expect(livePip(page)).toHaveAttribute(
+    "data-pip-rendering",
+    "unavailable",
+  );
   await page.getByRole("radio", { name: "The model" }).focus();
   await keys.press("ArrowRight");
   await expect(log(page)).toBeVisible();
@@ -235,16 +246,65 @@ test("the director's controls work with the keyboard", async ({ page }) => {
   const buttons = region.locator("button:not([role=switch])");
   const count = await buttons.count();
   expect(count).toBeGreaterThan(30);
-  for (let i = 0; i < count; i += 1) {
-    const button = buttons.nth(i);
-    const label = (await button.innerText()).split("\n")[0] ?? "";
-    // The gaze presets set targets, which the log does not show.
-    if (["Left", "Forward", "Right", "Toward the step"].includes(label))
+  const labels = await buttons.evaluateAll((all) =>
+    all.map((el) => (el as HTMLElement).innerText.split("\n")[0] ?? ""),
+  );
+  expect(labels).toHaveLength(count);
+  // Each press is judged by the entry it adds itself: the page notes the
+  // log's newest entry as the click starts and again once React has drawn
+  // what the click did, in the microtask after it. An entry is a new element
+  // (keyed by its number), even when its text matches the last one's. A tick or a scenario's later step
+  // lands in a task of its own, so it can never pass for a dead button. One
+  // round trip focuses the button, one presses Enter, one reads the note:
+  // the page draws three live rigs, so every trip is slow on CI.
+  await log(page).evaluate((logged) => {
+    let before: Element | null = null;
+    const note = window as unknown as { pressAddedEntry: boolean | null };
+    window.addEventListener(
+      "click",
+      () => {
+        before = logged.firstElementChild;
+      },
+      true,
+    );
+    window.addEventListener("click", () => {
+      queueMicrotask(() => {
+        note.pressAddedEntry = logged.firstElementChild !== before;
+      });
+    });
+  });
+  for (const [i, label] of labels.entries()) {
+    // The gaze presets set targets, which the log does not show: each is
+    // pressed instead.
+    if (
+      ["Left", "Forward", "Right", "Up", "Down", "Toward the step"].includes(
+        label,
+      )
+    ) {
+      await buttons.nth(i).focus();
+      await keys.press("Enter");
+      await expect(buttons.nth(i), label).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
       continue;
-    const before = await log(page).innerText();
-    await button.focus();
+    }
+    await buttons.nth(i).evaluate((button) => {
+      Object.assign(window, { pressAddedEntry: null });
+      (button as HTMLElement).focus();
+    });
     await keys.press("Enter");
-    await expect(log(page), label).not.toHaveText(before);
+    await expect
+      .poll(
+        () =>
+          page.evaluate(
+            () =>
+              (window as unknown as { pressAddedEntry: boolean | null })
+                .pressAddedEntry,
+          ),
+        { message: label },
+      )
+      .toBe(true);
   }
 
   // A scenario plays to its end: a Retry replaces a Success.
