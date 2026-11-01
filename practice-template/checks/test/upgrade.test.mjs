@@ -37,7 +37,7 @@ function write(dir, files) {
 }
 
 function repo(files) {
-  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'upgrade-')));
+  const dir = realpathSync.native(mkdtempSync(join(tmpdir(), 'upgrade-')));
   git(dir, 'init', '-q', '-b', 'main');
   write(dir, files);
   git(dir, 'add', '-A');
