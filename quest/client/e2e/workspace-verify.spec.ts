@@ -384,8 +384,13 @@ test('session: b-2 "Confirm no edit yet" waits for the session, says Not yet, th
     expect(count("session.ended") - before).toBe(1);
     await namesNoKey(page);
 
-    remove(copy, "scratch.txt");
+    // Said again while the tree is still dirty: still Not yet. Said before
+    // the edit goes, since a watched beat looks again by itself once the
+    // tree changes, and the button then turns into Next step.
     await ended.click();
+    await expect.poll(() => count("session.ended") - before).toBe(2);
+    await expect(page.locator("[data-says-words]")).toContainText("Not yet");
+    remove(copy, "scratch.txt");
     await expect(
       bar(page).getByRole("button", { name: "Next step" }),
     ).toBeVisible({ timeout: 30_000 });

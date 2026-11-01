@@ -95,6 +95,31 @@ test("the poll looks every 500 ms and asks again for what the beat waits on at m
   assert.equal(quiet.adapters.checks.calls.length, 0);
 });
 
+// 254 D25: the run a change the watcher saw asks for says so on its
+// run-start, for Pip to think through; the poll's and the opening run's do not.
+test("a run the watcher's change starts carries changed on its run-start; the poll's and the beat's opening run's do not", async () => {
+  const { host, clock, adapters, heard } = fakeHost({
+    saved: AT_W3,
+    checks: () => w3(false),
+  });
+  const starts = () =>
+    heard
+      .filter((h) => h.input.type === "run-start")
+      .map((h) => h.input.changed);
+  await host.open();
+  host.start();
+  host.dispatch({ type: "lesson.open", lesson: "b-1" });
+  await turn();
+  assert.deepEqual(starts(), [false], "the beat's opening run");
+  await clock.advance(500);
+  await turn();
+  assert.deepEqual(starts(), [false, false], "the poll's run");
+  clock.spend(400);
+  adapters.fire(ROOT);
+  await turn();
+  assert.deepEqual(starts(), [false, false, true], "the watcher's run");
+});
+
 // spec: watching
 test("a change within 400 ms of a save is the save's own, and one at 400 ms counts", async () => {
   const { host, clock, adapters, heard } = fakeHost({ saved: AT_W3 });

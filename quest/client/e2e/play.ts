@@ -95,7 +95,7 @@ export async function move(page: Page) {
   const check = bar(page).getByRole("button", { name: "Check again" });
   // The answers not tried yet: a wrong one stays marked, the next is tried.
   const untried = page.locator(
-    "main fieldset:not([disabled]) label[data-state=idle]",
+    'main fieldset:not([disabled]):not([aria-disabled="true"]):not([data-disabled]) label[data-state=idle]',
   );
   if ((await heading(page).innerText()) === "Less help from here") {
     await page.getByRole("button", { name: /^Go on/ }).click();

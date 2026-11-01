@@ -152,7 +152,9 @@ export interface BeatState {
   ended: boolean;
   opened: number;
   eased: boolean;
-  run: { asked: number } | null;
+  run: { asked: number; changed?: boolean } | null;
+  // The poll's run going unmarked: its r number (254 D25).
+  quiet?: number;
   look: string | null;
   touched: boolean;
   whileRuns?: { id: StepId; answer: number | null; at: string };
@@ -290,6 +292,8 @@ export type HostInput = ResultFields &
     | {
         type: "run-start";
         run: "check" | "git" | "probe";
+        // A change the host's file watcher saw asked for it.
+        changed?: boolean;
         items?: number[] | null;
         name?: string;
       }

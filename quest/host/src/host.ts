@@ -295,6 +295,7 @@ export function createHost({
   const runStart = (run: {
     run: "check" | "git" | "probe";
     asked: number;
+    changed: boolean;
     dir: string;
     lesson?: string;
     items?: number[] | null;
@@ -352,8 +353,15 @@ export function createHost({
     // The child starts when its turn in the lane comes, not when the run was
     // asked for.
     const r = await inLane(() => {
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- as the JavaScript had it
-      runStart({ run: "check", lesson, items, asked: flags.asked ?? 0, dir });
+      runStart({
+        run: "check",
+        lesson,
+        items,
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- as the JavaScript had it
+        asked: flags.asked ?? 0,
+        changed: flags.changed,
+        dir,
+      });
       return checks.run(dir, lesson, items, { slow, onRunning });
     });
     if (closed) return;
@@ -371,7 +379,14 @@ export function createHost({
     }
     if (ev && files.stamp(dir, ev) !== before) {
       queueMicrotask(() => {
-        if (!closed) void check({ slow, asked }, lesson, items, ev, dir);
+        if (!closed)
+          void check(
+            { slow, asked, changed: flags.changed },
+            lesson,
+            items,
+            ev,
+            dir,
+          );
       });
       return;
     }
@@ -391,13 +406,13 @@ export function createHost({
   // `head`: and where HEAD is, for a head-moved beat (ticket 105).
   const gitRun = owing(
     async (
-      { asked }: Flags,
+      { asked, changed }: Flags,
       dir: string,
       listed: boolean | undefined,
       head: boolean | undefined,
     ) => {
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- as the JavaScript had it
-      runStart({ run: "git", asked: asked ?? 0, dir });
+      runStart({ run: "git", asked: asked ?? 0, changed, dir });
       const r = await git.status(dir, { files: listed, head });
       if (closed) return;
       input(
@@ -417,10 +432,15 @@ export function createHost({
   );
   // A git probe (ticket 105), in the check child.
   const probe = owing(
-    async ({ asked }: Flags, dir: string, name: string, args: string[]) => {
+    async (
+      { asked, changed }: Flags,
+      dir: string,
+      name: string,
+      args: string[],
+    ) => {
       const r = await inLane(() => {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- as the JavaScript had it
-        runStart({ run: "probe", name, asked: asked ?? 0, dir });
+        runStart({ run: "probe", name, asked: asked ?? 0, changed, dir });
         return probes.run(dir, name, args);
       });
       if (closed) return;
@@ -593,17 +613,19 @@ export function createHost({
     }
   }
 
-  // Ask again for whatever the Learner waits on.
-  function poke() {
+  // Ask again for whatever the Learner waits on: on a change the watcher
+  // saw (`changed`, a run Pip thinks for, 254 D25), or on the poll.
+  function poke(changed = false) {
     const s = state as EngineState;
     const w = watching(s);
     if (!w) return;
     const dir = dirOf(w.dir);
+    const ask = { changed };
     if (w.check)
-      void check({}, w.check.lesson, w.check.items, evidence(s), dir);
+      void check(ask, w.check.lesson, w.check.items, evidence(s), dir);
     if (w.file) file(w.file, 0, dir);
-    if (w.git) void gitRun({}, dir, w.files, w.head);
-    if (w.probe) void probe({}, dir, w.probe.name, w.probe.args);
+    if (w.git) void gitRun(ask, dir, w.files, w.head);
+    if (w.probe) void probe(ask, dir, w.probe.name, w.probe.args);
   }
 
   // The copy is always watched: its .practice/ decides whether progress
@@ -618,7 +640,7 @@ export function createHost({
       input({ type: "facts", facts: { practiceDir } });
     // Only a change the watcher saw counts as the Learner working (D1).
     input({ type: "activity" });
-    poke();
+    poke(true);
     reprobe();
   };
   // A work folder whose look found something wrong is looked at again when

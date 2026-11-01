@@ -1096,8 +1096,10 @@ function openBeat(s: EngineState, effects: Effect[]) {
     ended: false,
     opened: s.now,
     eased: Boolean(p.easedSteps[step.id]),
-    // The run the card says "Checking" for, from the moment its child really
-    // starts (`run-start`) until the status leaves "opening": { asked }. And
+    // The Check run going, from the moment its child really starts
+    // (`run-start`) until the status leaves "opening", or, for one a change
+    // the watcher saw started while it was not, until a result lands:
+    // { asked, changed }. And
     // the last look at what the beat watches, as a digest, so a look that
     // differs from the one before is a change (work.changed), unless a file
     // change already said so since the last look. In memory.
@@ -1741,9 +1743,10 @@ function decide(
   st.stale = false;
   if (!failing) {
     st.status = st.baseline === undefined ? "already" : "done";
-    // The run that passed the lesson's whole check: its done line counts
-    // these, not a later poll's, which leaves the slow items out.
-    if (beat.verify.all) st.passed = ev.items;
+    // The run that passed the beat: its done lines are these, not a later
+    // poll's, which leaves the slow items out (b-1's item 0, or the whole
+    // check's slow items).
+    st.passed = ev.items;
     st.evidence = ev.evidence ?? null;
     // The file a glob matched, for the card to name (106).
     st.found = ev.found ?? null;
@@ -2326,10 +2329,12 @@ function apply(
       break;
     case "run-start": {
       // A child really started (the host's run-start: what it runs, the r
-      // number it carries and its folder). Only the run the card says
-      // "Checking" for counts, as for `running`: what the beat watches, in
-      // its folder, asked by the latest r, or by the beat opening when no r
-      // is out. A later r's run keeps the one run going.
+      // number it carries and its folder). A run of what the beat watches
+      // counts, in its folder, asked by the latest r, or by no r when none
+      // is out: while the status is "opening" (the beat opening, or r), or,
+      // whatever the status, one a change the host's file watcher saw asked
+      // for (254 D25, owner 2026-11-01). The timed poll's run is not one. A
+      // later r's run keeps the one run going. A done beat has no run.
       const w = watching(s);
       const asked = ev.asked ?? 0;
       const watched =
@@ -2341,15 +2346,24 @@ function apply(
             ? Boolean(w?.git)
             : w?.probe?.name === ev.name;
       if (
-        s.beat?.status !== "opening" ||
+        !s.beat ||
+        ["done", "already"].includes(s.beat.status) ||
         !w ||
         !watched ||
         ev.dir !== w.dir ||
         asked !== (s.beat.asked || 0)
       )
         break;
+      // The poll's run: not one yet, but a change the watcher sees while it
+      // goes makes it one, since its result may be the change's answer.
+      if (s.beat.status !== "opening" && !ev.changed) {
+        if (!s.beat.run) s.beat.quiet = asked;
+        break;
+      }
       if (s.beat.run) s.beat.run.asked = asked;
-      else s.beat.run = { asked };
+      else
+        s.beat.run =
+          s.beat.status === "opening" ? { asked } : { asked, changed: true };
       break;
     }
     case "running": {
@@ -2463,6 +2477,8 @@ function apply(
       // A file changed or git moved: the learner is working, so no "stuck?" offer.
       s.lastActivity = s.now;
       if (s.beat) s.beat.idle = false;
+      if (s.beat?.quiet !== undefined && !s.beat.run)
+        s.beat.run = { asked: s.beat.quiet, changed: true };
       // A change moments.ts says (work.changed): the look it brings says
       // nothing more.
       if (watching(s) && s.beat && !s.beat.run) s.beat.touched = true;
@@ -2537,7 +2553,12 @@ export function reduce(prev: EngineState, input: EngineInput) {
   if (typeof input.epoch === "number") s.epoch = input.epoch;
   const handled = apply(s, input, effects);
   settle(prev, s, effects);
-  // A started run ends as the status leaves "opening".
-  if (s.beat?.run && s.beat.status !== "opening") s.beat.run = null;
+  // A started run ends as the status leaves "opening"; one that started
+  // while it was not (the watcher's) ends when a result lands.
+  const st = s.beat;
+  const result = RESULTS.some((t) => t === input.type);
+  if (st && result) delete st.quiet;
+  if (st?.run && st.status !== "opening" && (!st.run.changed || result))
+    st.run = null;
   return { state: s, effects, events: momentsOf(prev, s, handled) };
 }

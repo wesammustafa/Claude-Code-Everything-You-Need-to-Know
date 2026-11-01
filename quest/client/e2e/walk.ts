@@ -970,7 +970,10 @@ export async function walkLesson(
     }
     // A question: each answer in turn, by its place, since a wrong pick on
     // a warm-up clears for another try rather than staying marked.
-    const answers = page.locator("main fieldset:not([disabled]) label");
+    // An answered question can stay on the card, disabled the non-native way.
+    const answers = page.locator(
+      'main fieldset:not([disabled]):not([aria-disabled="true"]):not([data-disabled]) label',
+    );
     if (
       now?.phase === "playing" &&
       now.step !== null &&

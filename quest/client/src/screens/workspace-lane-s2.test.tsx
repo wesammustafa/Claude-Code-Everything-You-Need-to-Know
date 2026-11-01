@@ -67,6 +67,68 @@ describe("the 2 second hint lock", () => {
     expect(page.posts).toEqual([{ type: "hint.next" }, { type: "hint.next" }]);
   });
 
+  test("an ask that opens only the exact-command question leaves no lock behind Not now", async () => {
+    fakeClock();
+    const user = userEvent.setup();
+    const page = renderConnected("/lesson/b-1/step", snapshotOf(playing));
+    await user.click(screen.getByRole("button", { name: "Show a hint" }));
+    await settle();
+    expect(page.posts).toEqual([{ type: "hint.next" }]);
+    // No rung opens: the engine asks first.
+    page.send(snapshotOf(confirmExact, { revision: 2 }));
+    await user.click(await screen.findByRole("button", { name: "Not now" }));
+    await settle();
+    page.send(snapshotOf(playing, { revision: 3 }));
+    await user.click(
+      await screen.findByRole("button", { name: "Show a hint" }),
+    );
+    await settle();
+    expect(page.posts).toEqual([
+      { type: "hint.next" },
+      { type: "hint.takeExact", take: false },
+      { type: "hint.next" },
+    ]);
+  });
+
+  test("while an exact-command answer is in flight, both answers are aria-disabled and keep focus (247 D10)", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected("/lesson/b-1/step", snapshotOf(confirmExact));
+    const take = () =>
+      screen.getByRole("button", { name: "Show the exact command" });
+    const decline = () => screen.getByRole("button", { name: "Not now" });
+    expect(take()).not.toHaveAttribute("aria-disabled");
+    const held = page.hold();
+    await user.click(decline());
+    expect(page.posts).toEqual([{ type: "hint.takeExact", take: false }]);
+    expect(take()).toHaveAttribute("aria-disabled", "true");
+    expect(decline()).toHaveAttribute("aria-disabled", "true");
+    expect(decline()).toHaveFocus();
+    await act(() => held.release());
+    expect(take()).not.toHaveAttribute("aria-disabled");
+    expect(decline()).not.toHaveAttribute("aria-disabled");
+  });
+
+  test("a take pressed while an answer is in flight starts no lock: the take after it lands goes out", async () => {
+    fakeClock();
+    const user = userEvent.setup();
+    const page = renderConnected("/lesson/b-1/step", snapshotOf(confirmExact));
+    const take = () =>
+      screen.getByRole("button", { name: "Show the exact command" });
+    const held = page.hold();
+    await user.click(screen.getByRole("button", { name: "Not now" }));
+    expect(take()).toHaveAttribute("aria-disabled", "true");
+    await user.click(take());
+    expect(page.posts).toEqual([{ type: "hint.takeExact", take: false }]);
+    await act(() => held.release());
+    // Well inside 2 s of the busy press.
+    await user.click(take());
+    await settle();
+    expect(page.posts).toEqual([
+      { type: "hint.takeExact", take: false },
+      { type: "hint.takeExact", take: true },
+    ]);
+  });
+
   test("the exact-command confirm ignores a repeat take within 2 s", async () => {
     fakeClock();
     const user = userEvent.setup();

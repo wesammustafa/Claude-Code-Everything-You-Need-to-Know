@@ -145,16 +145,18 @@ async function tabTo(page: Page, name: RegExp) {
   throw new Error(`Tab never reached ${String(name)}`);
 }
 
-/** Tabs forward to the action bar's last control. */
+/** Tabs forward to the action bar's last control, and returns its name. */
 async function tabToBar(page: Page) {
   for (let presses = 0; presses < 80; presses += 1) {
     await page.keyboard.press("Tab");
     const there = await page.evaluate(() => {
       const at = document.activeElement;
       const buttons = document.querySelectorAll("[data-action-bar] button");
-      return at !== null && at === buttons[buttons.length - 1];
+      if (!(at instanceof HTMLElement) || at !== buttons[buttons.length - 1])
+        return null;
+      return at.getAttribute("aria-label") ?? at.innerText.trim();
     });
-    if (there) return;
+    if (there !== null) return there;
   }
   throw new Error("Tab never reached the action bar");
 }
@@ -197,6 +199,8 @@ test("keyboard navigation: b-1 from Welcome to a passed Check with only the keyb
     await tabTo(page, /^Start$/);
     await focusShows(page);
     await page.keyboard.press("Space");
+    // Start lands on the first step: the Tab walk below is on its screen.
+    await expect(heading(page)).toHaveText("Run the installer");
     // The steps list opens, and Escape closes it.
     await tabTo(page, /^Steps$/);
     await page.keyboard.press("Enter");
@@ -211,8 +215,10 @@ test("keyboard navigation: b-1 from Welcome to a passed Check with only the keyb
       const last = bar(page).getByRole("button").last();
       await expect(last).toBeEnabled({ timeout: 30_000 });
       if (await next.isVisible()) break;
-      await tabToBar(page);
+      const landed = await tabToBar(page);
       await focusShows(page);
+      // The Check passed during the Tab walk: Enter would leave the step.
+      if (landed === "Next step") break;
       await page.keyboard.press("Enter");
       await page.waitForTimeout(300);
     }

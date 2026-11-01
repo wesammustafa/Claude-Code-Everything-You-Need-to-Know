@@ -184,6 +184,8 @@ function Play({
   }, [shownHints, look]);
 
   const send = useSend();
+  const { pending } = useAct();
+  const actionsOn = useActionsEnabled();
   const lockUntil = useRef(0);
   // True, and the lock starts, when no ask came within the last HINT_LOCK_MS.
   const unlocked = () => {
@@ -212,8 +214,17 @@ function Play({
     hintRung(hint, step.where?.kind ?? null),
   );
   const { available, unavailable, confirmExact } = lesson.hints;
+  // An ask that only opens the exact-command question opens no rung, so it
+  // leaves no lock: the take, or a later ask after Not now, is not held.
+  useEffect(() => {
+    if (confirmExact) lockUntil.current = 0;
+  }, [confirmExact]);
+  // Busy first: a press the store would drop starts no lock.
+  const exactBusy = !actionsOn || pending("hint.takeExact");
   const takeExact = (take: boolean) => {
+    if (exactBusy) return;
     if (take && !unlocked()) return;
+    if (!take) lockUntil.current = 0;
     send("hint.takeExact", { type: "hint.takeExact", take });
   };
   const tearDown = isTearDown(step);
@@ -364,6 +375,7 @@ function Play({
             {...(confirmExact
               ? {
                   confirm: {
+                    busy: exactBusy,
                     onTake: () => {
                       takeExact(true);
                     },

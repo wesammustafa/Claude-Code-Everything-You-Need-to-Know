@@ -437,6 +437,29 @@ test("playing: a resume with no beat open names its steps and the step it opens 
   assert.equal(v.hints.available, false);
 });
 
+// scenarios.spec keyboard b-1 (254): b-1's item 0 is slow, so a poll leaves
+// it out (a placeholder marked slow). A poll that lands after r passed the
+// beat must not take its line away.
+test("a passed beat keeps the verification lines of the run that passed it: a later poll that leaves the slow item out removes none", () => {
+  const d = at("b-1", { step: "W3", beat: 0, done: ["W1", "W2"] });
+  const eff = pending(d, "check");
+  const left = checkItems(d.state, false).map((it) => ({ ...it, slow: true }));
+  d.send(checkResult(eff, left));
+  assert.equal(view(d).beat.status, "waiting");
+  d.run();
+  d.send(
+    checkResult(pending(d, "check"), checkItems(d.state, true), {
+      asked: d.state.beat.asked,
+    }),
+  );
+  const passed = [{ text: lesson("b-1").items[0], pass: true }];
+  assert.equal(view(d).beat.status, "done");
+  assert.deepEqual(view(d).beat.verification, passed);
+  d.send(checkResult(eff, left));
+  assert.equal(view(d).beat.status, "done");
+  assert.deepEqual(view(d).beat.verification, passed);
+});
+
 test("playing: a do beat's lines with its commands for this platform and the practice copy's path, the watched tick, what it checks while it runs, and its verification lines", () => {
   const d = at("b-1", { step: "W3", beat: 0, done: ["W1", "W2"] });
   let b = view(d).beat;

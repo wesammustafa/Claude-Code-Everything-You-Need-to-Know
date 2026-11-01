@@ -252,6 +252,10 @@ test("by keyboard alone: every answer, the send, the reveal and each hint contro
     });
   await page.keyboard.press("Shift+Tab");
   expect(await focused(page)).toBe("Show the exact command");
+  // Not now's answer has landed: the take is no longer held in flight.
+  await expect(
+    page.getByRole("button", { name: "Show the exact command" }),
+  ).not.toHaveAttribute("aria-disabled", "true");
   await page.keyboard.press("Space");
   await expect
     .poll(() => sent.at(-1))

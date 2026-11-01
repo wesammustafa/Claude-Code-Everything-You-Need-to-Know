@@ -1,6 +1,6 @@
 // Pip's mode follows the b-1 step states on a real play (rehoming row 160,
 // 254 D22+): on the built app in a fresh Practice copy, Pip is Idle on the
-// waiting card, Thinking while the Check runs, and Idle again once it says
+// waiting card, Thinking from check.started to the result, and Idle again once it says
 // Not yet, could not run (broken) or passed (done). The director's mode is
 // read from `data-pip-mode` on Pip's element. It reuses rehomed.spec.ts's
 // helpers from their modules (play.ts, practice-copy.ts).
@@ -20,43 +20,61 @@ const CORRECTED =
 const pip = (page: Page) => page.locator("[data-pip=beside]");
 const card = (page: Page) => page.locator("[data-pip-target=lines] li").last();
 
-/** Every mode Pip's element held while the bubble said Checking, from now on. */
-async function watchChecking(page: Page) {
+/**
+ * Every mode Pip's element holds from now on, starting with the current one.
+ * The mode follows the event feed (check.started until the result, spec
+ * Reaction map), which lands after the snapshot's Checking words, so it is
+ * read over the whole run rather than while the bubble says Checking.
+ */
+async function watchModes(page: Page) {
   await page.evaluate(() => {
     const seen: string[] = [];
     (window as unknown as { __modes: string[] }).__modes = seen;
     const look = () => {
-      const words =
-        document.querySelector("[data-says-words]")?.textContent ?? "";
       const mode = document
         .querySelector("[data-pip=beside]")
         ?.getAttribute("data-pip-mode");
-      if (/^Checking/.test(words) && mode) seen.push(mode);
+      if (mode && seen.at(-1) !== mode) seen.push(mode);
     };
+    look();
     new MutationObserver(look).observe(document.body, {
       subtree: true,
       childList: true,
-      characterData: true,
       attributes: true,
+      attributeFilter: ["data-pip-mode"],
     });
   });
 }
 
-const checkingModes = (page: Page) =>
+const modes = (page: Page) =>
   page.evaluate(() => (window as unknown as { __modes: string[] }).__modes);
 
-/** Check again, Thinking while it runs, then the line's state and Idle. */
-async function checkTo(page: Page, state: string) {
-  await watchChecking(page);
-  await bar(page).getByRole("button", { name: "Check again" }).click();
+/** Idle, Thinking while the run is out, then the line's state and Idle. */
+async function checkTo(page: Page, state: string, run: () => Promise<void>) {
+  await watchModes(page);
+  await run();
   await expect(card(page)).toHaveAttribute("data-state", state, {
     timeout: 30_000,
   });
   await expect
-    .poll(() => checkingModes(page), { timeout: 30_000 })
-    .toContain("thinking");
+    .poll(
+      async () => {
+        const seen = await modes(page);
+        const thought = seen.indexOf("thinking");
+        return (
+          seen[0] === "idle" &&
+          thought > 0 &&
+          seen.indexOf("idle", thought) > thought
+        );
+      },
+      { timeout: 30_000 },
+    )
+    .toBe(true);
   await expect(pip(page)).toHaveAttribute("data-pip-mode", "idle");
 }
+
+const checkAgain = (page: Page) => () =>
+  bar(page).getByRole("button", { name: "Check again" }).click();
 
 test("Pip's mode follows b-1's step states on a real play: rest, checking, Not yet, broken and done (row 160)", async ({
   page,
@@ -72,16 +90,21 @@ test("Pip's mode follows b-1's step states on a real play: rest, checking, Not y
     // The card at rest: Pip holds Idle.
     await expect(pip(page)).toHaveAttribute("data-pip-mode", "idle");
 
-    await checkTo(page, "not-yet");
+    await checkTo(page, "not-yet", checkAgain(page));
 
     // The folder the Check runs in is gone: it cannot run.
     const project = join(copy.dir, "project");
     renameSync(project, `${project}.away`);
-    await checkTo(page, "broken");
+    await checkTo(page, "broken", checkAgain(page));
     renameSync(`${project}.away`, project);
 
-    copy.write("project/practice/b-1/onboarding.md", CORRECTED);
-    await checkTo(page, "ok");
+    // The correction alone passes it: the run the file watcher starts on
+    // the change is a Check run, so Pip thinks for it too (254 D25). No
+    // Check again: the run may pass first, and the button becomes Next step.
+    await checkTo(page, "ok", () => {
+      copy.write("project/practice/b-1/onboarding.md", CORRECTED);
+      return Promise.resolve();
+    });
     await expect(
       bar(page).getByRole("button", { name: "Next step" }),
     ).toBeVisible();

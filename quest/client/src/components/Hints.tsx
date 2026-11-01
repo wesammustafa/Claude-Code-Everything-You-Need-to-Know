@@ -20,8 +20,10 @@ export interface HintsProps {
   /**
    * The question before the exact command, in place of the button that
    * opens the next rung: take it or not now. It takes focus as it opens.
+   * While `busy` (an answer is in flight, or actions are off) both answers
+   * are aria-disabled but keep their place and focus.
    */
-  confirm?: { onTake: () => void; onDecline: () => void };
+  confirm?: { onTake: () => void; onDecline: () => void; busy?: boolean };
 }
 
 /** The question before the exact command, and what taking it means. */
@@ -114,11 +116,17 @@ export function Hints({
               variant="primary"
               size="sm"
               icon="terminal"
+              {...(confirm.busy ? { "aria-disabled": true } : {})}
               onClick={confirm.onTake}
             >
               Show the exact command
             </Button>
-            <Button variant="ghost" size="sm" onClick={confirm.onDecline}>
+            <Button
+              variant="ghost"
+              size="sm"
+              {...(confirm.busy ? { "aria-disabled": true } : {})}
+              onClick={confirm.onDecline}
+            >
               Not now
             </Button>
           </div>
