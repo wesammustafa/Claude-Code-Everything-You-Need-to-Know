@@ -1,7 +1,7 @@
 import { act, cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, test } from "vitest";
-import type { OverviewLesson, Snapshot } from "@quest/contract";
+import type { OverviewLesson, PlayingLesson, Snapshot } from "@quest/contract";
 import {
   complete,
   completed,
@@ -50,6 +50,7 @@ import {
   whenOption,
 } from "../../e2e/snapshots";
 import { renderConnected } from "../../test/connected";
+import FAILURES from "../../test/beginner-failures.json";
 import { WAITING_LINE } from "./Welcome";
 
 // The app's own words on the slice's screens. Any other text must be a
@@ -679,6 +680,17 @@ describe("Lesson workspace", () => {
     ]);
   });
 
+  test("no word on a Step-down or a step's done feedback praises how the work was done", () => {
+    const banned = /first try|no hints|fast|quick(ly)?|streak/i;
+    for (const lesson of [stepDown, stepDownGuided, watchPassed]) {
+      renderConnected("/lesson/b-1/step", snapshotOf(lesson));
+      expect(document.body.textContent).not.toMatch(banned);
+      for (const named of document.querySelectorAll("[aria-label]"))
+        expect(named.getAttribute("aria-label")).not.toMatch(banned);
+      cleanup();
+    }
+  });
+
   test("a Step-down's Back goes back", async () => {
     const user = userEvent.setup();
     const page = renderConnected("/lesson/b-1/step", snapshotOf(stepDown));
@@ -784,6 +796,43 @@ describe("Learning journey", () => {
     renderConnected("/journey", at);
     expect(screen.getAllByRole("tab")).toHaveLength(3);
     expect(unquoted(at)).toEqual([]);
+  });
+
+  test("lists every Lesson by its title in course order, a code span as code", async () => {
+    const user = userEvent.setup();
+    const levels = fullCourse.levels.map((level) => ({
+      ...level,
+      lessons: level.lessons.map((l) =>
+        l.id === "b-5" ? { ...l, title: "Project memory with `CLAUDE.md`" } : l,
+      ),
+    }));
+    renderConnected(
+      "/journey",
+      snapshotOf(overviewAt("b-4"), {
+        welcomed: true,
+        course: { ...fullCourse, levels },
+      }),
+    );
+    const shown: string[] = [];
+    for (const tab of screen.getAllByRole("tab")) {
+      await user.click(tab);
+      const panel = screen.getByRole("tabpanel");
+      for (const node of panel.querySelectorAll("a[data-state]"))
+        shown.push(
+          node.nextElementSibling?.firstElementChild?.textContent ?? "",
+        );
+    }
+    expect(shown).toEqual(
+      levels.flatMap((level) =>
+        level.lessons.map((l) => l.title.replaceAll("`", "")),
+      ),
+    );
+    await user.click(screen.getAllByRole("tab")[0] as HTMLElement);
+    const b5 = screen.getByRole("link", { name: /CLAUDE\.md/ });
+    expect(b5.nextElementSibling?.querySelector("code")).toHaveTextContent(
+      "CLAUDE.md",
+    );
+    expect(screen.getByRole("tabpanel")).not.toHaveTextContent("`");
   });
 
   test("a Lesson's preview and its top bar quote the course", () => {
@@ -1115,6 +1164,12 @@ describe("Lesson workspace, every step (246)", () => {
     expect(unquoted(snapshotOf(tearDown, { course: view }))).toEqual([]);
   });
 
+  test("no Badge on a Tear down step, after the Check passed (rehoming row 627)", () => {
+    renderConnected("/lesson/b-1/step", snapshotOf(tearDown));
+    expect(screen.getByText(/Tear down, step 1 of 2$/)).toBeInTheDocument();
+    expect(document.querySelector("[data-badge-shape]")).toBeNull();
+  });
+
   test("row A: the Where line names the folder", () => {
     renderConnected(
       "/lesson/i-1/step",
@@ -1123,6 +1178,23 @@ describe("Lesson workspace, every step (246)", () => {
     expect(document.querySelector("[data-where]")).toHaveTextContent(
       /Your terminal\s*in your Practice copy/,
     );
+  });
+
+  test("the shell's Where label names no ordinal", () => {
+    const step = playing.step as NonNullable<PlayingLesson["step"]>;
+    renderConnected(
+      "/lesson/b-1/step",
+      snapshotOf({
+        ...playing,
+        step: {
+          ...step,
+          where: { kind: "shell", terminal: null, folder: null },
+        },
+      }),
+    );
+    const where = document.querySelector("[data-where=shell]");
+    expect(where).toHaveTextContent("A shell");
+    expect(where).not.toHaveTextContent(/\d|first|second|third|other/i);
   });
 
   test("row B: an i-1 Check keeps --dir on its run line and works in the Practice copy", () => {
@@ -1205,6 +1277,107 @@ describe("Lesson workspace, every step (246)", () => {
     );
     expect(why?.firstElementChild).toHaveClass("text-accent-text");
     expect(document.querySelector("[data-watched]")).not.toBeNull();
+  });
+
+  test("the Why quote, a step's notes and its Windows note are body text, never muted", () => {
+    const beat = richCopy.beat as NonNullable<PlayingLesson["beat"]>;
+    renderConnected(
+      "/lesson/b-1/step",
+      snapshotOf({
+        ...richCopy,
+        beat: {
+          ...beat,
+          lines: [
+            ...beat.lines,
+            { kind: "note", text: "The sign-in opens a browser." },
+          ],
+          winNote: "On Windows, use PowerShell.",
+        },
+      }),
+    );
+    const quote = document.querySelector("[data-why] strong");
+    const note = document.querySelector("[data-line-kind=note]");
+    const win = document.querySelector("[data-win-note]");
+    for (const el of [quote, note, win]) {
+      expect(el).not.toBeNull();
+      expect(el?.closest(".text-muted")).toBeNull();
+    }
+  });
+
+  test("Copy is not doing the step: it posts nothing and the step stays as it was", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected("/lesson/b-1/step", snapshotOf(richCopy));
+    // The card's words, the Copy button's own label and announcement aside.
+    const card = () => {
+      const copy = document
+        .querySelector("article")
+        ?.cloneNode(true) as Element;
+      for (const c of copy.querySelectorAll(
+        "[data-pip-target=command] :is(button, [role=status])",
+      ))
+        c.remove();
+      return copy.textContent;
+    };
+    const before = card();
+    await user.click(
+      screen.getByRole("button", { name: "Copy npm run check -- b-1" }),
+    );
+    expect(page.posts).toEqual([]);
+    expect(card()).toBe(before);
+  });
+
+  test("one Copy for each command shown, and none on a beat of prose alone", () => {
+    const beat = richCopy.beat as NonNullable<PlayingLesson["beat"]>;
+    const withLines = (
+      lines: PlayingLesson["beat"] extends infer B
+        ? B extends { lines: infer L }
+          ? L
+          : never
+        : never,
+    ) => snapshotOf({ ...richCopy, beat: { ...beat, lines } });
+    renderConnected(
+      "/lesson/b-1/step",
+      withLines([...beat.lines, { kind: "run", text: "git status" }]),
+    );
+    expect(screen.getAllByRole("button", { name: /^Copy/ })).toHaveLength(2);
+    cleanup();
+    renderConnected(
+      "/lesson/b-1/step",
+      withLines([{ kind: "say", text: "Read the notes file." }]),
+    );
+    expect(screen.queryAllByRole("button", { name: /^Copy/ })).toHaveLength(0);
+  });
+
+  test("a code block keeps its Copy once the step has passed, done or already done", () => {
+    const beat = codeWindow.beat as NonNullable<PlayingLesson["beat"]>;
+    for (const status of ["done", "already"] as const) {
+      renderConnected(
+        "/lesson/b-1/step",
+        snapshotOf({ ...codeWindow, beat: { ...beat, status } }),
+      );
+      expect(
+        within(
+          document.querySelector("[data-code-block]") as HTMLElement,
+        ).getAllByRole("button", { name: /^Copy/ }),
+      ).toHaveLength(1);
+      cleanup();
+    }
+  });
+
+  test("an unanswered ask beat with a code block above its question offers Copy", () => {
+    const beat = askBeat.beat as NonNullable<PlayingLesson["beat"]>;
+    renderConnected(
+      "/lesson/b-1/step",
+      snapshotOf({
+        ...askBeat,
+        beat: { ...beat, code: (codeWindow.beat as typeof beat).code },
+      }),
+    );
+    expect(
+      within(
+        document.querySelector("[data-code-block]") as HTMLElement,
+      ).getAllByRole("button", { name: /^Copy/ }),
+    ).toHaveLength(1);
   });
 
   test("no app word on the workspace names a key", () => {
@@ -1374,6 +1547,68 @@ describe("Lesson workspace, questions and hints (247)", () => {
     );
   });
 
+  test("a typed warm-up: s types into the field, Backspace edits it, and an empty answer is sent", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected(
+      "/lesson/b-2/step",
+      snapshotOf({
+        ...typeBeat,
+        id: "b-2",
+        step: {
+          ...(typeBeat.step as NonNullable<PlayingLesson["step"]>),
+          warmup: { from: "b-1", explainer: false },
+        },
+      }),
+    );
+    const box = screen.getByRole("textbox", {
+      name: "Which command shows the session's cost?",
+    });
+    await user.type(box, "sx{Backspace}");
+    expect(box).toHaveValue("s");
+    expect(page.posts).toEqual([]);
+    await user.clear(box);
+    await user.click(screen.getByRole("button", { name: "Check my answer" }));
+    expect(page.posts).toEqual([{ type: "answer.type", text: "" }]);
+  });
+
+  test("at Challenge, a beat nothing checks and a question with no wrong answer open a hint at once", async () => {
+    const user = userEvent.setup();
+    const choices = (
+      askBeat.beat as NonNullable<PlayingLesson["beat"]>
+    ).options.map((o) => ({ text: o.text }));
+    for (const lesson of [
+      learnerBeat,
+      {
+        ...askBeat,
+        beat: {
+          ...(askBeat.beat as NonNullable<PlayingLesson["beat"]>),
+          options: choices,
+        },
+      },
+    ]) {
+      const page = renderConnected(
+        "/lesson/b-1/step",
+        snapshotOf({
+          ...lesson,
+          step: {
+            ...(lesson.step as NonNullable<PlayingLesson["step"]>),
+            tier: "challenge",
+          },
+          hints: {
+            shown: [],
+            available: true,
+            unavailable: null,
+            confirmExact: false,
+          },
+        }),
+      );
+      expect(document.querySelector("[data-hints-unavailable]")).toBeNull();
+      await user.click(screen.getByRole("button", { name: "Show a hint" }));
+      expect(page.posts).toEqual([{ type: "hint.next" }]);
+      cleanup();
+    }
+  });
+
   test("the hints say why they wait, and the exact command asks first", async () => {
     const user = userEvent.setup();
     renderConnected("/lesson/b-1/step", snapshotOf(challengeUnavailable));
@@ -1403,6 +1638,51 @@ describe("Lesson workspace, questions and hints (247)", () => {
     ).toBeInTheDocument();
   });
 
+  test("the exact-command rung: its lead-in before the Command with Copy, and its whole code block to copy only once taken", async () => {
+    const user = userEvent.setup();
+    const code = (codeWindow.beat as NonNullable<PlayingLesson["beat"]>).code;
+    renderConnected("/lesson/b-1/step", snapshotOf(confirmExact));
+    expect(screen.queryByRole("button", { name: "Copy the code" })).toBeNull();
+    cleanup();
+    renderConnected(
+      "/lesson/b-1/step",
+      snapshotOf({
+        ...exactTaken,
+        hints: {
+          ...exactTaken.hints,
+          shown: [
+            ...exactTaken.hints.shown.slice(0, -1),
+            {
+              kind: "exact",
+              commands: [
+                {
+                  leadIn: "For example, in the practice copy:",
+                  text: "node fetch.js",
+                  code,
+                },
+              ],
+            },
+          ],
+        },
+      }),
+    );
+    const rung = [...document.querySelectorAll("[data-hint-rung]")].at(
+      -1,
+    ) as HTMLElement;
+    const leadIn = within(rung).getByText("For example, in the practice copy:");
+    const command = rung.querySelector("[data-pip-target=command]");
+    expect(command).toHaveTextContent("node fetch.js");
+    expect(
+      leadIn.compareDocumentPosition(command as Node) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    within(rung).getByRole("button", { name: "Copy node fetch.js" });
+    await user.click(
+      within(rung).getByRole("button", { name: "Copy the code" }),
+    );
+    expect(await navigator.clipboard.readText()).toBe(code?.copy);
+  });
+
   test("a warm-up names the Lesson it looks back at", () => {
     renderConnected("/lesson/b-2/step", snapshotOf(warmupAsk));
     expect(document.querySelector("[data-warmup]")).toHaveTextContent(
@@ -1416,6 +1696,34 @@ describe("Lesson workspace, questions and hints (247)", () => {
     expect(document.querySelector("[data-warmup]")).not.toHaveTextContent(
       "Warm-ups",
     );
+  });
+
+  test("a warm-up from its own Level names no Level in its label", () => {
+    renderConnected("/lesson/b-2/step", snapshotOf(warmupAsk));
+    expect(document.querySelector("[data-warmup] p")).not.toHaveTextContent(
+      /Beginner|Intermediate|Advanced|level/i,
+    );
+  });
+
+  test("a warm-up from a Level index names the Level and no lesson", () => {
+    for (const [from, name] of [
+      ["beginner-index", "Beginner"],
+      ["intermediate-index", "Intermediate"],
+    ] as const) {
+      renderConnected(
+        "/lesson/b-2/step",
+        snapshotOf({
+          ...warmupAsk,
+          step: { ...warmupAsk.step, warmup: { from, explainer: false } },
+        }),
+      );
+      const label = document.querySelector("[data-warmup]");
+      expect(label).toHaveTextContent(
+        `A quick look back at the ${name} level.`,
+      );
+      expect(label).not.toHaveTextContent(/lesson/i);
+      cleanup();
+    }
   });
 
   test("the waiting question answers, puts away, and stays read only once the wait ends", async () => {
@@ -1439,5 +1747,103 @@ describe("Lesson workspace, questions and hints (247)", () => {
     renderConnected("/lesson/b-1/step", snapshotOf(waitQuestionOpen));
     await user.click(screen.getByRole("button", { name: "Not now" }));
     expect(section()).toBeNull();
+  });
+});
+
+// The check rung on a Not yet (row 423 and learn-check-says, 247 and 254):
+// every real Beginner FAIL message, from test/beginner-failures.json.
+describe("Lesson workspace, the check rung on a Not yet", () => {
+  const LINES = [
+    { kind: "goal", text: "Correct the claim the code contradicts." },
+    { kind: "do", text: "Open the note and fix the one wrong line." },
+    { kind: "say", text: "The check reads the note again." },
+  ] as const;
+  const notYet = (message: string): typeof playing => ({
+    ...playing,
+    beat: playing.beat && {
+      ...playing.beat,
+      lines: [...playing.beat.lines, ...LINES],
+      fail: message,
+    },
+    hints: {
+      ...playing.hints,
+      shown: [
+        { kind: "ask", text: "Which file decides it?" },
+        { kind: "check", text: message },
+      ],
+      available: false,
+    },
+  });
+  /**
+   * The words, without code-span marks: a drawn span loses its marks. (A
+   * double-backtick span, b-5's "rule missing", keeps a stray mark today.)
+   */
+  const shown = (message: string) => message.replaceAll("`", "");
+  const CLIPS = /\b(truncate|line-clamp-\d+|text-ellipsis|max-h-\S+|h-\d+)\b/;
+  /** A clipping class on the element or an ancestor inside the screen. */
+  const clipped = (el: Element) => {
+    for (
+      let at: Element | null = el;
+      at && !at.matches("[data-screen]");
+      at = at.parentElement
+    )
+      if (CLIPS.test(at.getAttribute("class") ?? ""))
+        return at.getAttribute("class");
+    return null;
+  };
+
+  test("the fixture holds every Beginner lesson's real FAIL messages", () => {
+    expect(new Set(FAILURES.map((f) => f.lesson))).toEqual(
+      new Set(["b-1", "b-2", "b-3", "b-4", "b-5", "b-capstone"]),
+    );
+    for (const f of FAILURES) expect(f.message, f.name).toMatch(/\S/);
+  });
+
+  test.each(FAILURES.map((f) => [`${f.lesson} ${f.name}`, f.message] as const))(
+    "%s: the step title stays on the card beside the real FAIL message",
+    (_name, message) => {
+      renderConnected("/lesson/b-1/step", snapshotOf(notYet(message)));
+      expect(
+        screen.getByRole("heading", { level: 1, name: "Check" }),
+      ).toBeVisible();
+    },
+  );
+
+  test.each(FAILURES.map((f) => [`${f.lesson} ${f.name}`, f.message] as const))(
+    "%s: every goal, do and say line stays beside the real FAIL message",
+    (_name, message) => {
+      renderConnected("/lesson/b-1/step", snapshotOf(notYet(message)));
+      for (const line of LINES)
+        expect(screen.getByText(line.text), line.kind).toBeVisible();
+    },
+  );
+
+  test.each(FAILURES.map((f) => [`${f.lesson} ${f.name}`, f.message] as const))(
+    "%s: the check rung and the Not yet line show the whole FAIL message, never clipped",
+    (_name, message) => {
+      renderConnected("/lesson/b-1/step", snapshotOf(notYet(message)));
+      const rungs = document.querySelectorAll("[data-hint-rung]");
+      const rung = rungs[rungs.length - 1];
+      expect(shown(rung?.textContent ?? "")).toBe(`Hint 2. ${shown(message)}`);
+      const line = document.querySelector("[data-not-yet]");
+      expect(shown(line?.textContent ?? "")).toBe(shown(message));
+      expect(line?.closest("li")?.textContent).toContain("Not yet: ");
+      // The rung opens through its height (Hints.tsx), so jsdom, which
+      // runs no animation, sees it closed: its words are checked whole.
+      expect(line).toBeVisible();
+      for (const el of [rung, line]) expect(clipped(el as Element)).toBeNull();
+    },
+  );
+
+  test("on a Not yet, the title, the Goal, the Not yet label and the whole message show together", () => {
+    for (const { message } of FAILURES) {
+      renderConnected("/lesson/b-1/step", snapshotOf(notYet(message)));
+      const text = shown(
+        document.querySelector("[data-screen]")?.textContent ?? "",
+      );
+      for (const part of ["Check", LINES[0].text, "Not yet: ", shown(message)])
+        expect(text, message).toContain(part);
+      cleanup();
+    }
   });
 });

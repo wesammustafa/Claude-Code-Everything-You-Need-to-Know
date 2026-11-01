@@ -62,7 +62,7 @@ export function refusalText(
     case "is-copy":
       return copyText(asks);
     case "contains-copy":
-      return "That folder holds this practice copy. Choose the folder of your own repository.";
+      return "That folder holds this practice copy. Choose the folder of your repository.";
     case "not-repo-root":
       return under(typedPath, practiceCopy)
         ? copyText(asks)

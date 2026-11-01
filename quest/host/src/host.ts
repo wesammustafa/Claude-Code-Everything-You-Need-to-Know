@@ -613,7 +613,7 @@ export function createHost({
   // there alone.
   const changed = () => {
     if (closed || clock.now() - lastSave < SAVE_QUIET_MS) return;
-    const practiceDir = files.exists(join(root, ".practice"));
+    const practiceDir = files.isFolder(join(root, ".practice"));
     if (practiceDir !== (state as EngineState).facts.practiceDir)
       input({ type: "facts", facts: { practiceDir } });
     // Only a change the watcher saw counts as the Learner working (D1).
@@ -668,7 +668,7 @@ export function createHost({
         root,
         name,
         gitError,
-        practiceDir: files.exists(join(root, ".practice")),
+        practiceDir: files.isFolder(join(root, ".practice")),
         codespace: env.CODESPACES === "true",
         win32: platform === "win32",
         linux: platform === "linux",

@@ -456,6 +456,7 @@ for (const [playing, next] of [
   ["success", "retry"],
   ["celebration", "success"],
   ["success", "success"],
+  ["success", "greeting"],
 ] as const) {
   test(`${next} interrupting ${playing} blends in from Pip's pose, never from rest`, async ({
     page,
@@ -509,6 +510,29 @@ for (const [playing, next] of [
     }
   });
 }
+
+test("Idle to Rest and back blends with no one-frame jump", async ({
+  page,
+}) => {
+  test.slow();
+  await openPaused(page);
+  await settle(page, 120);
+  // As the no-jump tests above: a frame that changes far more than both its
+  // neighbours is a snap, here at the end of a mode's blend.
+  for (const mode of ["rest", "idle"] as const) {
+    await setMode(page, mode);
+    const steps = (await sample(page, 16, 1, "step")) as number[];
+    for (let i = 1; i < 15; i++) {
+      const step = steps[i] ?? 0;
+      const around = Math.max(steps[i - 1] ?? 0, steps[i + 1] ?? 0);
+      expect(
+        step,
+        `to ${mode}: frame ${String(i + 1)} changes ${(step * 100).toFixed(1)}% of the canvas, its neighbours up to ${(around * 100).toFixed(1)}%`,
+      ).toBeLessThanOrEqual(around * 2.5 + 0.005);
+    }
+    await settle(page, 120);
+  }
+});
 
 /** Pip's highest top edge over 42 frames, sampled every third, from now. */
 const peak = async (page: Page) =>

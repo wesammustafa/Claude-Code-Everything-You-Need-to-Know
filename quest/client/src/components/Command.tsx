@@ -10,6 +10,22 @@ function words(text: string): string[] {
   return text.split(/( +)/).filter((part) => part !== "");
 }
 
+/** Whose prompt the command is typed at: the shell's `$` or Claude Code's `›`. */
+export type CommandPrompt = "shell" | "claude";
+
+const PROMPT_MARK: Record<CommandPrompt, string> = { shell: "$", claude: "›" };
+
+/**
+ * Whose prompt a command is typed at. A slash command is Claude Code's on any
+ * beat; in a Claude Code session every line is, except one that starts Claude
+ * Code, which is typed at the shell. A path that starts with / is the shell's.
+ */
+export function promptOf(text: string, where: string | null): CommandPrompt {
+  if (/^\/[a-z][a-z-]*(?:\s|$)/.test(text)) return "claude";
+  const session = where === "claude" || where === "claude-2";
+  return session && !/^claude(?:\s|$)/.test(text) ? "claude" : "shell";
+}
+
 export interface CommandProps {
   /** The command exactly as the Learner types it. */
   text: string;
@@ -19,6 +35,8 @@ export interface CommandProps {
   fit?: boolean;
   /** The app saw the Learner run it: a tick shows after the command. */
   watched?: boolean;
+  /** Whose prompt it is typed at; the shell's by default. */
+  prompt?: CommandPrompt;
   className?: string;
 }
 
@@ -32,6 +50,7 @@ export function Command({
   copy: copied,
   fit = false,
   watched = false,
+  prompt = "shell",
   className,
 }: CommandProps) {
   const code = useRef<HTMLElement>(null);
@@ -50,8 +69,9 @@ export function Command({
       <span
         className="font-mono text-control text-code-muted select-none"
         aria-hidden="true"
+        data-prompt={prompt}
       >
-        $
+        {PROMPT_MARK[prompt]}
       </span>
       <code
         ref={code}

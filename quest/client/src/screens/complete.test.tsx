@@ -69,6 +69,36 @@ const capstoneAt = (milestones: Milestone[] = []) =>
   snapshotOf(completeCapstone, { course: beginnerDone, milestones });
 
 describe("Lesson complete (249)", () => {
+  test.each([false, true])(
+    "every word is there on the first render: the completion, the Badge, the check and each skill practised in Mastery words, reduced motion %s (rehoming row 263)",
+    (reduce) => {
+      const MASTERY = {
+        commands: "Every command shown",
+        hints: "With hints",
+        own: "On your own",
+      } as const;
+      {
+        stubReducedMotion(reduce);
+        renderConnected("/lesson/b-1/complete", snapshotOf(complete));
+        // No await: this is the first frame the Learner sees.
+        expect(screen.getByText("Lesson 1 complete")).toBeInTheDocument();
+        expect(
+          screen.getByRole("img", { name: "Explorer" }),
+        ).toBeInTheDocument();
+        expect(screen.getByText("2 of 2 lines pass")).toBeInTheDocument();
+        const practised = within(
+          screen.getByRole("region", { name: "You practised" }),
+        ).getAllByRole("listitem");
+        expect(practised.map((li) => li.textContent)).toEqual(
+          complete.practised.map(
+            ({ skill, mastery }) =>
+              `${skill}${mastery ? MASTERY[mastery.used] : ""}`,
+          ),
+        );
+      }
+    },
+  );
+
   test("links the reference solution at the release ref", async () => {
     renderConnected("/lesson/b-1/complete", snapshotOf(complete));
     const link = await screen.findByRole("link", {

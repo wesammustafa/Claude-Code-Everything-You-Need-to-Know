@@ -26,6 +26,7 @@ function beat(over: Partial<BeatView>): BeatView {
     ...base,
     decidedBy: "learner",
     ranIn: null,
+    watches: null,
     status: "waiting",
     verification: [],
     fail: null,

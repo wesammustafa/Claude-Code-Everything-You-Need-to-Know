@@ -1,7 +1,7 @@
 // The real adapters: the Check child, read-only git, the file system as it
 // is, the watcher, the store in the practice copy and the PATH. Each host
 // gets its own registry of children, so closing it stops its own.
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { runCheck, runProbe } from "./check-child.ts";
 import { createChildren } from "./children.ts";
 import { bytesOf, matchOf, stampOf } from "./files.ts";
@@ -75,6 +75,8 @@ export function realAdapters({
       bytes: bytesOf,
       stamp: stampOf,
       exists: existsSync,
+      isFolder: (abs) =>
+        statSync(abs, { throwIfNoEntry: false })?.isDirectory() ?? false,
     },
     watch,
     store: {

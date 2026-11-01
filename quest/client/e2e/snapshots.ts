@@ -321,6 +321,7 @@ export const playing: PlayingLesson = {
     doneLabel: null,
     decidedBy: "check",
     ranIn: null,
+    watches: null,
     wait: null,
     why: {
       onCard: null,

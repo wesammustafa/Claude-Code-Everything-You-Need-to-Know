@@ -344,4 +344,46 @@ describe("Pip's stage in the app", () => {
       vi.useRealTimers();
     }
   });
+
+  test("a wall clock that steps back or forward moves no Pip timing", () => {
+    vi.useFakeTimers({
+      toFake: ["setTimeout", "clearTimeout", "performance", "Date"],
+    });
+    try {
+      function Help() {
+        return <output data-testid="help">{String(useHelpShowing())}</output>;
+      }
+      function Step() {
+        usePipStep("b-1:0", true);
+        return <Pip size="beside" />;
+      }
+      render(
+        <MemoryRouter initialEntries={["/lesson/b-1/step"]}>
+          <PipStageProvider>
+            <Help />
+            <Routes>
+              <Route path="/lesson/:id/step" element={<Step />} />
+            </Routes>
+          </PipStageProvider>
+        </MemoryRouter>,
+      );
+      const showing = () => screen.getByTestId("help").textContent;
+      // An hour back, then two forward: only the time that passes counts.
+      act(() => {
+        vi.setSystemTime(Date.now() - 3_600_000);
+        vi.advanceTimersByTime(HINT_UNUSED_MS / 2);
+      });
+      act(() => {
+        vi.setSystemTime(Date.now() + 7_200_000);
+        vi.advanceTimersByTime(HINT_UNUSED_MS / 2 - 1000);
+      });
+      expect(showing()).toBe("false");
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+      expect(showing()).toBe("true");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

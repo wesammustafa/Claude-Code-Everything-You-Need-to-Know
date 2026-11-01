@@ -318,6 +318,12 @@ export interface BeatView {
   decidedBy: DecidedBy;
   /** The Work folder the beat's last result ran in; null in the Practice copy or before any run. */
   ranIn: string | null;
+  /**
+   * The Work folder the step runs in and a waiting beat watches, from the
+   * step's own folder, so it is known before any first look; null when the
+   * step runs in the Practice copy or its new copy is not given yet.
+   */
+  watches: string | null;
   /** A long wait: its words, or null for the app's own. Null when none. */
   wait: { text: string | null } | null;
   /** Why it matters: the line on the card at Guided, and all its reasons. */

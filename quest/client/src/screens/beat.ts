@@ -147,6 +147,14 @@ export function statusOf(beat: BeatView): StatusWords {
   if (beat.status === "waiting") {
     if (decidedByOf(beat) === "session")
       return say("watching", "waiting", "Waiting for the session to end.");
+    // The folder actually watched: the step's Work folder, known before
+    // any first look; the Practice copy otherwise.
+    if (beat.watches !== null)
+      return say(
+        "watching",
+        "waiting-work",
+        `Watching your work folder: ${beat.watches}.`,
+      );
     return say("watching", "waiting", "Watching your Practice copy.");
   }
   if (beat.status === "already")
