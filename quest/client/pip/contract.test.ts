@@ -30,7 +30,7 @@ function exact(): RigShape {
         ],
       },
     ],
-    enums: [{ name: "PipMode", values: ["idle", "thinking", "rest"] }],
+    enums: [{ name: "PipMode", values: ["idle", "thinking", "rest", "sleep"] }],
   };
 }
 
@@ -52,7 +52,7 @@ describe("contractProblems", () => {
   });
 
   test("names the contract's properties: the mode enum, six triggers, intensity, reducedMotion, gazeX and gazeY", () => {
-    expect(PIP_MODES).toEqual(["idle", "thinking", "rest"]);
+    expect(PIP_MODES).toEqual(["idle", "thinking", "rest", "sleep"]);
     expect(PIP_PROPERTIES).toEqual({
       mode: "enumType",
       greeting: "trigger",
@@ -125,15 +125,15 @@ describe("contractProblems", () => {
 
   test("fails when the modes change: a value renamed, added, removed or reordered", () => {
     for (const values of [
-      ["idle", "thinking", "sleep"],
-      ["idle", "thinking", "rest", "busy"],
-      ["idle", "thinking"],
-      ["thinking", "idle", "rest"],
+      ["idle", "thinking", "rest", "nap"],
+      ["idle", "thinking", "rest", "sleep", "busy"],
+      ["idle", "thinking", "rest"],
+      ["idle", "thinking", "sleep", "rest"],
     ]) {
       const shape = exact();
       shape.enums = [{ name: "PipMode", values }];
       expect(contractProblems(shape)).toEqual([
-        `PipMode's values are ${values.join(", ")}; the contract's are idle, thinking, rest`,
+        `PipMode's values are ${values.join(", ")}; the contract's are idle, thinking, rest, sleep`,
       ]);
     }
   });

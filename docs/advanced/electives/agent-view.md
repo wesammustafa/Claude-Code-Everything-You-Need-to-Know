@@ -1,6 +1,6 @@
 # Agent view
 
-<sub>**Advanced** · Elective · about 20 minutes, plus run time · Needs: [Parallel sessions with worktrees](../01-parallel-sessions.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
+<sub>**Advanced** · Elective · about 20 minutes, plus run time · Needs: [Parallel sessions with worktrees](../01-parallel-sessions.md) · Verified against Claude Code v2.1.308 (stable) on 2026-10-26</sub>
 
 > [!NOTE]
 > "Agent view is in research preview. The interface and keyboard shortcuts may change as the feature evolves." ([Manage multiple agents with agent view](https://code.claude.com/docs/en/agent-view))
@@ -13,7 +13,7 @@ By the end of this Elective you can hand several independent tasks to background
 
 - Your copy of the practice template, and Node.js LTS, for the Worked example; one of your own repositories for Your turn. You practice in throwaway clones of them whose remote is a folder on your machine, so nothing a session pushes leaves your machine. Step 1 makes the clone for the Worked example.
 - macOS, Linux or WSL 2, and two terminals: one for agent view, one for git. On macOS, keep the clones outside Desktop, Documents and Downloads, where a background session can report `Operation not permitted` until you grant it access ([Background sessions can't read Desktop, Documents, or Downloads on macOS](https://code.claude.com/docs/en/agent-view#background-sessions-can%E2%80%99t-read-desktop-documents-or-downloads-on-macos)).
-- Usage: moderate. Each session draws on your usage independently ([Quick start](https://code.claude.com/docs/en/agent-view#quick-start)), and each row's one-line summary is a short Haiku-class request when a turn ends, and every few minutes during a long turn ([Row summaries](https://code.claude.com/docs/en/agent-view#row-summaries)). Cheap variant: in step 3, dispatch only the first task, then type `! npm test` as the second. A shell job runs the command in place of Claude, so no model is invoked, and its row clears itself a few minutes after the command ends ([Run a shell command](https://code.claude.com/docs/en/agent-view#run-a-shell-command)). Steps 4 to 8 then apply to the one Claude session: expect one worktree, one branch and one session to remove.
+- Usage: moderate. Each session draws on your usage independently ([Quick start](https://code.claude.com/docs/en/agent-view#quick-start)), and each row's one-line summary is a short Haiku-class request when a turn ends, and every few minutes during a long turn ([Row summaries](https://code.claude.com/docs/en/agent-view#row-summaries)). Cheap variant: in step 3, dispatch only the first task, then type `! npm test` as the second. A shell job runs the command in place of Claude, so no model is invoked, and its row clears itself a few minutes after the command ends ([Run a shell command](https://code.claude.com/docs/en/agent-view#run-a-shell-command)). Steps 4 to 8 then apply to the one Claude session: expect one worktree, one branch and one Claude session to remove.
 
 ## The idea
 
@@ -38,7 +38,7 @@ In [lesson 1](../01-parallel-sessions.md) you made the worktrees yourself. Here 
    ```
 
    `npm test` passes, and `origin` is now the folder `av-origin.git`, so a push stays on your machine. The exclude lines keep two folders out of `git status` without a commit: `.practice/`, where Your turn saves its files (as in the [Intermediate index](../../intermediate/README.md#prepare-your-own-repository)), and the worktrees Claude creates ([gitignore](https://git-scm.com/docs/gitignore), [Start Claude in a worktree](https://code.claude.com/docs/en/worktrees#start-claude-in-a-worktree)).
-2. In the first terminal, open agent view with two dispatch defaults: Manual mode, in which only reads run without asking ([Available modes](https://code.claude.com/docs/en/permission-modes#available-modes)), and Sonnet ([Model aliases](https://code.claude.com/docs/en/model-config#model-aliases)):
+2. In the first terminal, open agent view with two dispatch defaults: Manual mode, in which only reads and what your allow rules approve run without asking ([Available modes](https://code.claude.com/docs/en/permission-modes#available-modes)), and Sonnet ([Model aliases](https://code.claude.com/docs/en/model-config#model-aliases)):
 
    ```bash
    claude agents --permission-mode manual --model sonnet
@@ -56,7 +56,7 @@ In [lesson 1](../01-parallel-sessions.md) you made the worktrees yourself. Here 
    ```
 
    Two rows appear under `Working`, each named from its prompt.
-4. When a session needs your approval, for an edit or a command, its row moves under `Needs input`. Select it with `↑` or `↓` and press `Space`: the peek panel shows what it's waiting on ([Peek and reply](https://code.claude.com/docs/en/agent-view#peek-and-reply)). A reply typed there doesn't answer a permission prompt, so press `→` to attach. At v2.1.285, a background session waiting for your approval can show as done (fixed in v2.1.286), and `claude agents` sometimes doesn't show the permission prompt a session is waiting on (fixed in v2.1.287) ([CHANGELOG](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md)): if a row shows as done without a report, or its peek shows no prompt, attach with `→`.
+4. When a session needs your approval, for an edit or a command, its row moves under `Needs input`. Select it with `↑` or `↓` and press `Space`: the peek panel shows what it's waiting on ([Peek and reply](https://code.claude.com/docs/en/agent-view#peek-and-reply)). A reply typed there doesn't answer a permission prompt, so press `→` to attach.
 5. Attached, the session fills the terminal, with a short recap of what happened while you were away. Read what Claude wants to do, and approve it if it fits the task, but not with `Yes, and switch to auto mode`, which a command's prompt can offer: it would switch this unwatched session to auto mode ([Switch permission modes](https://code.claude.com/docs/en/permission-modes#switch-permission-modes)). You can stay attached and approve its next requests, such as a `git commit` or `git push` it asks to run, then press `←` on an empty prompt: you're back in the table, and the session keeps running ([Attach to a session](https://code.claude.com/docs/en/agent-view#attach-to-a-session)). Do the same whenever a row needs you.
 6. In the second terminal, in `av-practice`, look at your checkout while the sessions work:
 
@@ -66,7 +66,7 @@ In [lesson 1](../01-parallel-sessions.md) you made the worktrees yourself. Here 
    ```
 
    `git status --short` prints nothing: the sessions edit elsewhere. Once a session has asked to edit, `git worktree list` shows a worktree for it under `.claude/worktrees/`, with its branch in brackets.
-7. When each session's row is under `Completed`, peek at it: its result says what it did and where the work is, such as its branch (your wording will differ). A result that doesn't say what the session did and where the work is may still be waiting for your approval, as step 4 warns: attach with `→` and answer it first. In the second terminal, merge what you want to keep, then run the tests:
+7. When each session's row is under `Completed`, peek at it: its result says what it did and where the work is, such as its branch (your wording will differ). If a result doesn't say what the session did and where the work is, attach with `→` and read the session. In the second terminal, merge what you want to keep, then run the tests:
 
    ```bash
    git merge --no-edit <branch>
@@ -87,7 +87,7 @@ In [lesson 1](../01-parallel-sessions.md) you made the worktrees yourself. Here 
 
 **Brief:** in a throwaway clone of your own repository, made as in step 1 with new folder names and your own test command, hand off two tasks you've been putting off that touch different files. Each worktree is a fresh checkout ([Set up the worktree environment](https://code.claude.com/docs/en/worktrees#set-up-the-worktree-environment)), so a task that runs your tests should say to install the dependencies in its worktree first, as lesson 1's test task did. While both sessions work, save the two `.practice/` files the criteria below name.
 
-Then, in your second terminal, start a session in the clone yourself with `claude --permission-mode manual`: a session you move in keeps the mode it was in, and a plain `claude` usually starts in auto mode ([Permission mode](https://code.claude.com/docs/en/agent-view#permission-mode)). Ask it a question about the code that needs no edits, and move it into agent view with `/background`, which frees that terminal and returns you to your shell ([Send the session to the background](https://code.claude.com/docs/en/agent-view#send-the-session-to-the-background)). A session you move in keeps working in your checkout, with no worktree of its own. Supervise all three from agent view until each dispatched session's work is merged or discarded.
+Then, in your second terminal, start a session in the clone yourself with `claude --permission-mode manual --model sonnet`: a session you move in keeps the mode it was in, and a plain `claude` usually starts in auto mode ([Permission mode](https://code.claude.com/docs/en/agent-view#permission-mode)). Ask it a question about the code that needs no edits, and move it into agent view with `/background`, which frees that terminal and returns you to your shell ([Send the session to the background](https://code.claude.com/docs/en/agent-view#send-the-session-to-the-background)). A session you move in keeps working in your checkout, with no worktree of its own. Supervise all three from agent view until each dispatched session's work is merged or discarded.
 
 **Acceptance criteria:**
 
@@ -129,6 +129,6 @@ If the first item fails, save the files again on your next run, while both dispa
 
 ---
 
-<sub>Sources: [Manage multiple agents with agent view](https://code.claude.com/docs/en/agent-view) · [Run agents in parallel](https://code.claude.com/docs/en/agents) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Run parallel sessions with worktrees](https://code.claude.com/docs/en/worktrees) · [All settings](https://code.claude.com/docs/en/settings-reference) · [Commands](https://code.claude.com/docs/en/commands) · [Model configuration](https://code.claude.com/docs/en/model-config) · [Claude Code CHANGELOG](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md) · [gitignore](https://git-scm.com/docs/gitignore)</sub>
+<sub>Sources: [Manage multiple agents with agent view](https://code.claude.com/docs/en/agent-view) · [Run agents in parallel](https://code.claude.com/docs/en/agents) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Run parallel sessions with worktrees](https://code.claude.com/docs/en/worktrees) · [All settings](https://code.claude.com/docs/en/settings-reference) · [Commands](https://code.claude.com/docs/en/commands) · [Model configuration](https://code.claude.com/docs/en/model-config) · [gitignore](https://git-scm.com/docs/gitignore)</sub>
 
 <sub>Back to the [Advanced index](../README.md) · Topic: [Subagents and parallel work](../../topics/subagents-and-parallel-work.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=a-agent-view)</sub>

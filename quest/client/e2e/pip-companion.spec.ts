@@ -263,8 +263,17 @@ test.describe("the help offer", () => {
     const card = page.locator("main article");
     const pipTop = (await pip(page).boundingBox())?.y;
     const before = (await card.boundingBox())?.y ?? NaN;
-    // The card's top on every frame from the offer on, and Pip's.
+    // The offer's own transitions at a tenth of their speed, so even a
+    // loaded machine draws several frames of the glide (nothing else on the
+    // page is slowed); the card's top on every frame from the offer on, and
+    // Pip's.
     await page.evaluate(() => {
+      new MutationObserver((_, observer) => {
+        const offer = document.querySelector("[data-help-offer]");
+        if (offer === null) return;
+        observer.disconnect();
+        for (const glide of offer.getAnimations()) glide.playbackRate = 0.1;
+      }).observe(document.body, { childList: true, subtree: true });
       const article = document.querySelector("main article");
       const drawn = document.querySelector("[data-pip]");
       const frames: { card: number; pip: number }[] = [];
@@ -274,14 +283,21 @@ test.describe("the help offer", () => {
           card: article?.getBoundingClientRect().y ?? NaN,
           pip: drawn?.getBoundingClientRect().y ?? NaN,
         });
-        if (frames.length < 120) requestAnimationFrame(sample);
+        requestAnimationFrame(sample);
       };
       requestAnimationFrame(sample);
     });
     await send(page, notYet());
     await send(page, notYet());
     await expect(bubble(page)).toContainText(OFFER);
-    await page.waitForTimeout(1_000);
+    // Until the offer has opened all the way.
+    await page.evaluate(() =>
+      Promise.all(
+        (
+          document.querySelector("[data-help-offer]")?.getAnimations() ?? []
+        ).map((a) => a.finished),
+      ),
+    );
     const frames = await page.evaluate(
       () =>
         (window as unknown as { frames: { card: number; pip: number }[] })

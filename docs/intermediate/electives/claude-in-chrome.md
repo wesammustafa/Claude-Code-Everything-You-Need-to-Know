@@ -1,6 +1,6 @@
 # Verify UI changes in the browser with Claude in Chrome
 
-<sub>**Intermediate** · Elective · about 15 minutes · Needs: [Connect a tool with MCP](../07-mcp.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
+<sub>**Intermediate** · Elective · about 15 minutes · Needs: [Connect a tool with MCP](../07-mcp.md) · Verified against Claude Code v2.1.308 (stable) on 2026-10-26</sub>
 
 ## Goal
 
@@ -39,7 +39,7 @@ Unlike [lesson 7](../07-mcp.md)'s Chrome DevTools MCP server, which you ran with
    ```
 
 2. In a second terminal, start Claude Code with Chrome: `claude --chrome`. The first time, a dialog explains the integration; press `Enter`.
-3. Run `/chrome`. When it shows `Status: Enabled` and `Extension: Installed`, the integration works. If not, quit Claude Code, restart Chrome, and run `claude --chrome` again: the first time, Claude Code installs a connection file that Chrome reads only at startup ([Extension not detected](https://code.claude.com/docs/en/chrome#extension-not-detected)).
+3. Run `/chrome`. When it shows `Status: Enabled` and `Extension: Installed`, the integration works. If more than one browser is connected, choose the one Claude uses with **Select browser…** there ([Get started in the CLI](https://code.claude.com/docs/en/chrome#get-started-in-the-cli)). If not, quit Claude Code, restart Chrome, and run `claude --chrome` again: the first time, Claude Code installs a connection file that Chrome reads only at startup ([Extension not detected](https://code.claude.com/docs/en/chrome#extension-not-detected)).
 4. Ask:
 
    ```text
@@ -68,7 +68,7 @@ If Claude doesn't use the browser, start the session with `--chrome`, or run `/c
 ## Go further
 
 - [Use Claude Code with Chrome](https://code.claude.com/docs/en/chrome): more workflows, from filling forms to recording a GIF, and troubleshooting.
-- [Get started with Claude in Chrome](https://support.claude.com/en/articles/12012173-getting-started-with-claude-in-chrome): the extension itself, including its shortcuts and permissions.
+- [Get started with Claude in Chrome](https://support.claude.com/en/articles/12012173-get-started-with-claude-in-chrome): the extension itself, including its shortcuts and permissions.
 
 ---
 

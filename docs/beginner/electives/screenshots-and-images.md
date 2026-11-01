@@ -1,6 +1,6 @@
 # Give Claude a screenshot
 
-<sub>**Beginner** · Elective · about 15 minutes · Needs: [Your first change, from request to commit](../03-first-change.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
+<sub>**Beginner** · Elective · about 15 minutes · Needs: [Your first change, from request to commit](../03-first-change.md) · Verified against Claude Code v2.1.308 (stable) on 2026-10-26</sub>
 
 ## Goal
 
@@ -56,7 +56,7 @@ Some things are faster to show than to describe: an error on screen, a layout, a
    ```
 
    **WSL:** Windows saves the file on its own drive, which WSL reaches under `/mnt/c` ([Working across file systems](https://learn.microsoft.com/en-us/windows/wsl/filesystems)): `C:\Users\<user name>\shot.png` is `/mnt/c/Users/<user name>/shot.png`.
-2. In Claude Code (start `claude` if it isn't running), ask about it by path: `Look at this image: .practice/test-summary.png. What does each line of this summary mean?`
+2. In Claude Code (start `claude` if it isn't running), run `/clear` so the conversation no longer holds the stashed change ([Commands](https://code.claude.com/docs/en/commands)), then ask about it by path: `Look at this image: .practice/test-summary.png. What does each line of this summary mean?`
 3. Ask for a small change based on the image, such as a clearer name for one of the tests it shows, and approve the edit if Claude asks. Check it with `git diff` in the second terminal.
 
 ## Check
@@ -78,6 +78,6 @@ When you're done, set your change aside so the next lesson starts clean: `git st
 
 ---
 
-<sub>Sources: [Common workflows](https://code.claude.com/docs/en/common-workflows) · [Interactive mode](https://code.claude.com/docs/en/interactive-mode) · [Development containers](https://code.claude.com/docs/en/devcontainer) · [GitHub Codespaces](https://code.visualstudio.com/docs/remote/codespaces) · [Take a screenshot on Mac](https://support.apple.com/en-us/102646) · [Working across file systems](https://learn.microsoft.com/en-us/windows/wsl/filesystems)</sub>
+<sub>Sources: [Common workflows](https://code.claude.com/docs/en/common-workflows) · [Interactive mode](https://code.claude.com/docs/en/interactive-mode) · [Commands](https://code.claude.com/docs/en/commands) · [Development containers](https://code.claude.com/docs/en/devcontainer) · [GitHub Codespaces](https://code.visualstudio.com/docs/remote/codespaces) · [Take a screenshot on Mac](https://support.apple.com/en-us/102646) · [Working across file systems](https://learn.microsoft.com/en-us/windows/wsl/filesystems)</sub>
 
 <sub>Back to the [Beginner index](../README.md) · Topic: [Memory and context](../../topics/memory-and-context.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=b-images)</sub>
