@@ -8,6 +8,15 @@ export function readmeCommands(
 ): StepResult & { lines: string[] };
 export function shellScript(lines: string[], shell: string): string;
 export function shellCommand(shell: string, file: string): string[];
+export function gitBashProblem(
+  command: string,
+  result: {
+    stdout?: string | null;
+    stderr?: string | null;
+    status?: number | null;
+    error?: Error;
+  },
+): string | null;
 export function insteadOf(repo: string): [string, string];
 export function mapPaths(paths: string[]): {
   map: Record<string, string>;

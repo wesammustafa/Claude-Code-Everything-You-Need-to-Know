@@ -99,17 +99,19 @@ function upgraded(dir) {
  * @param {string} dir
  */
 export function refusals(dir) {
-  const top = gitOk(['rev-parse', '--show-toplevel'], dir)?.trim();
-  if (!top || realpathSync(top) !== realpathSync(dir)) return ['run it in your practice copy\'s top folder, the one holding .git'];
+  // Git's own answer, not a path comparison: on Windows git prints the long
+  // form of a folder that Node may hold as an 8.3 short name (RUNNER~1).
+  const where = gitOk(['rev-parse', '--is-inside-work-tree', '--show-prefix'], dir);
+  if (where?.replace(/\r?\n/g, '') !== 'true') return ['run it in your practice copy\'s top folder, the one holding .git'];
   if (!gitOk(['rev-parse', '--verify', '-q', 'FETCH_HEAD^{commit}'], dir)) return ['FETCH_HEAD is missing: run the git fetch line first'];
   const problems = [];
   for (const path of ['checks/run.mjs', 'learn/app.mjs']) {
-    const want = gitOk(['rev-parse', `FETCH_HEAD:${path}`], dir)?.trim();
+    const want = gitOk(['rev-parse', `FETCH_HEAD:./${path}`], dir)?.trim();
     const have = existsSync(join(dir, path)) ? gitOk(['hash-object', '--', path], dir)?.trim() : undefined;
     if (!want || want !== have) problems.push(`${path} is not the template's: run the git checkout lines first`);
   }
   for (const path of ['package.json', '.gitignore'])
-    if (!gitOk(['rev-parse', '--verify', '-q', `FETCH_HEAD:${path}`], dir)) problems.push(`FETCH_HEAD has no ${path}: fetch the template's main again`);
+    if (!gitOk(['rev-parse', '--verify', '-q', `FETCH_HEAD:./${path}`], dir)) problems.push(`FETCH_HEAD has no ${path}: fetch the template's main again`);
   if (existsSync(join(dir, 'project')) && !stopped(dir)) problems.push('project/ already exists: move it aside, then run this again');
   return problems;
 }
@@ -203,7 +205,7 @@ function move(dir) {
     git(['add', '--', 'project/package.json'], dir);
   }
   for (const path of ['package.json', '.gitignore']) {
-    writeFileSync(join(dir, path), execFileSync('git', ['show', `FETCH_HEAD:${path}`], { cwd: dir }));
+    writeFileSync(join(dir, path), execFileSync('git', ['show', `FETCH_HEAD:./${path}`], { cwd: dir }));
     git(['add', '--', path], dir);
   }
 
@@ -234,7 +236,7 @@ function move(dir) {
   return { code: 0, lines };
 }
 
-if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
+if (process.argv[1] && realpathSync.native(process.argv[1]) === realpathSync.native(fileURLToPath(import.meta.url))) {
   const { code, lines } = upgrade(process.cwd());
   (code ? console.error : console.log)(lines.join('\n'));
   process.exitCode = code;

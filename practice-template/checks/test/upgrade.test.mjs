@@ -20,6 +20,13 @@ const OLD_PACKAGE = `{
 }
 `;
 
+// Windows' git checks out with core.autocrlf=true, so every platform runs
+// these tests that way: the fixture's git, the upgrade's git and README's
+// checkout lines all inherit it.
+process.env.GIT_CONFIG_COUNT = '1';
+process.env.GIT_CONFIG_KEY_0 = 'core.autocrlf';
+process.env.GIT_CONFIG_VALUE_0 = 'true';
+
 const git = (cwd, ...args) => execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', '-c', 'core.excludesFile=', ...args], { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 
 function write(dir, files) {
@@ -57,6 +64,7 @@ const old = () => repo({
   'learn/lessons/b-1.mjs': 'old lesson\n',
   'capstone/brief.md': 'old brief\n',
   'src/a.js': 'a\n',
+  'src/crlf.js': 'one\r\ntwo\r\n',
   'test/a.test.js': 'test a\n',
   'package.json': OLD_PACKAGE,
   '.gitignore': '.practice/\nnode_modules/\nignored.log\n',
@@ -74,7 +82,11 @@ function checkout(copy, tpl) {
   git(copy, 'checkout', 'FETCH_HEAD', '--', '.github/workflows/progress.yml', '.gitattributes');
 }
 
-const read = (dir, path) => readFileSync(join(dir, path), 'utf8');
+// Learner files keep their exact bytes, line endings included.
+const read = (dir, path) => readFileSync(join(dir, path), 'latin1');
+// Only for files the checkout or the upgrade takes from the template: with
+// core.autocrlf=true git writes those with CRLF, which is git's doing, not the upgrade's.
+const fromTemplate = (dir, path) => readFileSync(join(dir, path), 'utf8').replace(/\r\n/g, '\n');
 
 function cleanup(...dirs) {
   for (const d of dirs) rmSync(d, { recursive: true, force: true });
@@ -96,12 +108,15 @@ test('rewriteProjectPackage runs check from project/, drops the root scripts and
 test('the upgrade moves tracked, modified, untracked and ignored files into project/ as renames', () => {
   const [tpl, copy] = [template(), old()];
   try {
-    write(copy, { 'src/a.js': 'a, edited\n', 'src/extra.js': 'untracked\n', 'src/ignored.log': 'ignored\n', 'CLAUDE.md': 'memory\n', '.claude/settings.json': '{}\n', 'notes.md': 'mine\n' });
+    write(copy, { 'src/a.js': 'a, edited\n', 'src/extra.js': 'untracked\n', 'src/ignored.log': 'ignored\n', 'CLAUDE.md': 'memory\n', '.claude/settings.json': '{}\n', 'notes.md': 'mine\n', 'src/extra-crlf.js': 'x\r\ny\r\n', 'src/mixed.txt': 'lf\ncrlf\r\n' });
     checkout(copy, tpl);
     const { code, lines } = upgrade(copy);
     assert.equal(code, 0, lines.join('\n'));
     assert.equal(read(copy, 'project/src/a.js'), 'a, edited\n');
     assert.equal(read(copy, 'project/src/extra.js'), 'untracked\n');
+    assert.equal(read(copy, 'project/src/crlf.js'), 'one\r\ntwo\r\n');
+    assert.equal(read(copy, 'project/src/extra-crlf.js'), 'x\r\ny\r\n');
+    assert.equal(read(copy, 'project/src/mixed.txt'), 'lf\ncrlf\r\n');
     assert.equal(read(copy, 'project/src/ignored.log'), 'ignored\n');
     assert.equal(read(copy, 'project/CLAUDE.md'), 'memory\n');
     assert.equal(read(copy, 'project/.claude/settings.json'), '{}\n');
@@ -109,8 +124,8 @@ test('the upgrade moves tracked, modified, untracked and ignored files into proj
     assert.equal(read(copy, 'project/.gitignore'), '.practice/\nnode_modules/\nignored.log\n');
     assert.equal(read(copy, 'project/package.json'), rewriteProjectPackage(OLD_PACKAGE));
     assert.equal(read(copy, 'notes.md'), 'mine\n');
-    assert.equal(read(copy, '.gitignore'), '.practice/\nnode_modules/\n');
-    assert.equal(read(copy, 'package.json'), '{ "scripts": { "learn": "node learn/app.mjs" } }\n');
+    assert.equal(fromTemplate(copy, '.gitignore'), '.practice/\nnode_modules/\n');
+    assert.equal(fromTemplate(copy, 'package.json'), '{ "scripts": { "learn": "node learn/app.mjs" } }\n');
     for (const gone of ['src', 'test', 'LICENSE', 'CLAUDE.md', '.claude']) assert.ok(!existsSync(join(copy, gone)), gone);
     const staged = git(copy, 'diff', '--cached', '--name-status', '-M').split('\n');
     assert.ok(staged.some((l) => /^R\d+\tsrc\/a\.js\tproject\/src\/a\.js$/.test(l)), staged.join('\n'));
@@ -124,13 +139,13 @@ test('the upgrade moves tracked, modified, untracked and ignored files into proj
 test('the lesson files under .practice/ move to project/, and the save and its backups stay', () => {
   const [tpl, copy] = [template(), old()];
   try {
-    write(copy, { '.practice/learn.json': 'save', '.practice/learn.json.unreadable': 'b1', '.practice/learn.json.unreadable-2': 'b2', '.practice/b-2-plan.txt': 'plan' });
+    write(copy, { '.practice/learn.json': '{\r\n"save": 1\r\n}\r\n', '.practice/learn.json.unreadable': 'b1', '.practice/learn.json.unreadable-2': 'b2', '.practice/b-2-plan.txt': 'plan\r\nline\n' });
     checkout(copy, tpl);
     assert.equal(upgrade(copy).code, 0);
-    assert.equal(read(copy, '.practice/learn.json'), 'save');
+    assert.equal(read(copy, '.practice/learn.json'), '{\r\n"save": 1\r\n}\r\n');
     assert.equal(read(copy, '.practice/learn.json.unreadable'), 'b1');
     assert.equal(read(copy, '.practice/learn.json.unreadable-2'), 'b2');
-    assert.equal(read(copy, 'project/.practice/b-2-plan.txt'), 'plan');
+    assert.equal(read(copy, 'project/.practice/b-2-plan.txt'), 'plan\r\nline\n');
     assert.ok(!existsSync(join(copy, '.practice/b-2-plan.txt')));
   } finally {
     cleanup(tpl, copy);
@@ -140,15 +155,16 @@ test('the lesson files under .practice/ move to project/, and the save and its b
 test('the Terminal app\'s files go, the Learner\'s workflows stay, and nothing lingers in checks/ or learn/', () => {
   const [tpl, copy] = [template(), old()];
   try {
-    write(copy, { 'checks/stray.mjs': 'untracked\n' });
+    write(copy, { 'checks/stray.mjs': 'untracked\r\n', 'learn/stray.txt': 'lf\n' });
     checkout(copy, tpl);
     assert.equal(upgrade(copy).code, 0);
     assert.equal(read(copy, '.github/workflows/mine.yml'), 'the Learner\'s\n');
-    assert.equal(read(copy, '.github/workflows/progress.yml'), 'new progress\n');
+    assert.equal(fromTemplate(copy, '.github/workflows/progress.yml'), 'new progress\n');
     for (const gone of ['.github/workflows/assert-checks.yml', '.github/readme/learn-lesson-complete.gif', 'checks/stray.mjs', 'checks/test', 'learn/lessons'])
       assert.ok(!existsSync(join(copy, gone)), gone);
-    assert.equal(read(copy, 'checks/run.mjs'), 'new run\n');
-    assert.equal(read(copy, '.practice/upgrade-kept/checks/stray.mjs'), 'untracked\n');
+    assert.equal(fromTemplate(copy, 'checks/run.mjs'), 'new run\n');
+    assert.equal(read(copy, '.practice/upgrade-kept/checks/stray.mjs'), 'untracked\r\n');
+    assert.equal(read(copy, '.practice/upgrade-kept/learn/stray.txt'), 'lf\n');
   } finally {
     cleanup(tpl, copy);
   }
@@ -189,6 +205,22 @@ test('the upgrade refuses, changing nothing, before the checkout and when projec
     const again = upgrade(copy);
     assert.equal(again.code, 0);
     assert.match(again.lines.join('\n'), /already upgraded/);
+  } finally {
+    cleanup(tpl, copy);
+  }
+});
+
+test('the upgrade refuses below the top folder and inside .git, changing nothing', () => {
+  const [tpl, copy] = [template(), old()];
+  try {
+    checkout(copy, tpl);
+    for (const below of [join(copy, 'checks'), join(copy, '.git')]) {
+      const result = upgrade(below);
+      assert.equal(result.code, 1, below);
+      assert.match(result.lines.join('\n'), /top folder/);
+    }
+    assert.ok(existsSync(join(copy, 'src/a.js')));
+    assert.ok(!existsSync(join(copy, 'project/src')));
   } finally {
     cleanup(tpl, copy);
   }

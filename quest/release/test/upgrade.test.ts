@@ -9,6 +9,7 @@ import { afterAll, expect, test } from "vitest";
 import { TEMPLATE_REMOTE } from "../src/publish.mjs";
 import { assembleTemplate } from "../src/template.mjs";
 import {
+  gitBashProblem,
   insteadOf,
   mapPaths,
   readmeCommands,
@@ -220,4 +221,23 @@ test("with no --from, as in CI, the old copy comes from the legacy remote over h
     seen.fetch === undefined || seen.fetch.split(":").includes("https"),
   ).toBe(true);
   expect(seen.later).toBe("file");
+});
+
+test("Git Bash passes on its MINGW, MSYS or Cygwin uname; WSL's bash and a failed run say why", () => {
+  const bash = "C:\\Program Files\\Git\\bin\\bash.exe";
+  for (const stdout of [
+    "MINGW64_NT-10.0-26100\r\n",
+    "MSYS_NT-10.0-26100\n",
+    "CYGWIN_NT-10.0-26100\n",
+  ])
+    expect(gitBashProblem(bash, { stdout, stderr: "", status: 0 })).toBeNull();
+  expect(
+    gitBashProblem(bash, { stdout: "Linux\n", stderr: "", status: 0 }),
+  ).toBe(`${bash} is not Git Bash: uname -s said "Linux", exit 0, stderr ""`);
+  expect(
+    gitBashProblem(bash, { stdout: "", stderr: "boom\n", status: 127 }),
+  ).toBe(`${bash} is not Git Bash: uname -s said "", exit 127, stderr "boom"`);
+  expect(
+    gitBashProblem(bash, { error: new Error("spawn ENOENT"), status: null }),
+  ).toBe(`${bash} is not Git Bash: did not start: spawn ENOENT`);
 });

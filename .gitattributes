@@ -1,0 +1,4 @@
+# Check out every text file with LF, whatever core.autocrlf says. The
+# template is built from this checkout and stores its bytes as they are, so
+# on Windows CRLF would reach the template's blobs (ticket 257).
+* text=auto eol=lf

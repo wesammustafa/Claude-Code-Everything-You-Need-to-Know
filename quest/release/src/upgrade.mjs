@@ -246,6 +246,28 @@ export function learnerFiles({ repoRoot, copy, env }) {
   return { ok: true, problems: [] };
 }
 
+/**
+ * Why `command` is not Git Bash, from its `uname -s` run, or null when it is.
+ * Git Bash says MINGW64_NT-... or MSYS_NT-... (CYGWIN_NT-... once its runtime
+ * is Cygwin's); WSL's bash says Linux. The problem quotes what came back, so
+ * a CI log shows why.
+ * @param {string} command
+ * @param {{ stdout?: string | null, stderr?: string | null, status?: number | null, error?: Error }} result
+ */
+export function gitBashProblem(command, result) {
+  const system = (result.stdout ?? "").trim();
+  if (
+    !result.error &&
+    result.status === 0 &&
+    /^(MINGW|MSYS|CYGWIN)/i.test(system)
+  )
+    return null;
+  const why = result.error
+    ? `did not start: ${result.error.message}`
+    : `uname -s said ${JSON.stringify(system)}, exit ${String(result.status)}, stderr ${JSON.stringify((result.stderr ?? "").trim())}`;
+  return `${command} is not Git Bash: ${why}`;
+}
+
 /** Step 5: README's lines in `shell`, from a script outside the copy. */
 export function runCommands({ copy, lines, shell, scratch, env }) {
   const file = join(scratch, shell === "bash" ? "upgrade.sh" : "upgrade.ps1");
@@ -253,9 +275,11 @@ export function runCommands({ copy, lines, shell, scratch, env }) {
   const [command, ...args] = shellCommand(shell, file);
   const problems = [];
   if (shell === "bash" && WINDOWS) {
-    const version = spawnSync(command, ["--version"], { encoding: "utf8" });
-    if (!/msys/i.test(version.stdout ?? ""))
-      return { ok: false, problems: [`${command} is not Git Bash`] };
+    const problem = gitBashProblem(
+      command,
+      spawnSync(command, ["-c", "uname -s"], { encoding: "utf8" }),
+    );
+    if (problem) return { ok: false, problems: [problem] };
   }
   const result = spawnSync(command, args, {
     cwd: copy,
