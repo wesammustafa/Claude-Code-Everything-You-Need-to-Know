@@ -14,6 +14,7 @@ import {
   overviewAt,
   snapshotOf,
 } from "./snapshots.ts";
+import { expectStill } from "./walk.ts";
 
 const LEVEL = levelCompleted[1];
 const capstoneWith = (milestones: typeof levelCompleted) =>
@@ -211,7 +212,7 @@ for (const motion of ["no-preference", "reduce"] as const) {
         await expect(levelTitle(page)).toBeVisible();
         await expect.poll(() => shown).toEqual([LEVEL?.id]);
         await expect.poll(() => celebrations([page])).toBe(1);
-        await expectStill(page, motion);
+        await levelStill(page, motion);
         await page.reload();
         await expect(levelTitle(page)).toBeVisible();
         await settle(page);
@@ -244,7 +245,7 @@ for (const motion of ["no-preference", "reduce"] as const) {
         await expect
           .poll(() => shown)
           .toEqual([levelCompleted[0]?.id, levelCompleted[1]?.id]);
-        await expectStill(page, motion);
+        await levelStill(page, motion);
       });
     });
   });
@@ -252,9 +253,9 @@ for (const motion of ["no-preference", "reduce"] as const) {
 
 /**
  * The Level moment's text and Badges are there; under reduced motion no
- * running animation moves anything (a rise of 0px is a fade).
+ * running animation moves anything (walk.ts expectStill).
  */
-async function expectStill(page: Page, motion: "no-preference" | "reduce") {
+async function levelStill(page: Page, motion: "no-preference" | "reduce") {
   await expect(
     page.getByText("Every lesson of the level is done, its capstone too."),
   ).toBeVisible();
@@ -263,22 +264,7 @@ async function expectStill(page: Page, motion: "no-preference" | "reduce") {
       .getByRole("list", { name: "The Beginner level's badges" })
       .getByRole("img"),
   ).toHaveCount(6);
-  if (motion !== "reduce") return;
-  const moving = await page.evaluate(
-    () =>
-      document
-        .getAnimations()
-        .filter((animation) => animation.playState === "running")
-        .filter((animation) => {
-          const effect = animation.effect as KeyframeEffect | null;
-          return (effect?.getKeyframes() ?? []).some(
-            (frame) =>
-              typeof frame.transform === "string" &&
-              !/^(none|translate[XY]?\(0px(, 0px)?\))$/.test(frame.transform),
-          );
-        }).length,
-  );
-  expect(moving).toBe(0);
+  if (motion === "reduce") await expectStill(page);
 }
 
 test.describe("a notice first", () => {

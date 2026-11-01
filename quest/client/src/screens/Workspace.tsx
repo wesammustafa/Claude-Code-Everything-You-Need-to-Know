@@ -12,7 +12,7 @@ import { Button } from "../components/Button";
 import { CheckLines } from "../components/CheckLines";
 import { Choice } from "../components/Choice";
 import { CodeBlock } from "../components/CodeBlock";
-import { Command } from "../components/Command";
+import { Command, promptOf } from "../components/Command";
 import { HelpOffer } from "../components/HelpOffer";
 import { Hints } from "../components/Hints";
 import { CODE, InlineText } from "../components/InlineText";
@@ -78,12 +78,19 @@ const UNAVAILABLE: Record<
   "pick-answer": "Hints open once you have tried an answer.",
 };
 
+/**
+ * After a hint rung is asked for or the exact command is taken, a repeat
+ * ask within this long opens nothing, so a double press never skips a rung.
+ * Nothing on the screen counts it down.
+ */
+export const HINT_LOCK_MS = 2000;
+
 /** The line under a warm-up's card when the engine explains warm-ups. */
 const WARMUP_EXPLAINER =
   "Warm-ups bring back a skill from before, so it sticks.";
 
 /** A hint rung: the page's words, or the exact command with Copy. */
-function hintRung(hint: HintView): ReactNode {
+function hintRung(hint: HintView, where: string | null): ReactNode {
   if (hint.kind !== "exact") return hint.text;
   return hint.commands.map((command, i) => (
     <div key={i} className="grid gap-2">
@@ -92,7 +99,7 @@ function hintRung(hint: HintView): ReactNode {
           <InlineText text={command.leadIn} />
         </p>
       )}
-      <Command text={command.text} />
+      <Command text={command.text} prompt={promptOf(command.text, where)} />
       {command.code && <CodeBlock code={command.code} />}
     </div>
   ));
@@ -177,7 +184,16 @@ function Play({
   }, [shownHints, look]);
 
   const send = useSend();
+  const lockUntil = useRef(0);
+  // True, and the lock starts, when no ask came within the last HINT_LOCK_MS.
+  const unlocked = () => {
+    const now = Date.now();
+    if (now < lockUntil.current) return false;
+    lockUntil.current = now + HINT_LOCK_MS;
+    return true;
+  };
   const showNextHint = () => {
+    if (!unlocked()) return;
     // Any rung opening closes the offer and starts the 45 s clock again.
     tellPip({ type: "hintOpened" });
     send("hint.next", { type: "hint.next" });
@@ -192,9 +208,12 @@ function Play({
   const seconds = useCheckClock(beat.status);
   const status = statusOf(beat);
   const at = lesson.steps.findIndex((s) => s.id === step.id);
-  const hints = lesson.hints.shown.map(hintRung);
+  const hints = lesson.hints.shown.map((hint) =>
+    hintRung(hint, step.where?.kind ?? null),
+  );
   const { available, unavailable, confirmExact } = lesson.hints;
   const takeExact = (take: boolean) => {
+    if (take && !unlocked()) return;
     send("hint.takeExact", { type: "hint.takeExact", take });
   };
   const tearDown = isTearDown(step);
@@ -303,7 +322,7 @@ function Play({
               <InlineText text={beat.codespace} />
             </p>
           )}
-          <BeatBody beat={beat} />
+          <BeatBody beat={beat} where={step.where?.kind ?? null} />
           <WaitQuestion lesson={lesson} step={step} />
           {lines.length > 0 && (
             <CheckLines
@@ -430,9 +449,21 @@ const LINE_CLASS: Partial<Record<BeatLine["kind"], string>> = {
 };
 
 /** One line of the beat, by its kind. */
-function Line({ line }: { line: BeatLine }): ReactNode {
+function Line({
+  line,
+  where,
+}: {
+  line: BeatLine;
+  where: string | null;
+}): ReactNode {
   if (line.kind === "run")
-    return <Command text={line.text} watched={line.watched === true} />;
+    return (
+      <Command
+        text={line.text}
+        watched={line.watched === true}
+        prompt={promptOf(line.text, where)}
+      />
+    );
   if (line.kind === "expect")
     return (
       <p>
@@ -454,7 +485,7 @@ function Line({ line }: { line: BeatLine }): ReactNode {
  * the words after the answer. A watched beat's "Done when" line is its
  * Check line instead, and a done beat with evidence hides it.
  */
-function BeatBody({ beat }: { beat: BeatView }) {
+function BeatBody({ beat, where }: { beat: BeatView; where: string | null }) {
   const watched = decidedByOf(beat) === "watch";
   const shown = beat.lines.filter(
     (line) =>
@@ -469,7 +500,7 @@ function BeatBody({ beat }: { beat: BeatView }) {
       {shown
         .filter((line) => line.kind !== "after")
         .map((line, i) => (
-          <Line key={i} line={line} />
+          <Line key={i} line={line} where={where} />
         ))}
       {beat.code && <CodeBlock code={beat.code} />}
       {beat.commandsInHints && (
@@ -483,7 +514,7 @@ function BeatBody({ beat }: { beat: BeatView }) {
     </>
   );
   const closing = after.map((line, i) => (
-    <Line key={`after-${String(i)}`} line={line} />
+    <Line key={`after-${String(i)}`} line={line} where={where} />
   ));
   const why = beat.why.onCard && (
     <p data-why="">

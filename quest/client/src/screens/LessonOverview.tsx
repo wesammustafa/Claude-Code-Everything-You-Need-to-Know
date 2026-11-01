@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { OverviewNote, StairStep } from "@quest/contract";
+import type { FolderNeed, OverviewNote, StairStep } from "@quest/contract";
 import { Button } from "../components/Button";
 import { CODE, InlineText } from "../components/InlineText";
 import { Says } from "../components/Says";
@@ -11,7 +11,7 @@ import { ReadLesson } from "../pages/ReadLesson";
 import { PageTitle } from "../shell/PageTitle";
 import { CheckLooksFor } from "./CheckLooksFor";
 import { FolderQuestion } from "./FolderQuestion";
-import { problemText } from "./folderWords";
+import { problemText, workFolderLabel } from "./folderWords";
 import { LessonGate } from "./LessonGate";
 import { COLUMN, EYEBROW } from "./layout";
 import {
@@ -87,10 +87,25 @@ export function LessonOverview() {
       actions.current?.querySelector<HTMLElement>("[data-start]")?.focus();
     wasAsked.current = asked;
   }, [asked, startable]);
+  const learner = useCourseSnapshot()?.learner;
+  // The open-first offer leaves once its prerequisite passes: focus it had
+  // moves to Start.
+  const first = active?.lesson.start?.first ?? null;
+  const offerFocused = useRef(false);
+  useEffect(() => {
+    if (first !== null || !offerFocused.current) return;
+    offerFocused.current = false;
+    const lost =
+      document.activeElement === null ||
+      document.activeElement === document.body;
+    if (lost)
+      actions.current?.querySelector<HTMLElement>("[data-start]")?.focus();
+  }, [first]);
   if (!active) return <LessonGate />;
   const { lesson, summary } = active;
+  const practiceCopy = learner?.practiceCopy ?? "";
+  const savedFolder = savedFolderOf(summary?.folder, learner?.workFolders);
   const intro = lesson.intro;
-  const first = lesson.start?.first ?? null;
   // The open-first offer goes after the first unmet note that names it.
   const offerAt = lesson.notes.findIndex(
     (note) =>
@@ -148,6 +163,12 @@ export function LessonOverview() {
             ))}
           </ul>
         </section>
+      )}
+
+      {intro?.why && (
+        <p className="max-w-measure text-muted" data-overview-why="">
+          Why: <InlineText text={intro.why} />
+        </p>
       )}
 
       <section aria-label="Help by part" className="grid gap-2">
@@ -209,10 +230,23 @@ export function LessonOverview() {
                   <InlineText text={text} />
                 </span>
               )}
-              {offer && first !== null && <OpenFirst lesson={first} />}
+              {offer && first !== null && (
+                <OpenFirst
+                  lesson={first}
+                  onFocusChange={(focused) => {
+                    offerFocused.current = focused;
+                  }}
+                />
+              )}
             </li>
           ))}
         </ul>
+      )}
+
+      {lesson.folderQuestion === null && savedFolder !== null && (
+        <p data-overview-folder="">
+          Work folder: {workFolderLabel(savedFolder, practiceCopy)}
+        </p>
       )}
 
       {lesson.folderQuestion !== null && (
@@ -251,13 +285,41 @@ export function LessonOverview() {
   );
 }
 
+/** The Work folder saved for this Lesson, or null where none is. */
+function savedFolderOf(
+  folder: FolderNeed | undefined,
+  saved: readonly { key: string; path: string }[] | undefined,
+): string | null {
+  if (!folder || (folder.kind !== "work" && folder.kind !== "new-copy"))
+    return null;
+  if (!folder.set) return null;
+  const key = folder.kind === "work" ? folder.level : folder.lesson;
+  return saved?.find((entry) => entry.key === key)?.path ?? null;
+}
+
 /** The offer to open a failed prerequisite's Lesson first. */
-function OpenFirst({ lesson }: { lesson: string }) {
+function OpenFirst({
+  lesson,
+  onFocusChange,
+}: {
+  lesson: string;
+  onFocusChange: (focused: boolean) => void;
+}) {
   const open = useOpenLesson(lesson);
   const title = summaryOf(useCourseSnapshot(), lesson)?.title;
   if (!title) return null;
   return (
-    <Button size="sm" {...open}>
+    <Button
+      size="sm"
+      onFocus={() => {
+        onFocusChange(true);
+      }}
+      onBlur={(event) => {
+        // A blur because the offer left keeps the flag: focus moves to Start.
+        if (event.relatedTarget !== null) onFocusChange(false);
+      }}
+      {...open}
+    >
       Open <InlineText text={title} /> first
     </Button>
   );

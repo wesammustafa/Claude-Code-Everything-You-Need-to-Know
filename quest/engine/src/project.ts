@@ -500,6 +500,12 @@ const codeView = (line: CodeLine): CodeView => ({
 const looksAtFile = (beat: Beat) =>
   beat.verify.kind === "check" || READS.has(beat.verify.kind);
 
+// The Work folder the current step runs in, as the watcher picks it.
+function watchesOf(s: EngineState): string | null {
+  const dir = folderOf(s, s.lesson, currentStep(s));
+  return dir && !inCopy(s, dir) ? dir : null;
+}
+
 function beatView(s: EngineState): BeatView {
   const beat = currentBeat(s);
   const st = beatState(s);
@@ -535,6 +541,7 @@ function beatView(s: EngineState): BeatView {
   const tier = tierOf(s);
   const answered = Boolean(st.answer);
   const f = st.feedback;
+  const from = fromFolderOf(s, currentStep(s));
   return {
     index: s.pos.beat,
     kind: beat.kind,
@@ -548,6 +555,7 @@ function beatView(s: EngineState): BeatView {
     doneLabel: beat.doneLabel ?? null,
     decidedBy: decidedBy(beat),
     ranIn: st.ranIn && !inCopy(s, st.ranIn) ? st.ranIn : null,
+    watches: watchesOf(s),
     wait: beat.wait ? { text: beat.wait.text ?? null } : null,
     why: {
       onCard:
@@ -570,16 +578,24 @@ function beatView(s: EngineState): BeatView {
             return {
               text: o.text,
               ...(shown
-                ? { kind: o.kind, ...(o.because ? { because: o.because } : {}) }
+                ? {
+                    kind: o.kind,
+                    ...(o.because
+                      ? { because: fromPage(from, o.because) }
+                      : {}),
+                  }
                 : {}),
             };
           }),
     answer: {
       picked: st.answer?.index ?? null,
       feedback: f?.kind ?? null,
-      because: f?.because ?? f?.hint ?? null,
+      because: fromPage(from, f?.because ?? f?.hint ?? null),
       point: f?.point ?? null,
-      reveal: beat.ask && isDone(st) ? (beat.reveal ?? null) : null,
+      reveal: fromPage(
+        from,
+        beat.ask && isDone(st) ? (beat.reveal ?? null) : null,
+      ),
       recall: recallOf(s, beat),
     },
     status: st.status === "opening" ? "checking" : st.status,
@@ -693,9 +709,47 @@ function waitQuestionOf(s: EngineState): PlayingLesson["waitQuestion"] {
       picked === null
         ? null
         : picked.kind !== "right" && picked.because
-          ? picked.because
-          : (beat.reveal ?? null),
+          ? fromPage(fromFolderOf(s, box.step), picked.because)
+          : fromPage(fromFolderOf(s, box.step), beat.reveal ?? null),
   };
+}
+
+// ---- a warm-up's words from another page --------------------------------------
+// A warm-up quotes the page it comes from: a Level index
+// (docs/<level>/README.md) or an earlier Lesson's page. A relative link in
+// those words is that page's, so it is resolved against the page's folder
+// to a repository path, as the page panel opens them.
+function fromFolderOf(s: EngineState, step: Step): string | null {
+  if (step.part !== "Warm-up" || !step.from) return null;
+  const index = /^(.+)-index$/.exec(step.from);
+  if (index) return `docs/${index[1] ?? ""}/`;
+  const entry = s.course.find((l) => l.id === step.from);
+  if (!entry) return null;
+  if (entry.page?.startsWith("docs/"))
+    return entry.page.slice(0, entry.page.lastIndexOf("/") + 1);
+  return `docs/${entry.level}/`;
+}
+
+function resolveFrom(folder: string, href: string): string {
+  if (/^[a-z][a-z0-9+.-]*:/i.test(href) || /^[/#]/.test(href)) return href;
+  const parts = folder.split("/").filter(Boolean);
+  for (const part of href.split("/")) {
+    if (part === "..") parts.pop();
+    else if (part !== ".") parts.push(part);
+  }
+  return parts.join("/");
+}
+
+/** A warm-up's words with their relative links resolved against its page. */
+function fromPage(folder: string | null, text: string): string;
+function fromPage(folder: string | null, text: string | null): string | null;
+function fromPage(folder: string | null, text: string | null): string | null {
+  if (folder === null || text === null) return text;
+  return text.replace(
+    /\[([^\]]+)\]\(([^)\s]+)\)/g,
+    (_, label: string, href: string) =>
+      `[${label}](${resolveFrom(folder, href)})`,
+  );
 }
 
 // ---- a Step-down and the lesson's end ----------------------------------------

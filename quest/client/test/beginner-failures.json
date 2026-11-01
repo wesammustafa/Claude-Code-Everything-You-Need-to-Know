@@ -1,0 +1,614 @@
+[
+  {
+    "lesson": "b-1",
+    "item": "`claude --version` prints a Claude Code version",
+    "name": "not on PATH",
+    "message": "The check couldn't find `claude` on the PATH of the shell it ran in. Open a new terminal. If it still fails, use lesson 1, Worked example step 2 to fix PATH, then retry."
+  },
+  {
+    "lesson": "b-1",
+    "item": "`claude --version` prints a Claude Code version",
+    "name": "not executable",
+    "message": "The check couldn't run `claude --version`: spawnSync claude EACCES"
+  },
+  {
+    "lesson": "b-1",
+    "item": "`claude --version` prints a Claude Code version",
+    "name": "no output",
+    "message": "`claude --version` printed nothing, not a line such as `2.1.0 (Claude Code)`. Open a new terminal. If it still fails, use lesson 1, Worked example step 2 to fix PATH, then retry."
+  },
+  {
+    "lesson": "b-1",
+    "item": "`claude --version` prints a Claude Code version",
+    "name": "malformed version",
+    "message": "`claude --version` printed \"unknown version\", not a line such as `2.1.0 (Claude Code)`. Open a new terminal. If it still fails, use lesson 1, Worked example step 2 to fix PATH, then retry."
+  },
+  {
+    "lesson": "b-1",
+    "item": "`claude --version` prints a Claude Code version",
+    "name": "command fails",
+    "message": "`claude --version` printed \"installation failed\" and exited with 1, not a line such as `2.1.0 (Claude Code)`. Open a new terminal. If it still fails, use lesson 1, Worked example step 2 to fix PATH, then retry."
+  },
+  {
+    "lesson": "b-1",
+    "item": "the claim in `practice/b-1/onboarding.md` that the code contradicts is corrected",
+    "name": "wrong folder",
+    "message": "This folder has no `practice/b-1/onboarding.md`: Your turn uses the note in your practice copy. Run `npm run check -- b-1` there, without `--dir`."
+  },
+  {
+    "lesson": "b-1",
+    "item": "the claim in `practice/b-1/onboarding.md` that the code contradicts is corrected",
+    "name": "note removed",
+    "message": "`practice/b-1/onboarding.md` is missing. Bring it back with `git checkout HEAD -- practice/b-1/onboarding.md`, then correct the one claim the code contradicts."
+  },
+  {
+    "lesson": "b-1",
+    "item": "the claim in `practice/b-1/onboarding.md` that the code contradicts is corrected",
+    "name": "claim is still wrong",
+    "message": "The note still says \"linkcheck exits 0 when it finds broken links\". Ask Claude which file decides how linkcheck exits, open that line yourself, and write what the code does."
+  },
+  {
+    "lesson": "b-1",
+    "item": "the claim in `practice/b-1/onboarding.md` that the code contradicts is corrected",
+    "name": "claim omitted",
+    "message": "No line in the note says which exit code linkcheck gives for a broken link. Open the line Claude cites for it and write that code into the claim: CI depends on it."
+  },
+  {
+    "lesson": "b-2",
+    "item": "`.practice/b-2-before.txt`, saved while the plan was on screen, lists no changed files",
+    "name": "no snapshot while the plan was on screen",
+    "message": "While the plan is on screen, run `git status --porcelain > .practice/b-2-before.txt` in another terminal."
+  },
+  {
+    "lesson": "b-2",
+    "item": "`.practice/b-2-before.txt`, saved while the plan was on screen, lists no changed files",
+    "name": "a changed file in the snapshot taken before approving",
+    "message": "Files had changed before you approved the plan: src/config.js, notes.md. Start from a clean tree (commit them, or set them aside with `git stash push --include-untracked`) and stay in plan mode until you approve."
+  },
+  {
+    "lesson": "b-2",
+    "item": "every file in `.practice/b-2-after.txt` is listed in `.practice/b-2-plan.txt`",
+    "name": "no plan file",
+    "message": "Write the files the plan will change into `.practice/b-2-plan.txt`, one path per line, before you approve."
+  },
+  {
+    "lesson": "b-2",
+    "item": "every file in `.practice/b-2-after.txt` is listed in `.practice/b-2-plan.txt`",
+    "name": "a blank plan file",
+    "message": "Write the files the plan will change into `.practice/b-2-plan.txt`, one path per line, before you approve."
+  },
+  {
+    "lesson": "b-2",
+    "item": "every file in `.practice/b-2-after.txt` is listed in `.practice/b-2-plan.txt`",
+    "name": "no snapshot after the edits",
+    "message": "After Claude finishes the edits, run `git status --porcelain > .practice/b-2-after.txt`."
+  },
+  {
+    "lesson": "b-2",
+    "item": "every file in `.practice/b-2-after.txt` is listed in `.practice/b-2-plan.txt`",
+    "name": "a snapshot saved before Claude changed any file (190)",
+    "message": "`.practice/b-2-after.txt` lists no changed file yet. Approve the plan you reviewed; if Claude Code asks, read each request: plain Yes, or No if it does more than the plan needs. Once `git status` lists changes, save it again."
+  },
+  {
+    "lesson": "b-2",
+    "item": "every file in `.practice/b-2-after.txt` is listed in `.practice/b-2-plan.txt`",
+    "name": "a changed file not in the plan",
+    "message": "Changed but not in the plan: src/empty.js. Compare the plan you approved with what Claude changed."
+  },
+  {
+    "lesson": "b-2",
+    "item": "An unknown key in `linkcheck.json`, such as `ignores`, makes the tool exit with code 2 and name the key",
+    "name": "not the practice template",
+    "message": "This runs the practice template's linkcheck tool, so run the check in your copy of the template: `npm run check -- b-2`."
+  },
+  {
+    "lesson": "b-2",
+    "item": "An unknown key in `linkcheck.json`, such as `ignores`, makes the tool exit with code 2 and name the key",
+    "name": "unknown key accepted",
+    "message": "With `\"ignores\"` in `linkcheck.json`, the tool exited with code 0, not 2. Read the ticket's first request again: `practice/b-2/ticket.md`."
+  },
+  {
+    "lesson": "b-2",
+    "item": "An unknown key in `linkcheck.json`, such as `ignores`, makes the tool exit with code 2 and name the key",
+    "name": "error omits the key",
+    "message": "The tool exits with code 2 but its error doesn't name the key, `ignores`. The ticket asks for an error that names it."
+  },
+  {
+    "lesson": "b-2",
+    "item": "A broken link still makes the tool exit with code 1 and report the link",
+    "name": "not the practice template",
+    "message": "This runs the practice template's linkcheck tool, so run the check in your copy of the template: `npm run check -- b-2`."
+  },
+  {
+    "lesson": "b-2",
+    "item": "A broken link still makes the tool exit with code 1 and report the link",
+    "name": "broken links pass CI",
+    "message": "With a broken link, the tool exited with code 0, not 1, so CI would pass with broken links. Compare the plan you approved with the ticket, and tell Claude what to undo."
+  },
+  {
+    "lesson": "b-2",
+    "item": "A broken link still makes the tool exit with code 1 and report the link",
+    "name": "CLI crashes instead of reporting a link",
+    "message": "With a broken link, the tool exited with code 1 but didn't report `broken link to missing.md`, so it failed for another reason: throw new Error(\"crash\");"
+  },
+  {
+    "lesson": "b-3",
+    "item": "links with a title, in double or single quotes, are checked",
+    "name": "outside the template",
+    "message": "This folder has no `src/cli.js` or `src/links.js`. Lesson 3 runs the practice template's link checker and reviews a patch planted in it, so do this lesson in your template copy and run the check there."
+  },
+  {
+    "lesson": "b-3",
+    "item": "links with a title, in double or single quotes, are checked",
+    "name": "CLI crashes",
+    "message": "`node src/cli.js` crashed: Error: broken. Run `npm test`, read the first failure, and ask Claude to fix the code."
+  },
+  {
+    "lesson": "b-3",
+    "item": "links with a title, in double or single quotes, are checked",
+    "name": "existing titled link reported",
+    "message": "The checker reports `[setup](setup.md \"Setup guide\")` as a broken link to `setup.md \"Setup guide\"`, though setup.md exists. Ask Claude to leave the title out of the target, with a test."
+  },
+  {
+    "lesson": "b-3",
+    "item": "links with a title, in double or single quotes, are checked",
+    "name": "titles skipped",
+    "message": "The checker skips `[gone](gone.md \"Old page\")` and `[old](old.md 'Old page')`. Finish the worked example: links with a title, in double or single quotes, are checked, with a test for each."
+  },
+  {
+    "lesson": "b-3",
+    "item": "links with a title, in double or single quotes, are checked",
+    "name": "target includes title",
+    "message": "The checker reads the target of `[gone](gone.md \"Old page\")` as `gone.md \"Old page\"`, not `gone.md`. Ask Claude to leave the title out of the target, with a test for it."
+  },
+  {
+    "lesson": "b-3",
+    "item": "protocol-relative links, such as `//cdn.example.com/app.js`, are skipped, and every other link is checked as before",
+    "name": "outside the template",
+    "message": "This folder has no `src/cli.js` or `src/links.js`. Lesson 3 runs the practice template's link checker and reviews a patch planted in it, so do this lesson in your template copy and run the check there."
+  },
+  {
+    "lesson": "b-3",
+    "item": "protocol-relative links, such as `//cdn.example.com/app.js`, are skipped, and every other link is checked as before",
+    "name": "CLI crashes",
+    "message": "`node src/cli.js` crashed: Error: broken. Run `npm test`, read the first failure, and ask Claude to fix the code."
+  },
+  {
+    "lesson": "b-3",
+    "item": "protocol-relative links, such as `//cdn.example.com/app.js`, are skipped, and every other link is checked as before",
+    "name": "protocol relative not skipped",
+    "message": "The checker still reports `//cdn.example.com/app.js` as broken. Apply `git apply practice/b-3/protocol-relative.patch`, then fix the flaw (Your turn, step 2)."
+  },
+  {
+    "lesson": "b-3",
+    "item": "protocol-relative links, such as `//cdn.example.com/app.js`, are skipped, and every other link is checked as before",
+    "name": "uncommitted patch skips other links",
+    "message": "The checker skips a link that the patch's description says is still checked: the flaw is still there. Compare that description with what the new line skips, and tell Claude (Your turn, steps 1 and 3)."
+  },
+  {
+    "lesson": "b-3",
+    "item": "protocol-relative links, such as `//cdn.example.com/app.js`, are skipped, and every other link is checked as before",
+    "name": "committed patch skips other links",
+    "message": "Your commit still skips `[root](/missing.md)` and `[page](missing.md)`. Compare that with the patch's description, fix the rule, add a test that fails on the patch, and commit both."
+  },
+  {
+    "lesson": "b-3",
+    "item": "your tests catch the planted flaw: with the patch's `isExternal` put back, they fail",
+    "name": "outside the template",
+    "message": "This folder has no `src/cli.js` or `src/links.js`. Lesson 3 runs the practice template's link checker and reviews a patch planted in it, so do this lesson in your template copy and run the check there."
+  },
+  {
+    "lesson": "b-3",
+    "item": "your tests catch the planted flaw: with the patch's `isExternal` put back, they fail",
+    "name": "tests already fail",
+    "message": "The tests fail as they are. Make `npm test` pass first."
+  },
+  {
+    "lesson": "b-3",
+    "item": "your tests catch the planted flaw: with the patch's `isExternal` put back, they fail",
+    "name": "test runner is missing",
+    "message": "`npm test` did not finish (ENOENT). Fix the test runner and retry; this does not prove a failing test."
+  },
+  {
+    "lesson": "b-3",
+    "item": "your tests catch the planted flaw: with the patch's `isExternal` put back, they fail",
+    "name": "uncommitted tests miss flaw",
+    "message": "Your tests still pass with the patch's `isExternal` put back, so none of them catches its flaw yet. Once you have found the flaw (Your turn, step 1), ask Claude for a test that fails on the patch's version."
+  },
+  {
+    "lesson": "b-3",
+    "item": "your tests catch the planted flaw: with the patch's `isExternal` put back, they fail",
+    "name": "committed tests miss flaw",
+    "message": "Your tests still pass with the patch's `isExternal` put back: none of them fails on a link the patch skips by mistake. Add a regression case for that link and commit it."
+  },
+  {
+    "lesson": "b-3",
+    "item": "your last commit changes a test file and at least one other file",
+    "name": "no learner commit",
+    "message": "There is no commit of yours yet. Once the fix and its test are in, ask Claude to commit them together."
+  },
+  {
+    "lesson": "b-3",
+    "item": "your last commit changes a test file and at least one other file",
+    "name": "last commit has no test",
+    "message": "Your last commit changes no test file (src/x.js): none is in a test/ folder or named like links.test.js. Add one, then `git commit --amend`."
+  },
+  {
+    "lesson": "b-3",
+    "item": "your last commit changes a test file and at least one other file",
+    "name": "last commit has tests alone",
+    "message": "Your last commit changes only tests (test/x.test.js). If the code change is in the commit before it, ask Claude to combine the two commits into one."
+  },
+  {
+    "lesson": "b-3",
+    "item": "the tests pass",
+    "name": "npm tests fail",
+    "message": "`npm test` fails. Run it, read the first failure, and ask Claude to fix the code, not the test."
+  },
+  {
+    "lesson": "b-3",
+    "item": "the tests pass",
+    "name": "no npm test script",
+    "message": "This repository has no `npm test` script. Save your tests' exit code: `<your test command>; echo $? > .practice/b-3-tests.txt` (Windows: end with `$LASTEXITCODE > .practice/b-3-tests.txt`)."
+  },
+  {
+    "lesson": "b-3",
+    "item": "the tests pass",
+    "name": "saved exit is not a number",
+    "message": "`.practice/b-3-tests.txt` holds \"True\", not an exit code. Save it again: `<your test command>; echo $? > .practice/b-3-tests.txt` (Windows: end with `$LASTEXITCODE > .practice/b-3-tests.txt`)."
+  },
+  {
+    "lesson": "b-3",
+    "item": "the tests pass",
+    "name": "saved exit is nonzero",
+    "message": "`.practice/b-3-tests.txt` says the tests exited with 1, not 0."
+  },
+  {
+    "lesson": "b-3",
+    "item": "nothing is left uncommitted",
+    "name": "uncommitted source",
+    "message": "These changes are uncommitted: src/. Commit them, or set them aside with `git stash push --include-untracked`."
+  },
+  {
+    "lesson": "b-4",
+    "item": "a commit after your copy's first one changes `src/check-links.js`, which still exports a synchronous `brokenLinks`",
+    "name": "no refactor commit",
+    "message": "No commit since your copy's first one changes `src/check-links.js`. Finish the refactor in Worked example step 5 and commit it."
+  },
+  {
+    "lesson": "b-4",
+    "item": "a commit after your copy's first one changes `src/check-links.js`, which still exports a synchronous `brokenLinks`",
+    "name": "export lost",
+    "message": "The last commit's `src/check-links.js` exports no `brokenLinks`, which `src/cli.js` imports by that name. Ask Claude to keep `brokenLinks` exported, as Worked example step 5 asks, and commit."
+  },
+  {
+    "lesson": "b-4",
+    "item": "a commit after your copy's first one changes `src/check-links.js`, which still exports a synchronous `brokenLinks`",
+    "name": "still asynchronous",
+    "message": "The last commit's `src/check-links.js` is still asynchronous. Ask Claude to make `brokenLinks` synchronous again, as Worked example step 5 asks, and commit."
+  },
+  {
+    "lesson": "b-4",
+    "item": "`.practice/b-4-before-rewind.txt` lists `src/links.js` and `src/check-links.js`",
+    "name": "no before snapshot",
+    "message": "After Claude runs the rename script and updates its callers, run `git status --porcelain > .practice/b-4-before-rewind.txt`."
+  },
+  {
+    "lesson": "b-4",
+    "item": "`.practice/b-4-before-rewind.txt` lists `src/links.js` and `src/check-links.js`",
+    "name": "script not run",
+    "message": "It doesn't list `src/links.js`. Save it once the script has renamed `findLinks` and Claude has updated `src/check-links.js`, before you rewind."
+  },
+  {
+    "lesson": "b-4",
+    "item": "`.practice/b-4-after-rewind.txt` lists `src/links.js` and no other file in `src/` or `test/`",
+    "name": "no after snapshot",
+    "message": "Right after rewinding with Restore code, run `git status --porcelain > .practice/b-4-after-rewind.txt`."
+  },
+  {
+    "lesson": "b-4",
+    "item": "`.practice/b-4-after-rewind.txt` lists `src/links.js` and no other file in `src/` or `test/`",
+    "name": "caller not restored",
+    "message": "`src/check-links.js` is still changed. Use Restore code, then `git status --porcelain > .practice/b-4-after-rewind.txt`. If a command made the edit, use `git restore src test` and repeat Your turn from step 2."
+  },
+  {
+    "lesson": "b-4",
+    "item": "`.practice/b-4-after-rewind.txt` lists `src/links.js` and no other file in `src/` or `test/`",
+    "name": "command change also gone",
+    "message": "`src/links.js` isn't changed, so the script's rename is gone. If you restored it yourself, repeat step 2. Otherwise Claude had already edited it: run `git restore src test`, start a new session and repeat step 2."
+  },
+  {
+    "lesson": "b-4",
+    "item": "`src/` and `test/` have no uncommitted changes, your last commit's `src/links.js` still exports `findLinks`, and `npm run linkcheck -- samples` runs without an error",
+    "name": "source still changed",
+    "message": "Still changed: src/. Delete the new files you don't want."
+  },
+  {
+    "lesson": "b-4",
+    "item": "`src/` and `test/` have no uncommitted changes, your last commit's `src/links.js` still exports `findLinks`, and `npm run linkcheck -- samples` runs without an error",
+    "name": "rename committed",
+    "message": "Your last commit's `src/links.js` no longer exports `findLinks`. Undo the dropped rename with `git revert <sha>`; find that commit with `git log`."
+  },
+  {
+    "lesson": "b-4",
+    "item": "`src/` and `test/` have no uncommitted changes, your last commit's `src/links.js` still exports `findLinks`, and `npm run linkcheck -- samples` runs without an error",
+    "name": "tool crashes",
+    "message": "`npm run linkcheck -- samples` stops with an error. Run it, read the error, and ask Claude to fix the code you committed."
+  },
+  {
+    "lesson": "b-5",
+    "item": "a committed CLAUDE.md has a rule that every new JavaScript file in `src/` starts with a given line",
+    "name": "memory not committed",
+    "message": "There is no committed CLAUDE.md. Run `/init`, edit what it wrote, then `git add CLAUDE.md` and commit it."
+  },
+  {
+    "lesson": "b-5",
+    "item": "a committed CLAUDE.md has a rule that every new JavaScript file in `src/` starts with a given line",
+    "name": "rule missing",
+    "message": "The committed CLAUDE.md has no line like ``- Every new JavaScript file in `src/` starts with the line `// SPDX-License-Identifier: MIT`.``. Add it under `## Conventions` and commit CLAUDE.md again."
+  },
+  {
+    "lesson": "b-5",
+    "item": "a committed CLAUDE.md has a rule that every new JavaScript file in `src/` starts with a given line",
+    "name": "rule has no scope",
+    "message": "The rule for `// SPDX-License-Identifier: MIT` doesn't say which files it covers. Scope it to \"Every new JavaScript file in `src/`\" and commit CLAUDE.md: a header can break shell scripts or JSON."
+  },
+  {
+    "lesson": "b-5",
+    "item": "a commit made after that rule adds JavaScript files to `src/`, and each of them starts with the rule's line",
+    "name": "no memory rule",
+    "message": "Commit a CLAUDE.md with the header rule first."
+  },
+  {
+    "lesson": "b-5",
+    "item": "a commit made after that rule adds JavaScript files to `src/`, and each of them starts with the rule's line",
+    "name": "new file not committed",
+    "message": "No commit after the rule adds a JavaScript file to `src/`, and these new files are not committed yet: src/stats.js. Ask Claude to commit them."
+  },
+  {
+    "lesson": "b-5",
+    "item": "a commit made after that rule adds JavaScript files to `src/`, and each of them starts with the rule's line",
+    "name": "no new source",
+    "message": "No commit after the rule adds a JavaScript file to `src/`. In a new session, ask for a change that creates one, such as `src/stats.js` with a test, and to commit it."
+  },
+  {
+    "lesson": "b-5",
+    "item": "a commit made after that rule adds JavaScript files to `src/`, and each of them starts with the rule's line",
+    "name": "test alone is not source",
+    "message": "No commit after the rule adds a JavaScript file to `src/`. In a new session, ask for a change that creates one, such as `src/stats.js` with a test, and to commit it."
+  },
+  {
+    "lesson": "b-5",
+    "item": "a commit made after that rule adds JavaScript files to `src/`, and each of them starts with the rule's line",
+    "name": "wrong first line",
+    "message": "In commit dbf5428, these new files don't start with `// SPDX-License-Identifier: MIT`: src/stats.js. In a new session, verify CLAUDE.md with `/context all`, then ask for a different new file and commit."
+  },
+  {
+    "lesson": "b-5",
+    "item": "a commit made after that rule adds JavaScript files to `src/`, and each of them starts with the rule's line",
+    "name": "header later in file",
+    "message": "In commit b21d01b, these new files don't start with `// SPDX-License-Identifier: MIT`: src/stats.js. In a new session, verify CLAUDE.md with `/context all`, then ask for a different new file and commit."
+  },
+  {
+    "lesson": "b-5",
+    "item": "the committed CLAUDE.md holds the notes' rule for CLI errors, and every `npm run` script it names is in `package.json`",
+    "name": "no committed memory",
+    "message": "There is no committed CLAUDE.md."
+  },
+  {
+    "lesson": "b-5",
+    "item": "the committed CLAUDE.md holds the notes' rule for CLI errors, and every `npm run` script it names is in `package.json`",
+    "name": "error convention missing",
+    "message": "The committed CLAUDE.md doesn't have the rule from the lesson's notes that CLI errors start with `linkcheck:`. Add it and commit CLAUDE.md."
+  },
+  {
+    "lesson": "b-5",
+    "item": "the committed CLAUDE.md holds the notes' rule for CLI errors, and every `npm run` script it names is in `package.json`",
+    "name": "package invalid",
+    "message": "package.json doesn't parse, so the check can't read its scripts."
+  },
+  {
+    "lesson": "b-5",
+    "item": "the committed CLAUDE.md holds the notes' rule for CLI errors, and every `npm run` script it names is in `package.json`",
+    "name": "script not real",
+    "message": "The committed CLAUDE.md names `npm run tests.`, but package.json has no such script. Fix or delete that line, then commit CLAUDE.md."
+  },
+  {
+    "lesson": "b-5",
+    "item": "a committed `.gitignore` keeps `CLAUDE.local.md` out, git tracks no `CLAUDE.local.md`, and the committed CLAUDE.md holds neither personal note",
+    "name": "no committed memory",
+    "message": "There is no committed CLAUDE.md."
+  },
+  {
+    "lesson": "b-5",
+    "item": "a committed `.gitignore` keeps `CLAUDE.local.md` out, git tracks no `CLAUDE.local.md`, and the committed CLAUDE.md holds neither personal note",
+    "name": "personal file tracked",
+    "message": "git tracks `CLAUDE.local.md`, which is yours alone. Run `git rm --cached CLAUDE.local.md`, add the line `CLAUDE.local.md` to `.gitignore`, and commit."
+  },
+  {
+    "lesson": "b-5",
+    "item": "a committed `.gitignore` keeps `CLAUDE.local.md` out, git tracks no `CLAUDE.local.md`, and the committed CLAUDE.md holds neither personal note",
+    "name": "personal removal not committed",
+    "message": "`CLAUDE.local.md` is still in your last commit. Commit its removal."
+  },
+  {
+    "lesson": "b-5",
+    "item": "a committed `.gitignore` keeps `CLAUDE.local.md` out, git tracks no `CLAUDE.local.md`, and the committed CLAUDE.md holds neither personal note",
+    "name": "ignore missing",
+    "message": "No committed `.gitignore` ignores `CLAUDE.local.md`. Add the line `CLAUDE.local.md` to `.gitignore` and commit it. A rule in your global git excludes file doesn't count: it isn't in the repository."
+  },
+  {
+    "lesson": "b-5",
+    "item": "a committed `.gitignore` keeps `CLAUDE.local.md` out, git tracks no `CLAUDE.local.md`, and the committed CLAUDE.md holds neither personal note",
+    "name": "personal note in team instructions",
+    "message": "The committed CLAUDE.md still holds a note that is only yours (\"linkcheck-docs\"). Move it to `CLAUDE.local.md` or your user file, take it out of CLAUDE.md and commit."
+  },
+  {
+    "lesson": "b-5",
+    "item": "a committed `.gitignore` keeps `CLAUDE.local.md` out, git tracks no `CLAUDE.local.md`, and the committed CLAUDE.md holds neither personal note",
+    "name": "negated personal ignore",
+    "message": "Line 2 of `.gitignore`, `!CLAUDE.local.md`, keeps `CLAUDE.local.md` from being ignored. Delete it, add the line `CLAUDE.local.md` to `.gitignore` and commit."
+  },
+  {
+    "lesson": "b-5",
+    "item": "a committed `.gitignore` keeps `CLAUDE.local.md` out, git tracks no `CLAUDE.local.md`, and the committed CLAUDE.md holds neither personal note",
+    "name": "local exclude is not shared",
+    "message": "Only `.git/info/exclude` ignores `CLAUDE.local.md`, and git never commits that file, so your teammates don't get the rule. Add the line `CLAUDE.local.md` to `.gitignore` and commit it."
+  },
+  {
+    "lesson": "b-5",
+    "item": "a committed `.gitignore` keeps `CLAUDE.local.md` out, git tracks no `CLAUDE.local.md`, and the committed CLAUDE.md holds neither personal note",
+    "name": "ignore not committed",
+    "message": "`.gitignore` ignores `CLAUDE.local.md`, but that rule isn't committed. Run `git add .gitignore` and commit it."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "`.practice/capstone-before.txt`, saved while the plan was on screen, lists no changed files",
+    "name": "no snapshot while the plan was on screen",
+    "message": "While the plan is on screen, run `git status --porcelain > .practice/capstone-before.txt`."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "`.practice/capstone-before.txt`, saved while the plan was on screen, lists no changed files",
+    "name": "a file had changed before the approval",
+    "message": "Files had changed before you approved the plan: src/cli.js, linkcheck.json. Commit or stash them, then snapshot again in plan mode."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "`.practice/capstone-before.txt`, saved while the plan was on screen, lists no changed files",
+    "name": "saved after approving",
+    "message": "Files had changed before you approved the plan: src/check-links.js, src/cli.js, test/check-links.test.js. Commit or stash them, then snapshot again in plan mode."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "the commit in `.practice/capstone-commit.txt` changes only files listed in `.practice/capstone-plan.txt`, including a test",
+    "name": "no plan file",
+    "message": "Save the files the plan will change, one per line, to `.practice/capstone-plan.txt` before you approve."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "the commit in `.practice/capstone-commit.txt` changes only files listed in `.practice/capstone-plan.txt`, including a test",
+    "name": "a plan, but no saved commit",
+    "message": "After you commit the fix, run `git rev-parse HEAD > .practice/capstone-commit.txt`."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "the commit in `.practice/capstone-commit.txt` changes only files listed in `.practice/capstone-plan.txt`, including a test",
+    "name": "a saved commit that is not in the repository",
+    "message": "`.practice/capstone-commit.txt` names 0123456789abcdef0123456789abcdef01234567, which is not a commit in this repository."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "the commit in `.practice/capstone-commit.txt` changes only files listed in `.practice/capstone-plan.txt`, including a test",
+    "name": "the commit changes a file the plan did not name",
+    "message": "The commit changes files the plan didn't name: README.md. If the plan named them, add them to `.practice/capstone-plan.txt`; if not, take them out of the commit. Re-save the SHA (task 8)."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "the commit in `.practice/capstone-commit.txt` changes only files listed in `.practice/capstone-plan.txt`, including a test",
+    "name": "the plan names one of the two test files the commit changes",
+    "message": "The commit changes files the plan didn't name: test/cli.test.js. If the plan named them, add them to `.practice/capstone-plan.txt`; if not, take them out of the commit. Re-save the SHA (task 8)."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "the commit in `.practice/capstone-commit.txt` changes only files listed in `.practice/capstone-plan.txt`, including a test",
+    "name": "the saved commit is the earlier CLAUDE.md commit",
+    "message": "The commit changes files the plan didn't name: CLAUDE.md. If the plan named them, add them to `.practice/capstone-plan.txt`; if not, take them out of the commit. Re-save the SHA (task 8)."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "the commit in `.practice/capstone-commit.txt` changes only files listed in `.practice/capstone-plan.txt`, including a test",
+    "name": "the commit has no test",
+    "message": "The commit changes no test file. The test goes in the same commit as the fix: ask Claude to add it, then `git commit --amend` and run `git rev-parse HEAD > .practice/capstone-commit.txt` again."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "the reported bug is fixed: a missing folder in `linkcheck.json` makes the tool exit with code 2 and name the folder",
+    "name": "the bug is not fixed yet",
+    "message": "The tool exited with code 0, not 2. Read capstone/beginner-bug.md again."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "the tests pass",
+    "name": "the tests fail",
+    "message": "`npm test` fails. Run it, read the first failure, and ask Claude to fix the code, not the test."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "the tests pass",
+    "name": "no test script and no saved exit code",
+    "message": "This repository has no `npm test` script. Save your tests' exit code: `<your test command>; echo $? > .practice/b-3-tests.txt` (Windows: end with `$LASTEXITCODE > .practice/b-3-tests.txt`)."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "the tests pass",
+    "name": "a PowerShell True instead of an exit code",
+    "message": "`.practice/b-3-tests.txt` holds \"True\", not an exit code. Save it again: `<your test command>; echo $? > .practice/b-3-tests.txt` (Windows: end with `$LASTEXITCODE > .practice/b-3-tests.txt`)."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "the tests pass",
+    "name": "a saved exit code that is not 0",
+    "message": "`.practice/b-3-tests.txt` says the tests exited with 1, not 0."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "a committed CLAUDE.md names the test command, `npm test`",
+    "name": "a committed CLAUDE.md without the test command",
+    "message": "The committed CLAUDE.md doesn't mention `npm test`. Add the test command and commit it."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "a committed CLAUDE.md names the test command, `npm test`",
+    "name": "a CLAUDE.md that names npm test but is not committed",
+    "message": "There is no committed CLAUDE.md. Run `/init` in a session, check the file, and commit it."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "nothing is left uncommitted",
+    "name": "a linkcheck.json left in the copy",
+    "message": "These changes are uncommitted: linkcheck.json. Commit them, or set them aside with `git stash push --include-untracked`."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "the commit in `.practice/capstone-commit.txt` changes only files listed in `.practice/capstone-plan.txt`, including a test",
+    "name": "test-only commit",
+    "message": "The commit changes only tests. Combine it with the fix before it, if you haven't pushed, or amend with `git commit --amend` to include the fix. Then run `git rev-parse HEAD > .practice/capstone-commit.txt` again."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "the commit's test fails without its fix: with the other files it changes as they were before it, `npm test` fails",
+    "name": "no saved commit",
+    "message": "After you commit the fix, run `git rev-parse HEAD > .practice/capstone-commit.txt`."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "the commit's test fails without its fix: with the other files it changes as they were before it, `npm test` fails",
+    "name": "commit has no tests",
+    "message": "The commit changes no test file, so no test runs without the fix. Ask Claude to add one to the fix commit, then `git commit --amend` and run `git rev-parse HEAD > .practice/capstone-commit.txt` again."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "the commit's test fails without its fix: with the other files it changes as they were before it, `npm test` fails",
+    "name": "commit has tests alone",
+    "message": "The commit changes only tests. Combine it with the fix before it, if you haven't pushed, or amend with `git commit --amend` to include the fix. Then run `git rev-parse HEAD > .practice/capstone-commit.txt` again."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "the commit's test fails without its fix: with the other files it changes as they were before it, `npm test` fails",
+    "name": "first commit has no previous code",
+    "message": "02d5d062a777d69a94a1208a6f074e8a1f4a7591 is the first commit in this repository, so there is no code from before the fix to test."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "the commit's test fails without its fix: with the other files it changes as they were before it, `npm test` fails",
+    "name": "tests pass without fix",
+    "message": "Without the fix, `npm test` still passes, so the new test doesn't catch the bug. Add a regression test that fails on the old code, amend the fix and run `git rev-parse HEAD > .practice/capstone-commit.txt` again."
+  },
+  {
+    "lesson": "b-capstone",
+    "item": "the reported bug is fixed: a missing folder in `linkcheck.json` makes the tool exit with code 2 and name the folder",
+    "name": "error omits missing folder",
+    "message": "The tool exits with code 2, but its error doesn't name the missing folder, `docs`. Fix that inside the plan, amend the commit and run `git rev-parse HEAD > .practice/capstone-commit.txt` again."
+  }
+]

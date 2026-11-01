@@ -105,6 +105,8 @@ export interface Files {
   bytes(dir: string, path: string): Buffer | null;
   stamp(dir: string, path: string): string | null;
   exists(abs: string): boolean;
+  /** True only for a folder: a file at `abs` is not one. */
+  isFolder(abs: string): boolean;
 }
 
 /** Arms a watcher on a folder; it calls onChange after changes settle. */

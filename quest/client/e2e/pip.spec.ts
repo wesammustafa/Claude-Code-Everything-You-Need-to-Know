@@ -7,6 +7,7 @@ import { expect, sendEvents, test } from "./live.ts";
 import { changedShare, drawnBounds, type Rgba } from "../pip/png.ts";
 import { POSTER_SCALE } from "../pip/posters.ts";
 import { RIG, RUNTIME, STEP, WASM, lessonUsable, pip } from "./pip-page.ts";
+import { overview, playing, snapshotOf } from "./snapshots.ts";
 import { watch } from "./watch.ts";
 
 async function rigDrawn(page: Page) {
@@ -301,6 +302,42 @@ async function handover(page: Page): Promise<Handover> {
 // poster's own scaling and anti-aliasing; a different turn differs in about
 // a quarter of him.
 const SAME_POSE = 0.08;
+
+/** Every text box on the page: its place and size, as a string. */
+const textBoxes = (page: Page) =>
+  page.evaluate(() =>
+    [...document.querySelectorAll("main :is(h1, h2, p, li, button, label)")]
+      .map((el) => {
+        const box = el.getBoundingClientRect();
+        return [box.x, box.y, box.width, box.height]
+          .map((n) => n.toFixed(1))
+          .join(" ");
+      })
+      .join("\n"),
+  );
+
+for (const [screen, other] of [
+  ["Welcome", snapshotOf(overview, { welcomed: true })],
+  ["Resume", snapshotOf(playing, { welcomed: true })],
+] as const)
+  test.describe(screen, () => {
+    test.use({ routedSnapshots: { other } });
+
+    test(`on ${screen} no text box moves while the Greeting plays`, async ({
+      page,
+    }) => {
+      await page.goto("/");
+      await rigDrawn(page);
+      await expect(pip(page)).toHaveAttribute("data-pip-reaction", "greeting");
+      const first = await textBoxes(page);
+      expect(first).not.toBe("");
+      // Through the Greeting and past it, sampled every 100 ms for 3 s.
+      for (let sample = 0; sample < 30; sample += 1) {
+        expect(await textBoxes(page)).toBe(first);
+        await page.waitForTimeout(100);
+      }
+    });
+  });
 
 test.describe("the rig takes over in the poster's pose", () => {
   test.use({ deviceScaleFactor: POSTER_SCALE });

@@ -17,6 +17,8 @@ import {
   driver,
   finished,
   finishedBefore,
+  beatOf,
+  folderKey,
   gitResult,
   pending,
   playUntil,
@@ -581,7 +583,101 @@ test("playing: the exact command behind the hints fills in the practice copy's p
   );
 });
 
+test("playing: after a failed Check and a Check again that still fails, the hints advance one rung at a time to a check rung holding the failing item's message (rehoming row 422)", () => {
+  const d = at("b-1", { step: "W3", beat: 0, done: ["W1", "W2"] });
+  const eff = pending(d, "check");
+  d.send(checkResult(eff, checkItems(d.state, false)));
+  d.run();
+  d.send(
+    checkResult(pending(d, "check"), checkItems(d.state, false), {
+      asked: d.state.beat.asked,
+    }),
+  );
+  const message = checkItems(d.state, false)[0].hint;
+  let count = view(d).hints.shown.length;
+  for (let i = 0; i < 8 && view(d).hints.shown.at(-1)?.kind !== "check"; i++) {
+    d.hint();
+    const next = view(d).hints.shown.length;
+    assert.equal(next, count + 1, "one rung at a time");
+    count = next;
+  }
+  const last = view(d).hints.shown.at(-1);
+  assert.equal(last?.kind, "check");
+  assert.equal(last.text, message);
+});
+
 // ---- render.mjs's rules -----------------------------------------------------------
+test("warm-ups on the plan count as steps: b-2 has 15 with one, 14 with none, 16 from an older save with two", () => {
+  const steps = (missed, place) => {
+    const d = driver({
+      course,
+      saved: save({
+        missed,
+        lessons: {
+          "b-1": finished(lesson("b-1")),
+          ...(place ? { "b-2": place } : {}),
+        },
+      }),
+    });
+    d.open("b-2");
+    if (!place) d.start();
+    return view(d).steps.map((x) => x.id);
+  };
+  const one = steps(["status"]);
+  assert.equal(one.length, 15);
+  assert.equal(one[0], "R2");
+  assert.equal(steps([]).length, 14);
+  const older = steps([], { step: "W1", beat: 0, warm: ["R1", "R2"] });
+  assert.equal(older.length, 16);
+  assert.deepEqual(older.slice(0, 2), ["R1", "R2"]);
+});
+
+test("a card entry waits for a step of its own lesson: the capstone's, though b-3 teaches its skill, and b-1's", () => {
+  const cardWith = (lessons) =>
+    project(driver({ course, saved: save({ lessons }) }).state).learner.card;
+  assert.deepEqual(cardWith({}), []);
+  const before = cardWith(finishedBefore("b-capstone"));
+  assert.ok(
+    before.some((e) => e.lesson === "b-3" && e.skill === "review-diff"),
+  );
+  assert.ok(before.some((e) => e.lesson === "b-1"));
+  assert.ok(before.every((e) => e.lesson !== "b-capstone"));
+  const after = cardWith({
+    ...finishedBefore("b-capstone"),
+    "b-capstone": finished(lesson("b-capstone")),
+  });
+  assert.ok(after.some((e) => e.lesson === "b-capstone"));
+});
+
+test("a saved new copy for a-5 or the Advanced capstone leaves each lesson's done state alone", () => {
+  const lessonsOf = (d) =>
+    project(d.state).course.levels.flatMap((l) => l.lessons);
+  for (const id of ["a-5", "a-capstone"]) {
+    const without = driver({
+      course,
+      saved: save({ lessons: finishedBefore(id) }),
+    });
+    const key = folderKey(without.state, id);
+    const d = driver({
+      course,
+      saved: save({
+        lessons: finishedBefore(id),
+        folders: { [key]: NEW_COPY },
+      }),
+    });
+    assert.ok(
+      project(d.state).learner.workFolders.some((f) => f.path === NEW_COPY),
+      `${id}: the new copy is saved`,
+    );
+    assert.equal(lessonsOf(d).find((x) => x.id === id).complete, false, id);
+    assert.deepEqual(
+      lessonsOf(d).map((x) => x.complete),
+      lessonsOf(without).map((x) => x.complete),
+      id,
+    );
+  }
+});
+
 test("the warm-up explainer: on the Level's first warm-up the Learner plays, not on a later one, and not on the step after it", () => {
   const b2 = driver({
     course,
@@ -667,6 +763,39 @@ test("a beat's Windows note shows on native Windows only", () => {
   }
 });
 
+test("the cd line quotes the practice copy's folder: plain, POSIX single quotes, Windows double quotes", () => {
+  const cd = (facts) => {
+    const d = at("b-1", { step: "W3", beat: 1, done: ["W1", "W2"] }, { facts });
+    return view(d)
+      .beat.lines.map((l) => l.text)
+      .find((t) => t.startsWith("cd "));
+  };
+  assert.equal(cd({ root: "/home/sam/practice" }), "cd /home/sam/practice");
+  assert.equal(
+    cd({ root: "/home/sam/Sam's practice" }),
+    "cd '/home/sam/Sam'\\''s practice'",
+  );
+  assert.equal(
+    cd({ root: "C:\\Users\\Sam\\my practice", win32: true }),
+    'cd "C:\\Users\\Sam\\my practice"',
+  );
+});
+
+test("a run line's <your repo> shows the Work folder, shell-quoted when it has a space", () => {
+  const MINE = "/home/sam/code/my app";
+  const d = at(
+    "i-1",
+    { step: "C", beat: 0 },
+    { saved: { folders: { intermediate: MINE } } },
+  );
+  const texts = view(d).beat.lines.map((l) => l.text);
+  assert.ok(
+    texts.includes("npm run check -- i-1 --dir '/home/sam/code/my app'"),
+    texts.join("\n"),
+  );
+  assert.ok(texts.every((t) => !t.includes("<your repo>")));
+});
+
 test("an i-1 step in the Learner's own repository names that folder", () => {
   const MINE = "/home/sam/code/my-app";
   const d = driver({
@@ -687,6 +816,30 @@ test("an i-1 step in the Learner's own repository names that folder", () => {
       ),
   );
   assert.equal(view(d).step.where.folder, MINE);
+});
+
+test("a waiting beat names the Work folder it watches before the first look; the Practice copy names none", () => {
+  const MINE = "/home/sam/code/my-app";
+  const d = driver({
+    course,
+    saved: save({
+      lessons: finishedBefore("i-1"),
+      folders: { intermediate: MINE },
+    }),
+  });
+  d.open("i-1");
+  playUntil(
+    d,
+    (s) =>
+      Boolean(s.beat) &&
+      stepOf(s).part !== "Worked example" &&
+      beatOf(s).verify.kind === "check",
+  );
+  assert.equal(view(d).beat.ranIn, null, "no first look yet");
+  assert.equal(view(d).beat.watches, MINE);
+  const b = driver();
+  playUntil(b, (s) => Boolean(s.beat) && beatOf(s).verify.kind === "check");
+  assert.equal(view(b).beat.watches, null);
 });
 
 // ---- step-down and complete --------------------------------------------------------
