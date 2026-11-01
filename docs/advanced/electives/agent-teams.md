@@ -1,6 +1,6 @@
 # Agent teams
 
-<sub>**Advanced** · Elective · about 20 minutes, plus run time · Needs: [Choose an orchestration pattern](../02-orchestration-patterns.md) · Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
+<sub>**Advanced** · Elective · about 20 minutes, plus run time · Needs: [Choose an orchestration pattern](../02-orchestration-patterns.md) · Verified against Claude Code v2.1.308 (stable) on 2026-10-26</sub>
 
 > [!NOTE]
 > "Agent teams are experimental and disabled by default." ([Orchestrate teams of Claude Code sessions](https://code.claude.com/docs/en/agent-teams))
@@ -65,7 +65,7 @@ Teams "use significantly more tokens than a single session" ([Token usage](https
    CLAUDE_CODE_ENABLE_TODO_TOOLS=1 claude --settings .practice/a-teams.json
    ```
 
-   `--settings` applies the file's keys on top of your settings, for this session only ([CLI reference](https://code.claude.com/docs/en/cli-reference#cli-flags)). The variable gives the session the Task tools on every model; without it, Claude Code provides them only on the older models that [Task tool availability](https://code.claude.com/docs/en/tools-reference#task-tool-availability) lists, and teammates coordinate by message instead of a shared task list. Run `/context`: its custom subagents include `security-reviewer` and `test-reviewer` ([See what loaded into context](https://code.claude.com/docs/en/debug-your-config#see-what-loaded-into-context)).
+   `--settings` applies the file's keys on top of your settings, for this session only ([CLI reference](https://code.claude.com/docs/en/cli-reference#cli-flags)). The variable gives the session the Task tools on every model; without it, Claude Code provides them only on the older models that [Task tool availability](https://code.claude.com/docs/en/tools-reference#task-tool-availability) lists, and teammates coordinate by message instead of a shared task list. Run `/context`: its custom subagents include `security-reviewer` and `test-reviewer` ([See what loaded into context](https://code.claude.com/docs/en/debug-your-config#see-what-loaded-into-context)). In fullscreen mode, `/context` collapses the per-item breakdown; run `/context all` to expand it ([Commands](https://code.claude.com/docs/en/commands)).
 5. Ask for the team. Give each teammate one lens, as the docs' [parallel code review](https://code.claude.com/docs/en/agent-teams#run-a-parallel-code-review) does, plus a name and an [agent type](https://code.claude.com/docs/en/agent-teams#use-subagent-definitions-for-teammates):
 
    ```text
@@ -82,7 +82,7 @@ Teams "use significantly more tokens than a single session" ([Token usage](https
    Ask the security and tests teammates to shut down.
    ```
 
-   Each teammate approves and exits, or rejects the request with an explanation ([Shut down teammates](https://code.claude.com/docs/en/agent-teams#shut-down-teammates)); if one rejects, read its reason and ask again. A teammate whose row has disappeared from the panel is hidden, not stopped, so name it in the request too ([Start your first agent team](https://code.claude.com/docs/en/agent-teams#start-your-first-agent-team)). Then exit the session. Claude Code removes the team's config when the session ends and keeps its task list for resumed sessions, so there's no separate cleanup step ([Architecture](https://code.claude.com/docs/en/agent-teams#architecture)).
+   Each teammate approves and exits, or rejects the request with an explanation ([Shut down teammates](https://code.claude.com/docs/en/agent-teams#shut-down-teammates)); if one rejects, read its reason and ask again. A teammate whose row has disappeared from the panel is hidden, not stopped, so name it in the request too ([Start your first agent team](https://code.claude.com/docs/en/agent-teams#start-your-first-agent-team)). Then exit the session. Claude Code removes the team's config when the session ends and leaves its task list on disk, so there's no separate cleanup step ([Architecture](https://code.claude.com/docs/en/agent-teams#architecture)).
 7. Read the log:
 
    ```bash
@@ -136,6 +136,6 @@ If the teammates log is missing, no team formed: start the lead with the step 4 
 
 ---
 
-<sub>Sources: [Orchestrate teams of Claude Code sessions](https://code.claude.com/docs/en/agent-teams) · [Run agents in parallel](https://code.claude.com/docs/en/agents) · [Create custom subagents](https://code.claude.com/docs/en/sub-agents) · [Hooks reference](https://code.claude.com/docs/en/hooks) · [Tools reference](https://code.claude.com/docs/en/tools-reference) · [All settings](https://code.claude.com/docs/en/settings-reference) · [CLI reference](https://code.claude.com/docs/en/cli-reference) · [Debug your configuration](https://code.claude.com/docs/en/debug-your-config) · [Manage costs effectively](https://code.claude.com/docs/en/costs)</sub>
+<sub>Sources: [Orchestrate teams of Claude Code sessions](https://code.claude.com/docs/en/agent-teams) · [Run agents in parallel](https://code.claude.com/docs/en/agents) · [Create custom subagents](https://code.claude.com/docs/en/sub-agents) · [Hooks reference](https://code.claude.com/docs/en/hooks) · [Tools reference](https://code.claude.com/docs/en/tools-reference) · [All settings](https://code.claude.com/docs/en/settings-reference) · [CLI reference](https://code.claude.com/docs/en/cli-reference) · [Commands](https://code.claude.com/docs/en/commands) · [Debug your configuration](https://code.claude.com/docs/en/debug-your-config) · [Manage costs effectively](https://code.claude.com/docs/en/costs)</sub>
 
 <sub>Back to the [Advanced index](../README.md) · Topic: [Subagents and parallel work](../../topics/subagents-and-parallel-work.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=a-agent-teams)</sub>

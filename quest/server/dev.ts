@@ -54,7 +54,14 @@ if (started) {
     root: client,
     configFile: join(client, "vite.config.ts"),
     server: {
-      proxy: { "/api": `http://127.0.0.1:${String(started.port)}` },
+      // Keep the browser's Host: the server's trust check matches it against
+      // the Origin, and Vite's string form would rewrite it to the target.
+      proxy: {
+        "/api": {
+          target: `http://127.0.0.1:${String(started.port)}`,
+          changeOrigin: false,
+        },
+      },
     },
   });
   await vite.listen();

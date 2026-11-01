@@ -260,51 +260,40 @@ test.describe("the help offer", () => {
     const card = page.locator("main article");
     const pipTop = (await pip(page).boundingBox())?.y;
     const before = (await card.boundingBox())?.y ?? NaN;
-    // The card's top on every frame, and Pip's. The glide is a transition
-    // timed in milliseconds, so a slow CI renderer might draw only one frame
-    // of it: once the offer appears its transitions are paused and stepped a
-    // tenth of the way each frame, so ten frames see it however slow the
-    // renderer is. Sampling ends ten frames after the last step.
+    // The offer's own transitions at a tenth of their speed, so even a
+    // loaded machine draws several frames of the glide (nothing else on the
+    // page is slowed); the card's top on every frame from the offer on, and
+    // Pip's.
     await page.evaluate(() => {
+      new MutationObserver((_, observer) => {
+        const offer = document.querySelector("[data-help-offer]");
+        if (offer === null) return;
+        observer.disconnect();
+        for (const glide of offer.getAnimations()) glide.playbackRate = 0.1;
+      }).observe(document.body, { childList: true, subtree: true });
       const article = document.querySelector("main article");
       const drawn = document.querySelector("[data-pip]");
       const frames: { card: number; pip: number }[] = [];
-      const state = { done: false };
-      Object.assign(window, { frames, glide: state });
-      const STEPS = 10;
-      let glide: Animation[] | null = null;
-      let step = 0;
-      let after = 0;
+      Object.assign(window, { frames });
       const sample = () => {
-        if (glide === null) {
-          const offer = document.querySelector("[data-help-offer]");
-          const running = offer?.getAnimations() ?? [];
-          if (running.length > 0) {
-            glide = running;
-            for (const a of glide) a.pause();
-          }
-        } else if (step < STEPS) {
-          step += 1;
-          for (const a of glide) {
-            const end = Number(a.effect?.getComputedTiming().endTime ?? 0);
-            if (step === STEPS) a.finish();
-            else a.currentTime = (end * step) / STEPS;
-          }
-        } else after += 1;
         frames.push({
           card: article?.getBoundingClientRect().y ?? NaN,
           pip: drawn?.getBoundingClientRect().y ?? NaN,
         });
-        if (after < 10) requestAnimationFrame(sample);
-        else state.done = true;
+        requestAnimationFrame(sample);
       };
       requestAnimationFrame(sample);
     });
     await send(page, notYet());
     await send(page, notYet());
     await expect(bubble(page)).toContainText(OFFER);
-    await page.waitForFunction(
-      () => (window as unknown as { glide: { done: boolean } }).glide.done,
+    // Until the offer has opened all the way.
+    await page.evaluate(() =>
+      Promise.all(
+        (
+          document.querySelector("[data-help-offer]")?.getAnimations() ?? []
+        ).map((a) => a.finished),
+      ),
     );
     const frames = await page.evaluate(
       () =>

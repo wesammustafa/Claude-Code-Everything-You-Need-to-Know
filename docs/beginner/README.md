@@ -1,6 +1,6 @@
 # Beginner
 
-<sub>**Beginner** · about 2½ hours · Verified against Claude Code v2.1.292 (stable) on 2026-10-19</sub>
+<sub>**Beginner** · about 2½ hours · Verified against Claude Code v2.1.308 (stable) on 2026-10-26</sub>
 
 One session, one change, done well. You start Claude Code safely and check what it tells you against the code, decide when it asks and when to plan first, take a change from request to commit and catch what it gets wrong, stop or rewind a wrong turn and keep the conversation focused, and give the project a memory that new sessions follow.
 
@@ -52,7 +52,7 @@ Optional lessons beside the core path, each ending with a checklist you confirm 
 
 - [IDE extensions](electives/ide-extensions.md)
 - [Screenshots and images](electives/screenshots-and-images.md)
-- [The built-in teachers](electives/built-in-teachers.md): `/powerup`, the Learning and Explanatory output styles, and the `claude-code-guide` subagent
+- [The built-in teachers](electives/built-in-teachers.md): `/powerup`, the Learning and Explanatory [output styles](https://code.claude.com/docs/en/output-styles), and the `claude-code-guide` [subagent](https://code.claude.com/docs/en/sub-agents)
 
 ## Official companions
 

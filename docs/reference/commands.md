@@ -1,9 +1,9 @@
 <a id="slash-commands--cheatsheet"></a>
 # Commands by level
 
-<sub>Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
+<sub>Verified against Claude Code v2.1.308 (stable) on 2026-10-26</sub>
 
-The built-in commands, bundled skills and workflows, and `claude` command-line forms the lessons use, grouped by the level that teaches them. It is not the full list: the official [commands reference](https://code.claude.com/docs/en/commands#all-commands) has every command and its options, the [CLI reference](https://code.claude.com/docs/en/cli-reference#cli-flags) has the command-line flags, and typing `/` in a session shows the commands available to you.
+The built-in commands, bundled skills and `claude` command-line forms the lessons use, grouped by the level that teaches them. It is not the full list: the official [commands reference](https://code.claude.com/docs/en/commands#all-commands) has every command and its options, the [CLI reference](https://code.claude.com/docs/en/cli-reference#cli-flags) has the command-line flags, and typing `/` in a session shows the commands available to you.
 
 <a id="common-built-in-slash-commands"></a>
 ## Beginner
@@ -40,12 +40,13 @@ Electives: `/statusline` ([The status line](../intermediate/electives/status-lin
 
 - `claude --worktree <name>` (`-w`): start a session in an isolated git worktree at `.claude/worktrees/<name>` ([CLI reference](https://code.claude.com/docs/en/cli-reference#cli-flags)). [Parallel sessions with worktrees](../advanced/01-parallel-sessions.md)
 - `/tasks`: view and manage background work in this session, including subagents that have finished. [Choose an orchestration pattern](../advanced/02-orchestration-patterns.md)
+- `/batch <instruction>`: plan a large change across the codebase, then run one background subagent per unit, each in its own worktree. [Choose an orchestration pattern](../advanced/02-orchestration-patterns.md)
+- `/usage`: the session's cost, your plan's usage limits and activity stats. [Choose an orchestration pattern](../advanced/02-orchestration-patterns.md)
 - `/workflows`: watch, pause, resume and save dynamic workflows. [Run and save a dynamic workflow](../advanced/03-dynamic-workflows.md)
 - `/goal <condition>`: keep Claude working across turns until the condition is met; `/goal clear` removes it. [Run and save a dynamic workflow](../advanced/03-dynamic-workflows.md)
-- `claude -p "<prompt>"`: run one prompt without the interactive interface, print the answer and exit; a script adds `--output-format json`, `--allowedTools` and `--max-turns` ([CLI reference](https://code.claude.com/docs/en/cli-reference#cli-commands)). [Script Claude Code with `claude -p`](../advanced/04-headless.md)
-- `/install-github-app`: install the Claude GitHub App for a repository, with optional workflow and secret setup. [GitHub Actions](../advanced/05-github-actions.md) names it as one way to add `@claude`; its exercise uses the job's own token instead.
+- `claude -p "<prompt>"`: run one prompt without the interactive interface, print the answer and exit; a script adds `--output-format json`, a permission mode such as `--permission-mode dontAsk`, `--allowedTools` for what may run without a prompt, and `--max-turns` ([CLI reference](https://code.claude.com/docs/en/cli-reference#cli-commands)). [Script Claude Code with `claude -p`](../advanced/04-headless.md)
+- `/install-github-app`: install the Claude GitHub App for a repository, with optional workflow and secret setup. [GitHub Actions](../advanced/05-github-actions.md) names it as one way to add `@claude`; its exercises use the job's own token instead.
 - `claude plugin validate <dir>`: check a marketplace or a plugin folder before you share it; `--strict` also fails on warnings ([Plugin commands reference](https://code.claude.com/docs/en/plugins/cli-reference#plugin-validate)). [Share your setup with a team](../advanced/06-share-your-setup.md)
-- `/usage`: the session's cost, your plan's usage limits and activity stats. [Put bounds on autonomous runs](../advanced/07-bounded-runs.md)
 
 Electives: `claude agents` and `/background` ([Agent view](../advanced/electives/agent-view.md)); `/loop` and `/schedule` ([`/loop` and cloud scheduled tasks](../advanced/electives/goal-loop-routines.md)); `claude plugin eval` ([Testing and publishing a plugin](../advanced/electives/publish-a-plugin.md)).
 

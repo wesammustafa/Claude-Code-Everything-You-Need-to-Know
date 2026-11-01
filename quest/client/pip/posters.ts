@@ -79,6 +79,7 @@ export const POSTER_FOR = {
   idle: "idle",
   thinking: "thinking",
   rest: "idle",
+  sleep: "idle",
   greeting: "idle",
   curious: "idle",
   explaining: "idle",
