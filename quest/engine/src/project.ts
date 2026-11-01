@@ -759,15 +759,46 @@ function resolveFrom(folder: string, href: string): string {
 }
 
 /** A warm-up's words with their relative links resolved against its page. */
-function fromPage(folder: string | null, text: string): string;
-function fromPage(folder: string | null, text: string | null): string | null;
-function fromPage(folder: string | null, text: string | null): string | null {
+// Each `[label](href)` is found as /\[([^\]]+)\]\(([^)\s]+)\)/g would find
+// it, in one pass: that regex backtracks quadratically on a run of "[".
+// Every "[" up to a "]" shares that "]", and every href start up to the
+// next ")" or space shares that stop, so each is looked up once.
+export function fromPage(folder: string | null, text: string): string;
+export function fromPage(
+  folder: string | null,
+  text: string | null,
+): string | null;
+export function fromPage(
+  folder: string | null,
+  text: string | null,
+): string | null {
   if (folder === null || text === null) return text;
-  return text.replace(
-    /\[([^\]]+)\]\(([^)\s]+)\)/g,
-    (_, label: string, href: string) =>
-      `[${label}](${resolveFrom(folder, href)})`,
-  );
+  let out = "";
+  let done = 0;
+  let close = -1;
+  let stop = -1; // the first ")" or space at or after the last href start
+  for (let open = text.indexOf("["); open >= 0;) {
+    if (close <= open) {
+      close = text.indexOf("]", open + 1);
+      if (close < 0) break;
+    }
+    const start = close + 2;
+    if (close > open + 1 && text[close + 1] === "(") {
+      if (stop < start) {
+        stop = start;
+        while (stop < text.length && !/[)\s]/.test(text[stop] ?? "")) stop++;
+      }
+      if (stop > start && text[stop] === ")") {
+        const href = text.slice(start, stop);
+        out += `${text.slice(done, open)}[${text.slice(open + 1, close)}](${resolveFrom(folder, href)})`;
+        done = stop + 1;
+        open = text.indexOf("[", done);
+        continue;
+      }
+    }
+    open = text.indexOf("[", open + 1);
+  }
+  return out + text.slice(done);
 }
 
 // ---- a Step-down and the lesson's end ----------------------------------------

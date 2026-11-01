@@ -226,13 +226,70 @@ async function recordStates(page: Page) {
   await page.addInitScript(() => {
     const seen: string[] = [];
     (window as unknown as { seenStates: string[] }).seenStates = seen;
+    // On Linux the first look can finish, and its frame reach the store,
+    // before React commits the card for lesson.open's reply, which would
+    // drop that reply's "checking" revision unseen. Snapshot frames that
+    // come after lesson.open wait until the card's lines have shown once.
+    let hold = false;
+    const held: (() => void)[] = [];
+    const release = () => {
+      hold = false;
+      for (const deliver of held.splice(0)) deliver();
+    };
+    const addHeld = function (
+      this: EventSource,
+      type: string,
+      listener: EventListenerOrEventListenerObject | null,
+      options?: boolean | AddEventListenerOptions,
+    ) {
+      if (type !== "snapshot" || listener === null) {
+        EventTarget.prototype.addEventListener.call(
+          this,
+          type,
+          listener,
+          options,
+        );
+        return;
+      }
+      const call = (event: Event) => {
+        if (typeof listener === "function") listener.call(this, event);
+        else listener.handleEvent(event);
+      };
+      EventTarget.prototype.addEventListener.call(
+        this,
+        type,
+        (event: Event) => {
+          if (hold)
+            held.push(() => {
+              call(event);
+            });
+          else call(event);
+        },
+        options,
+      );
+    };
+    window.EventSource.prototype.addEventListener =
+      addHeld as typeof EventSource.prototype.addEventListener;
+    const realFetch = window.fetch.bind(window);
+    window.fetch = (input, init) => {
+      const url = input instanceof Request ? input.url : String(input);
+      if (
+        url.endsWith("/api/actions") &&
+        typeof init?.body === "string" &&
+        init.body.includes('"lesson.open"')
+      )
+        hold = true;
+      return realFetch(input, init);
+    };
     const look = () => {
-      for (const li of document.querySelectorAll(
+      const items = document.querySelectorAll(
         "main [data-pip-target=lines] > li",
-      )) {
+      );
+      for (const li of items) {
         const state = li.getAttribute("data-state") ?? "";
         if (seen.at(-1) !== state) seen.push(state);
       }
+      if (hold && items.length > 0) release();
     };
     new MutationObserver(look).observe(document, {
       subtree: true,
@@ -288,7 +345,17 @@ for (const row of ROWS)
       const seen = await recordStates(page);
       const sent = actionsOf(page);
       await copy.start();
+      // The engine reports the first look as running in lesson.open's reply.
+      const opened = page.waitForResponse(
+        (response) =>
+          response.url().endsWith("/api/actions") &&
+          response.request().postData()?.includes('"lesson.open"') === true,
+      );
       await openAt(page, copy);
+      const reply = (await (await opened).json()) as {
+        snapshot?: { lesson?: { beat?: { status?: string } } };
+      };
+      expect(reply.snapshot?.lesson?.beat?.status).toBe("checking");
       await expect(heading(page)).toHaveText(row.step);
 
       // Waiting: the line is waiting while the first look runs.

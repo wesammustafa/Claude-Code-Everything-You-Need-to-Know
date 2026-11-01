@@ -957,9 +957,24 @@ export async function walkLesson(
         );
         if (looked) continue;
       }
-      await expect(check).toBeEnabled({ timeout: LOOK_MS });
-      await check.click();
-      await settled(frames, now).catch(async (error: unknown) => {
+      // The host's watcher may look on the staged change by itself and
+      // answer the beat before the click lands (254 D25): either counts.
+      const answered = settled(frames, now);
+      const clicked = (async () => {
+        await expect(check).toBeEnabled({ timeout: LOOK_MS });
+        await check.click();
+      })();
+      const first = await Promise.race([
+        clicked.then(() => "clicked" as const),
+        answered.then(
+          () => "answered" as const,
+          () => "clicked" as const,
+        ),
+      ]);
+      // Check again was replaced by Next step: the pending click is moot.
+      if (first === "answered") clicked.catch(() => undefined);
+      else await clicked;
+      await answered.catch(async (error: unknown) => {
         const recent = (await frames()).slice(-3);
         throw new Error(
           `${key}: no answer to Check again after ${JSON.stringify(recent)}`,

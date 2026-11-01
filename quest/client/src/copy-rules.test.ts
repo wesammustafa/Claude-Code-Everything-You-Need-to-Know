@@ -112,6 +112,17 @@ const matching = (patterns: readonly RegExp[], words: string) =>
   patterns.filter((re) => re.test(words)).map((re) => String(re));
 
 /** Each banned or alias phrase a source text's words hold. */
+/**
+ * A string literal for source text: JSON's quoting, with the characters
+ * that matter around code (<, >, /, U+2028, U+2029) as \\u escapes, so the
+ * literal parses back to the same words.
+ */
+const quote = (s: string) =>
+  JSON.stringify(s).replace(
+    /[<>/\u2028\u2029]/g,
+    (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`,
+  );
+
 const caught = (patterns: readonly RegExp[], text: string, file = "x.tsx") =>
   wordsOf(file, text).flatMap((words) => matching(patterns, words));
 
@@ -162,7 +173,7 @@ describe("the app's own words (spec Copy rules)", () => {
       "Preparing your lesson…",
       "Loading your progress…",
     ]) {
-      const quoted = JSON.stringify(bad);
+      const quoted = quote(bad);
       expect(caught(BANNED, `const x = ${quoted};`), bad).toHaveLength(1);
       expect(
         caught(BANNED, `const x = () => [${quoted}];`),
@@ -173,6 +184,10 @@ describe("the app's own words (spec Copy rules)", () => {
         `${bad}, as JSX text`,
       ).toHaveLength(1);
     }
+    // A quoted value with code characters still reads as the same words.
+    expect(
+      caught(BANNED, `const x = ${quote("Thinking it over…</p>")};`),
+    ).toHaveLength(1);
   });
 
   test("the claim check reaches a string behind a branch on any value the app passes, and a count's words", () => {
@@ -243,10 +258,7 @@ describe("the app's own words (spec Copy rules)", () => {
       "This template copy",
       "Give the folder of your fresh copy",
     ]) {
-      expect(
-        caught(ALIASES, `const x = ${JSON.stringify(bad)};`),
-        bad,
-      ).toHaveLength(1);
+      expect(caught(ALIASES, `const x = ${quote(bad)};`), bad).toHaveLength(1);
       expect(
         caught(ALIASES, `const X = () => <p>${bad}</p>;`),
         bad,
