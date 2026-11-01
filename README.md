@@ -92,8 +92,6 @@ You'll run Claude Code in parallel, unattended in CI, and for a team, within lim
 
 **Examples:** [How to use the examples](examples/README.md)
 
-**Maintainer configuration:** [Issue tracker](docs/agents/issue-tracker.md) · [Triage labels](docs/agents/triage-labels.md) · [Domain docs](docs/agents/domain.md)
-
 </details>
 
 <a id="how-the-guide-stays-current"></a>

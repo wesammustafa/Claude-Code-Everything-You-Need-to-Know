@@ -212,17 +212,17 @@ It needs Node.js LTS, git, Ruby (for YAML), jq (for the examples' smoke tests), 
 
 | Rule | Fails when |
 |---|---|
-| `internal-links` | A link or fragment inside the repo does not resolve |
+| `internal-links` | A link or fragment inside the repo does not resolve, outside `course/steps/`, `practice-template/learn/lessons/` and `quest/engine/test/fixtures/reducer-course/` (whose quotes are checked against their pages), and `practice-template/project/samples/` (the linkcheck tests' deliberate broken link) |
 | `anchor-diff` | An anchor in `anchors.txt`, or on the base branch, is gone |
 | `stub-paths` | A page path in `paths.txt` is gone |
 | `stamps` | A stamped page's Stamp is missing or malformed, or the trust strip disagrees with the CHANGELOG |
 | `edition-gate` | On a release tag only: a stamped page does not match the release |
 | `expiry` | Never on a pull request, where it warns about markers due within 30 days |
-| `em-dash` | An added line has an em dash outside code and double quotes |
+| `em-dash` | An added line in a Markdown, YAML or text file has an em dash outside code and double quotes, or an added line in the `quest/` source (TypeScript, TSX, CSS, JSON or HTML) has one anywhere, strings included |
 | `images` | An image lacks alt text, a Mermaid block lacks its accessibility lines, or a file under `assets/` breaks the naming, reference or size rules |
 | `lesson-lint` | A lesson or Elective breaks the [lesson anatomy](#lessons) |
 | `static-validation` | JSON, YAML, skill or agent frontmatter, a workflow script or a shell script does not parse or lint |
-| `inertness` | `examples/` holds a path Claude Code can load on its own, or a marketplace manifest not renamed to `dot-claude-plugin/`, or the repository root holds a `.claude-plugin/` folder |
+| `inertness` | `examples/`, `practice-template/` or `solutions/` holds a path Claude Code can load on its own, or a marketplace manifest not renamed to `dot-claude-plugin/`, or the repository root holds a `.claude-plugin/` folder |
 | `smoke-tests` | An example's `test.sh` fails (only when the change touches `examples/`) |
 | `lesson-quotes` | With `LEARN_DIR` set to a practice template checkout's `learn/lessons` folder, or in the weekly run: a quoted line, a code block, the title, the Stamp or a step count in a lesson file of the template's learning app no longer matches its lesson (a warm-up's quotes and code blocks, the earlier lesson or the level index its `from` line names), or a code block has no closing fence. A step count compares a `Worked example`, `Your turn`, `The task` or `Tear down` `step N of M` heading with the numbered steps under that heading in the lesson; a `Your turn part N of M` heading is not counted. A level index page (`docs/<level>/README.md`) can be quoted from any level: `learn.txt` lists it as `<level>-index`, and on any run, pull requests included, the check fails when that id names a different page; only a warm-up names it, as `from: <level>-index`. A code block must equal a fenced block of the lesson line for line, blank lines included, less the indent of the lesson's fence, which must be at most three spaces and outside a quote or alert. On a pull request that changes a lesson or level index listed in `learn.txt`, it only warns |
 
@@ -320,7 +320,7 @@ Callouts are GitHub alerts, at most two per lesson, each with one meaning:
 - Filler such as "In this section we will explore", "as we mentioned earlier" or "it's worth noting that". Cut it.
 - Marketing language. "The ultimate guide to mastering..." reads as hype; lead with what the reader actually gets.
 - Multi-paragraph docstrings. One short line at most in code samples.
-- Em dashes in new prose. Keep them only inside quotations, identifiers and filenames. The `em-dash` check skips text in backticks, code blocks and double quotes; any other line that must keep one carries `<!-- allow-em-dash -->`.
+- Em dashes in new prose. Keep them only inside quotations, identifiers and filenames. The `em-dash` check skips text in backticks, code blocks and double quotes; any other line that must keep one carries `<!-- allow-em-dash -->`. In the `quest/` source it skips no string, since every string there is the app's own wording; a source line that must keep one carries `// allow-em-dash` (or `/* allow-em-dash */`) in a comment.
 - Claims about features you have not verified.
 
 ## File layout
@@ -363,6 +363,35 @@ Every executable example (hook, script, workflow, settings snippet, skill with `
 Report a security problem in an example as [SECURITY.md](SECURITY.md) describes.
 
 The root `.claude/` is reserved for maintainer tooling. Do not add skills or other examples there.
+
+## App code
+
+Claude Code Quest, the web learning app, lives in `quest/`, with its course in `course/`, the Practice template's hand-written files in `practice-template/` and one Reference solution per Lesson in `solutions/`. The rules in this section apply to every agent and contributor working there.
+
+Every change to the app keeps this safety contract:
+
+- the app binds `127.0.0.1` and makes no outbound request at runtime (no telemetry, CDN, web font or update check);
+- reads only the Practice copy and the Learner's Work folders, writes only `.practice/` through the store, and runs only the Check child, read-only git and the platform's browser opener;
+- never reads `.env` files, never calls the Claude API, never logs file contents or command output beyond the verification lines;
+- its own wording states no Claude Code fact;
+- every bundled dependency is pinned, on the license allowlist and credited in the notices.
+
+The server trusts a request only on these rules, on every route:
+
+- the Host is `127.0.0.1` or `localhost`, with any port, and nothing else;
+- an `X-Forwarded-Host` is accepted only in a codespace, and only when it is exactly that codespace's forwarded name for the server's port;
+- every method but GET and HEAD must send `Content-Type: application/json`, an `Origin` equal to `http://` plus the Host (or exactly `https://localhost:` plus the bound port on an accepted forwarded request), and, when it sends `Sec-Fetch-Site`, `same-origin`;
+- a GET or HEAD changes nothing, and no response carries a CORS header;
+- an untrusted request gets a `403` and nothing is logged;
+- every action passes a strict schema of the contract's actions, refusing unknown keys and capping every string, and no action names a command, a script or a file to read;
+- a folder from the browser is checked before the host sees it: an absolute path inside the Learner's home folder, resolved through symlinks, the root of a git working tree, not the Practice copy and not holding it;
+- logs carry an error's message only, never a header value, a cookie, a token or a request body.
+
+Dependencies follow these rules:
+
+- A dependency bundled into the Practice template needs the owner's OK and a license on the allowlist: MIT, ISC, BSD-2-Clause, BSD-3-Clause or Apache-2.0; MIT-Modern-Variant or MIT-0 for code compiled into Rive's WASM; OFL-1.1 for fonts.
+- Every dependency is pinned to an exact version in the one root lockfile, and installs use `npm ci`.
+- A dev dependency is named, with its reason, in the pull request that adds it.
 
 ## License
 

@@ -1,0 +1,9 @@
+{
+  "name": "ok-lib",
+  "version": "1.0.0",
+  "license": "MIT",
+  "dependencies": {
+    "inner": "^2.0.0",
+    "mid-lib": "1.0.0"
+  }
+}

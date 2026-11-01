@@ -1,0 +1,10 @@
+/* The Pip contract page: Pip at hero size on a plain background. */
+body {
+  margin: 0;
+  background: #fff;
+}
+
+.pip {
+  width: 208px;
+  height: 208px;
+}

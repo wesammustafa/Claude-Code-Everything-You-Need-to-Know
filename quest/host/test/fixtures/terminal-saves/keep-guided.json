@@ -1,0 +1,60 @@
+{
+ "format": 1,
+ "welcomed": true,
+ "eased": [],
+ "missed": [],
+ "lessons": {
+  "b-1": {
+   "step": null,
+   "beat": 0,
+   "done": [
+    "W1",
+    "W2",
+    "W3",
+    "W4",
+    "W5",
+    "W6",
+    "Y1",
+    "Y2",
+    "Y3",
+    "Y4",
+    "C"
+   ],
+   "answers": {},
+   "levels": [],
+   "lessHelp": false,
+   "keepGuided": false,
+   "easedSteps": {},
+   "complete": true,
+   "warm": [],
+   "recalled": [],
+   "stamps": {},
+   "bottomAt": null
+  },
+  "b-2": {
+   "step": "Y1",
+   "beat": 0,
+   "done": [
+    "W1",
+    "W2",
+    "W3",
+    "W4",
+    "W5",
+    "W6",
+    "W7",
+    "W8",
+    "W9"
+   ],
+   "answers": {},
+   "levels": [],
+   "lessHelp": false,
+   "keepGuided": true,
+   "easedSteps": {},
+   "complete": false,
+   "warm": [],
+   "recalled": [],
+   "stamps": {},
+   "bottomAt": null
+  }
+ }
+}

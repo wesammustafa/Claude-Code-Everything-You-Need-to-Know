@@ -1,0 +1,9 @@
+{
+  "origin": "lesson-quotes-index-wrong-page",
+  "was": "fail",
+  "expect": "fail",
+  "about": "The manifest pairs a Level with another Level's index page.",
+  "problems": [
+    "course/manifest\\.json:1: lists docs/intermediate/README\\.md as the beginner index, but a Level index is docs/beginner/README\\.md"
+  ]
+}

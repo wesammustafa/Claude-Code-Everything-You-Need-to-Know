@@ -1,0 +1,7 @@
+{
+  "hooks": {
+    "SubagentStart": [
+      { "hooks": [ { "type": "command", "command": "jq -r '.agent_type' >> \"$CLAUDE_PROJECT_DIR/.practice/i-6-agents.txt\"" } ] }
+    ]
+  }
+}

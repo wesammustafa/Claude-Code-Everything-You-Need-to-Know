@@ -1,0 +1,9 @@
+{
+  "origin": "lesson-quotes-index-unknown",
+  "was": "fail",
+  "expect": "fail",
+  "about": "A warm-up's from line names a Level index the manifest doesn't list, though the quote is on the listed index.",
+  "problems": [
+    "course/steps/i-1\\.md:14: from expert-index: a level index is intermediate-index"
+  ]
+}

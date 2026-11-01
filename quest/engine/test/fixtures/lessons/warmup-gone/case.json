@@ -1,0 +1,9 @@
+{
+  "origin": "lesson-quotes-warmup-gone",
+  "was": "fail",
+  "expect": "fail",
+  "about": "A warm-up quotes text that is in its own Lesson but no longer in the Lesson its from line names.",
+  "problems": [
+    "course/steps/b-2\\.md:20: quotes \"Type `/help`\\.\" \\(R1 \\| Warm-up \\| Status\\), which is not in docs/beginner/01-demo\\.md"
+  ]
+}

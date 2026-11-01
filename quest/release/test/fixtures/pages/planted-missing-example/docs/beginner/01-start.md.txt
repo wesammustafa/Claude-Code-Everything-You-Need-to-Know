@@ -1,0 +1,8 @@
+# Start
+
+```bash
+base=https://raw.githubusercontent.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/main/examples
+for f in present missing; do
+  curl -fsSL "$base/$f.sh" -o "$f.sh"
+done
+```

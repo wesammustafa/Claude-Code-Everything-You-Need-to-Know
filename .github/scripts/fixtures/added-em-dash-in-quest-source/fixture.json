@@ -1,0 +1,15 @@
+{
+  "rule": "em-dash",
+  "expect": "fail",
+  "about": "A pull request adds an em dash to the quest/ source: in TypeScript, TSX, CSS, JSON and HTML, inside single, double or backtick quotes and a JSX attribute too.",
+  "output": [
+    "quest/engine/src/steps\\.ts:2:",
+    "quest/engine/src/steps\\.ts:3:",
+    "quest/engine/src/steps\\.ts:4:",
+    "quest/client/src/App\\.tsx:3:",
+    "quest/client/src/App\\.tsx:6:",
+    "quest/client/src/app\\.css:1:",
+    "quest/client/index\\.html:4:",
+    "quest/client/package\\.json:3:"
+  ]
+}

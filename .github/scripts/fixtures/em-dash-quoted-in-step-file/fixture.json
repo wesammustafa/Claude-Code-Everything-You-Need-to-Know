@@ -1,0 +1,6 @@
+{
+  "rule": "em-dash",
+  "expect": "pass",
+  "about": "An em dash inside a double-quoted step-file value (the page's exact words) passes.",
+  "output": ["PASS em-dash: \\d+ added lines"]
+}

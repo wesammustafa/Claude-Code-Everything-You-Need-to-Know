@@ -1,0 +1,9 @@
+{
+  "origin": "lesson-quotes-loose-quote",
+  "was": "fail",
+  "expect": "fail",
+  "about": "A reworded quote with extra spaces around it, which the parser still reads as a quote, no longer matches the page.",
+  "problems": [
+    "course/steps/b-1\\.md:17: quotes \"Type `/status` now\\.\""
+  ]
+}

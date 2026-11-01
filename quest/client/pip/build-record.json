@@ -1,0 +1,60 @@
+{
+  "rive": "1.7.0",
+  "rig": "7db91d5c48a5b601d009265fbd52578bef201d9288f81d6675e4835ad4fa575f",
+  "posters": {
+    "poses": {
+      "happy": {
+        "advance": "450ms",
+        "data": {
+          "intensity": "1",
+          "success": "1"
+        }
+      },
+      "idle": {
+        "advance": "300ms",
+        "data": {}
+      },
+      "reassuring": {
+        "advance": "560ms",
+        "data": {
+          "intensity": "1",
+          "retry": "1"
+        }
+      },
+      "thinking": {
+        "advance": "1s",
+        "data": {
+          "mode": "thinking"
+        }
+      }
+    },
+    "scale": 2,
+    "sizeTurns": {
+      "beside": ["content", "front"],
+      "hero": ["front"]
+    },
+    "sizes": {
+      "beside": 76,
+      "hero": 208
+    },
+    "turns": {
+      "content": 0.4,
+      "front": 0
+    }
+  },
+  "outputs": {
+    "pip.riv": "c055d1d0b4b84aa4d75ea4734096b2899da409d69e834457dc339d453c8e88dc",
+    "posters/happy-beside-content.png": "da102b908bf4e14cb76c32a35b40ced5f08937c576dbfcc40fdf00c3c5a26669",
+    "posters/happy-beside-front.png": "8422327179997b73f9050c6d57c2c2a40916d0ef5c10dc88d343b39c74238a26",
+    "posters/happy-hero-front.png": "6764e5efc6add5338f1ffc07276bfe9ba185374c6a11f72892f1c109afe11992",
+    "posters/idle-beside-content.png": "9d4d6108f0d3efcb19f3e49e1a4570499a14e1ee19f3181bb0107a7980749d83",
+    "posters/idle-beside-front.png": "d8660595d97ecd831472e207eb68f7370c07cd6b439c25b571fcc1af8bc5b13a",
+    "posters/idle-hero-front.png": "4a6a8584831478d070bcef96d915c8f617aa79130c9496f3f78e89c9ff1baac5",
+    "posters/reassuring-beside-content.png": "8d69b66b663a14525dfbbf2699a395d5b263cde8421ee6afc1a551594219b846",
+    "posters/reassuring-beside-front.png": "bb2795f13d8dee75a9d86e5365113c371e10ce7711a3271222d285912171a952",
+    "posters/reassuring-hero-front.png": "00c68c8111832d319cd63a0875d42f212070508596e37ea01cf4546b839e96b6",
+    "posters/thinking-beside-content.png": "d09b085a07431a4a25a7b1146fca42e1fb80ce3680c40b24727ce7d015a43d8c",
+    "posters/thinking-beside-front.png": "a52d56af7a9bc2045e91239481a17b7cf9a487147b51bdf70cdf812f8b730c1f",
+    "posters/thinking-hero-front.png": "dc5ee9fd69666e035c829ca96f2c19b16f6cd88878d484ded5bc027ef9292d00"
+  }
+}

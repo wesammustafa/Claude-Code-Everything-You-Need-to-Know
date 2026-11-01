@@ -1,0 +1,239 @@
+{
+  "levels": [
+    { "id": "beginner", "index": "docs/beginner/README.md" },
+    { "id": "intermediate", "index": "docs/intermediate/README.md" },
+    { "id": "advanced", "index": "docs/advanced/README.md" }
+  ],
+  "lessons": [
+    {
+      "id": "b-1",
+      "level": "beginner",
+      "order": 1,
+      "page": "docs/beginner/01-install-and-look-around.md",
+      "steps": "course/steps/b-1.md",
+      "check": "b-1",
+      "folder": "copy",
+      "slow": [0]
+    },
+    {
+      "id": "b-2",
+      "level": "beginner",
+      "order": 2,
+      "page": "docs/beginner/02-permission-modes-and-plan-mode.md",
+      "steps": "course/steps/b-2.md",
+      "check": "b-2",
+      "folder": "copy",
+      "slow": [2, 3]
+    },
+    {
+      "id": "b-3",
+      "level": "beginner",
+      "order": 3,
+      "page": "docs/beginner/03-first-change.md",
+      "steps": "course/steps/b-3.md",
+      "check": "b-3",
+      "folder": "copy",
+      "slow": [0, 1, 2, 4]
+    },
+    {
+      "id": "b-4",
+      "level": "beginner",
+      "order": 4,
+      "page": "docs/beginner/04-keep-a-session-on-track.md",
+      "steps": "course/steps/b-4.md",
+      "check": "b-4",
+      "folder": "copy",
+      "slow": [3]
+    },
+    {
+      "id": "b-5",
+      "level": "beginner",
+      "order": 5,
+      "page": "docs/beginner/05-project-memory.md",
+      "steps": "course/steps/b-5.md",
+      "check": "b-5",
+      "folder": "copy",
+      "slow": []
+    },
+    {
+      "id": "b-capstone",
+      "level": "beginner",
+      "order": 6,
+      "page": "docs/beginner/capstone.md",
+      "steps": "course/steps/b-capstone.md",
+      "check": "b-capstone",
+      "folder": "copy",
+      "slow": [2, 3, 4]
+    },
+    {
+      "id": "i-1",
+      "level": "intermediate",
+      "order": 7,
+      "page": "docs/intermediate/01-first-skill.md",
+      "steps": "course/steps/i-1.md",
+      "check": "i-1",
+      "folder": "work",
+      "slow": []
+    },
+    {
+      "id": "i-2",
+      "level": "intermediate",
+      "order": 8,
+      "page": "docs/intermediate/02-organize-memory.md",
+      "steps": "course/steps/i-2.md",
+      "check": "i-2",
+      "folder": "work",
+      "slow": []
+    },
+    {
+      "id": "i-3",
+      "level": "intermediate",
+      "order": 9,
+      "page": "docs/intermediate/03-model-and-effort.md",
+      "steps": "course/steps/i-3.md",
+      "check": "i-3",
+      "folder": "work",
+      "slow": []
+    },
+    {
+      "id": "i-4",
+      "level": "intermediate",
+      "order": 10,
+      "page": "docs/intermediate/04-permissions-and-sandbox.md",
+      "steps": "course/steps/i-4.md",
+      "check": "i-4",
+      "folder": "work",
+      "slow": []
+    },
+    {
+      "id": "i-5",
+      "level": "intermediate",
+      "order": 11,
+      "page": "docs/intermediate/05-hooks.md",
+      "steps": "course/steps/i-5.md",
+      "check": "i-5",
+      "folder": "work",
+      "slow": [2]
+    },
+    {
+      "id": "i-6",
+      "level": "intermediate",
+      "order": 12,
+      "page": "docs/intermediate/06-subagents.md",
+      "steps": "course/steps/i-6.md",
+      "check": "i-6",
+      "folder": "work",
+      "slow": []
+    },
+    {
+      "id": "i-7",
+      "level": "intermediate",
+      "order": 13,
+      "page": "docs/intermediate/07-mcp.md",
+      "steps": "course/steps/i-7.md",
+      "check": "i-7",
+      "folder": "work",
+      "slow": [2]
+    },
+    {
+      "id": "i-8",
+      "level": "intermediate",
+      "order": 14,
+      "page": "docs/intermediate/08-plugins.md",
+      "steps": "course/steps/i-8.md",
+      "check": "i-8",
+      "folder": "work",
+      "slow": []
+    },
+    {
+      "id": "i-capstone",
+      "level": "intermediate",
+      "order": 15,
+      "page": "docs/intermediate/capstone.md",
+      "steps": "course/steps/i-capstone.md",
+      "check": "i-capstone",
+      "folder": "copy",
+      "slow": [1, 9, 11]
+    },
+    {
+      "id": "a-1",
+      "level": "advanced",
+      "order": 16,
+      "page": "docs/advanced/01-parallel-sessions.md",
+      "steps": "course/steps/a-1.md",
+      "check": "a-1",
+      "folder": "work",
+      "slow": []
+    },
+    {
+      "id": "a-2",
+      "level": "advanced",
+      "order": 17,
+      "page": "docs/advanced/02-orchestration-patterns.md",
+      "steps": "course/steps/a-2.md",
+      "check": "a-2",
+      "folder": "work",
+      "slow": []
+    },
+    {
+      "id": "a-3",
+      "level": "advanced",
+      "order": 18,
+      "page": "docs/advanced/03-dynamic-workflows.md",
+      "steps": "course/steps/a-3.md",
+      "check": "a-3",
+      "folder": "work",
+      "slow": []
+    },
+    {
+      "id": "a-4",
+      "level": "advanced",
+      "order": 19,
+      "page": "docs/advanced/04-headless.md",
+      "steps": "course/steps/a-4.md",
+      "check": "a-4",
+      "folder": "work",
+      "slow": [1, 2, 3]
+    },
+    {
+      "id": "a-5",
+      "level": "advanced",
+      "order": 20,
+      "page": "docs/advanced/05-github-actions.md",
+      "steps": "course/steps/a-5.md",
+      "check": "a-5",
+      "folder": "new-copy",
+      "slow": []
+    },
+    {
+      "id": "a-6",
+      "level": "advanced",
+      "order": 21,
+      "page": "docs/advanced/06-share-your-setup.md",
+      "steps": "course/steps/a-6.md",
+      "check": "a-6",
+      "folder": "work",
+      "slow": []
+    },
+    {
+      "id": "a-7",
+      "level": "advanced",
+      "order": 22,
+      "page": "docs/advanced/07-bounded-runs.md",
+      "steps": "course/steps/a-7.md",
+      "check": "a-7",
+      "folder": "work",
+      "slow": [0, 1, 2, 3, 4]
+    },
+    {
+      "id": "a-capstone",
+      "level": "advanced",
+      "order": 23,
+      "page": "docs/advanced/capstone.md",
+      "steps": "course/steps/a-capstone.md",
+      "check": "a-capstone",
+      "folder": "new-copy",
+      "slow": [4, 5, 6, 11]
+    }
+  ]
+}

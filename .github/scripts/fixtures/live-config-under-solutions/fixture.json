@@ -1,0 +1,10 @@
+{
+  "rule": "inertness",
+  "expect": "fail",
+  "about": "A Reference solution under solutions/<lesson-id>/ with a real CLAUDE.md, .claude/ folder and .mcp.json, which Claude Code can load. Generated, never committed.",
+  "output": [
+    "solutions/b-2/CLAUDE\\.md: Claude Code can load this",
+    "solutions/b-2/\\.claude: Claude Code can load this",
+    "solutions/i-1/\\.mcp\\.json: Claude Code can load this"
+  ]
+}

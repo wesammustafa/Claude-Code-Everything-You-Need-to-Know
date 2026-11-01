@@ -1,0 +1,50 @@
+<a id="old-sample-heading"></a>
+# A sample page
+
+Verified against nothing: this page is the renderer's reviewed fixture.
+
+## Setup
+
+> [!NOTE]
+> A note with `code` and a [same-page link](#setup-1).
+
+1. Download an example:
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/main/examples/intermediate/05-hooks/dot-claude/hooks/protect-files.sh -o protect.sh
+   echo "<script>alert(1)</script>"
+   ```
+
+2. Inside a list:
+
+   > [!WARNING]
+   > A warning nested in a list item.
+
+## Setup
+
+```json
+{ "hooks": { "Stop": [] } }
+```
+
+```mermaid
+flowchart LR
+  accTitle: Where hook events fire in a turn
+  accDescr: A session starts with SessionStart. Each prompt fires UserPromptSubmit. Before each tool call, PreToolUse runs; exit code 2 blocks the call. After a successful call, PostToolUse runs, then Claude may call another tool. When Claude finishes responding, Stop fires; exit code 2 sends Claude back to work.
+  S[SessionStart] --> U[UserPromptSubmit]
+  U --> P[PreToolUse]
+  P -->|exit 2| B[Call blocked, stderr goes to Claude]
+  P -->|exit 0| T[Permission check, then the tool runs]
+  T --> Q[PostToolUse]
+  Q -->|next tool call| P
+  Q --> E[Stop]
+  E -->|exit 2| K[Claude keeps working]
+```
+
+## Links
+
+- A live page: [Hooks](05-hooks.md#worked-example).
+- A Level README: [Intermediate](README.md).
+- An example file: [protect-files.sh](../../examples/intermediate/05-hooks/dot-claude/hooks/protect-files.sh).
+- A folder: [the hooks example](../../examples/intermediate/05-hooks/).
+- Another site: [hooks guide](https://code.claude.com/docs/en/hooks-guide).
+- <a href="javascript:alert(1)" onclick="alert(1)" style="color:red">A hostile link</a>.

@@ -1,0 +1,10 @@
+{
+  "origin": "lesson-quotes-warmup-match",
+  "was": "pass",
+  "expect": "pass",
+  "about": "A warm-up's quotes match the earlier Lesson its from line names, not the Lesson that holds it.",
+  "problems": [],
+  "compared": {
+    "from": 1
+  }
+}

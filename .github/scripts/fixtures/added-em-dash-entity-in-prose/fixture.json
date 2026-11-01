@@ -1,0 +1,6 @@
+{
+  "rule": "em-dash",
+  "expect": "fail",
+  "about": "A pull request adds a prose line with an em dash written as an HTML entity, which Markdown renders as the character.",
+  "output": ["docs/hooks\\.md:5:", "docs/hooks\\.md:7:"]
+}

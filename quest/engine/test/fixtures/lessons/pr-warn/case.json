@@ -1,0 +1,9 @@
+{
+  "origin": "lesson-quotes-pr-warn",
+  "was": "warn",
+  "expect": "fail",
+  "about": "The page changed a line the step file quotes. lesson-quotes only warned offline, since the step files lived in the template; the lesson test has them here and fails.",
+  "problems": [
+    "course/steps/b-1\\.md:26: quotes \"Run the check\\.\" \\(Y1 \\| Your turn step 1 of 1 \\| Your own question\\), which is not in docs/beginner/01-demo\\.md"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "rule": "em-dash",
+  "expect": "pass",
+  "about": "In the quest/ source, an em dash passes on an unchanged line and on a line whose comment carries the allow marker (//, /* */ and JSX's {/* */}), whether written as the character or an escape; en dashes, however written, are not em dashes.",
+  "output": [
+    "PASS em-dash: \\d+ added lines"
+  ]
+}

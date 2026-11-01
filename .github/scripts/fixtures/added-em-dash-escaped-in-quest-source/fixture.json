@@ -1,0 +1,13 @@
+{
+  "rule": "em-dash",
+  "expect": "fail",
+  "about": "A pull request writes an em dash into the quest/ source without the character: as a JSX entity (named, decimal or hex), a JavaScript escape (\\u2014 or \\u{2014}) or a CSS escape.",
+  "output": [
+    "quest/client/src/Note\\.tsx:3:",
+    "quest/client/src/Note\\.tsx:4:",
+    "quest/client/src/Note\\.tsx:5:",
+    "quest/client/src/Note\\.tsx:6:",
+    "quest/client/src/Note\\.tsx:7:",
+    "quest/client/src/note\\.css:1:"
+  ]
+}

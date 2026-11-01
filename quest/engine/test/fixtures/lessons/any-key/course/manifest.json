@@ -1,0 +1,20 @@
+{
+  "levels": [
+    {
+      "id": "beginner",
+      "index": "docs/beginner/README.md"
+    }
+  ],
+  "lessons": [
+    {
+      "id": "b-1",
+      "level": "beginner",
+      "order": 1,
+      "page": "docs/beginner/01-demo.md",
+      "steps": "course/steps/b-1.md",
+      "check": "b-1",
+      "folder": "copy",
+      "slow": []
+    }
+  ]
+}

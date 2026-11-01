@@ -86,7 +86,6 @@ If the first item fails, read its hint: it names the line or the part of the scr
 
 ## Go further
 
-- [This guide's own saved workflow](../../.claude/workflows/stale-docs-audit.js): a real script that reads `args`, groups its agents into phases, and has separate agents verify each claim before it's reported.
 - [Distribute a workflow in a plugin](https://code.claude.com/docs/en/workflows#distribute-a-workflow-in-a-plugin): share a saved workflow with other repositories through your team's plugin, as in [lesson 6](06-share-your-setup.md).
 - [Compare ways to keep a session running](https://code.claude.com/docs/en/goal#compare-ways-to-keep-a-session-running): `/goal`, `/loop` and a Stop hook, and what starts each next turn.
 

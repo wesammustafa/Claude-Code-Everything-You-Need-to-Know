@@ -1,0 +1,9 @@
+{
+  "origin": "lesson-quotes-title-changed",
+  "was": "fail",
+  "expect": "fail",
+  "about": "The title check is gone, since the page's top heading is the title; a step file that still has a title fails as a dropped field.",
+  "problems": [
+    "course/steps/b-1\\.md:3: title is no step-file field: the title is the page's top heading"
+  ]
+}

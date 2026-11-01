@@ -1,0 +1,15 @@
+{
+  "mermaid": "12.2.0",
+  "diagrams": {
+    "advanced-02-orchestration-patterns.d1.dark.svg": "57df3ad873222f9562134a8a360c96745d2e7fab101384d8858cd848cd9f2764",
+    "advanced-02-orchestration-patterns.d1.light.svg": "4f9fa035386179ec820d74f9c3375b44e63d4db5482037e2e166c65179cebab3",
+    "intermediate-01-first-skill.d1.dark.svg": "d08a3192aa8445b6b00073cee012b43751d89ef5486fcd22aa9897e50c4b4dbc",
+    "intermediate-01-first-skill.d1.light.svg": "636e35161ff91b677f0a7245f5b45c0f003e7553236aea4d477be961f48e7499",
+    "intermediate-05-hooks.d1.dark.svg": "18b95d83ccaf986ab1bc23e9709a1a0d3f7b976901cfdbd827c74d4dc2ba4465",
+    "intermediate-05-hooks.d1.light.svg": "6a366dd59860b1899416ff67014de8d623e040cb8dfbf6950c975e2b1f2ef8e0",
+    "intermediate-06-subagents.d1.dark.svg": "1c909a0db23fa25083b5888936dc85f8bb17941808ea1ae1381600de950e947b",
+    "intermediate-06-subagents.d1.light.svg": "42b491635d5f5c870070fb381232b9bd4ef941a02ce6d75c657271a4dee965d3",
+    "intermediate-07-mcp.d1.dark.svg": "9cf8d05602ae0ca9aad02f98e44973ff4878b345c84570fa0f7920066d52ebb2",
+    "intermediate-07-mcp.d1.light.svg": "4103ab3d3b1a83d7acd1b739e8e9cca6c0cc72e0ec91ca98c6274e49694cad46"
+  }
+}

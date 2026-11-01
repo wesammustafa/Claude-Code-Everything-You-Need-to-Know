@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "types": ["node"],
+    "tsBuildInfoFile": "node_modules/.tmp/checks.tsbuildinfo"
+  },
+  "include": ["practice-template/checks/**/*.mjs"],
+  "exclude": ["practice-template/checks/test"]
+}

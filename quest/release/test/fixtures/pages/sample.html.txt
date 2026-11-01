@@ -1,0 +1,36 @@
+<p><a id="old-sample-heading"></a></p>
+<h1 id="a-sample-page">A sample page</h1>
+<p>Verified against nothing: this page is the renderer's reviewed fixture.</p>
+<h2 id="setup">Setup</h2>
+<div class="markdown-alert markdown-alert-note">
+<p class="markdown-alert-title">Note</p>
+<p>A note with <code>code</code> and a <a href="#setup-1">same-page link</a>.</p>
+</div>
+<ol>
+<li>
+<p>Download an example:</p>
+<pre><code class="language-bash">curl -fsSL https://raw.githubusercontent.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/v0000.00/examples/intermediate/05-hooks/dot-claude/hooks/protect-files.sh -o protect.sh
+echo "&lt;script&gt;alert(1)&lt;/script&gt;"
+</code></pre>
+</li>
+<li>
+<p>Inside a list:</p>
+<div class="markdown-alert markdown-alert-warning">
+<p class="markdown-alert-title">Warning</p>
+<p>A warning nested in a list item.</p>
+</div>
+</li>
+</ol>
+<h2 id="setup-1">Setup</h2>
+<pre><code class="language-json">{ "hooks": { "Stop": [] } }
+</code></pre>
+<picture class="diagram" data-light="sample.d1.light.svg" data-dark="sample.d1.dark.svg"><source media="(prefers-color-scheme: dark)" srcset="sample.d1.dark.svg" /><img src="sample.d1.light.svg" alt="Where hook events fire in a turn" /></picture>
+<h2 id="links">Links</h2>
+<ul>
+<li>A live page: <a href="https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/v0000.00/docs/intermediate/05-hooks.md#worked-example" data-page="docs/intermediate/05-hooks.md" data-fragment="worked-example">Hooks</a>.</li>
+<li>A Level README: <a href="https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/v0000.00/docs/intermediate/README.md">Intermediate</a>.</li>
+<li>An example file: <a href="https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/v0000.00/examples/intermediate/05-hooks/dot-claude/hooks/protect-files.sh">protect-files.sh</a>.</li>
+<li>A folder: <a href="https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/tree/v0000.00/examples/intermediate/05-hooks">the hooks example</a>.</li>
+<li>Another site: <a href="https://code.claude.com/docs/en/hooks-guide">hooks guide</a>.</li>
+<li><a>A hostile link</a>.</li>
+</ul>

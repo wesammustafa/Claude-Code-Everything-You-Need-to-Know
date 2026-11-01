@@ -1,0 +1,20 @@
+{
+  "levels": [
+    {
+      "id": "intermediate",
+      "index": "docs/intermediate/README.md"
+    }
+  ],
+  "lessons": [
+    {
+      "id": "i-1",
+      "level": "intermediate",
+      "order": 1,
+      "page": "docs/intermediate/01-demo.md",
+      "steps": "course/steps/i-1.md",
+      "check": "i-1",
+      "folder": "copy",
+      "slow": []
+    }
+  ]
+}

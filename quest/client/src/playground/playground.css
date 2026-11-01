@@ -1,0 +1,28 @@
+/* The Pip Playground's utilities, development only. app.css leaves this folder
+   out of its sources, so none of the Playground's classes reach the release
+   build; this sheet builds them from the app's own tokens, with no second
+   preflight or theme. */
+@reference "../styles/tokens.css";
+@import "tailwindcss/utilities.css" layer(utilities) source("./");
+@source not "./**/*.test.{ts,tsx}";
+
+/* The stage's four figures, and the Model and Sizes cards, sit side by side
+   once the page's main column is this wide. A container query takes no
+   custom property, so the width is written here, in a sheet that never ships. */
+@custom-variant wide (@container (width >= 57rem));
+
+/* Narrower than this, a card's figures change their layout: the Stage scrolls
+   sideways and the Sizes card puts Hero above the others. */
+@custom-variant narrow (@container (width < 30rem));
+
+/* Below the two-column layout, on a screen tall enough to keep the controls
+   in view beneath it, the Stage stays pinned at the top while they scroll. */
+@custom-variant pinned (@media (width < 64rem) and (height >= 40rem));
+
+/* Where the Stage is pinned, scrolling to a control (a Tab, say) stops below
+   the Stage, never under it. The page keeps the Stage's height up to date. */
+@media (width < 64rem) and (height >= 40rem) {
+  :root:has([data-pip-playground]) {
+    scroll-padding-top: calc(var(--playground-stage, 0px) + 1rem);
+  }
+}

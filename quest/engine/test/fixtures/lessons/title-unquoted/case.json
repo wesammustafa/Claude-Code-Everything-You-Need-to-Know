@@ -1,0 +1,9 @@
+{
+  "origin": "lesson-quotes-title-unquoted",
+  "was": "fail",
+  "expect": "fail",
+  "about": "An unquoted title is a dropped field too.",
+  "problems": [
+    "course/steps/b-1\\.md:3: title is no step-file field: the title is the page's top heading"
+  ]
+}

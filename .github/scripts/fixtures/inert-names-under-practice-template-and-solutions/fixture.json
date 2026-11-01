@@ -1,0 +1,6 @@
+{
+  "rule": "inertness",
+  "expect": "pass",
+  "about": "practice-template/ and solutions/ use the inert names dot-claude/, dot-mcp.json, CLAUDE.example.md and dot-claude-plugin/, which Claude Code doesn't load.",
+  "output": ["PASS inertness: inert: practice-template/, solutions/"]
+}

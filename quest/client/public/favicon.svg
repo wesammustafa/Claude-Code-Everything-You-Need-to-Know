@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Pip's icon, as src/pip/icon.ts draws it, in the tokens' values: the
+       dark theme's, and the light theme's when the system asks for light. -->
+  <style>
+    .body { fill: #ff784e; }
+    .shade { fill: #d95a3a; }
+    .eye { fill: #1e1e1e; }
+    @media (prefers-color-scheme: light) {
+      .body { fill: #d95a3a; }
+      .shade { fill: #b44e34; }
+      .eye { fill: #1e1e1e; }
+    }
+  </style>
+  <path class="shade" d="M12 4h2v4h-2zM22 4h2v4h-2z"/>
+  <path class="body" d="M10 0h6v4h-6zM20 0h6v4h-6z"/>
+  <path class="shade" d="M6 8H26L30 12V26L26 30H6L2 26V12Z"/>
+  <path class="body" d="M8 8H26L30 12V26L26 30H8Z"/>
+  <path class="eye" d="M14 14h4v10h-4zM22 14h4v10h-4z"/>
+</svg>
