@@ -8,7 +8,7 @@ Baseline: Claude Code v2.1.308 (stable), frozen on 2026-10-24.
 
 Every change in the next edition is verified against this version, the `stable` dist-tag of [`@anthropic-ai/claude-code`](https://www.npmjs.com/package/@anthropic-ai/claude-code?activeTab=versions) on 2026-10-24. It stays frozen until the edition ships, unless a later `stable` release removes, renames or changes the default of something a lesson teaches. It moved from v2.1.292 because v2.1.302 changed the permission mode a `claude -p` run starts in when nothing sets one ([CHANGELOG](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md#21302)).
 
-## v2026.12 - 2026-10-26
+## v2026.12 - 2026-11-01
 
 Verified against Claude Code v2.1.308 (stable).
 
