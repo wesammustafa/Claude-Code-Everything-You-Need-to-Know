@@ -1,6 +1,6 @@
 # Feature map
 
-<sub>Verified against Claude Code v2.1.292 (stable) on 2026-10-15</sub>
+<sub>Verified against Claude Code v2.1.308 (stable) on 2026-10-26</sub>
 
 Every current Claude Code feature and surface a Learner is likely to meet, with its stability label in the docs' own words and the plans or providers that have it. Each feature links its official page and, where a lesson or Elective teaches it, the guide pages that teach it. For what changed recently, see the official [CHANGELOG](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md) and [What's new](https://code.claude.com/docs/en/whats-new).
 
@@ -17,7 +17,7 @@ How to read it:
 | [Terminal](https://code.claude.com/docs/en/quickstart); taught in [Install, sign in and look around](../beginner/01-install-and-look-around.md) | – | Every provider |
 | [VS Code](https://code.claude.com/docs/en/vs-code); taught in [IDE extensions](../beginner/electives/ide-extensions.md) | – | Every provider |
 | [JetBrains IDEs](https://code.claude.com/docs/en/jetbrains); taught in [IDE extensions](../beginner/electives/ide-extensions.md) | The page has no label sentence, but its settings path reads "Claude Code [Beta]" | Every provider |
-| [Desktop app](https://code.claude.com/docs/en/desktop) | On Linux: "Linux support for the Claude desktop app is in beta." ([Linux](https://code.claude.com/docs/en/desktop-linux)) | A Claude subscription; on Bedrock, Agent Platform and Foundry through Claude Desktop on those providers |
+| [Desktop app](https://code.claude.com/docs/en/desktop) | On Linux: "Linux support for the Claude desktop app is in beta." ([Linux](https://code.claude.com/docs/en/desktop-linux)) | A Claude subscription; on Bedrock, Agent Platform and Foundry, and with a Console API key, through Claude Desktop on 3P |
 | [Cloud sessions on the web](https://code.claude.com/docs/en/claude-code-on-the-web) | – | Pro, Max and Team; Enterprise with a premium or Chat + Claude Code seat |
 | [Mobile](https://code.claude.com/docs/en/mobile) | – | A Claude subscription |
 | [Remote Control](https://code.claude.com/docs/en/remote-control) | – | Pro and Max; Team and Enterprise once an admin turns it on |
@@ -67,7 +67,7 @@ How to read it:
 | [Agent view](https://code.claude.com/docs/en/agent-view); taught in [Agent view](../advanced/electives/agent-view.md) | "Agent view is in research preview." | Every provider ([Settings and provider](https://code.claude.com/docs/en/agent-view#settings-and-provider)) |
 | [Agent teams](https://code.claude.com/docs/en/agent-teams); taught in [Agent teams](../advanced/electives/agent-teams.md) | "Agent teams are experimental and disabled by default." | Every provider |
 | [Cross-session messaging](https://code.claude.com/docs/en/cross-session-messaging) | – | A Claude subscription; elsewhere between sessions on the same machine only |
-| [Projects](https://code.claude.com/docs/en/claude-projects) | "Projects are in public beta on Pro and Max plans and rolling out gradually …" | Pro and Max; not yet Team or Enterprise |
+| [Projects](https://code.claude.com/docs/en/claude-projects) | "Projects are in public beta on Pro and Max plans and rolling out gradually." | Pro and Max; not yet Team or Enterprise |
 | [`/loop` and session-scoped scheduled tasks](https://code.claude.com/docs/en/scheduled-tasks); taught in [`/loop` and cloud scheduled tasks](../advanced/electives/goal-loop-routines.md) | – | Every provider |
 | [Cloud scheduled tasks](https://code.claude.com/docs/en/routines), formerly routines; taught in [`/loop` and cloud scheduled tasks](../advanced/electives/goal-loop-routines.md) | "Scheduled tasks are in research preview." | Pro, Max, Team and Enterprise |
 | [Running Claude Code from scripts](https://code.claude.com/docs/en/headless); taught in [Script Claude Code with `claude -p`](../advanced/04-headless.md) and [Put bounds on autonomous runs](../advanced/07-bounded-runs.md) | – | Every provider |
@@ -92,6 +92,6 @@ How to read it:
 
 ---
 
-<sub>Sources: [Feature availability](https://code.claude.com/docs/en/feature-availability) and each feature's linked page, checked on 2026-10-05, and for the `/goal`, `/loop`, cloud scheduled tasks and Code Review rows on 2026-10-24.</sub>
+<sub>Sources: [Feature availability](https://code.claude.com/docs/en/feature-availability) and each feature's linked page.</sub>
 
 <sub>Up: [Reference](README.md)</sub>

@@ -5,7 +5,7 @@
 You learn by doing: every core lesson and capstone ends with a check you run in your own practice copy, and every one of them runs step by step in a terminal app beside Claude Code.\
 **[Try it now](#try-it-now)** · [Pick your level](#pick-your-level) · [Every page](#everything-in-the-guide)
 
-[![Verified against Claude Code v2.1.292 (stable)](https://img.shields.io/badge/verified-v2.1.292_stable-2e6e57)](CHANGELOG.md#v202611---2026-10-23) [![Edition release date](https://img.shields.io/github/release-date/wesammustafa/Claude-Code-Everything-You-Need-to-Know?label=edition&color=2e6e57)](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/releases/latest) [![License: MIT](https://img.shields.io/badge/license-MIT-5b6470)](LICENSE) [![Mentioned in Awesome Claude Code](https://awesome.re/mentioned-badge.svg)](https://github.com/hesreallyhim/awesome-claude-code)
+[![Verified against Claude Code v2.1.308 (stable)](https://img.shields.io/badge/verified-v2.1.308_stable-2e6e57)](CHANGELOG.md#v202612---2026-11-01) [![Edition release date](https://img.shields.io/github/release-date/wesammustafa/Claude-Code-Everything-You-Need-to-Know?label=edition&color=2e6e57)](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/releases/latest) [![License: MIT](https://img.shields.io/badge/license-MIT-5b6470)](LICENSE) [![Mentioned in Awesome Claude Code](https://awesome.re/mentioned-badge.svg)](https://github.com/hesreallyhim/awesome-claude-code)
 
 <p align="center">
   <!-- Captured with Claude Code v2.1.292 (stable) on 2026-10-17. -->
@@ -60,7 +60,7 @@ You'll take one change from request to commit, safely, and give your project a m
 
 ### Intermediate
 **Ready if** you can plan a change in plan mode, review the diff and commit it, and keep a long session on track.\
-You'll shape Claude Code to your project with skills, hooks, subagents, MCP and plugins. About 3 hours: 8 lessons, a capstone and 4 Electives.\
+You'll shape Claude Code to your project with skills, hooks, subagents, MCP and plugins. About 4 hours: 8 lessons, a capstone and 4 Electives.\
 **[Start Intermediate](docs/intermediate/README.md)**
 
 ### Advanced
