@@ -8,7 +8,14 @@
 import { readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
-import { KEY_NAMES, actionsOf, bar, heading, saveAt } from "./play.ts";
+import {
+  KEY_NAMES,
+  actionsOf,
+  bar,
+  checkAgainOn,
+  heading,
+  saveAt,
+} from "./play.ts";
 import { practiceCopy, type PracticeCopy } from "./practice-copy.ts";
 
 test.describe.configure({ mode: "parallel" });
@@ -374,7 +381,16 @@ for (const row of ROWS)
 
         // Passed, with what the Check saw, and Next step.
         row.show(copy);
-        if (row.looks === "check") await check.click();
+        // The host's watcher can see the change and pass the beat before the
+        // press lands; a press then would go to the next beat (254 D25), so
+        // it is bound to this beat and its Not yet.
+        if (row.looks === "check")
+          await checkAgainOn(
+            page,
+            `${row.lesson}:${row.at[0]}:${String(row.at[1])}`,
+            "fail",
+            30_000,
+          );
       } else {
         await expect(page.locator("main")).toContainText(row.says);
       }

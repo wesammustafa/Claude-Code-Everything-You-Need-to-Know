@@ -12,6 +12,73 @@ export const KEY_NAMES =
 export const heading = (page: Page) => page.getByRole("heading", { level: 1 });
 export const bar = (page: Page) => page.locator("[data-action-bar]");
 
+/**
+ * In the page: whether the card still shows `beat` at `status` with Check
+ * again enabled, pressing it in the same task when `click` is set. Null
+ * while the button is not enabled yet, so waitForFunction keeps polling.
+ */
+function pressCheckAgain({
+  beat,
+  status,
+  click,
+}: {
+  beat: string;
+  status: string;
+  click: boolean;
+}): "pressed" | "moved" | null {
+  const card = document.querySelector("main [data-step-card]");
+  if (
+    card?.getAttribute("data-beat") !== beat ||
+    card.getAttribute("data-beat-status") !== status
+  )
+    return "moved";
+  const button = [
+    ...document.querySelectorAll<HTMLButtonElement>("[data-action-bar] button"),
+  ].find(
+    (b) =>
+      b.textContent.trim() === "Check again" &&
+      !b.disabled &&
+      b.getAttribute("aria-disabled") !== "true",
+  );
+  if (button === undefined) return null;
+  if (click) button.click();
+  return "pressed";
+}
+
+/**
+ * Presses Check again only on the beat `beat` ("lesson:step:index") while its
+ * status is still `status`, so the press never lands on a later beat the
+ * host's watcher moved to (254 D25). It waits, up to `timeout` ms, until the
+ * button is enabled or the card shows another beat or status; then one task
+ * in the page reads the card again and presses only if it still shows the
+ * same beat. Returns whether it pressed; when it did not, the beat moved on.
+ */
+export async function checkAgainOn(
+  page: Page,
+  beat: string,
+  status: string,
+  timeout: number,
+): Promise<boolean> {
+  const ready = await page
+    .waitForFunction(
+      pressCheckAgain,
+      { beat, status, click: false },
+      { timeout },
+    )
+    .then(
+      async (handle) => {
+        await handle.dispose();
+        return true;
+      },
+      () => false,
+    );
+  if (!ready) return false;
+  return (
+    (await page.evaluate(pressCheckAgain, { beat, status, click: true })) ===
+    "pressed"
+  );
+}
+
 /** Every action the page POSTs, in order. */
 export function actionsOf(
   page: Page,

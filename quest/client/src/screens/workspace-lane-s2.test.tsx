@@ -262,3 +262,34 @@ describe("the Check's lines", () => {
     );
   });
 });
+
+describe("the step card's beat", () => {
+  test("names the lesson, step and beat on screen and the beat's status, and follows the next beat", () => {
+    const page = renderConnected("/lesson/b-1/step", snapshotOf(playing));
+    const card = () => document.querySelector("[data-step-card]");
+    const step = playing.step?.id ?? "";
+    const index = playing.beat?.index ?? -1;
+    expect(card()?.getAttribute("data-beat")).toBe(
+      `${playing.id}:${step}:${String(index)}`,
+    );
+    expect(card()?.getAttribute("data-beat-status")).toBe(playing.beat?.status);
+    act(() => {
+      page.send(
+        snapshotOf(
+          playingWith({
+            beat: {
+              index: index + 1,
+              status: "checking",
+              decidedBy: playing.beat?.decidedBy ?? "check",
+            },
+          }),
+          { revision: 2 },
+        ),
+      );
+    });
+    expect(card()?.getAttribute("data-beat")).toBe(
+      `${playing.id}:${step}:${String(index + 1)}`,
+    );
+    expect(card()?.getAttribute("data-beat-status")).toBe("checking");
+  });
+});

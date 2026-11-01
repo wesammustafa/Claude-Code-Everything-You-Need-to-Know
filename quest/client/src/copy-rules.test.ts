@@ -111,7 +111,6 @@ const ALIASES: readonly RegExp[] = [
 const matching = (patterns: readonly RegExp[], words: string) =>
   patterns.filter((re) => re.test(words)).map((re) => String(re));
 
-/** Each banned or alias phrase a source text's words hold. */
 /**
  * A string literal for source text: JSON's quoting, with the characters
  * that matter around code (<, >, /, U+2028, U+2029) as \\u escapes, so the
@@ -123,6 +122,7 @@ const quote = (s: string) =>
     (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`,
   );
 
+/** Each banned or alias phrase a source text's words hold. */
 const caught = (patterns: readonly RegExp[], text: string, file = "x.tsx") =>
   wordsOf(file, text).flatMap((words) => matching(patterns, words));
 

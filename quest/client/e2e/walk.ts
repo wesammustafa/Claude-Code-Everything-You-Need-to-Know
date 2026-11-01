@@ -19,7 +19,7 @@ import {
 import { dirname, join } from "node:path";
 import { expect, type Page } from "@playwright/test";
 import type { Snapshot } from "@quest/contract";
-import { KEY_NAMES, bar, heading, move } from "./play.ts";
+import { KEY_NAMES, bar, checkAgainOn, heading, move } from "./play.ts";
 import { RESTORE, gitEnv } from "../../release/src/replay.mjs";
 import { repoRoot, type PracticeCopy } from "./practice-copy.ts";
 
@@ -896,7 +896,6 @@ export async function walkLesson(
   const picks = new Map<string, number>();
   const beats = beatsOf(id);
   const taken = opts.taken ?? new Map<string, TakenFile>();
-  const check = bar(page).getByRole("button", { name: "Check again" });
   for (let moves = 0; ; moves += 1) {
     const now = newest(await frames());
     if (now?.phase === "complete" && now.lesson === id) break;
@@ -959,21 +958,17 @@ export async function walkLesson(
       }
       // The host's watcher may look on the staged change by itself and
       // answer the beat before the click lands (254 D25): either counts.
+      // The press is bound to this beat (checkAgainOn): not pressed means
+      // the beat moved on, and the host's answer is awaited below.
       const answered = settled(frames, now);
-      const clicked = (async () => {
-        await expect(check).toBeEnabled({ timeout: LOOK_MS });
-        await check.click();
-      })();
-      const first = await Promise.race([
-        clicked.then(() => "clicked" as const),
-        answered.then(
-          () => "answered" as const,
-          () => "clicked" as const,
-        ),
-      ]);
-      // Check again was replaced by Next step: the pending click is moot.
-      if (first === "answered") clicked.catch(() => undefined);
-      else await clicked;
+      // Reported below, after the click, if the host never answers.
+      answered.catch(() => undefined);
+      await checkAgainOn(
+        page,
+        `${id}:${now.step}:${String(now.beat)}`,
+        now.status,
+        LOOK_MS,
+      );
       await answered.catch(async (error: unknown) => {
         const recent = (await frames()).slice(-3);
         throw new Error(

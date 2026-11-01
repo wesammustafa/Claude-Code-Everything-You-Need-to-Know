@@ -282,6 +282,9 @@ function Play({
         </Says>
         <article
           data-step-card=""
+          // The beat on screen, for a test that acts only on the beat it read.
+          data-beat={`${lesson.id}:${step.id}:${String(beat.index)}`}
+          data-beat-status={beat.status}
           className="grid gap-5 rounded-xl border border-line bg-surface p-6.5 shadow-md max-sm:p-5 [&>*]:min-w-0"
         >
           <header className="grid gap-1.5">

@@ -594,17 +594,18 @@ for (const [playing, next] of [
       steps[0],
       `${at}: the first frame stays near the pose Pip was in (gap ${String(gap)} px)`,
     ).toBeLessThanOrEqual(gap / 4);
-    // The 160 ms hand-over closes the gap over its frames, eased (peaking at
-    // about 1.5x its mean speed), on top of the Reaction's own pace; 1 px
-    // covers headTop's whole-pixel rounding. A snap or a 2-3 frame jump
-    // still fails.
-    const handOverFrames = 160 / FRAME_MS;
-    const blendPace = Math.ceil((1.5 * gap) / handOverFrames);
-    for (const [i, step] of steps.slice(0, handOverFrames).entries()) {
+    // The 160 ms hand-over closes the gap smoothly: no frame moves Pip more
+    // than the new Reaction's own pace plus twice the even per-frame share of
+    // the gap (gap / 10 over its first 10 frames). An eased blend peaks near
+    // 1.5x that share, so it passes on every renderer whatever whole-pixel
+    // rounding headTop sees; a one-frame jump spends most of the gap at once
+    // and fails (254 D29 amendment, owner 2026-11-01).
+    const cap = ownPace + 2 * (gap / 10);
+    for (const [i, step] of steps.slice(0, 10).entries()) {
       expect(
         step,
-        `${at}: frame ${String(i + 1)} of the hand-over (the Reaction alone moves up to ${String(ownPace)} px a frame, the blend adds up to ${String(blendPace)})`,
-      ).toBeLessThanOrEqual(ownPace + blendPace + 1);
+        `${at}: frame ${String(i + 1)} of the hand-over (own pace ${String(ownPace)} px a frame, gap ${String(gap)} px, cap ${cap.toFixed(1)} px)`,
+      ).toBeLessThanOrEqual(cap);
     }
     // Then the new Reaction plays from its start, as it does on its own.
     for (let i = 11; i < alone.length; i++) {
