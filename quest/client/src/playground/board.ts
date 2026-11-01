@@ -119,14 +119,16 @@ export const BOARD_SECTIONS: readonly {
 
 /**
  * The board's art for each mode and Reaction: what the rig is held to. Retry
- * is a brief surprise, then reassurance; Rest is the sleeping pose.
+ * is a brief surprise, then reassurance; Rest is a calm, awake Idle and
+ * Sleep the sleeping pose.
  */
 export const BOARD_FOR: Readonly<
   Record<PipMode | PipReactionKind, readonly BoardCrop[]>
 > = {
   idle: [crop("idle")],
   thinking: [crop("thinking"), crop("focused")],
-  rest: [crop("sleeping")],
+  rest: [crop("idle")],
+  sleep: [crop("sleeping")],
   greeting: [crop("meet")],
   curious: [crop("curious")],
   explaining: [crop("explaining"), crop("helping")],

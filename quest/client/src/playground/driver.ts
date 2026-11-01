@@ -207,7 +207,7 @@ export function createPlaygroundDriver(
   let snapshot = snapshotOf();
 
   // As the app's stage does: tick the director when its model is next due
-  // to change with no input (a waiting Reaction, the gaze's release, rest).
+  // to change with no input (a waiting Reaction, the gaze's release, sleep).
   const schedule = () => {
     if (wake !== null) clock.clearTimeout(wake);
     wake = null;
