@@ -1290,6 +1290,32 @@ test("every match and no-match regex compiles and holds no code span", () => {
   );
 });
 
+test("verify: answer on a do beat is a parse error (305)", () => {
+  const OLD =
+    "- verify: check 0 fresh\n- watching: .practice/b-2-before.txt\n- evidence: .practice/b-2-before.txt";
+  const swap = (lines) => parseLesson(DEMO_B2.replace(OLD, lines), "b-2.md");
+  const rejected = /b-2\.md:\d+: verify: answer is only for an ask beat/;
+  assert.throws(() => swap("- verify: answer"), rejected);
+  assert.throws(() => swap("- verify: answer fresh"), rejected);
+  assert.throws(() => swap("- verify: answer fresh since W1"), rejected);
+  assert.throws(
+    () => swap("- verify: answer\n- ask: What did it print?"),
+    rejected,
+  );
+  // The beats it still fits, and a do beat that only asks.
+  assert.doesNotThrow(() => swap("- verify: self"));
+  const kinds = (l) =>
+    l.steps.flatMap((s) => s.beats.map((b) => b.verify?.kind));
+  assert.ok(
+    kinds(
+      swap(
+        "- verify: none\n- beat: ask\n- verify: answer\n- ask: What did it print?\n- right: a version\n- other: something else",
+      ),
+    ).includes("answer"),
+  );
+  assert.ok(kinds(swap("- ask: What did it print?")).includes("none"));
+});
+
 // ---- code blocks (ticket 90) --------------------------------------------------
 // The hooks page's Your turn skeleton, from its first line to its case block:
 // indented lines and a blank line, as the page has them.
@@ -1810,8 +1836,7 @@ const TYPED = [
   '- reveal: "`CLAUDE.md`"',
 ];
 const ASKED = [
-  "- beat: do",
-  "- verify: answer",
+  "- beat: ask",
   "- ask: What did it print?",
   "- right: a version",
   "- other: something else",
@@ -1825,7 +1850,7 @@ test("the rework's budget: a fourth graded question fails a new lesson, and a ca
     budgetOff("a-1", ruled("a-1", { warm: [PICK, PICK], beats: three })),
     [],
   );
-  // A fourth, of any kind: a safety guess, a pick, a typed answer or a do beat that asks.
+  // A fourth, of any kind: a safety guess, a pick, a typed answer or an ask beat.
   for (const fourth of [
     [
       ...guess("- right: **No**", "- option: **Yes**"),

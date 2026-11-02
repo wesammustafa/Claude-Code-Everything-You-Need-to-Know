@@ -90,7 +90,7 @@ const ROWS = [
     "learner",
   ],
   ["self", () => onY1('- beat: self\n- self: "Saved it."'), "learner"],
-  ["do with ask", () => onY1(`- beat: do\n${ASK}`), "answer"],
+  ["ask", () => onY1(`- beat: ask\n${ASK}`), "answer"],
 ];
 
 // Whether an action took: it changed the state or asked for effects.
@@ -105,6 +105,16 @@ test("each beat projects the one place that decides it", () => {
     assert.equal(view(d).decidedBy, want, name);
     assert.equal(decidedBy(beatOf(d.state)), want, name);
   }
+});
+
+test("a do beat can't take verify: answer (305)", () => {
+  assert.throws(
+    () => onY1(`- beat: do\n- verify: answer\n${ASK}`),
+    /verify: answer is only for an ask beat/,
+  );
+  // Without a verify line it is a learner beat whose question waits for its
+  // answer before markDone takes (spec-gaps covers that).
+  assert.equal(decidedBy(beatOf(onY1(`- beat: do\n${ASK}`).state)), "learner");
 });
 
 test("step.markDone takes only a learner beat, session.ended only a session beat", () => {
