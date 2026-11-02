@@ -26,6 +26,7 @@ import {
   threeLevels,
   watching,
   where,
+  keyOf,
 } from "./drive.mjs";
 
 const view = (d) => project(d.state).lesson.beat;
@@ -220,7 +221,7 @@ test("ranIn: the saved Work folder a result ran in, per beat", () => {
   assert.equal(view(d).ranIn, null, "a reopen resets it");
   d.send(checkResult(lastOf(d.effects, "check"), []));
   assert.equal(view(d).ranIn, MINE);
-  d.act("check.run");
+  d.act("check.run", { beat: keyOf(d.state) });
   const late = lastOf(d.effects, "check");
   assert.ok(late.asked, "r numbers its run");
   d.send(checkResult(late, []));

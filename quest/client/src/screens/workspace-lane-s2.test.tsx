@@ -292,4 +292,37 @@ describe("the step card's beat", () => {
     );
     expect(card()?.getAttribute("data-beat-status")).toBe("checking");
   });
+
+  test("Check again sends the beat it was pressed on", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected("/lesson/b-1/step", snapshotOf(playing));
+    const card = () => document.querySelector("[data-step-card]");
+    const press = () =>
+      user.click(screen.getByRole("button", { name: "Check again" }));
+    const sent = () =>
+      page.posts.filter((a) => a.type === "check.run").map((a) => a.beat);
+    await press();
+    expect(sent()).toEqual([card()?.getAttribute("data-beat")]);
+    const index = playing.beat?.index ?? -1;
+    act(() => {
+      page.send(
+        snapshotOf(
+          playingWith({
+            beat: {
+              index: index + 1,
+              status: playing.beat?.status ?? "fail",
+              decidedBy: playing.beat?.decidedBy ?? "check",
+            },
+          }),
+          { revision: 2 },
+        ),
+      );
+    });
+    await press();
+    expect(sent()).toEqual([
+      `${playing.id}:${playing.step?.id ?? ""}:${String(index)}`,
+      `${playing.id}:${playing.step?.id ?? ""}:${String(index + 1)}`,
+    ]);
+    expect(sent()[1]).toBe(card()?.getAttribute("data-beat"));
+  });
 });

@@ -581,7 +581,12 @@ describe("Lesson workspace", () => {
     expect(check).toHaveAttribute("data-pending");
     await user.click(check);
     expect(check).toHaveFocus();
-    expect(page.posts).toEqual([{ type: "check.run" }]);
+    expect(page.posts).toEqual([
+      {
+        type: "check.run",
+        beat: `${playing.id}:${playing.step?.id ?? ""}:${String(playing.beat?.index)}`,
+      },
+    ]);
     await held.release();
     expect(check).not.toHaveAttribute("aria-disabled");
   });
@@ -1072,7 +1077,12 @@ describe("Lesson workspace, every step (246)", () => {
     const page = renderConnected("/lesson/b-1/step", snapshotOf(watchWaiting));
     expect(screen.queryByRole("button", { name: "I've done it" })).toBeNull();
     await user.click(screen.getByRole("button", { name: "Check again" }));
-    expect(page.posts).toEqual([{ type: "check.run" }]);
+    expect(page.posts).toEqual([
+      {
+        type: "check.run",
+        beat: `${watchWaiting.id}:${watchWaiting.step?.id ?? ""}:${String(watchWaiting.beat?.index)}`,
+      },
+    ]);
   });
 
   test("the Learner's beat sends step.markDone with its label; a session sends session.ended", async () => {

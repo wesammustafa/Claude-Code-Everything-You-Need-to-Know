@@ -37,7 +37,7 @@ const SAMPLES: Record<QuestActionType, QuestAction> = {
   "answer.type": { type: "answer.type", text: "plan mode" },
   "step.markDone": { type: "step.markDone" },
   "session.ended": { type: "session.ended" },
-  "check.run": { type: "check.run" },
+  "check.run": { type: "check.run", beat: "b-2:Y4:0" },
   "hint.next": { type: "hint.next" },
   "hint.takeExact": { type: "hint.takeExact", take: true },
   "waitQuestion.answer": { type: "waitQuestion.answer", option: 1 },
@@ -145,9 +145,17 @@ describe("the schema", () => {
       { type: "lesson.start", help: "none" },
     ],
     ["a string take", { type: "hint.takeExact", take: "yes" }],
+    ["an empty beat", { type: "check.run", beat: "" }],
+    ["a beat of 201 characters", { type: "check.run", beat: "b".repeat(201) }],
   ])("%s out of bounds is refused", async (_, action) => {
     const kit = await actionKit();
     await expectInvalid(await kit.post(at(kit.host, action)));
+  });
+
+  test("a check.run with no beat is refused", async () => {
+    const kit = await actionKit();
+    await expectInvalid(await kit.post(at(kit.host, { type: "check.run" })));
+    expect(kit.dispatched).toEqual([]);
   });
 
   test("a missing instance is refused", async () => {
@@ -359,13 +367,13 @@ describe("no action names a command, a script or a file", () => {
     expect(JSON.stringify(SAMPLES)).not.toMatch(/command|script/i);
   });
 
-  test("check.run takes no field: a Check is chosen by the Lesson", () => {
+  test("check.run carries only the beat it was pressed on: a Check is chosen by the Lesson", () => {
     expect(
       Object.keys(
         actionSchema.options.find((o) => o.shape.type.value === "check.run")
           ?.shape ?? {},
       ),
-    ).toEqual(["type"]);
+    ).toEqual(["type", "beat"]);
   });
 
   test("the server's source spawns nothing an action could name", () => {

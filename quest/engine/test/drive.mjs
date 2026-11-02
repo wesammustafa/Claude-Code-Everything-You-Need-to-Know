@@ -11,6 +11,7 @@ import {
   EFFECT_TYPES,
   IDLE_MS,
   asksFolder,
+  beatKeyOf,
   beatOf,
   folderKey,
   folderOf,
@@ -243,6 +244,9 @@ export const finishedBefore = (id, lessons = course) =>
 // A saved file, as the store keeps it: the welcome seen.
 export const save = (fields = {}) => ({ format: 1, welcomed: true, ...fields });
 
+// The beat's key, as the card's data-beat renders it: what check.run carries.
+export const keyOf = (state) => beatKeyOf(state);
+
 // ---- the driver -----------------------------------------------------------------
 // Every input costs no time unless it carries `wait`, so the clock moves
 // only where a test says so: idle is the time since the beat opened, a FAIL
@@ -325,7 +329,7 @@ export function driver({
     type: (text) => act("answer.type", { text }),
     markDone: () => act("step.markDone"),
     ended: () => act("session.ended"),
-    run: () => act("check.run"),
+    run: (beat) => act("check.run", { beat: beat ?? beatKeyOf(state) }),
     hint: () => act("hint.next"),
     exact: (take = true) => act("hint.takeExact", { take }),
     waitAnswer: (option) => act("waitQuestion.answer", { option }),

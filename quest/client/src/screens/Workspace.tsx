@@ -1,11 +1,14 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type {
+  BeatKey,
   BeatLine,
   BeatView,
   HintView,
+  LessonId,
   PlayingLesson,
   Snapshot,
   StepDownLesson,
+  StepId,
   StepView,
 } from "@quest/contract";
 import { Button } from "../components/Button";
@@ -89,6 +92,10 @@ export const HINT_LOCK_MS = 2000;
 const WARMUP_EXPLAINER =
   "Warm-ups bring back a skill from before, so it sticks.";
 
+// The beat's key, as its card's data-beat renders it and Check again sends it.
+const beatKey = (lesson: LessonId, step: StepId, index: number): BeatKey =>
+  `${lesson}:${step}:${String(index)}`;
+
 /** A hint rung: the page's words, or the exact command with Copy. */
 function hintRung(hint: HintView, where: string | null): ReactNode {
   if (hint.kind !== "exact") return hint.text;
@@ -166,10 +173,7 @@ function Play({
   const look = usePipLook();
   const offering = useHelpShowing();
   const shownHints = lesson.hints.shown.length;
-  usePipStep(
-    `${lesson.id}:${step.id}:${String(beat.index)}`,
-    lesson.hints.available,
-  );
+  usePipStep(beatKey(lesson.id, step.id, beat.index), lesson.hints.available);
 
   // A hint that opens takes focus, since the button that opened it has gone,
   // and Pip looks at it.
@@ -283,7 +287,7 @@ function Play({
         <article
           data-step-card=""
           // The beat on screen, for a test that acts only on the beat it read.
-          data-beat={`${lesson.id}:${step.id}:${String(beat.index)}`}
+          data-beat={beatKey(lesson.id, step.id, beat.index)}
           data-beat-status={beat.status}
           className="grid gap-5 rounded-xl border border-line bg-surface p-6.5 shadow-md max-sm:p-5 [&>*]:min-w-0"
         >
@@ -392,7 +396,7 @@ function Play({
         )}
         <Offers lesson={lesson} />
       </main>
-      <Actions lesson={lesson} beat={beat} />
+      <Actions lesson={lesson} step={step} beat={beat} />
     </>
   );
 }
@@ -860,10 +864,21 @@ function WaitQuestion({
  * and Skip show only where the snapshot offers them, each pointing to the
  * line that says why. Each press sends exactly one action.
  */
-function Actions({ lesson, beat }: { lesson: PlayingLesson; beat: BeatView }) {
+function Actions({
+  lesson,
+  step,
+  beat,
+}: {
+  lesson: PlayingLesson;
+  step: StepView;
+  beat: BeatView;
+}) {
   const revisit = useActionProps("step.revisit", { type: "step.revisit" });
   const skip = useActionProps("step.skip", { type: "step.skip" });
-  const check = useActionProps("check.run", { type: "check.run" });
+  const check = useActionProps("check.run", {
+    type: "check.run",
+    beat: beatKey(lesson.id, step.id, beat.index),
+  });
   const markDone = useActionProps("step.markDone", { type: "step.markDone" });
   const ended = useActionProps("session.ended", { type: "session.ended" });
   const next = useActionProps("step.continue", { type: "step.continue" });

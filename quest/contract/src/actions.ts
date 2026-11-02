@@ -2,7 +2,7 @@
 // "Actions, events and the snapshot"). No action names a command, a script
 // or a file to read: a Check is chosen by Lesson id from the course file.
 // An action the Learner's place does not allow changes nothing. Types only.
-import type { FolderKey, LessonId } from "./common";
+import type { BeatKey, FolderKey, LessonId } from "./common";
 import type { EventId } from "./events";
 
 /** The Learner read the welcome. */
@@ -98,9 +98,13 @@ export interface SessionEndedAction {
   type: "session.ended";
 }
 
-/** Check again: run the step's Check now. */
+/**
+ * Check again: run the step's Check now. `beat` is the beat it was pressed
+ * on; one no longer on the card changes nothing.
+ */
 export interface CheckRunAction {
   type: "check.run";
+  beat: BeatKey;
 }
 
 /** The next hint, or the question before the exact command. */

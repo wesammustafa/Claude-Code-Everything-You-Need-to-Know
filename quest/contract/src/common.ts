@@ -13,6 +13,12 @@ export type LessonId = string;
 export type StepId = string;
 
 /**
+ * `lesson:step:index`: the lesson id, the step id and the beat's index in the
+ * step, as the card's data-beat renders it.
+ */
+export type BeatKey = string;
+
+/**
  * What a Work folder is saved under: a Level with a Work folder
  * (`intermediate`, `advanced`), or a Lesson that runs in a new copy of the
  * template (`a-5`, `a-capstone`).

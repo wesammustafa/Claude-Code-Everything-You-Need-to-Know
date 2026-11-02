@@ -18,6 +18,7 @@ import {
   VERSION,
   w3,
   WORK,
+  checkRun,
 } from "./scripted.mjs";
 
 const MINE = "/home/sam/mine";
@@ -47,7 +48,7 @@ test("a check: run-start when the child really starts, a run asked during anothe
     [WORK, "b-1", [0], false],
   );
   // r while the first runs: it waits, and starts no child yet.
-  host.dispatch({ type: "check.run" });
+  host.dispatch(checkRun(host));
   await turn();
   assert.equal(adapters.checks.calls.length, 1);
   assert.equal(inputs(heard, "run-start").length, 1);

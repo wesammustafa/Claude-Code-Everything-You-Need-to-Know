@@ -26,6 +26,7 @@ import {
   toFinish,
   watching,
   where,
+  keyOf,
 } from "./drive.mjs";
 
 // A lesson's overview, opened by the Learner.
@@ -222,7 +223,7 @@ test("a-5 and a-capstone run in a new copy of the template: PATH says so, and in
       null,
       `${id}: the polls and the watcher ask for nothing`,
     );
-    d.refused("check.run");
+    d.refused("check.run", { beat: keyOf(d.state) });
     // dropped: T-render the card's new-copy words, and no "check now" on
     // the key bar
   }
