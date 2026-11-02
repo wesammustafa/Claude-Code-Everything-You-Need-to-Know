@@ -208,7 +208,14 @@ export interface EngineState {
   levelFrom?: HelpTier | null;
   checks: Record<
     LessonId,
-    { items?: CheckItem[]; evidence?: string | null; error: string | null }
+    {
+      items?: CheckItem[];
+      evidence?: string | null;
+      error: string | null;
+      // The items of the runs that passed this lesson's check beats, merged
+      // by index; slow placeholders never land here.
+      passed?: CheckItem[];
+    }
   >;
   git: { paths: readonly string[]; error: string | null } | null;
   session: number;
