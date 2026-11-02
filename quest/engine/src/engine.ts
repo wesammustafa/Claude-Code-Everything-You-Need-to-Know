@@ -1125,11 +1125,20 @@ function openBeat(s: EngineState, effects: Effect[]) {
     st.codespace = true;
   } else if (beat.verify.kind === "check") {
     st.status = "opening";
+    // A beat that checks only slow items runs them on arrival; mixed beats
+    // leave them for r (ticket 309).
+    const slow = lessonIn(s).slow ?? [];
+    const items = beat.verify.all ? null : beat.verify.items;
+    const allSlow =
+      items !== null &&
+      items.length > 0 &&
+      items.every((i) => slow.includes(i));
     effects.push({
       type: "check",
       lesson: s.lesson,
-      items: beat.verify.all ? null : beat.verify.items,
+      items,
       evidence: beat.evidence ?? null,
+      ...(allSlow ? { slow: true as const } : {}),
       dir: folderOf(s, s.lesson, step),
     });
   } else if (isReadVerify(beat.verify)) {
@@ -1612,6 +1621,7 @@ function onCheck(
   rRuns: boolean,
 ) {
   const ev = { ...input, evidence: evidenceOf(input.read) };
+  const before = s.checks[ev.lesson];
   s.checks[ev.lesson] = {
     items: ev.items,
     evidence: ev.evidence,
@@ -1633,6 +1643,16 @@ function onCheck(
   // any message about the items that pass now. A FAIL about a slow item stays
   // with its hints: a run without that item can't tell whether it passes now.
   if (!failing && wanted.some((it) => it.slow)) {
+    // A beat of only slow items ran them on arrival (openBeat): a later poll
+    // without them can't add to that answer, so it and its rows stay.
+    if (
+      wanted.every((it) => it.slow) &&
+      st.status === "waiting" &&
+      !st.slowWait
+    ) {
+      if (before) s.checks[ev.lesson] = before;
+      return;
+    }
     if (
       st.status === "fail" &&
       wanted.some((it) => it.slow && it.text === st.fail?.item)
