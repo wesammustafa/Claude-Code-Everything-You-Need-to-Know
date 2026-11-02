@@ -397,9 +397,9 @@ export const STAGE: Record<string, Stage> = {
   "i-2:Y4.2": (dir) => {
     add(LOADED, `path_glob_match\t${dir}/.claude/rules/cli.md`)(dir);
   },
-  // i-3: the effort line on i-1's downloaded skill (which i-1's solution
-  // leaves out, so it is downloaded again), the partial changelog skill, then
-  // its choices.
+  // i-3: the effort line on i-1's committed five-whys skill (which the walk
+  // takes out, as W4's fresh look reads it, so it is put back), the partial
+  // changelog skill, then its choices.
   "i-3:W4.0": (dir) => {
     if (!existsSync(join(dir, FIVE_WHYS))) STAGE["i-1:W1.0"]?.(dir);
     const text = readFileSync(join(dir, FIVE_WHYS), "utf8");
