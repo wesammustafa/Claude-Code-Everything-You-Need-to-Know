@@ -25,9 +25,9 @@ The first job you give it in a new repository is usually to explain the code. Tr
 
 Before you trust any answer, know three things about the session:
 
-- **the version**, because features and defaults change between releases;
-- **the model**, because models differ in what they can do;
-- **the account**, because it decides the model a session starts on and which features you can use ([Model configuration](https://code.claude.com/docs/en/model-config#default-model-setting), [Authentication](https://code.claude.com/docs/en/authentication)).
+- **The version** matters because features and defaults change between releases.
+- **The model** matters because models differ in what they can do.
+- **The account** matters because it decides the model a session starts on and which features you can use ([Model configuration](https://code.claude.com/docs/en/model-config#default-model-setting), [Authentication](https://code.claude.com/docs/en/authentication)).
 
 The header Claude Code shows when it starts gives the version and the model. The `/status` command shows the version, model and account together ([Commands](https://code.claude.com/docs/en/commands)).
 
@@ -49,10 +49,10 @@ The header Claude Code shows when it starts gives the version and the model. The
    ```
 
    If your shell says `claude` isn't found or isn't recognized, the install folder isn't on your `PATH` yet: fix it with [Troubleshoot installation](https://code.claude.com/docs/en/troubleshoot-install#command-not-found-claude-after-installation) before you go on.
-3. Go to your practice copy and start a session there: put the full path to your copy's folder in place of `<your practice copy>`, in quotes if the path has a space. In a Codespace, that is `/workspaces/` followed by your copy's name ([Codespaces deep dive](https://docs.github.com/en/codespaces/about-codespaces/deep-dive)):
+3. Go to your copy's `project/` folder and start a session there, not at the root of your copy: put the full path to your copy's folder in place of `<your practice copy>`, in quotes if the path has a space. In a Codespace, that is `/workspaces/` followed by your copy's name ([Codespaces deep dive](https://docs.github.com/en/codespaces/about-codespaces/deep-dive)):
 
    ```bash
-   cd <your practice copy>
+   cd <your practice copy>/project
    claude
    ```
 
@@ -88,7 +88,7 @@ Find and correct the wrong claim in a teammate's onboarding notes before the tea
    ```
 
 2. For each claim Claude says the code contradicts, open the file and line it cites and read them yourself. Decide which claim is wrong from the code, not from the notes or from Claude's answer. If Claude also names cases a claim leaves out, that's fine: correct only a claim the code contradicts.
-3. Correct that claim in your editor, in one sentence that says what the code does, and leave the other claims as they are. If Claude already edited the note, read its change with `git diff` ([git diff](https://git-scm.com/docs/git-diff)) and keep it only if it matches the code.
+3. Correct that claim in your editor, in one sentence that says what the code does, and leave the other claims as they are. If Claude already edited the note, read its change with [git diff](https://git-scm.com/docs/git-diff) and keep it only if it matches the code.
 4. End the session with `/exit`, then run `git status` ([git status](https://git-scm.com/docs/git-status)): it should list only `practice/b-1/onboarding.md`. Commit it, so lesson 2 starts from a clean tree ([git commit](https://git-scm.com/docs/git-commit)):
 
    ```bash
