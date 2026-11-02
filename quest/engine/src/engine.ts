@@ -421,6 +421,13 @@ export function folderOf(
   const k = folderKey(s, id);
   return (k && workOf(s, s.folders[k])) || projectDir(s);
 }
+// The second place a read verify looks (ticket 295): the copy's root when
+// the folder is the copy's project/. Claude Code keeps some files at the git
+// root (.claude/settings.local.json, Project-scope /workflows saves), and
+// project/ sits below it. A folder of the Learner's own is its own git root,
+// so it has none. Spread into an effect only when there is one.
+export const altOf = (s: EngineState, dir: string | null) =>
+  dir !== null && dir === projectDir(s) ? { alt: s.facts.root } : {};
 // A lesson whose Check passed with its Tear down still to do (ticket 102):
 // it completes only after its last Tear down step.
 export const tearDownLeft = (s: EngineState, id: LessonId = s.lesson) => {
@@ -1138,6 +1145,7 @@ function openBeat(s: EngineState, effects: Effect[]) {
       type: "file",
       path: beat.verify.path,
       dir: folderOf(s, s.lesson, step),
+      ...altOf(s, folderOf(s, s.lesson, step)),
     });
   } else if (isGitVerify(beat.verify)) {
     st.status = "opening";
@@ -1188,6 +1196,9 @@ function stampFresh(s: EngineState, effects: Effect[]) {
           key,
           ...what,
           dir: folderOf(s, s.lesson, other),
+          ...(isReadVerify(b.verify)
+            ? altOf(s, folderOf(s, s.lesson, other))
+            : {}),
         });
     });
   }
@@ -2155,7 +2166,13 @@ const ACTIONS: ActionHandlers = {
         dir: w.dir,
       });
     if (w.file)
-      effects.push({ type: "file", path: w.file, asked: s.asks, dir: w.dir });
+      effects.push({
+        type: "file",
+        path: w.file,
+        asked: s.asks,
+        dir: w.dir,
+        ...altOf(s, w.dir),
+      });
     if (w.git) effects.push(gitAsk(w, { asked: s.asks }));
     if (w.probe) effects.push(probeAsk(w, { asked: s.asks }));
     return true;

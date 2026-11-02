@@ -62,19 +62,27 @@ function changedSinceHead(repo, path) {
 // aren't a .js file directly in it; and `uncommitted`, scripts only in the
 // working tree or the index, each `{ path, rule }`, with the ignore rule
 // that hides it, if any.
+// In a Practice copy the checks run in project/, below the git root, and a
+// Project-scope /workflows save with no .claude/workflows/ on the way goes to
+// the root's (ticket 295): those count too, as `../.claude/workflows/...`.
 /** @param {Repo} repo */
 export function findWorkflows(repo) {
-  const committed = paths(() => repo.git('ls-tree', '-r', '-z', '--name-only', 'HEAD'))
-    .filter((p) => IN_WORKFLOWS.test(p) && !SKIPPED.test(p));
+  const nested = paths(() => repo.prefix).length > 0;
+  const atRoot = nested
+    ? paths(() => repo.git('ls-tree', '-r', '-z', '--full-tree', '--name-only', 'HEAD', '--', '.claude/workflows'))
+      .map((p) => repo.local(p))
+    : [];
+  const committed = [...paths(() => repo.git('ls-tree', '-r', '-z', '--name-only', 'HEAD'))
+    .filter((p) => IN_WORKFLOWS.test(p) && !SKIPPED.test(p)), ...atRoot];
   const scripts = committed.filter((p) => WORKFLOW.test(p)).map((path) => ({
     path,
     text: repo.git('show', `HEAD:./${path}`),
     changed: changedSinceHead(repo, path),
   }));
   const misplaced = committed.filter((p) => !WORKFLOW.test(p) && SCRIPT_LIKE.test(p));
-  const spec = ':(glob)**/.claude/workflows/*.js';
-  const ignored = new Set(paths(() => repo.git('ls-files', '-z', '--others', '--ignored', '--exclude-standard', '--', spec)));
-  const listed = paths(() => repo.git('ls-files', '-z', '--cached', '--others', '--exclude-standard', '--', spec));
+  const specs = [':(glob)**/.claude/workflows/*.js', ...(nested ? [':(top,glob).claude/workflows/*.js'] : [])];
+  const ignored = new Set(paths(() => repo.git('ls-files', '-z', '--others', '--ignored', '--exclude-standard', '--', ...specs)));
+  const listed = paths(() => repo.git('ls-files', '-z', '--cached', '--others', '--exclude-standard', '--', ...specs));
   const uncommitted = [...new Set([...listed, ...ignored])]
     .filter((p) => WORKFLOW.test(p) && !SKIPPED.test(p) && !committed.includes(p))
     .sort()

@@ -17,15 +17,24 @@ const SAVE = '`claude plugin list --json > .practice/i-8-plugins.json`';
 
 // Whether an install's projectPath is this repository: true or false when the
 // path exists on this machine, null when it doesn't (a list saved elsewhere).
+// In a Practice copy the checks run in project/, below the git root, where
+// Claude Code keeps the local settings file (ticket 295), so either counts.
 /**
  * @param {string} projectPath
- * @param {string} dir
+ * @param {Repo} repo
  */
-function here(projectPath, dir) {
+function here(projectPath, repo) {
+  let path;
   try {
-    return realpathSync(projectPath) === realpathSync(dir);
+    path = realpathSync(projectPath);
   } catch {
     return null;
+  }
+  if (path === realpathSync(repo.dir)) return true;
+  try {
+    return path === realpathSync(repo.top);
+  } catch {
+    return false;
   }
 }
 
@@ -82,7 +91,7 @@ export const items = [
       // The list holds project-scope installs for every project on the machine,
       // and projectEnabled reflects the settings of the folder it ran in, so an
       // install counts only when its projectPath is this repository.
-      const ok = list.some((p) => ids.includes(p?.id) && p.scope === 'project' && p.enabled === true && p.projectEnabled === true && here(p.projectPath, repo.dir) !== false);
+      const ok = list.some((p) => ids.includes(p?.id) && p.scope === 'project' && p.enabled === true && p.projectEnabled === true && here(p.projectPath, repo) !== false);
       return ok ? true : `The saved list doesn't show the plugin at project scope here. Install it with \`--scope project\`, then save the list again.`;
     },
   },
@@ -92,7 +101,7 @@ export const items = [
     check(repo) {
       const list = savedList(repo);
       if (typeof list === 'string') return list;
-      const trials = list.filter((p) => /-lsp@/.test(p?.id ?? '') && p.scope === 'local' && here(p.projectPath, repo.dir) !== false);
+      const trials = list.filter((p) => /-lsp@/.test(p?.id ?? '') && p.scope === 'local' && here(p.projectPath, repo) !== false);
       if (!trials.length) return 'The saved list shows no code intelligence plugin at local scope here. Install your language\'s plugin, such as `typescript-lsp`, for this repository only, then save the list again.';
       const shared = trials.map((p) => p.id).filter((id) => (committedPlugins(repo) ?? []).includes(id));
       return shared.length < trials.length ? true : `${shared.join(', ')} is turned on in the committed \`.claude/settings.json\`, so every teammate gets your trial. Take it out of \`enabledPlugins\` and commit.`;

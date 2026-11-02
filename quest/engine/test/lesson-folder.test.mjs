@@ -139,6 +139,51 @@ test("a saved work folder is where its level's checks run; Beginner stays in the
   }
 });
 
+// Ticket 295: Claude Code keeps some files at the git root, the folder
+// above the copy's project/.
+const readAt = (folders) => {
+  const d = atI1(
+    folders,
+    threeLevels({
+      "i-1": DEMO_I1.replace(
+        "- verify: check 0\n",
+        "- verify: json .claude/settings.local.json\n",
+      ),
+    }),
+  );
+  toW1(d);
+  return d;
+};
+
+test("a read verify in a Practice copy also offers the copy root", () => {
+  const d = readAt(null);
+  assert.equal(lastOf(d.effects, "file").dir, PROJECT);
+  assert.equal(lastOf(d.effects, "file").alt, FACTS.root);
+  d.run();
+  assert.equal(lastOf(d.effects, "file").alt, FACTS.root, "r's read too");
+});
+
+test("a work folder of its own gets no alt", () => {
+  const d = readAt({ intermediate: MINE });
+  assert.equal(lastOf(d.effects, "file").dir, MINE);
+  assert.equal("alt" in lastOf(d.effects, "file"), false);
+  d.run();
+  assert.equal("alt" in lastOf(d.effects, "file"), false, "r's read too");
+});
+
+test("git and check beats get no alt", () => {
+  const b = driver({ course: threeLevels() });
+  playUntil(b, (s) => Boolean(s.beat) && beatOf(s).verify.kind === "check");
+  assert.equal("alt" in lastOf(b.effects, "check"), false);
+  playUntil(b, (s) => Boolean(s.beat) && beatOf(s).verify.kind === "git-clean");
+  assert.equal("alt" in lastOf(b.effects, "git"), false);
+  assert.ok(
+    b.effects
+      .filter((e) => e.type === "stamp" && e.git)
+      .every((e) => !("alt" in e)),
+  );
+});
+
 // spec: guards.2-folder-match
 test("a result from another folder than the lesson's decides nothing", () => {
   // was learn-folder:114
@@ -1015,11 +1060,12 @@ test("worked: copy reads each Worked example step in the practice copy, every ve
     "Y1.0": "first",
   });
   // W1 reads its file in the copy: on opening, on r, and only a read from
-  // there decides.
+  // there decides. The copy's root is its second place (ticket 295).
   assert.deepEqual(lastOf(d.effects, "file"), {
     type: "file",
     path: SETTINGS,
     dir: PROJECT,
+    alt: COPY,
   });
   assert.deepEqual(watching(d.state), { file: SETTINGS, dir: PROJECT });
   assert.equal(folderHere(d.state), PROJECT);

@@ -34,6 +34,8 @@ export function openRepo(dir) {
     gitLocal: (/** @type {string[]} */ ...args) => execFileSync('git', args, { cwd: dir, env: { ...process.env, GIT_NO_LAZY_FETCH: '1' }, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).replace(/\s+$/, ''),
     // A copy's git root sits above project/, where the checks run: `prefix`
     // is the folder's path from that root ('' at the root), `top` the root.
+    // Claude Code keeps some files there, so `find`, `readAny` and
+    // `trackedAny` look in this folder first, then at the root (ticket 295).
     get prefix() {
       prefix ??= execFileSync('git', ['rev-parse', '--show-prefix'], { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
       return prefix;
@@ -45,6 +47,35 @@ export function openRepo(dir) {
     // A path git prints from the root (status, diff and log names), made
     // relative to this folder; a path outside it keeps its `../` steps.
     local: (/** @type {string} */ path) => localPath(path, repo.prefix),
+    // Where `path` is: in this folder, else at the git root above it, with
+    // `rel` the path from this folder; null in neither.
+    find: (/** @type {string} */ path) => {
+      if (existsSync(join(dir, path))) return { abs: join(dir, path), rel: path };
+      const prefix = nestedPrefix();
+      if (!prefix) return null;
+      const abs = join(repo.top, path);
+      return existsSync(abs) ? { abs, rel: localPath(path, prefix) } : null;
+    },
+    readAny: (/** @type {string} */ path) => {
+      const at = repo.find(path);
+      return at ? decode(readFileSync(at.abs)) : null;
+    },
+    // The path git tracks for `path` here or at the root, as `rel`; '' when
+    // neither is tracked.
+    trackedAny: (/** @type {string} */ path) => {
+      const here = repo.git('ls-files', '--', path);
+      if (here || !nestedPrefix()) return here;
+      return repo.git('ls-files', '--', `:/${path}`);
+    },
+  };
+  // The prefix when this folder sits below its git root, '' otherwise or
+  // outside git.
+  const nestedPrefix = () => {
+    try {
+      return repo.prefix;
+    } catch {
+      return '';
+    }
   };
   return repo;
 }
