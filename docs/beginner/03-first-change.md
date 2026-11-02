@@ -1,6 +1,6 @@
 # Your first change, from request to commit
 
-<sub>**Beginner** · Lesson 3 of 5 · about 20 minutes · Needs: [Permission modes and plan mode](02-permission-modes-and-plan-mode.md) · Verified against Claude Code v2.1.308 (stable) on 2026-10-25</sub>
+<sub>**Beginner** · Lesson 3 of 5 · about 20 minutes · Needs: [Permission modes and plan mode](02-permission-modes-and-plan-mode.md) · Verified against Claude Code v2.1.309 (stable) on 2026-11-02</sub>
 
 ## Goal
 

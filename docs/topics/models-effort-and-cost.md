@@ -1,6 +1,6 @@
 # Models, effort and cost
 
-<sub>Topic · Verified against Claude Code v2.1.308 (stable) on 2026-10-26</sub>
+<sub>Topic · Verified against Claude Code v2.1.309 (stable) on 2026-11-02</sub>
 
 Which model and effort level a task needs, and what a session costs.
 

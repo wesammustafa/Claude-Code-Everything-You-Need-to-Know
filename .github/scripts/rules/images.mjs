@@ -2,10 +2,13 @@
 // - every Markdown image and <img> has alt text;
 // - every Mermaid block declares accTitle and accDescr;
 // - files under assets/ have kebab-case names, an allowed type, fit the size
-//   budget, and are referenced by a page (the brand sources and the social
-//   card are the only allowed orphans);
-// - README may show one animated capture: a single GIF in assets/readme/.
-import { statSync } from 'node:fs';
+//   budget, and are referenced by a page (the brand sources, the social card
+//   and its rig-rendered Pip are the only allowed orphans);
+// - the only animation is README's Pip GIFs: assets/readme/pip-*.gif, each
+//   shown by README alone and within PIP_GIF_BUDGET, so a PNG or WebP that is
+//   animated (APNG, animated WebP) fails too;
+// - a capture named for a theme (-light or -dark) comes as a pair.
+import { readFileSync, statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { readText } from '../lib/tree.mjs';
 
@@ -14,15 +17,56 @@ export const modes = ['pr', 'release'];
 
 const KB = 1024;
 const KEBAB = /^[a-z0-9]+(?:-[a-z0-9]+)*(?:\.[a-z0-9]+)*$/;
-// README's one animated capture of the learning app.
-const README_GIF = /^assets\/readme\/[^/]+\.gif$/;
+// README's Pip GIFs, captured from the app.
+const PIP_GIF = /^assets\/readme\/pip-[^/]+\.gif$/;
+// The largest measured Pip GIF plus about 15%, set with CONTRIBUTING's image rules.
+const PIP_GIF_BUDGET = 900 * KB;
+const isPipGif = (asset) => PIP_GIF.test(asset);
+const THEMED = /^(assets\/(?:lessons|readme)\/.+)-(light|dark)\.(png|jpe?g|webp)$/;
 const BUDGET = [
   [/\.svg$/, 50 * KB, 'an SVG may be up to 50 KB'],
   [/^assets\/(lessons|readme)\/.+\.(png|jpe?g|webp)$/, 200 * KB, 'a capture may be up to 200 KB'],
-  [/^assets\/brand\/social-card\.png$/, 1000 * KB, 'the social card must be under 1 MB'],
-  [README_GIF, 1000 * KB, 'README\'s animated capture may be up to 1000 KB'],
+  [/^assets\/brand\/social-card(?:-pip)?\.png$/, 1000 * KB, 'the social card and its Pip must each be under 1 MB'],
+  [{ test: isPipGif }, PIP_GIF_BUDGET, `a Pip GIF may be up to ${PIP_GIF_BUDGET / KB} KB`],
 ];
-const ALLOWED_ORPHANS = [/^assets\/brand\/[^/]+\.svg$/, /^assets\/brand\/social-card\.png$/];
+const ALLOWED_ORPHANS = [/^assets\/brand\/[^/]+\.svg$/, /^assets\/brand\/social-card(?:-pip)?\.png$/];
+
+// An APNG declares its animation in an acTL chunk before the first IDAT.
+function isAnimatedPng(buf) {
+  const SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  if (buf.length < 8 || !buf.subarray(0, 8).equals(SIGNATURE)) return false;
+  // Each chunk: 4-byte big-endian length, 4-byte type, data, 4-byte CRC.
+  for (let at = 8; at + 8 <= buf.length; ) {
+    const length = buf.readUInt32BE(at);
+    const type = buf.toString('latin1', at + 4, at + 8);
+    if (type === 'acTL') return true;
+    if (type === 'IDAT' || type === 'IEND') return false;
+    at += 12 + length;
+  }
+  return false;
+}
+
+// An animated WebP sets the animation flag in its VP8X chunk and carries ANIM
+// and ANMF chunks.
+function isAnimatedWebp(buf) {
+  if (buf.length < 12 || buf.toString('latin1', 0, 4) !== 'RIFF' || buf.toString('latin1', 8, 12) !== 'WEBP') return false;
+  const end = Math.min(buf.length, 8 + buf.readUInt32LE(4));
+  // Each chunk: 4-byte FourCC, 4-byte little-endian size, data padded to even.
+  for (let at = 12; at + 8 <= end; ) {
+    const type = buf.toString('latin1', at, at + 4);
+    const size = buf.readUInt32LE(at + 4);
+    if (type === 'VP8X' && at + 8 < end && buf[at + 8] & 0x02) return true;
+    if (type === 'ANIM' || type === 'ANMF') return true;
+    at += 8 + size + (size & 1);
+  }
+  return false;
+}
+
+function isAnimated(root, asset) {
+  if (/\.png$/.test(asset)) return isAnimatedPng(readFileSync(join(root, asset)));
+  if (/\.webp$/.test(asset)) return isAnimatedWebp(readFileSync(join(root, asset)));
+  return false;
+}
 
 // Each line of a page with its code stripped: fenced blocks become null,
 // inline code spans are removed. Mermaid blocks are returned separately.
@@ -70,6 +114,8 @@ function resolveFrom(page, target) {
 export function run(ctx) {
   const problems = [];
   const referenced = new Set();
+  // Pages that show each GIF: README alone may.
+  const gifPages = new Map();
   const pages = ctx.files.filter((f) => f.endsWith('.md'));
   for (const page of pages) {
     const { lines, mermaid } = scan(readText(ctx.root, page));
@@ -85,7 +131,9 @@ export function run(ctx) {
       }
       for (const t of targets(line)) {
         const path = resolveFrom(page, t);
-        if (path) referenced.add(path);
+        if (!path) continue;
+        referenced.add(path);
+        if (path.endsWith('.gif') && page !== 'README.md') gifPages.set(path, `${at}`);
       }
     });
     for (const block of mermaid) {
@@ -100,7 +148,8 @@ export function run(ctx) {
   for (const asset of assets) {
     const bad = asset.split('/').slice(1).find((part) => !KEBAB.test(part));
     if (bad) problems.push(`${asset}: "${bad}" is not kebab-case`);
-    if (!/\.(svg|png|jpe?g|webp)$/.test(asset) && !README_GIF.test(asset)) problems.push(`${asset}: only SVG, PNG, JPEG and WebP files belong under assets/, and one GIF in assets/readme/`);
+    if (!/\.(svg|png|jpe?g|webp)$/.test(asset) && !isPipGif(asset)) problems.push(`${asset}: only SVG, PNG, JPEG and WebP files belong under assets/; the only animation is README's Pip GIFs, assets/readme/pip-*.gif`);
+    if (isAnimated(ctx.root, asset)) problems.push(`${asset}: an animated image; the only animation is README's Pip GIFs, assets/readme/pip-*.gif`);
     const size = statSync(join(ctx.root, asset)).size;
     for (const [pattern, limit, rule] of BUDGET) {
       if (pattern.test(asset) && size > limit) problems.push(`${asset}: ${Math.ceil(size / KB)} KB; ${rule}`);
@@ -110,8 +159,15 @@ export function run(ctx) {
     }
   }
 
-  const gifs = assets.filter((asset) => README_GIF.test(asset));
-  if (gifs.length > 1) problems.push(`assets/readme/ holds ${gifs.length} GIFs (${gifs.join(', ')}); README may show one animated capture`);
+  for (const [gif, at] of gifPages) problems.push(`${at}: shows ${gif}; only README shows the Pip GIFs`);
+
+  const present = new Set(assets);
+  for (const asset of assets) {
+    const m = asset.match(THEMED);
+    if (!m) continue;
+    const other = m[2] === 'light' ? 'dark' : 'light';
+    if (![...present].some((a) => a.startsWith(`${m[1]}-${other}.`))) problems.push(`${asset}: a ${m[2]} capture needs its ${other} pair beside it`);
+  }
 
   if (problems.length) return { status: 'fail', problems };
   return { status: 'pass', summary: `${pages.length} pages, ${assets.length} files under assets/` };

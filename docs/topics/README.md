@@ -1,6 +1,6 @@
 # Topics
 
-<sub>Verified against Claude Code v2.1.308 (stable) on 2026-10-26</sub>
+<sub>Verified against Claude Code v2.1.309 (stable) on 2026-11-02</sub>
 
 Each topic page lists its lessons in level order, its Electives, its reference page and the official docs. Topic pages link; they don't teach.
 

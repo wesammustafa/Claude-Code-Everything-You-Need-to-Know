@@ -63,7 +63,7 @@ function claudeShim(version: string): string {
 
 describe("baselineVersion", () => {
   test("reads the baseline from the real CHANGELOG", () => {
-    expect(BASELINE).toBe("2.1.308");
+    expect(BASELINE).toBe("2.1.309");
   });
 
   test("throws without the Baseline line", () => {

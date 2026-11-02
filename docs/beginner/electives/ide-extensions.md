@@ -1,6 +1,6 @@
 # Use Claude Code in your editor
 
-<sub>**Beginner** · Elective · about 15 minutes · Needs: [Install, sign in and look around](../01-install-and-look-around.md) · Verified against Claude Code v2.1.308 (stable) on 2026-10-26</sub>
+<sub>**Beginner** · Elective · about 15 minutes · Needs: [Install, sign in and look around](../01-install-and-look-around.md) · Verified against Claude Code v2.1.309 (stable) on 2026-11-02</sub>
 
 ## Goal
 

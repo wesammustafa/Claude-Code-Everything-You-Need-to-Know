@@ -1,0 +1,8 @@
+{
+  "rule": "images",
+  "expect": "pass",
+  "about": "A static PNG under assets/: no acTL chunk. generate.mjs builds it from bytes.",
+  "output": [
+    "PASS images"
+  ]
+}

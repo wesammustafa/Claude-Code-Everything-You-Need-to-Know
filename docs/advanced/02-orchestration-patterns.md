@@ -1,6 +1,6 @@
 # Choose an orchestration pattern
 
-<sub>**Advanced** · Lesson 2 of 7 · about 20 minutes · Needs: [Parallel sessions with worktrees](01-parallel-sessions.md) · Verified against Claude Code v2.1.308 (stable) on 2026-10-25</sub>
+<sub>**Advanced** · Lesson 2 of 7 · about 20 minutes · Needs: [Parallel sessions with worktrees](01-parallel-sessions.md) · Verified against Claude Code v2.1.309 (stable) on 2026-11-02</sub>
 
 ## Goal
 

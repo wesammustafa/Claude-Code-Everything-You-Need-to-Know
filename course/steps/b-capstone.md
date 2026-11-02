@@ -1,6 +1,6 @@
 ---
 lesson: b-capstone
-stamp: "Verified against Claude Code v2.1.308 (stable) on 2026-10-25"
+stamp: "Verified against Claude Code v2.1.309 (stable) on 2026-11-02"
 badge: Beginner
 ---
 
@@ -21,8 +21,8 @@ badge: Beginner
 - watching: the committed CLAUDE.md
 - goal: "A committed `CLAUDE.md` in your copy that names the test command, `npm test`"
 - note: "A teammate filed the bug report in `capstone/beginner-bug.md` in your practice copy: the tool says every link resolves and exits with code 0. Read it first: its "What should happen" section is what done means."
-- hint: "If you skipped lesson 5: start `claude` in your copy and run `/init`."
-- hint: "In the new `CLAUDE.md`, delete what it says about the course's own files (`checks/`, `learn/`, `capstone/` and `.github/`) and about `npm run check`, `npm run learn` and `npm run test:checks`, including any rule to keep your work off `main`: that rule is for the template repository, not your copy."
+- hint: "If you skipped lesson 5: start `claude` in your copy's `project/` folder and run `/init`."
+- hint: "In the new `CLAUDE.md`, delete what it says about `npm run check`, including any rule to keep your work off `main`: that rule is for the template repository, not your copy."
 - hint: "Make sure the file names `npm test`, then end that session with `/exit`, so the task starts in a new one."
 - bottom: "Commit any change to `CLAUDE.md` on its own before you start (`git add CLAUDE.md`, then `git commit -m "Add CLAUDE.md"`)"
 - beat: do

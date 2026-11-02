@@ -1,6 +1,6 @@
 # Beginner capstone: fix a reported bug, from plan to commit
 
-<sub>**Beginner** · Capstone · 30 to 60 minutes · Needs: the five [Beginner lessons](README.md), or their skills · Verified against Claude Code v2.1.308 (stable) on 2026-10-25</sub>
+<sub>**Beginner** · Capstone · 30 to 60 minutes · Needs: the five [Beginner lessons](README.md), or their skills · Verified against Claude Code v2.1.309 (stable) on 2026-11-02</sub>
 
 This task puts the whole Beginner level together. Unlike the lessons, it has no worked example: the steps say what to do, and you choose the prompts and make the calls. The [Beginner Exit](README.md#by-the-end-of-this-level-you-can) is the list of what you can do by the end of this level. The check reads the files and the commit this task leaves behind, and you tick the rest of the Exit yourself under [What the check can't see](#what-the-check-cant-see). When both are done, you've shown the Beginner Exit, whether you took the lessons or not.
 
@@ -9,7 +9,7 @@ This task puts the whole Beginner level together. Unlike the lessons, it has no 
 - Your copy of the practice template, with no uncommitted changes, and Node.js LTS (a Codespace on your copy has it). If `git status --porcelain` ([git status](https://git-scm.com/docs/git-status)) lists files, commit them. The capstone runs in the template only.
 - If you skipped the lessons: create the `.practice/` folder in your copy (`mkdir -p .practice`; **Windows:** `New-Item -ItemType Directory -Force .practice`). The template already tells git to ignore it.
 - A committed `CLAUDE.md` in your copy that names the test command, `npm test`: `git show HEAD:CLAUDE.md` shows it. Lesson 5 gives you one; if yours doesn't name `npm test`, add it.
-- If you skipped lesson 5: start `claude` in your copy and run `/init`. In the new `CLAUDE.md`, delete what it says about the course's own files (`checks/`, `learn/`, `capstone/` and `.github/`) and about `npm run check`, `npm run learn` and `npm run test:checks`, including any rule to keep your work off `main`: that rule is for the template repository, not your copy. Make sure the file names `npm test`, then end that session with `/exit`, so the task starts in a new one.
+- If you skipped lesson 5: start `claude` in your copy's `project/` folder and run `/init`. In the new `CLAUDE.md`, delete what it says about `npm run check`, including any rule to keep your work off `main`: that rule is for the template repository, not your copy. Make sure the file names `npm test`, then end that session with `/exit`, so the task starts in a new one.
 - Commit any change to `CLAUDE.md` on its own before you start (`git add CLAUDE.md`, then `git commit -m "Add CLAUDE.md"`): the fix commit may change only the files the plan names.
 - Two terminals open in your copy: one for Claude Code, one for your own commands.
 - Usage: moderate.

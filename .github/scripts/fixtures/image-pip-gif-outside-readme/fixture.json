@@ -1,0 +1,8 @@
+{
+  "rule": "images",
+  "expect": "fail",
+  "about": "A page other than README shows a Pip GIF.",
+  "output": [
+    "docs/lesson\\.md:3: shows assets/readme/pip-celebrates\\.gif; only README shows the Pip GIFs"
+  ]
+}

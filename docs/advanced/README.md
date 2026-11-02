@@ -1,6 +1,6 @@
 # Advanced
 
-<sub>**Advanced** · about 4 hours, plus run time · Verified against Claude Code v2.1.308 (stable) on 2026-10-26</sub>
+<sub>**Advanced** · about 4 hours, plus run time · Verified against Claude Code v2.1.309 (stable) on 2026-11-02</sub>
 
 Beyond one session: parallel sessions, orchestration, unattended runs in scripts and CI, a setup your team shares, and limits that keep an autonomous run safe.
 
@@ -15,19 +15,11 @@ Beyond one session: parallel sessions, orchestration, unattended runs in scripts
 
 ## Practice
 
-Practice in your own repository, and run each check from your copy of the [practice template](https://github.com/wesammustafa/claude-code-practice) as `npm run check -- <lesson-id> --dir <your repo>`. The GitHub Actions lesson and the capstone are the exceptions: each runs in a new template copy of its own, which you tear down afterwards so no workflow or secret is left behind.
+Practice in your own repository, and run each check from the `project/` folder of your copy of the [practice template](https://github.com/wesammustafa/claude-code-practice) as `npm run check -- <lesson-id> --dir <your repo>`. The GitHub Actions lesson and the capstone are the exceptions: each runs in a new template copy of its own, which you tear down afterwards so no workflow or secret is left behind.
 
-To go step by step, run `npm run learn` in your copy and use Claude Code in a second terminal beside it. The app takes you through every lesson and the capstone, one step at a time, and checks your work as you go. Each page below teaches the same lesson on its own.
+To go step by step, run `npm run learn` in your copy: Claude Code Quest opens in your browser (in a Codespace, it prints the address to open) and you use Claude Code in your own terminal beside it. The app takes you through every lesson and the capstone, one step at a time, checks your work as you go and saves your place. Each page below teaches the same lesson on its own.
 
-A copy you made for an earlier level may not have the Advanced checks or lessons: `npm run check` then lists no `a-` lessons. Bring them in from the template, in your copy:
-
-```bash
-git fetch https://github.com/wesammustafa/claude-code-practice main
-git checkout FETCH_HEAD -- checks capstone learn
-git commit -m "Add the Advanced checks and lessons"
-```
-
-A copy older than the app has no `learn` script, so `npm run learn` says `Missing script: "learn"`: run `node learn/app.mjs` instead.
+If `npm run learn` opens in your terminal instead of your browser, or says `Missing script: "learn"`, your copy is older, so [upgrade it](../../README.md#already-have-a-practice-copy).
 
 ## Lessons
 

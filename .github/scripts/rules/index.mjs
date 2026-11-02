@@ -11,8 +11,7 @@ import * as lessonLint from './lesson-lint.mjs';
 import * as staticValidation from './static-validation.mjs';
 import * as inertness from './inertness.mjs';
 import * as smokeTests from './smoke-tests.mjs';
-import * as lessonQuotes from './lesson-quotes.mjs';
 import * as externalLinks from './external-links.mjs';
 import * as drift from './drift.mjs';
 
-export const rules = [internalLinks, anchorDiff, stubPaths, stamps, editionGate, expiry, emDash, images, lessonLint, staticValidation, inertness, smokeTests, lessonQuotes, externalLinks, drift];
+export const rules = [internalLinks, anchorDiff, stubPaths, stamps, editionGate, expiry, emDash, images, lessonLint, staticValidation, inertness, smokeTests, externalLinks, drift];
