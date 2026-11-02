@@ -156,7 +156,7 @@ Passed in `.claude/worktrees/318-readme-gifs`:
 - GIF metadata was read with `ffprobe`. All widths are exactly 2x their README display widths.
 - First frames and sampled contact sheets at two samples per second were visually inspected. They showed the intended scenes and Ali greeting, with no obvious personal path or browser chrome. This is not a frame-by-frame review.
 
-`npm run test:quest` was started and ran for 15 minutes before the command timed out with no final Vitest summary. The captured output showed many passing files and no reported failure, including the slow a-4 ladder at about 829 seconds, but the suite did not finish. It is explicitly not a passing full-suite result and must be rerun with an adequate time budget.
+The first `npm run test:quest` attempt ran for 15 minutes before the command timed out with no final summary. A later unrestricted rerun completed in 1063.02 seconds: 180 test files passed and one failed; 3,109 tests passed, one failed and two skipped. The only failure was `quest/release/test/replay.test.ts > the replay's contract > both CLIs resolve a relative path from INIT_CWD, where npm was typed`, which exceeded its 5,000 ms timeout during the full-suite load. The identical isolated test then passed in 834 ms. This is a load-sensitive test timeout, but the full suite remains red until the timeout is addressed and a complete run passes. No implementation was changed during these verification runs.
 
 ### Dry-run fix branches
 
@@ -187,7 +187,8 @@ Passed in `.claude/worktrees/318-readme-gifs`:
 ## 7. Known Issues
 
 - **318 frame-rate acceptance is not settled.** `ffprobe` reports `avg_frame_rate` 25/1 for step and level, and 100/3 for looks. Counting decoded frames over full duration, including intentional terminal holds, gives 20.21, 22.83 and 26.35 frames per second respectively. The first two therefore need an explicit acceptance decision or a capture/encoding adjustment against the ticket's at-least-24-fps wording. Do not claim this criterion passes from `r_frame_rate` alone.
-- **318 full visual review is incomplete.** The existing review was sampled, not all 95, 92 and 181 frames. Loop equality and subtle dithering or dropped-frame artefacts remain unverified.
+- **318 full visual review is incomplete.** The existing review was sampled, not all 95, 92 and 181 frames. A separate decoded-frame analysis found no exact consecutive duplicates. At 32 x 32 RGB resolution, first-to-last mean absolute differences were 1.764 for step, 16.021 for level and 1.265 for looks, so level has the largest loop-seam change. Loop equality and subtle dithering or dropped-frame artefacts remain unverified.
+- **318 full Quest suite is red on a load-sensitive timeout.** The completed run's only failure was the replay CLI test's 5-second timeout under load; it passed alone in 834 ms. The timeout needs an intentional fix and a complete green rerun before ticket 318 can be called verified.
 - **304 has one red test**, caused by a stale fixture save rather than evidence that the new fingerprint behavior is wrong. It must be fixed and rerun before the ticket is called done.
 - **313 has one red test**, caused by reviewer-message casing. It must be fixed and rerun before the ticket is called done.
 - **297 and 299 still need the real-template quote check** using `LEARN_DIR`; the normal Guide check only warned about it.
