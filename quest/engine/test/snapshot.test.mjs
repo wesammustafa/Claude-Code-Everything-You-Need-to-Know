@@ -993,6 +993,10 @@ test("complete: b-1's Badge and first time, its check summary, the help used, an
     ["Explorer", true, false, false],
   );
   assert.equal(v.next.id, "b-2");
+  assert.deepEqual(
+    v.checkSummary,
+    lesson("b-1").items.map((text) => ({ text, pass: true })),
+  );
   assert.ok(v.staircase.length > 0);
   assert.ok(v.practised.length > 0);
   // Each skill practised has the help its latest step used (ticket 213).

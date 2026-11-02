@@ -46,6 +46,7 @@ import type {
   ActionHandlers,
   BeatState,
   CardState,
+  CheckItem,
   CourseEntry,
   Effect,
   EngineInput,
@@ -1604,6 +1605,17 @@ export const RESULTS = [
   "probe-error",
 ] as const;
 
+// The completion summary's items (310): each passing run's real items
+// replace earlier ones by index; a slow placeholder keeps the earlier one.
+function mergePassed(
+  before: readonly CheckItem[] | undefined,
+  items: readonly CheckItem[],
+): CheckItem[] {
+  const by = new Map((before ?? []).map((it) => [it.index, it]));
+  for (const it of items) if (!it.slow) by.set(it.index, it);
+  return [...by.values()].sort((a, b) => a.index - b.index);
+}
+
 // `read` is the bytes of the beat's evidence file, as the host read it.
 function onCheck(
   s: EngineState,
@@ -1613,6 +1625,7 @@ function onCheck(
 ) {
   const ev = { ...input, evidence: evidenceOf(input.read) };
   s.checks[ev.lesson] = {
+    ...s.checks[ev.lesson],
     items: ev.items,
     evidence: ev.evidence,
     error: null,
@@ -1750,6 +1763,9 @@ function decide(
     // poll's, which leaves the slow items out (b-1's item 0, or the whole
     // check's slow items).
     st.passed = ev.items;
+    // onCheck only decides a result for the lesson on screen.
+    const entry = s.checks[s.lesson];
+    if (entry && ev.items) entry.passed = mergePassed(entry.passed, ev.items);
     st.evidence = ev.evidence ?? null;
     // The file a glob matched, for the card to name (106).
     st.found = ev.found ?? null;
@@ -1996,6 +2012,8 @@ const ACTIONS: ActionHandlers = {
       ...(help && { help }),
     };
     forgetHelp(s, lesson);
+    // A replay's summary lists its own passing runs, not the earlier play's.
+    if (s.checks[lesson]) delete s.checks[lesson].passed;
     s.changed = s.changed.filter((id) => id !== lesson);
     s.lesson = lesson;
     s.phase = "overview";

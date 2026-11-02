@@ -98,7 +98,7 @@ import {
   whileRunsBox,
 } from "./engine.ts";
 import { mix, TIERS } from "./tiers.ts";
-import type { CourseEntry, EngineState, HintRung } from "./types.ts";
+import type { CheckItem, CourseEntry, EngineState, HintRung } from "./types.ts";
 
 // The snapshot as the engine builds it: the host adds the header.
 export type EngineSnapshot = Omit<
@@ -145,6 +145,16 @@ function courseView(s: EngineState): CourseView {
     }),
     next: s.course.find((l) => l.content && toFinish(s, l))?.id ?? null,
   };
+}
+
+// The completion screen's check lines (310): the runs that passed the
+// lesson's check beats, or, when none did (a skipped check), the latest run
+// without its slow placeholders.
+function summaryItems(
+  entry: EngineState["checks"][LessonId] | undefined,
+): CheckItem[] {
+  if (entry?.passed?.length) return entry.passed;
+  return (entry?.items ?? []).filter((it) => !it.slow);
 }
 
 function summary(s: EngineState, l: CourseEntry): LessonSummary {
@@ -875,9 +885,10 @@ function completeOf(s: EngineState, head: LessonHead): CompleteLesson {
     })),
     badge: c?.badge ?? null,
     firstTime: s.firstCompletion === s.lesson,
-    checkSummary: (s.checks[s.lesson]?.items ?? [])
-      .filter((it) => !it.slow)
-      .map((it) => ({ text: it.text, pass: it.pass })),
+    checkSummary: summaryItems(s.checks[s.lesson]).map((it) => ({
+      text: it.text,
+      pass: it.pass,
+    })),
     staircase: stairs(steps, tiers).filter((x) => x.part !== "Warm-up"),
     handover: head.capstone && p.bottomAt === null,
     invitation: head.capstone,
