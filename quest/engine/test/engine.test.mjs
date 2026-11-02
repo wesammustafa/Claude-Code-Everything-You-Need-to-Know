@@ -129,14 +129,14 @@ function script() {
   const f = watched({ saved: save({ lessons: finishedBefore("i-1") }) });
   f.open("i-1");
   assert.ok(asksFolder(f.state));
-  let out = f.folderChoose("intermediate", { path: "/home/sam/gone" }).effects;
+  let out = f.folderChoose("intermediate", { path: "/home/ali/gone" }).effects;
   assert.deepEqual(
     out.filter((e) => e.type === "folder"),
     [
       {
         type: "folder",
         key: "intermediate",
-        text: "/home/sam/gone",
+        text: "/home/ali/gone",
         asked: f.state.asks,
       },
     ],
@@ -145,12 +145,12 @@ function script() {
     type: "probed",
     key: "intermediate",
     asked: f.state.folderAsk.asked,
-    path: "/home/sam/gone",
+    path: "/home/ali/gone",
     missing: true,
   });
   assert.deepEqual(
     [f.state.folderAsk.missing, f.state.folderAsk.asked],
-    ["/home/sam/gone", 0],
+    ["/home/ali/gone", 0],
   );
   // Editing the answer clears the note about the last one.
   f.folderAsk("intermediate");
@@ -160,35 +160,35 @@ function script() {
     isCopy: false,
     asked: 0,
   });
-  f.folderChoose("intermediate", { path: "/home/sam/work" });
+  f.folderChoose("intermediate", { path: "/home/ali/work" });
   f.send({
     type: "probed",
     key: "intermediate",
     asked: f.state.folderAsk.asked,
-    path: "/home/sam/work",
+    path: "/home/ali/work",
     missing: false,
     git: true,
     practice: true,
   });
   assert.deepEqual(
     [f.state.folders.intermediate, f.state.folderAsk, asksFolder(f.state)],
-    ["/home/sam/work", null, false],
+    ["/home/ali/work", null, false],
   );
-  f.folderChoose("intermediate", { path: "/home/sam/other" });
+  f.folderChoose("intermediate", { path: "/home/ali/other" });
   const asked = f.state.folderAsk.asked;
   f.folderCancel();
   out = f.send({
     type: "probed",
     key: "intermediate",
     asked,
-    path: "/home/sam/other",
+    path: "/home/ali/other",
     missing: false,
     git: true,
     practice: true,
   });
   assert.deepEqual(
     [f.state.folders.intermediate, f.state.folderAsk, out],
-    ["/home/sam/work", null, []],
+    ["/home/ali/work", null, []],
     "a late answer to a dropped ask sets nothing",
   );
   f.folderChoose("intermediate", "practice-copy");
@@ -490,7 +490,7 @@ test("an action whose guard fails changes nothing: on a fresh overview, nothing 
   for (const key of ["b-1", "beginner", "nope"]) {
     for (const input of [
       { type: "folder.choose", key, to: "practice-copy" },
-      { type: "folder.choose", key, to: { path: "/home/sam/work" } },
+      { type: "folder.choose", key, to: { path: "/home/ali/work" } },
       { type: "folder.ask", key },
     ]) {
       const r = reduce(s, input);
