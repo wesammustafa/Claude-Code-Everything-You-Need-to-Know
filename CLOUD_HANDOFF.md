@@ -40,6 +40,7 @@ The cutover dry-runs also produced tickets 295 to 317. Their purpose is to fix a
 - Tickets 316 and 317 have clean assigned worktrees, but their actual implementation is in the ignored root `.scratch/learn-app/` harness. That code is complete enough to pass its tests, but is intentionally not committed and is not available in the cloud checkout.
 - Many older clean `quest/*` branches are stacked construction history. Commits ahead of `origin/main` do not by themselves mean unfinished work because the final changes often landed through squash merges. Do not reopen those branches merely because they are old or ahead.
 - A separate recurring process refreshes `refs/backup/*`, and another Claude session is running. Do not stop it. The handoff branches are stable commits and do not depend on those changing refs.
+- All 141 current local Quest refs have exact archive copies on `origin`: local branches under `quest/local/*`, backup refs under `quest/local-backup/*`, and the older WIP ref under `quest/local-wip/*`. A scan of 160 previously unpublished commits found no secrets or private files before these archive pushes. The archive verification reported zero missing or mismatched SHAs. The old local `main`, local-only agent configuration and ignored `.scratch/` content are not included.
 
 ### Completed implementation, awaiting final acceptance
 
