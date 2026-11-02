@@ -24,6 +24,7 @@ import {
   type PipReactionKind,
 } from "../../pip/contract";
 import { reactionLedger } from "./playback";
+import { markPipReady } from "../../pip/ready";
 import { rigValues } from "./rig";
 
 /** The rig, open on a runtime, and the WebGL2 context every Pip draws through. */
@@ -271,6 +272,7 @@ export function PipRive({
   useEffect(() => {
     if (rive === null || !bound) return;
     rive.startRendering();
+    markPipReady();
     let frames = 0;
     let start: number | undefined;
     const tick = (now: number) => {

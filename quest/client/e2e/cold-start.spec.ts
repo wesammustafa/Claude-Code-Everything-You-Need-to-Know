@@ -8,8 +8,16 @@
 // every run, so a failed run still reports what was measured. The spec has its
 // own Playwright project, which runs after every other spec, so no other
 // page shares the CPU while it times.
+//
+// "Pip ready" is the app's performance mark (pip/ready.ts, set in
+// src/pip/PipRive.tsx): the runtime loaded, its WASM started, the rig
+// instantiated and its first frame requested. The first frame's own GPU work
+// is not gated (owner decision, 2026-11-02, ticket 240): on SwiftShader it is
+// a long software-GPU task that a Learner with a GPU does not pay. Its time,
+// "Pip first frame", is still logged in the table, outside the budget.
 import { appendFileSync } from "node:fs";
 import { expect, test } from "./live.ts";
+import { PIP_READY_MARK } from "../pip/ready.ts";
 import { STEP } from "./pip-page.ts";
 
 interface ColdStart {
@@ -28,10 +36,18 @@ declare global {
 const LIMITS = Object.freeze([
   { id: "fcp", label: "first contentful paint", limitMs: 1000 },
   { id: "usable", label: "Lesson usable", limitMs: 1500 },
-  { id: "animated", label: "Pip animated", limitMs: 3000 },
+  { id: "ready", label: "Pip ready", limitMs: 3000 },
 ] as const);
 
-type Run = Record<(typeof LIMITS)[number]["id"], number>;
+/** Logged with the budgets, never gated. */
+const LOGGED = Object.freeze([
+  { id: "firstFrame", label: "Pip first frame" },
+] as const);
+
+type Run = Record<
+  (typeof LIMITS)[number]["id"] | (typeof LOGGED)[number]["id"],
+  number
+>;
 
 const runs: Run[] = [];
 
@@ -52,7 +68,7 @@ function observeColdStart() {
       )
     )
       times.usable = now;
-    // Animated: the rig's first frame drawn over the poster.
+    // First frame: the rig's first frame drawn over the poster (logged only).
     if (
       times.animated === undefined &&
       document.querySelector('[data-pip][data-pip-rendering="rig"]')
@@ -94,31 +110,44 @@ for (const n of [1, 2, 3]) {
     await page.addInitScript(observeColdStart);
     await page.goto(STEP);
     await page.waitForFunction(
-      () => {
+      (mark) => {
         const c = window.__coldStart;
-        return c && (c.unavailable ?? (c.usable && c.animated));
+        return (
+          c &&
+          (c.unavailable ??
+            (c.usable &&
+              c.animated &&
+              performance.getEntriesByName(mark, "mark").length > 0))
+        );
       },
-      null,
+      PIP_READY_MARK,
       { timeout: 20_000 },
     );
-    const { fcp, times } = await page.evaluate(() => ({
-      fcp: performance.getEntriesByName("first-contentful-paint")[0]?.startTime,
-      times: window.__coldStart ?? {},
-    }));
+    const { fcp, ready, times } = await page.evaluate(
+      (mark) => ({
+        fcp: performance.getEntriesByName("first-contentful-paint")[0]
+          ?.startTime,
+        ready: performance.getEntriesByName(mark, "mark")[0]?.startTime,
+        times: window.__coldStart ?? {},
+      }),
+      PIP_READY_MARK,
+    );
     expect(times.unavailable, "Pip unavailable: no WebGL2").toBeUndefined();
     expect(fcp, "no first-contentful-paint entry").toBeDefined();
+    expect(ready, `no ${PIP_READY_MARK} performance mark`).toBeDefined();
     expect(
       times.poster,
       "no Pip poster shown during the cold start",
     ).toBeDefined();
     expect(
       times.poster ?? Infinity,
-      "the poster showed only after the rig",
+      "the poster showed only after the rig's first frame",
     ).toBeLessThanOrEqual(times.animated ?? Infinity);
     runs.push({
       fcp: fcp ?? Infinity,
       usable: times.usable ?? Infinity,
-      animated: times.animated ?? Infinity,
+      ready: ready ?? Infinity,
+      firstFrame: times.animated ?? Infinity,
     });
   });
 }
@@ -136,18 +165,36 @@ function budgetRows() {
   });
 }
 
+function loggedRows() {
+  return LOGGED.map(({ id, label }) => {
+    const values = runs.map((run) => run[id]);
+    return { label, values, mid: median(values) };
+  });
+}
+
 // After every run, the failed ones too: the numbers measured so far.
 test.afterAll(() => {
-  const cells = budgetRows().map((row) => [
-    row.label,
-    ...[0, 1, 2].map((i) => {
-      const value = row.values[i];
+  const runCells = (values: number[]) =>
+    [0, 1, 2].map((i) => {
+      const value = values[i];
       return value === undefined ? "-" : ms(value);
-    }),
-    ms(row.mid),
-    ms(row.limitMs),
-    row.ok ? "ok" : "FAIL",
-  ]);
+    });
+  const cells = [
+    ...budgetRows().map((row) => [
+      row.label,
+      ...runCells(row.values),
+      ms(row.mid),
+      ms(row.limitMs),
+      row.ok ? "ok" : "FAIL",
+    ]),
+    ...loggedRows().map((row) => [
+      row.label,
+      ...runCells(row.values),
+      ms(row.mid),
+      "-",
+      "logged",
+    ]),
+  ];
   const head = ["Measure", "Run 1", "Run 2", "Run 3", "Median", "Limit", ""];
   const widths = head.map((h, i) =>
     Math.max(h.length, ...cells.map((c) => c[i]?.length ?? 0)),
