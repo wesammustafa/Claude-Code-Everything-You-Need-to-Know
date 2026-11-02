@@ -300,7 +300,7 @@ Callouts are GitHub alerts, at most two per lesson, each with one meaning:
 - The only animation is README's Pip GIFs, `assets/readme/pip-*.gif`: captures of Claude Code Quest that show Pip reacting, each with full alt text and within the Pip GIF budget below. No other page shows them.
 - Pip's art comes only from his rig (`quest/client/pip/`, rendered by the app's runtime or `npm run pip:build`), his icon SVG, or captures of the app. Never redraw him by hand.
 - The `images` check enforces the alt text, the Mermaid lines, the one-animation rule (it reads each PNG and WebP's header and fails an animated PNG or WebP), and the names, references and budget below.
-- New images go under `assets/`: `assets/brand/` for the guide's identity, `assets/lessons/<lesson-id>/` for captures and `assets/readme/` for README's. Names are kebab-case, and paths are explicit and relative. Budget: an SVG up to 50 KB, a capture up to 200 KB, the social card under 1 MB, and each Pip GIF up to `PIP_GIF_BUDGET`, 900 KB (the largest measured GIF plus about 15%). Every image that is not a capture ships its editable source beside it. Hand-drawn SVG is for the guide's identity pieces only.
+- New images go under `assets/`: `assets/brand/` for the guide's identity, `assets/lessons/<lesson-id>/` for captures and `assets/readme/` for README's. Names are kebab-case, and paths are explicit and relative. Budget: an SVG up to 50 KB, a capture up to 200 KB, the social card under 1 MB, and each Pip GIF up to `PIP_GIF_BUDGET`, 1400 KB (the largest measured GIF plus about 15%). Every image that is not a capture ships its editable source beside it. Hand-drawn SVG is for the guide's identity pieces only.
 
 ### Headings
 

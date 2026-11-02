@@ -124,9 +124,9 @@ test("a needs item the app can't read, or one with no need line to quote, is an 
 });
 
 // ---- the overview --------------------------------------------------------------
-const MINE = "/home/sam/code/my-app";
+const MINE = "/home/ali/code/my-app";
 // The practice copy: the driver's FACTS.root.
-const COPY = "/home/sam/claude-code-practice";
+const COPY = "/home/ali/claude-code-practice";
 // Its project/, where the checks run (ticket 277).
 const PROJECT = `${COPY}/project`;
 // At i-1's overview, Beginner finished and Intermediate's folder answered,
@@ -355,7 +355,7 @@ test("the repository line shows on a later intro in the level's work folder, and
     ["i-capstone", { intermediate: MINE }],
     [
       "a-5",
-      { intermediate: MINE, advanced: MINE, "a-5": "/home/sam/new-copy" },
+      { intermediate: MINE, advanced: MINE, "a-5": "/home/ali/new-copy" },
     ],
     ["b-4", {}],
   ];

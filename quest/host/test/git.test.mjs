@@ -237,8 +237,8 @@ test("git's first answers: whether the folder is a repository, and why not, and 
       { cwd: mine },
     );
     assert.equal(await gitFirstName(mine), "Maximiliana-Alexandr");
-    execFileSync("git", ["config", "user.name", "Sam Lee"], { cwd: mine });
-    assert.equal(await gitFirstName(mine), "Sam");
+    execFileSync("git", ["config", "user.name", "Ali Lee"], { cwd: mine });
+    assert.equal(await gitFirstName(mine), "Ali");
     rmSync(join(mine, ".git"), { recursive: true, force: true });
     assert.equal(await gitReady(mine), NOT_A_REPO);
     process.env.PATH = join(mine, "no-bin");
