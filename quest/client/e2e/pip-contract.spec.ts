@@ -945,7 +945,17 @@ test("on Welcome the pointer pitches the rendered head in every direction and ea
   page,
 }) => {
   test.slow();
-  await page.clock.install();
+  // Welcome runs here with no server, so the stream fails; a failing health
+  // check STOPPED_MS later would mean stopped, and Pip would rest and ignore
+  // the pointer. A server that answers its health check keeps the page
+  // waiting, as a learner's running Quest does.
+  await page.route("**/api/health", (route) =>
+    route.fulfill({ json: { ok: true, instance: "e2e" } }),
+  );
+  // Paused, so Pip moves on rig time alone: a running clock would also tick
+  // between commands, and a busy machine's frame would cover more than 16 ms.
+  await page.clock.install({ time: CLOCK_START });
+  await page.clock.pauseAt(CLOCK_START + 1_000);
   await page.goto("/");
   await expect
     .poll(
