@@ -36,6 +36,12 @@ export interface SaysProps {
    * what changes too often to be said (a running clock).
    */
   aside?: ReactNode;
+  /**
+   * Shown in the bubble under the words, outside the live region: controls
+   * (the help offer) that a screen reader should reach, not hear again with
+   * every status.
+   */
+  after?: ReactNode;
   children: ReactNode;
 }
 
@@ -57,6 +63,7 @@ export function Says({
   pip,
   textKey,
   aside,
+  after,
   children,
 }: SaysProps) {
   const entrance = saysEntrance(useMotionTokens());
@@ -96,6 +103,7 @@ export function Says({
             </div>
             {aside}
           </div>
+          {after}
         </div>
       </div>
     </div>

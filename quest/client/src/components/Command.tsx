@@ -37,11 +37,6 @@ export interface CommandProps {
   watched?: boolean;
   /** Whose prompt it is typed at; the shell's by default. */
   prompt?: CommandPrompt;
-  /**
-   * Copy says "Copied" in its own live region. Inside another live region
-   * (the connection notice), that region says it instead, so it is said once.
-   */
-  announce?: boolean;
   className?: string;
 }
 
@@ -56,7 +51,6 @@ export function Command({
   fit = false,
   watched = false,
   prompt = "shell",
-  announce = true,
   className,
 }: CommandProps) {
   const code = useRef<HTMLElement>(null);
@@ -122,7 +116,7 @@ export function Command({
         />
         <span aria-hidden="true">{label}</span>
       </button>
-      <span {...(announce ? { role: "status" } : {})} className="sr-only">
+      <span role="status" className="sr-only">
         {state !== "idle" && (
           // A new node for each Copy, so a repeat is announced, not dropped as unchanged.
           <span key={copies}>

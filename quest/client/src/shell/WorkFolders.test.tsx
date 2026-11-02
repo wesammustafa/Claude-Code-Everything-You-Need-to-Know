@@ -89,4 +89,36 @@ describe("Settings' Work folders", () => {
     await user.click(within(region).getByRole("button", { name: "Cancel" }));
     expect(within(region).queryByRole("textbox")).toBeNull();
   });
+
+  test("Change puts focus in the form; Cancel, a send and Escape give it back to Change, and Escape leaves Settings open", async () => {
+    const { user, region } = await openFolders(
+      withFolders([{ key: "a-5", path: "/home/sam/actions" }]),
+    );
+    const change = (key: string) =>
+      within(row(region, key)).getByRole("button", { name: /Change/ });
+
+    await user.click(change("advanced"));
+    expect(within(region).getAllByRole("radio")).toContain(
+      document.activeElement,
+    );
+    await user.click(within(region).getByRole("button", { name: "Cancel" }));
+    expect(change("advanced")).toHaveFocus();
+
+    await user.click(change("a-5"));
+    expect(within(region).getByRole("textbox")).toHaveFocus();
+    await user.keyboard("{Escape}");
+    expect(within(region).queryByRole("textbox")).toBeNull();
+    expect(change("a-5")).toHaveFocus();
+    expect(
+      screen.getByRole("dialog", { name: "Settings" }),
+    ).toBeInTheDocument();
+
+    await user.click(change("advanced"));
+    await user.click(
+      within(region).getByRole("button", { name: "Use this folder" }),
+    );
+    await waitFor(() => {
+      expect(change("advanced")).toHaveFocus();
+    });
+  });
 });

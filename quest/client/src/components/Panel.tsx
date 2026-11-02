@@ -25,12 +25,19 @@ export interface PanelProps {
 }
 
 // While a Panel is open, everything else in <body> is inert: #root and the
-// fixed layers portaled beside it (the action bar, notices), including any
-// that mount while it is open. Returns the undo.
+// fixed layers portaled beside it (the action bar), including any that mount
+// while it is open. A live region marked data-keep-live (the connection
+// notice's) stays live, so what it says still reaches a screen reader.
+// Returns the undo.
 function makeRestInert(own: Element): () => void {
   const made: Element[] = [];
   const mark = (el: Element) => {
-    if (el === own || el.hasAttribute("inert")) return;
+    if (
+      el === own ||
+      el.hasAttribute("inert") ||
+      el.hasAttribute("data-keep-live")
+    )
+      return;
     el.setAttribute("inert", "");
     made.push(el);
   };

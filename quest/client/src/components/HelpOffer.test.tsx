@@ -30,11 +30,30 @@ test("its words keep the copy rules", () => {
   expect(words).not.toContain(String.fromCodePoint(0x2014));
 });
 
-test("closed, it is not on the page", () => {
+test("closed, only its empty live region is on the page", () => {
   const { container } = render(
     <HelpOffer open={false} onShowHint={none} onDismiss={none} />,
   );
-  expect(container).toBeEmptyDOMElement();
+  expect(screen.getByRole("status")).toBeEmptyDOMElement();
+  expect(container.querySelector("[data-help-offer]")).toBeNull();
+  expect(container).toHaveTextContent("");
+});
+
+test("its own region says the offer as it opens, holds no control, and clears as it closes", () => {
+  const { rerender } = render(
+    <HelpOffer open={false} onShowHint={none} onDismiss={none} />,
+  );
+  const region = screen.getByRole("status");
+  rerender(<HelpOffer open onShowHint={none} onDismiss={none} />);
+  expect(screen.getByRole("status")).toBe(region);
+  expect(region).toHaveTextContent(HELP_OFFER_TEXT);
+  expect(region.querySelector("button")).toBeNull();
+  // The words show once to a screen reader: the visible line is hidden from it.
+  expect(screen.getAllByText(HELP_OFFER_TEXT)).toHaveLength(2);
+  for (const el of screen.getAllByText(HELP_OFFER_TEXT))
+    if (el !== region) expect(el).toHaveAttribute("aria-hidden", "true");
+  rerender(<HelpOffer open={false} onShowHint={none} onDismiss={none} />);
+  expect(region).toBeEmptyDOMElement();
 });
 
 test("its height opens and closes from tokens, and only fades under reduced motion", () => {
@@ -65,7 +84,7 @@ test("closing, it stays as it was, inert, until its transitions end, then leaves
   );
   const box = container.querySelector("[data-help-offer]");
   rerender(<HelpOffer open={false} onShowHint={none} onDismiss={none} />);
-  // The same words, not re-inserted, so the live region hears nothing new.
+  // The same box, not re-inserted, while it closes.
   expect(container.querySelector("[data-help-offer]")).toBe(box);
   expect(box).toHaveAttribute("data-help-offer", "leaving");
   expect(box).toHaveAttribute("inert");
@@ -74,6 +93,7 @@ test("closing, it stays as it was, inert, until its transitions end, then leaves
     finish();
     await finished;
   });
-  expect(container).toBeEmptyDOMElement();
+  expect(container.querySelector("[data-help-offer]")).toBeNull();
+  expect(container).toHaveTextContent("");
   Reflect.deleteProperty(Element.prototype, "getAnimations");
 });

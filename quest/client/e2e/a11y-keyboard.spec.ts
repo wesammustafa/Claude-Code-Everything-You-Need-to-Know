@@ -19,6 +19,8 @@ import {
 import { actionsOf, bar } from "./play.ts";
 import {
   askBeat,
+  confirmExact,
+  hinted,
   offersBoth,
   snapshotOf,
   stepDown,
@@ -250,6 +252,72 @@ test("Start over: Keep my place takes focus, Escape goes back to the button, and
   await page.keyboard.press("Escape");
   await expect(ask).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Start over" })).toBeFocused();
+});
+
+test("Settings' Work folders: Change puts focus in the form; Cancel and Escape give it back to Change, Escape leaving Settings open", async ({
+  page,
+}) => {
+  await workspace(page);
+  await page.getByRole("button", { name: "Settings", exact: true }).focus();
+  await page.keyboard.press("Enter");
+  const dialog = page.getByRole("dialog", { name: "Settings" });
+  const change = dialog.getByRole("button", {
+    name: "Change the folder for Intermediate",
+  });
+  await change.focus();
+  await page.keyboard.press("Enter");
+  const radios = dialog
+    .getByRole("region", { name: "Work folders" })
+    .getByRole("radio");
+  await expect(radios.first()).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => (document.activeElement as HTMLInputElement | null)?.type,
+    ),
+  ).toBe("radio");
+  await expectVisibleFocus(page);
+  // Tab on to Cancel, and Enter.
+  const cancel = dialog.getByRole("button", { name: "Cancel" });
+  for (let i = 0; i < 6; i += 1) {
+    if (await cancel.evaluate((el) => el === document.activeElement)) break;
+    await page.keyboard.press("Tab");
+  }
+  await expect(cancel).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(change).toBeFocused();
+  await expectVisibleFocus(page);
+
+  await page.keyboard.press("Enter");
+  await expect(radios.first()).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(radios).toHaveCount(0);
+  await expect(dialog).toBeVisible();
+  await expect(change).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+});
+
+test("a hint opened from the keyboard takes focus with the ring, as does the exact-command question", async ({
+  page,
+}) => {
+  await page.goto("/#/lesson/b-1/step");
+  await connected(page, snapshotOf(watching, { revision: 2 }));
+  const show = page.getByRole("button", { name: "Show a hint" });
+  await show.focus();
+  await page.keyboard.press("Enter");
+  await connected(page, snapshotOf(hinted, { revision: 3 }));
+  const rung = page.locator("[data-pip-target=hint]");
+  await expect(rung).toBeFocused();
+  await settle(page);
+  await expectVisibleFocus(page);
+  await connected(page, snapshotOf(confirmExact, { revision: 4 }));
+  const question = page.getByText(/^Show the exact command\?/);
+  await expect(question).toBeFocused();
+  await expectVisibleFocus(page);
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("button", { name: "Show the exact command" }),
+  ).toBeFocused();
 });
 
 test("Step-down: focus on its heading, then each choice by Tab and Enter", async ({

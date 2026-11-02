@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FolderKey, FolderQuestion, Snapshot } from "@quest/contract";
 import { Button } from "../components/Button";
 import { FolderForm } from "../components/FolderForm";
@@ -52,19 +52,50 @@ function rowsOf(snapshot: Snapshot): Row[] {
 /**
  * Settings' Work folders (ticket 252): each later Level's folder, this
  * practice copy or a path, and each new copy a Lesson was given, with Change,
- * which opens the folder form in place. A refusal is the server's; what the
- * host then finds there the overview says.
+ * which opens the folder form in place, focus on its first field; closing it
+ * (Cancel, sent, or Escape) gives focus back to Change. A refusal is the
+ * server's; what the host then finds there the overview says.
  */
 export function WorkFolders() {
   const snapshot = useCourseSnapshot();
   const [editing, setEditing] = useState<FolderKey | null>(null);
+  const list = useRef<HTMLUListElement>(null);
+  // The row last opened, whose Change takes focus back when its form closes.
+  const opened = useRef<FolderKey | null>(null);
+  useEffect(() => {
+    const at = (key: FolderKey) =>
+      list.current?.querySelector<HTMLElement>(`[data-work-folder="${key}"]`);
+    if (editing !== null) {
+      opened.current = editing;
+      const row = at(editing);
+      // The chosen radio, as Tab into the group would land, or the path.
+      (
+        row?.querySelector<HTMLElement>("input:checked") ??
+        row?.querySelector<HTMLElement>("input")
+      )?.focus();
+      // Escape closes the form, not the Settings panel round it.
+      const onKey = (event: KeyboardEvent) => {
+        if (event.key !== "Escape") return;
+        event.stopPropagation();
+        setEditing(null);
+      };
+      row?.addEventListener("keydown", onKey);
+      return () => {
+        row?.removeEventListener("keydown", onKey);
+      };
+    }
+    if (opened.current !== null)
+      at(opened.current)?.querySelector<HTMLElement>("button")?.focus();
+    opened.current = null;
+    return undefined;
+  }, [editing]);
   const rows = snapshot ? rowsOf(snapshot) : [];
   // A course of Beginner alone has no Work folder.
   if (!snapshot || rows.length === 0) return null;
   const practiceCopy = snapshot.learner.practiceCopy;
   return (
     <div className="grid gap-2">
-      <ul className="grid gap-2" data-work-folders="">
+      <ul ref={list} className="grid gap-2" data-work-folders="">
         {rows.map((row) => (
           <li key={row.key} className="grid gap-1.5" data-work-folder={row.key}>
             {editing === row.key ? (

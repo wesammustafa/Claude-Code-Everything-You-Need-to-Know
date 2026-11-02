@@ -57,7 +57,11 @@ export function Hints({
     if (asking) question.current?.focus();
     // Not now took the question's buttons away and opened no rung: focus
     // goes to the button that opens the next one, or the newest rung.
-    if (!closed || document.activeElement !== document.body) return;
+    const lost =
+      document.activeElement === null ||
+      document.activeElement === document.body ||
+      !document.activeElement.isConnected;
+    if (!closed || !lost) return;
     (
       root.current?.querySelector<HTMLElement>("[data-hints-next]") ??
       root.current?.querySelector<HTMLElement>(
@@ -79,11 +83,13 @@ export function Hints({
             animate={entrance.animate}
             transition={entrance.transition}
           >
+            {/* Focus put on the newest rung draws the ring inside it: the
+                rung's box clips what spills past it while it opens. */}
             <div
               ref={newest ? newestRef : undefined}
               tabIndex={newest ? -1 : undefined}
               data-pip-target={newest ? "hint" : undefined}
-              className="flex w-full items-start gap-2.5 rounded-lg border border-line bg-surface-2 px-4.5 py-3.5 text-sm focus:outline-none"
+              className="flex w-full items-start gap-2.5 rounded-lg border border-line bg-surface-2 px-4.5 py-3.5 text-sm focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus"
             >
               <Icon name="bulb" className="mt-0.5 text-accent-text" />
               {typeof hint === "string" ? (
@@ -107,7 +113,7 @@ export function Hints({
           <p
             ref={question}
             tabIndex={-1}
-            className="text-sm focus:outline-none"
+            className="text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
           >
             {CONFIRM_EXACT}
           </p>

@@ -37,12 +37,16 @@ const notYet = () => ({
   evidence: "No commit yet",
 });
 
-/** Every text Pip's bubble says from now on, in order, each change once. */
-async function noteBubble(page: Page): Promise<() => Promise<string[]>> {
-  await page.evaluate(() => {
-    const bubble = document.querySelector(
-      "main [role=status][aria-live=polite]",
-    );
+/**
+ * Every text Pip's bubble, or the live region `selector` names, says from
+ * now on, in order, each change once.
+ */
+async function noteBubble(
+  page: Page,
+  selector = "main [role=status][aria-live=polite]",
+): Promise<() => Promise<string[]>> {
+  await page.evaluate((selector) => {
+    const bubble = document.querySelector(selector);
     const said: string[] = [bubble?.textContent ?? ""];
     Object.assign(window, { bubbleSaid: said });
     if (bubble === null) return;
@@ -50,7 +54,7 @@ async function noteBubble(page: Page): Promise<() => Promise<string[]>> {
       const text = bubble.textContent;
       if (said.at(-1) !== text) said.push(text);
     }).observe(bubble, { subtree: true, childList: true, characterData: true });
-  });
+  }, selector);
   return () =>
     page.evaluate(
       () => (window as unknown as { bubbleSaid: string[] }).bubbleSaid,
@@ -71,6 +75,10 @@ async function settled(page: Page) {
 
 const bubble = (page: Page) =>
   page.locator("main [role=status][aria-live=polite]");
+
+/** The help offer's own live region, under the bubble's words (268). */
+const OFFER_SAID = "main [data-help-offer-said]";
+const offerSaid = (page: Page) => page.locator(OFFER_SAID);
 
 test.describe("resting gaze", () => {
   test("beside the step Pip rests turned toward it; centred on Welcome he faces the Learner", async ({
@@ -139,13 +147,13 @@ test.describe("the help offer", () => {
     await expect(pip(page)).toHaveAttribute("data-pip-rendering", "rig", {
       timeout: 20_000,
     });
-    const said = await noteBubble(page);
+    const said = await noteBubble(page, OFFER_SAID);
 
     await send(page, notYet());
     await page.waitForTimeout(2_000);
-    await expect(bubble(page)).not.toContainText(OFFER);
+    await expect(offerSaid(page)).toBeEmpty();
     await send(page, notYet());
-    await expect(bubble(page)).toContainText(OFFER);
+    await expect(offerSaid(page)).toHaveText(OFFER);
     // Pip turned to the Learner with Explaining, under the offer's own ID.
     await expect(pip(page)).toHaveAttribute("data-pip-reaction", /^help\./);
     await expect(pip(page)).toHaveAttribute("data-pip-gaze", FORWARD);
@@ -156,7 +164,7 @@ test.describe("the help offer", () => {
     await expect(hint).toBeVisible();
     await expect(hint).toContainText("Hint 1.");
     await expect(hint).toBeFocused();
-    await expect(bubble(page)).not.toContainText(OFFER);
+    await expect(offerSaid(page)).toBeEmpty();
 
     // The live region said the offer once: one change into it, one out.
     const texts = await said();
@@ -170,14 +178,14 @@ test.describe("the help offer", () => {
     await page.goto(STEP);
     await send(page, notYet());
     await send(page, notYet());
-    await expect(bubble(page)).toContainText(OFFER);
+    await expect(offerSaid(page)).toHaveText(OFFER);
     await page.getByRole("button", { name: "Not now" }).click();
-    await expect(bubble(page)).not.toContainText(OFFER);
+    await expect(offerSaid(page)).toBeEmpty();
     await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
     await send(page, notYet());
     await send(page, notYet());
     await page.waitForTimeout(2_500);
-    await expect(bubble(page)).not.toContainText(OFFER);
+    await expect(offerSaid(page)).toBeEmpty();
     // The hint is still there for the asking.
     await expect(
       page.getByRole("button", { name: "Show a hint" }),
@@ -188,11 +196,9 @@ test.describe("the help offer", () => {
     page,
   }) => {
     await page.goto(STEP);
-    // Every change to the bubble, with whether it was inert then.
+    // Every change to the offer's region, with whether it was inert then.
     await page.evaluate(() => {
-      const region = document.querySelector(
-        "main [role=status][aria-live=polite]",
-      );
+      const region = document.querySelector("main [data-help-offer-said]");
       const changes: { text: string; inert: boolean }[] = [];
       Object.assign(window, { changes });
       if (region === null) return;
@@ -209,10 +215,10 @@ test.describe("the help offer", () => {
     await send(page, notYet());
     await send(page, notYet());
     await page.waitForTimeout(2_500);
-    await expect(bubble(page)).not.toContainText(OFFER);
+    await expect(offerSaid(page)).toBeEmpty();
     await page.keyboard.press("Escape");
     await expect(outline).toBeHidden();
-    await expect(bubble(page)).toContainText(OFFER);
+    await expect(offerSaid(page)).toHaveText(OFFER);
     await expect(pip(page)).toHaveAttribute("data-pip-reaction", /^help\./);
     const changes = await page.evaluate(
       () =>
@@ -228,7 +234,7 @@ test.describe("the help offer", () => {
     await page.goto(STEP);
     await send(page, notYet());
     await send(page, notYet());
-    await expect(bubble(page)).toContainText(OFFER);
+    await expect(offerSaid(page)).toHaveText(OFFER);
     // Every node put into the live region from now on.
     await page.evaluate(() => {
       const region = document.querySelector(
@@ -289,7 +295,7 @@ test.describe("the help offer", () => {
     });
     await send(page, notYet());
     await send(page, notYet());
-    await expect(bubble(page)).toContainText(OFFER);
+    await expect(offerSaid(page)).toHaveText(OFFER);
     // Until the offer has opened all the way.
     await page.evaluate(() =>
       Promise.all(
@@ -321,7 +327,7 @@ test.describe("the help offer", () => {
     await page.goto(STEP);
     await send(page, notYet());
     await send(page, notYet());
-    await expect(bubble(page)).toContainText(OFFER);
+    await expect(offerSaid(page)).toHaveText(OFFER);
     await expect(pip(page)).toHaveAttribute("data-pip-gaze", REST);
     await page.getByRole("button", { name: "Show the hint" }).click();
     await expect(page.locator("[data-pip-target=hint]")).toBeFocused();

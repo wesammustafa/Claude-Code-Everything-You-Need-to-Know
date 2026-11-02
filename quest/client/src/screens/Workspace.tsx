@@ -253,7 +253,8 @@ function Play({
         />
         {/* The status words stay keyed as they are while the offer comes
             and goes, so the live region never says them twice. The seconds
-            sit beside the live region, so their ticks are never said. */}
+            sit beside the live region, so their ticks are never said, and
+            the offer under it, so its buttons are never said with them. */}
         <Says
           tone={offering ? "offer" : status.tone}
           textKey={status.key}
@@ -268,6 +269,13 @@ function Play({
               </span>
             )
           }
+          after={
+            <HelpOffer
+              open={offering}
+              onShowHint={showNextHint}
+              onDismiss={dismissOffer}
+            />
+          }
         >
           <span>
             {beat.status === "waiting" && decidedByOf(beat) !== "answer" && (
@@ -278,11 +286,6 @@ function Play({
             )}
             {status.words}
           </span>
-          <HelpOffer
-            open={offering}
-            onShowHint={showNextHint}
-            onDismiss={dismissOffer}
-          />
         </Says>
         <article
           data-step-card=""

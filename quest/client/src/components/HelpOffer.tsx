@@ -15,9 +15,10 @@ export interface HelpOfferProps {
 /**
  * Pip's offer of the step's hint, inside his bubble: open it, or not now.
  * The bubble's height opens and closes smoothly with it, so the step card
- * below glides instead of jumping; under reduced motion it only fades. While
- * it closes it is inert and its words stay put, so the live region hears
- * nothing new: the offer is announced once, as it opens.
+ * below glides instead of jumping; under reduced motion it only fades. It
+ * sits under the bubble's words, outside their live region (ticket 268), so
+ * its buttons are never read out with a status: its own polite region, there
+ * open or closed, says the offer once as it opens and clears quietly.
  */
 export function HelpOffer({ open, onShowHint, onDismiss }: HelpOfferProps) {
   const [mounted, setMounted] = useState(open);
@@ -47,38 +48,47 @@ export function HelpOffer({ open, onShowHint, onDismiss }: HelpOfferProps) {
     };
   }, [open, mounted]);
 
-  if (!mounted) return null;
+  const said = (
+    <p role="status" data-help-offer-said="" className="sr-only">
+      {open ? HELP_OFFER_TEXT : ""}
+    </p>
+  );
+  if (!mounted) return said;
   return (
-    <div
-      ref={box}
-      data-help-offer={leaving ? "leaving" : "open"}
-      inert={leaving}
-      className={cx(
-        "grid transition-[grid-template-rows,opacity] duration-(--duration-slow) ease-out",
-        "starting:grid-rows-[0fr] starting:opacity-gone reduced:transition-opacity",
-        leaving
-          ? "grid-rows-[0fr] opacity-gone reduced:grid-rows-[1fr]"
-          : "grid-rows-[1fr]",
-      )}
-    >
-      <div className={cx("min-h-0", !settled && "overflow-hidden")}>
-        <div className="grid justify-items-start gap-2.5 pt-2">
-          <p>{HELP_OFFER_TEXT}</p>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="primary"
-              size="sm"
-              icon="bulb"
-              onClick={onShowHint}
-            >
-              Show the hint
-            </Button>
-            <Button variant="ghost" size="sm" onClick={onDismiss}>
-              Not now
-            </Button>
+    <>
+      {said}
+      <div
+        ref={box}
+        data-help-offer={leaving ? "leaving" : "open"}
+        inert={leaving}
+        className={cx(
+          "grid transition-[grid-template-rows,opacity] duration-(--duration-slow) ease-out",
+          "starting:grid-rows-[0fr] starting:opacity-gone reduced:transition-opacity",
+          leaving
+            ? "grid-rows-[0fr] opacity-gone reduced:grid-rows-[1fr]"
+            : "grid-rows-[1fr]",
+        )}
+      >
+        <div className={cx("min-h-0", !settled && "overflow-hidden")}>
+          <div className="grid justify-items-start gap-2.5 pt-2">
+            {/* Said by the region above. */}
+            <p aria-hidden="true">{HELP_OFFER_TEXT}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="primary"
+                size="sm"
+                icon="bulb"
+                onClick={onShowHint}
+              >
+                Show the hint
+              </Button>
+              <Button variant="ghost" size="sm" onClick={onDismiss}>
+                Not now
+              </Button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
