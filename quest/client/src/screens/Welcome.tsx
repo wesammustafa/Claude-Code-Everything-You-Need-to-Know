@@ -20,8 +20,9 @@ const HERO =
 
 /**
  * Welcome on a first run, Resume on a return: Pip large and centred, one
- * action. The words state no Claude Code fact; the resume card's are the
- * snapshot's.
+ * action. A welcomed copy not mid-Lesson offers Continue to the course's
+ * next Lesson instead of Start. The words state no Claude Code fact; the
+ * resume card's and the Continue title are the snapshot's.
  */
 export function Welcome() {
   const snapshot = useCourseSnapshot();
@@ -63,8 +64,10 @@ function FirstRun({ snapshot }: { snapshot: Snapshot | null }) {
   const navigate = useNavigate();
   const first = snapshot?.course.next ?? null;
   const welcomed = snapshot?.learner.welcomed === true;
-  // Welcome is read once, before any Lesson is opened, so course.next is
-  // still the active Lesson and its route shows it without a lesson.open.
+  const title = first !== null ? summaryOf(snapshot, first)?.title : undefined;
+  // course.next is the active Lesson only on a first run, so its route shows
+  // it without a lesson.open. A welcomed Learner may have another active
+  // (a new copy's pin, or a complete Lesson), so Continue opens course.next.
   const open = () => {
     if (first !== null) void navigate(`/lesson/${first}`);
   };
@@ -73,9 +76,17 @@ function FirstRun({ snapshot }: { snapshot: Snapshot | null }) {
     { type: "welcome.finish" },
     open,
   );
+  const reopen = useActionProps(
+    "lesson.open",
+    { type: "lesson.open", lesson: first ?? "" },
+    open,
+  );
   return (
     <>
-      <PageTitle title="Welcome" className="text-display max-sm:text-3xl">
+      <PageTitle
+        title={welcomed ? "Welcome back" : "Welcome"}
+        className="text-display max-sm:text-3xl"
+      >
         Learn Claude Code by using it.
       </PageTitle>
       <p className="max-w-moment text-lg text-muted">
@@ -98,18 +109,25 @@ function FirstRun({ snapshot }: { snapshot: Snapshot | null }) {
           </span>
         </li>
       </ul>
-      {first !== null && (
-        <Button
-          variant="primary"
-          size="lg"
-          iconEnd="arrow"
-          {...(welcomed ? { onClick: open } : finish)}
-        >
-          Start the first lesson
-        </Button>
-      )}
+      {first !== null &&
+        (welcomed ? (
+          <Button variant="primary" size="lg" iconEnd="arrow" {...reopen}>
+            {title === undefined ? (
+              "Continue"
+            ) : (
+              <>
+                {"Continue: "}
+                <InlineText text={title} />
+              </>
+            )}
+          </Button>
+        ) : (
+          <Button variant="primary" size="lg" iconEnd="arrow" {...finish}>
+            Start the first lesson
+          </Button>
+        ))}
       <Link to="/journey" className={QUIET_LINK}>
-        See all three levels first
+        {welcomed ? "See all three levels" : "See all three levels first"}
       </Link>
     </>
   );
