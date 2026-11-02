@@ -13,6 +13,9 @@ import { lessons } from "../../../practice-template/checks/lessons/index.mjs";
 import { PROBES, probeError } from "../src/probes.ts";
 import { STAMP, checkLessons } from "../src/lessons.ts";
 
+/** Escape every RegExp special character, backslash included. */
+const escapeRegExp = (text) => text.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
+
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const probes = { PROBES, probeError };
 
@@ -135,7 +138,7 @@ describe("the lesson test on this repo", () => {
     for (const problem of problems)
       expect(problem).toMatch(
         new RegExp(
-          `^course/steps/b-1\\.md:\\d+: quotes ".*" \\(.*\\), which is not in ${page.replace(/\./g, "\\.")}\\.$`,
+          `^course/steps/b-1\\.md:\\d+: quotes ".*" \\(.*\\), which is not in ${escapeRegExp(page)}\\.$`,
         ),
       );
     expect(problems.join("\n")).toContain(`quotes "${quote}"`);
@@ -196,7 +199,7 @@ describe("the lesson test on this repo", () => {
     expect(added({ ...repo, stepFiles })).toEqual([
       expect.stringMatching(
         new RegExp(
-          `^course/steps/i-1\\.md:${at}: quotes "A sentence no page holds at all\\." \\(.*\\), which is not in ${pageOf("i-1").replace(/\./g, "\\.")}\\.$`,
+          `^course/steps/i-1\\.md:${at}: quotes "A sentence no page holds at all\\." \\(.*\\), which is not in ${escapeRegExp(pageOf("i-1"))}\\.$`,
         ),
       ),
     ]);
