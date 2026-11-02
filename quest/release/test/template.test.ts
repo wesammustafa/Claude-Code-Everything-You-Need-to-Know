@@ -363,6 +363,16 @@ describe("assembleTemplate", () => {
     );
   });
 
+  // Ticket 295 D1: one repository, at the copy root. Claude Code keeps
+  // `.claude/settings.local.json` and Project-scope workflows at the git
+  // root, so verifies and Checks read project/ first and then the root.
+  test("the copy is one repository: no .git or .claude under project/, and the root .gitignore keeps project/", () => {
+    expect(existsSync(join(a, "project", ".git"))).toBe(false);
+    expect(existsSync(join(a, "project", ".claude"))).toBe(false);
+    const ignore = readFileSync(join(a, ".gitignore"), "utf8").split("\n");
+    expect(ignore.some((l) => /^\/?project\/?$/.test(l.trim()))).toBe(false);
+  });
+
   test("learn/ ships the release course, its README and the notices", () => {
     expect(readFileSync(join(a, "learn/course.json"), "utf8")).toBe(
       '{"from":"release"}\n',

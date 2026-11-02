@@ -303,6 +303,19 @@ function tracked(repo, ...args) {
   }
 }
 
+// The path git tracks for `path` here or at the git root, '' for neither.
+/**
+ * @param {Repo} repo
+ * @param {string} path
+ */
+function trackedAt(repo, path) {
+  try {
+    return repo.trackedAny(path);
+  } catch {
+    return '';
+  }
+}
+
 /** @type {Item} */
 export const personalFiles = {
   text: 'a committed `.gitignore` keeps `.claude/settings.local.json` and `CLAUDE.local.md` out, and git tracks neither',
@@ -312,8 +325,10 @@ export const personalFiles = {
     /** @type {string[]} */
     const unruled = [];
     for (const path of PERSONAL) {
-      if (tracked(repo, 'ls-files', '--', path)) {
-        problems.push(`git tracks ${code(path)}, which is yours alone. Run \`git rm --cached ${path}\`, add the line ${code(path)} to \`.gitignore\`, and commit.`);
+      // Claude Code may keep the local settings file at the git root (ticket 295).
+      const at = path === PERSONAL[0] ? trackedAt(repo, path) : tracked(repo, 'ls-files', '--', path) && path;
+      if (at) {
+        problems.push(`git tracks ${code(at)}, which is yours alone. Run \`git rm --cached ${at}\`, add the line ${code(path)} to \`.gitignore\`, and commit.`);
       } else if (tracked(repo, 'ls-tree', '--name-only', 'HEAD', '--', path)) {
         problems.push(`${code(path)} is still in your last commit. Commit its removal.`);
       } else {
