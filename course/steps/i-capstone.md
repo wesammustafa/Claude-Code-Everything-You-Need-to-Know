@@ -138,6 +138,7 @@ needs: [jq python3]
 - done-label: installed
 - say: Then install it, as a teammate does.
 - bottom: "claude plugin install claude-code-setup@claude-plugins-official --scope project"
+- say: Review what the install changed with git diff .claude/settings.json; you commit it with your setup in step 8.
 
 ### T8 | The task step 8 of 8 | Fix the bug with your setup
 - tier: challenge
@@ -147,7 +148,7 @@ needs: [jq python3]
 - verify: self
 - done-label: I reproduced it
 - goal: "Reproduce the malformed-percent bug in `capstone/intermediate-bug.md` with your link-check workflow"
-- hint: "a link such as `[broken](bad%.md)` crashes the checker instead of producing its normal broken-link report."
+- hint: "a link such as `[broken](bad%.md)` crashes the checker with `URIError: URI malformed` instead of producing its normal broken-link report."
 - beat: do
 - verify: self
 - done-label: I saw red and green
@@ -170,12 +171,21 @@ needs: [jq python3]
 - say: Done when the file holds the SubagentStart hook.
 - hint: "a session started with `claude --settings .practice/i-capstone-hook.json`"
 - beat: do
+- where: shell
+- skill: commit
+- verify: check 2
+- watching: git status --porcelain
+- done-label: reviewer committed
+- goal: "Before the review, commit your setup (the skill, the reviewer, the settings and the server file) and keep the fix and its test uncommitted: the check reads your reviewer from git."
+- say: Stage everything except the source fix and its test, then commit.
+- beat: do
 - skill: delegate
 - verify: check 12 fresh
 - watching: .practice/i-capstone-agents.txt
 - evidence: .practice/i-capstone-agents.txt
-- goal: "Before you commit, have your reviewer review the fix"
-- hint: "Before you commit, have your reviewer review the fix in a session started with `claude --settings .practice/i-capstone-hook.json`"
+- goal: "Before you commit the fix, have your reviewer review it"
+- note: "A review in a session started without the hook file, or one Claude does itself without your reviewer, is not logged, so the check fails."
+- hint: "Before you commit the fix, have your reviewer review it in a session started with `claude --settings .practice/i-capstone-hook.json`"
 - beat: do
 - where: shell
 - skill: commit
@@ -348,7 +358,7 @@ needs: [jq python3]
 ### `.practice/i-capstone-agents.txt` shows Claude delegating to the committed reviewer
 - narrow "There is no delegation log": Did you start the review session with the capstone's hook file, in your practice copy?
 - narrow "The log names no committed reviewer": Did Claude hand the review to your committed reviewer, by its name, in that session?
-- hint: "Before you commit, have your reviewer review the fix in a session started with `claude --settings .practice/i-capstone-hook.json`"
+- hint: "Before you commit the fix, have your reviewer review it in a session started with `claude --settings .practice/i-capstone-hook.json`"
 
 ### the committed `.claude/settings.json` asks before a command the team approves each time, such as `git push`
 - narrow "as valid JSON, with the ask rule": Is the shared settings file committed, and does it still parse?
