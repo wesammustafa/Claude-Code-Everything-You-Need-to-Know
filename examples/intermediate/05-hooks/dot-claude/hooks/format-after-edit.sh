@@ -11,7 +11,7 @@
 # files and files outside the project. It never blocks: it always exits 0.
 # Requires: bash, jq and python3. Platforms: macOS, Linux, WSL2.
 # Remove: delete its PostToolUse entry from .claude/settings.json, then this file.
-# Tested in Claude Code v2.1.285 (stable) on macOS, 2026-10-06
+# Not yet tested in a session at this edition's version
 set -u
 
 file=$(jq -r '.tool_input.file_path // empty')
