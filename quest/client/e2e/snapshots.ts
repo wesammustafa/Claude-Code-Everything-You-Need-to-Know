@@ -8,11 +8,13 @@ import type {
   CompleteLesson,
   CourseView,
   LearnerView,
+  Mastery,
   Milestone,
   OverviewLesson,
   PlayingLesson,
   Snapshot,
   StepDownLesson,
+  StepSummary,
 } from "@quest/contract";
 
 export const FIXTURE_INSTANCE = "e2e";
@@ -69,12 +71,111 @@ export const learner: LearnerView = {
   saving: true,
 };
 
+// b-1's outline: every step to do, as the overview lists it.
+const b1Outline: StepSummary[] = [
+  {
+    id: "W1",
+    part: "Worked example",
+    title: "Run the installer",
+    tier: "guided",
+    state: "todo",
+    optional: false,
+  },
+  {
+    id: "W2",
+    part: "Worked example",
+    title: "Check the install",
+    tier: "guided",
+    state: "todo",
+    optional: false,
+  },
+  {
+    id: "W3",
+    part: "Worked example",
+    title: "Start, sign in and trust",
+    tier: "guided",
+    state: "todo",
+    optional: false,
+  },
+  {
+    id: "W4",
+    part: "Worked example",
+    title: "Compare the session",
+    tier: "guided",
+    state: "todo",
+    optional: false,
+  },
+  {
+    id: "W5",
+    part: "Worked example",
+    title: "Ask, stop and ask again",
+    tier: "guided",
+    state: "todo",
+    optional: false,
+  },
+  {
+    id: "W6",
+    part: "Worked example",
+    title: "Check the source",
+    tier: "guided",
+    state: "todo",
+    optional: false,
+  },
+  {
+    id: "Y1",
+    part: "Your turn",
+    title: "Check the onboarding notes",
+    tier: "hinted",
+    state: "todo",
+    optional: false,
+  },
+  {
+    id: "Y2",
+    part: "Your turn",
+    title: "Read the cited lines",
+    tier: "hinted",
+    state: "todo",
+    optional: false,
+  },
+  {
+    id: "Y3",
+    part: "Your turn",
+    title: "Correct one claim",
+    tier: "challenge",
+    state: "todo",
+    optional: false,
+  },
+  {
+    id: "Y4",
+    part: "Your turn",
+    title: "Finish from a clean tree",
+    tier: "hinted",
+    state: "todo",
+    optional: false,
+  },
+  {
+    id: "C",
+    part: "Check",
+    title: "Check",
+    tier: "challenge",
+    state: "todo",
+    optional: false,
+  },
+];
+// b-1's outline on the step at `current`: the steps before it done.
+const b1At = (current: number): StepSummary[] =>
+  b1Outline.map((step, i) => ({
+    ...step,
+    state: i < current ? "done" : i === current ? "current" : "todo",
+  }));
+
 export const overview: OverviewLesson = {
   id: "b-1",
   title: "Install, sign in and look around",
   level: "beginner",
   capstone: false,
   phase: "overview",
+  steps: b1Outline,
   intro: {
     can: [
       "start it safely in a repository",
@@ -180,6 +281,8 @@ export const overview: OverviewLesson = {
       },
     ],
   },
+  check: [],
+  needs: [],
   notes: [],
   folderQuestion: null,
   start: {
@@ -196,96 +299,7 @@ export const playing: PlayingLesson = {
   level: "beginner",
   capstone: false,
   phase: "playing",
-  steps: [
-    {
-      id: "W1",
-      part: "Worked example",
-      title: "Run the installer",
-      tier: "guided",
-      state: "done",
-      optional: false,
-    },
-    {
-      id: "W2",
-      part: "Worked example",
-      title: "Check the install",
-      tier: "guided",
-      state: "done",
-      optional: false,
-    },
-    {
-      id: "W3",
-      part: "Worked example",
-      title: "Start, sign in and trust",
-      tier: "guided",
-      state: "done",
-      optional: false,
-    },
-    {
-      id: "W4",
-      part: "Worked example",
-      title: "Compare the session",
-      tier: "guided",
-      state: "done",
-      optional: false,
-    },
-    {
-      id: "W5",
-      part: "Worked example",
-      title: "Ask, stop and ask again",
-      tier: "guided",
-      state: "done",
-      optional: false,
-    },
-    {
-      id: "W6",
-      part: "Worked example",
-      title: "Check the source",
-      tier: "guided",
-      state: "done",
-      optional: false,
-    },
-    {
-      id: "Y1",
-      part: "Your turn",
-      title: "Check the onboarding notes",
-      tier: "hinted",
-      state: "done",
-      optional: false,
-    },
-    {
-      id: "Y2",
-      part: "Your turn",
-      title: "Read the cited lines",
-      tier: "hinted",
-      state: "done",
-      optional: false,
-    },
-    {
-      id: "Y3",
-      part: "Your turn",
-      title: "Correct one claim",
-      tier: "challenge",
-      state: "done",
-      optional: false,
-    },
-    {
-      id: "Y4",
-      part: "Your turn",
-      title: "Finish from a clean tree",
-      tier: "hinted",
-      state: "done",
-      optional: false,
-    },
-    {
-      id: "C",
-      part: "Check",
-      title: "Check",
-      tier: "challenge",
-      state: "current",
-      optional: false,
-    },
-  ],
+  steps: b1At(10),
   step: {
     index: 10,
     id: "C",
@@ -316,6 +330,9 @@ export const playing: PlayingLesson = {
     ask: null,
     self: null,
     doneLabel: null,
+    decidedBy: "check",
+    ranIn: null,
+    watches: null,
     wait: null,
     why: {
       onCard: null,
@@ -409,6 +426,8 @@ export const stepDown: StepDownLesson = {
   phase: "step-down",
   from: "hinted",
   to: "challenge",
+  step: { id: "C", title: "Check", index: 10, of: 11 },
+  steps: b1At(10),
   toCome: [
     {
       tier: "challenge",
@@ -416,6 +435,16 @@ export const stepDown: StepDownLesson = {
     },
   ],
   moreHelp: false,
+};
+
+/** The first Step-down, from Guided to Hinted, with more help on offer. */
+export const stepDownGuided: StepDownLesson = {
+  ...stepDown,
+  from: "guided",
+  to: "hinted",
+  step: { id: "Y1", title: "Check the onboarding notes", index: 6, of: 11 },
+  steps: b1At(6),
+  moreHelp: true,
 };
 
 export const complete: CompleteLesson = {
@@ -945,6 +974,105 @@ export function overviewAt(id: string): OverviewLesson {
   };
 }
 
+/** fullCourse with every Lesson and Level complete, and nothing next. */
+export const courseDone: CourseView = {
+  levels: fullCourse.levels.map((level) => ({
+    ...level,
+    complete: true,
+    lessons: level.lessons.map((lesson) => ({ ...lesson, complete: true })),
+  })),
+  next: null,
+};
+
+/** fullCourse with the Beginner Level complete, its capstone too, and i-1 next (249). */
+export const beginnerDone: CourseView = {
+  levels: fullCourse.levels.map((level) =>
+    level.id === "beginner"
+      ? {
+          ...level,
+          complete: true,
+          lessons: level.lessons.map((lesson) => ({
+            ...lesson,
+            complete: true,
+          })),
+        }
+      : level,
+  ),
+  next: "i-1",
+};
+
+/** The Beginner capstone completed for the first time, with no next in the Level (249). */
+export const completeCapstone: CompleteLesson = {
+  ...complete,
+  id: "b-capstone",
+  title: "Beginner capstone",
+  capstone: true,
+  badge: "Beginner",
+  handover: true,
+  invitation: true,
+  next: {
+    id: "i-1",
+    title: "Turn a repeated workflow into a skill",
+    notchHarder: false,
+  },
+};
+
+/** The capstone's first completion and the Level complete it brought (249). */
+export const levelCompleted: Milestone[] = [
+  {
+    id: "e2e.40",
+    revision: 1,
+    serverTime: 1793380000000,
+    type: "lesson.completed",
+    badge: "Beginner",
+    capstone: true,
+    firstTime: true,
+  },
+  {
+    id: "e2e.41",
+    revision: 1,
+    serverTime: 1793380000000,
+    type: "level.completed",
+    level: "beginner",
+  },
+];
+
+/** The last Level and the course complete, waiting together (249). */
+export const courseCompleted: Milestone[] = [
+  {
+    id: "e2e.50",
+    revision: 1,
+    serverTime: 1793380000000,
+    type: "level.completed",
+    level: "advanced",
+  },
+  {
+    id: "e2e.51",
+    revision: 1,
+    serverTime: 1793380000000,
+    type: "course.completed",
+  },
+];
+
+/** An unreadable-save notice ahead of b-1's first completion (249). */
+export const noticeFirst: Milestone[] = [
+  {
+    id: "e2e.30",
+    revision: 1,
+    serverTime: 1793380000000,
+    type: "notice",
+    kind: "unreadable",
+  },
+  ...completed,
+];
+
+/** Three of b-1's skills with a step finished, in course order. */
+export const someMastery: Record<string, Mastery> = {
+  install: { used: "commands", at: 1793380000000 },
+  ask: { used: "own", at: 1793380060000 },
+  exit: { used: "hints", at: 1793380120000 },
+};
+
 /** A whole snapshot around one phase of b-1. */
 export function snapshotOf(
   lesson: ActiveLesson,
@@ -954,12 +1082,14 @@ export function snapshotOf(
     milestones = [],
     name = learner.name,
     course: view = course,
+    mastery = {},
   }: {
     revision?: number;
     welcomed?: boolean;
     milestones?: Milestone[];
     name?: string | null;
     course?: CourseView;
+    mastery?: Record<string, Mastery>;
   } = {},
 ): Snapshot {
   return {
@@ -967,7 +1097,7 @@ export function snapshotOf(
     revision,
     milestones,
     course: view,
-    learner: { ...learner, welcomed, name },
+    learner: { ...learner, welcomed, name, mastery },
     lesson,
   };
 }
@@ -1009,4 +1139,465 @@ export const playingB3 = playingAt("b-3", null);
 export const indexWarmupI1 = playingAt("i-1", {
   from: "beginner-index",
   explainer: false,
+});
+
+/**
+ * `playing` with its step, beat and Lesson fields changed (246). The beat
+ * starts from `playing`'s Check beat; a fixture that is not a Check passes
+ * the fields that make it so, and every fixture says what decides it.
+ */
+export function playingWith({
+  step = {},
+  beat,
+  lesson = {},
+}: {
+  step?: Partial<NonNullable<PlayingLesson["step"]>>;
+  beat: Partial<NonNullable<PlayingLesson["beat"]>> &
+    Pick<NonNullable<PlayingLesson["beat"]>, "decidedBy">;
+  lesson?: Partial<PlayingLesson>;
+}): PlayingLesson {
+  if (!playing.step || !playing.beat) throw new Error("playing has a beat");
+  return {
+    ...playing,
+    ...lesson,
+    step: { ...playing.step, ...step },
+    beat: { ...playing.beat, ...beat },
+  };
+}
+
+/** A watched file beat (b-2 Y4's shape): its Done when line, before a look. */
+const fileBeat = {
+  decidedBy: "watch" as const,
+  verification: [],
+  fail: null,
+  lines: [
+    { kind: "do" as const, text: "Save the notes as `notes.md`." },
+    {
+      kind: "do" as const,
+      text: "Done when `notes.md` exists.",
+      doneWhen: true,
+    },
+  ],
+};
+
+export const watchWaiting = playingWith({
+  beat: { ...fileBeat, status: "waiting" },
+});
+export const watchChecking = playingWith({
+  beat: { ...fileBeat, status: "checking", checking: "notes.md" },
+});
+export const watchNotYet = playingWith({
+  beat: { ...fileBeat, status: "fail", fail: "`notes.md` is not there yet." },
+});
+export const watchPassed = playingWith({
+  beat: {
+    ...fileBeat,
+    status: "done",
+    found: "notes.md",
+    evidence: "# Notes",
+  },
+});
+export const checkBroken = playingWith({
+  beat: {
+    decidedBy: "check",
+    status: "broken",
+    broken: "timeout",
+    fail: null,
+  },
+});
+export const checkSame = playingWith({
+  beat: { decidedBy: "check", same: true },
+});
+export const checkStale = playingWith({
+  beat: { decidedBy: "check", stale: true },
+});
+export const checkRunning = playingWith({
+  beat: {
+    decidedBy: "check",
+    status: "checking",
+    running: { n: 2, m: 5 },
+    fail: null,
+  },
+});
+export const alreadyCodespace = playingWith({
+  beat: {
+    decidedBy: "check",
+    status: "already",
+    fail: null,
+    codespace: "In a Codespace **Claude Code** is already installed.",
+  },
+});
+/** A self-check beat with its own done-label. */
+export const learnerBeat = playingWith({
+  beat: {
+    decidedBy: "learner",
+    kind: "self",
+    status: "waiting",
+    verification: [],
+    fail: null,
+    lines: [],
+    self: "Self-check: you can say which model it was.",
+    doneLabel: "I've said it",
+  },
+});
+/** A git-clean beat with a done-label: session.ended. */
+export const sessionBeat = playingWith({
+  beat: {
+    status: "waiting",
+    verification: [],
+    fail: null,
+    lines: [],
+    doneLabel: "The session has ended",
+    decidedBy: "session",
+  },
+});
+/** A code beat on lines 9 to 11 of a longer block, explaining line 10. */
+export const codeWindow = playingWith({
+  beat: {
+    decidedBy: "learner",
+    status: "waiting",
+    verification: [],
+    fail: null,
+    lines: [{ kind: "say", text: "Read the loop." }],
+    code: {
+      lines: [
+        { n: 9, text: "for (const url of urls) {" },
+        { n: 10, text: "  const res = await fetch(url);" },
+        { n: 11, text: "}" },
+      ],
+      point: 10,
+      copy: "const urls = [];\nfor (const url of urls) {\n  const res = await fetch(url);\n}\n",
+    },
+  },
+});
+/** An optional step that offers Skip, and Back with a long done-label. */
+export const offersBoth = playingWith({
+  beat: {
+    decidedBy: "learner",
+    kind: "self",
+    status: "waiting",
+    verification: [],
+    fail: null,
+    lines: [],
+    self: "Read the **settings** page.",
+    doneLabel: "I've read the settings page and tried it",
+  },
+  lesson: {
+    offers: {
+      back: playing.offers.back,
+      skip: { when: "Skip it if you have no second machine." },
+    },
+  },
+});
+/** The first Tear down step, after the Check passed. */
+export const tearDown = playingWith({
+  step: { id: "D1", part: "Tear down", title: "Remove the hook" },
+  beat: {
+    decidedBy: "learner",
+    kind: "self",
+    status: "waiting",
+    verification: [],
+    fail: null,
+    lines: [],
+    self: "Delete the hook file.",
+  },
+  lesson: {
+    steps: [
+      ...playing.steps.map((s) => ({ ...s, state: "done" as const })),
+      {
+        id: "D1",
+        part: "Tear down",
+        title: "Remove the hook",
+        tier: "guided",
+        state: "current",
+        optional: false,
+      },
+      {
+        id: "D2",
+        part: "Tear down",
+        title: "Check the tree",
+        tier: "guided",
+        state: "todo",
+        optional: false,
+      },
+    ],
+  },
+});
+/** i-1's Check in its Work folder: the run line keeps --dir. */
+export const workFolderCheck = {
+  ...playingWith({
+    step: {
+      where: { kind: "terminal", terminal: null, folder: "your Practice copy" },
+    },
+    beat: {
+      decidedBy: "check",
+      lines: [
+        {
+          kind: "run",
+          text: "npm run check -- i-1 --dir ../work",
+          watched: false,
+        },
+      ],
+    },
+  }),
+  id: "i-1",
+  level: "intermediate" as const,
+};
+/** A say and a why with bold and a link, through InlineText. */
+export const richCopy = playingWith({
+  beat: {
+    decidedBy: "check",
+    lines: [
+      {
+        kind: "say",
+        text: "See **the settings** in [the page](beginner/02-first-session.md).",
+      },
+      { kind: "run", text: "npm run check -- b-1", watched: true },
+    ],
+    why: {
+      onCard: "It is **faster** than [asking](https://code.claude.com/docs).",
+      all: [],
+    },
+  },
+});
+
+// ---- Questions, warm-ups and hints (247) -------------------------------------
+
+/** The fields every question beat shares: no Check, decided by its answer. */
+const questionBeat = {
+  decidedBy: "answer" as const,
+  status: "waiting" as const,
+  verification: [],
+  fail: null,
+  lines: [{ kind: "say" as const, text: "Before you run it, guess." }],
+};
+
+/** A predict beat before its guess. */
+export const predictBeat = playingWith({
+  beat: {
+    ...questionBeat,
+    kind: "predict",
+    ask: "What will `claude --version` print?",
+    options: [{ text: "A version number" }, { text: "Nothing at all" }],
+  },
+});
+
+const askOptions = [
+  { text: "`CLAUDE.md`" },
+  { text: "Every file in the folder" },
+  { text: "The settings file" },
+];
+
+/** An ask beat before a pick. */
+export const askBeat = playingWith({
+  beat: {
+    ...questionBeat,
+    kind: "ask",
+    ask: "Which file does Claude Code read at the start of a session?",
+    options: askOptions,
+    why: { onCard: "It is where the project's rules live.", all: [] },
+  },
+});
+
+/** The ask beat after one wrong pick: its reason and what to look for. */
+export const askWrong = playingWith({
+  beat: {
+    ...(askBeat.beat as NonNullable<PlayingLesson["beat"]>),
+    options: [
+      askOptions[0] as { text: string },
+      {
+        text: "Every file in the folder",
+        kind: "wrong",
+        because: "It reads only the files a task needs.",
+      },
+      askOptions[2] as { text: string },
+    ],
+    answer: {
+      ...(playing.beat as NonNullable<PlayingLesson["beat"]>).answer,
+      feedback: "wrong",
+      because: "It reads only the files a task needs.",
+      point: "Look for the file named in the lesson's first step.",
+    },
+  },
+});
+
+/** The ask beat after a right pick. */
+export const askRight = playingWith({
+  beat: {
+    ...(askWrong.beat as NonNullable<PlayingLesson["beat"]>),
+    status: "done",
+    options: [
+      { text: "`CLAUDE.md`", kind: "right", because: "Its rules load first." },
+      ...(askWrong.beat?.options.slice(1) ?? []),
+    ],
+    answer: {
+      ...(askWrong.beat as NonNullable<PlayingLesson["beat"]>).answer,
+      picked: 0,
+      feedback: "right",
+      because: null,
+      point: null,
+      reveal: "Claude Code reads `CLAUDE.md` when a session starts.",
+    },
+  },
+});
+
+/** The ask beat once its answer is shown. */
+export const askRevealed = playingWith({
+  beat: {
+    ...(askRight.beat as NonNullable<PlayingLesson["beat"]>),
+    answer: {
+      ...(askRight.beat as NonNullable<PlayingLesson["beat"]>).answer,
+      feedback: "revealed",
+    },
+  },
+});
+
+/** A typed-answer beat. */
+export const typeBeat = playingWith({
+  beat: {
+    ...questionBeat,
+    kind: "type",
+    ask: "Which command shows the session's cost?",
+    options: [],
+  },
+});
+
+/** The typed beat after a miss: the page's words for it. */
+export const typeWrong = playingWith({
+  beat: {
+    ...(typeBeat.beat as NonNullable<PlayingLesson["beat"]>),
+    answer: {
+      ...(playing.beat as NonNullable<PlayingLesson["beat"]>).answer,
+      feedback: "wrong",
+      because: "It starts with a slash.",
+    },
+  },
+});
+
+/** A choice whose pick shows later beats (`when:`): a guess, not judged. */
+export const whenOption = playingWith({
+  beat: {
+    ...questionBeat,
+    kind: "ask",
+    status: "done",
+    ask: "Which shell do you use?",
+    options: [
+      { text: "bash", kind: "option" },
+      { text: "zsh", kind: "option" },
+    ],
+    answer: {
+      ...(playing.beat as NonNullable<PlayingLesson["beat"]>).answer,
+      picked: 1,
+      feedback: "option",
+    },
+  },
+});
+
+/** b-2's warm-up question from b-1, with the line that explains warm-ups. */
+export const warmupAsk = {
+  ...askBeat,
+  id: "b-2",
+  title: warmupB2.title,
+  step: {
+    ...(askBeat.step as NonNullable<PlayingLesson["step"]>),
+    warmup: { from: "b-1", explainer: true },
+  },
+};
+/** The same warm-up, its explainer already seen. */
+export const warmupAskQuiet = {
+  ...warmupAsk,
+  step: {
+    ...warmupAsk.step,
+    warmup: { from: "b-1", explainer: false },
+  },
+};
+
+const waitQuestion = {
+  prompt: "While the check runs: which file holds the project's rules?",
+  options: [
+    { text: "`CLAUDE.md`", kind: "right" as const },
+    { text: "`README.md`" },
+  ],
+  answered: null,
+  words: null,
+};
+
+/** A long wait with its question. */
+export const waitQuestionOpen = playingWith({
+  beat: { ...fileBeat, status: "checking", checking: "notes.md" },
+  lesson: { waitQuestion },
+});
+/** The wait question answered, with the page's words. */
+export const waitQuestionAnswered = playingWith({
+  beat: { ...fileBeat, status: "checking", checking: "notes.md" },
+  lesson: {
+    waitQuestion: {
+      ...waitQuestion,
+      answered: 0,
+      words: "Yes: `CLAUDE.md` holds them.",
+    },
+  },
+});
+/** The wait over: the snapshot drops the question. */
+export const waitQuestionEnded = watchPassed;
+
+/** A Challenge step before its first Check: hints wait. */
+export const challengeUnavailable = {
+  ...playing,
+  hints: {
+    shown: [],
+    available: false,
+    unavailable: "run-check",
+    confirmExact: false,
+  },
+} satisfies PlayingLesson;
+/** A Challenge question before its first answer: hints wait. */
+export const challengeUnavailableAnswer = {
+  ...askBeat,
+  hints: {
+    shown: [],
+    available: false,
+    unavailable: "pick-answer",
+    confirmExact: false,
+  },
+} satisfies PlayingLesson;
+
+/** The hints open to the question before the exact command. */
+export const confirmExact = {
+  ...hinted,
+  hints: { ...hinted.hints, available: false, confirmExact: true },
+} satisfies PlayingLesson;
+
+/** The exact command taken: its rung has the command with Copy. */
+export const exactTaken = {
+  ...hinted,
+  hints: {
+    ...hinted.hints,
+    shown: [
+      ...hinted.hints.shown,
+      {
+        kind: "exact",
+        commands: [
+          {
+            leadIn: "Run the check:",
+            text: "npm run check -- b-1",
+            code: null,
+          },
+        ],
+      },
+    ],
+    available: false,
+  },
+} satisfies PlayingLesson;
+
+/** The predict once guessed: a guess is drawn chosen, then the step goes on. */
+export const predictDone = playingWith({
+  beat: {
+    ...(predictBeat.beat as NonNullable<PlayingLesson["beat"]>),
+    status: "done",
+    answer: {
+      ...(playing.beat as NonNullable<PlayingLesson["beat"]>).answer,
+      picked: 1,
+    },
+  },
 });

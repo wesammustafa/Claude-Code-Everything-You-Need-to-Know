@@ -12,6 +12,7 @@ import {
   classifyDocs,
   mermaidVersion,
   pageIds,
+  pageKind,
   pageName,
   readLock,
   releaseRef,
@@ -39,7 +40,7 @@ const noDiagram = (_n: number, source: string) => ({
 });
 
 describe("the page set", () => {
-  test("is every live docs/ page: no Stub, README or ADR", () => {
+  test("is every live docs/ page: no Stub, ADR or README but the Level indexes", () => {
     expect(docs.live.map(pageName)).toEqual([
       "advanced/01-parallel-sessions",
       "advanced/02-orchestration-patterns",
@@ -48,6 +49,7 @@ describe("the page set", () => {
       "advanced/05-github-actions",
       "advanced/06-share-your-setup",
       "advanced/07-bounded-runs",
+      "advanced/README",
       "advanced/beyond-this-guide",
       "advanced/capstone",
       "advanced/electives/agent-teams",
@@ -60,6 +62,7 @@ describe("the page set", () => {
       "beginner/03-first-change",
       "beginner/04-keep-a-session-on-track",
       "beginner/05-project-memory",
+      "beginner/README",
       "beginner/capstone",
       "beginner/electives/built-in-teachers",
       "beginner/electives/ide-extensions",
@@ -72,6 +75,7 @@ describe("the page set", () => {
       "intermediate/06-subagents",
       "intermediate/07-mcp",
       "intermediate/08-plugins",
+      "intermediate/README",
       "intermediate/capstone",
       "intermediate/electives/claude-in-chrome",
       "intermediate/electives/fast-mode",
@@ -92,11 +96,21 @@ describe("the page set", () => {
       "topics/skills",
       "topics/subagents-and-parallel-work",
     ]);
-    expect(docs.readmes).toHaveLength(5);
+    expect(docs.readmes).toEqual([
+      "docs/reference/README.md",
+      "docs/topics/README.md",
+    ]);
     expect(docs.stubs).toHaveLength(9);
     expect(docs.unpublished).toEqual([
       "docs/adr/0001-separate-course-machinery-from-the-learner-project.md",
     ]);
+  });
+
+  test("gives a Level README the kind index", () => {
+    expect(pageKind("docs/intermediate/README.md")).toEqual({
+      kind: "index",
+      level: "intermediate",
+    });
   });
 });
 
@@ -263,7 +277,7 @@ describe("the build", () => {
 
   test("passes both release tests on the real tree", () => {
     expect(first.problems).toEqual([]);
-    expect(first.pages).toHaveLength(50);
+    expect(first.pages).toHaveLength(53);
   });
 
   test("gives identical bytes twice", () => {
@@ -272,7 +286,7 @@ describe("the build", () => {
 
   test("writes each page, each diagram in both themes, and the index", () => {
     const files = Object.keys(tree(first.outDir));
-    expect(files.filter((f) => f.endsWith(".html"))).toHaveLength(50);
+    expect(files.filter((f) => f.endsWith(".html"))).toHaveLength(53);
     expect(files.filter((f) => f.endsWith(".svg")).sort()).toEqual(
       [
         "advanced/02-orchestration-patterns",
@@ -284,12 +298,23 @@ describe("the build", () => {
     );
     const index = JSON.parse(
       readFileSync(join(first.outDir, "index.json"), "utf8"),
-    ) as { ref: string; pages: { url: string; kind: string }[] };
+    ) as {
+      ref: string;
+      pages: { url: string; kind: string; level?: string; title: string }[];
+    };
     expect(index.ref).toBe(ref);
     expect(
       index.pages.find((p) => p.url === "/pages/intermediate/05-hooks.html")
         ?.kind,
     ).toBe("lesson");
+    for (const [level, title] of [
+      ["beginner", "Beginner"],
+      ["intermediate", "Intermediate"],
+      ["advanced", "Advanced"],
+    ] as const)
+      expect(
+        index.pages.find((p) => p.url === `/pages/${level}/README.html`),
+      ).toMatchObject({ kind: "index", level, title });
   });
 
   test("ships the course with its example URLs at the ref and no indentation", () => {
@@ -310,6 +335,26 @@ describe("the build", () => {
     expect(text.trimEnd()).not.toContain("\n");
     expect(text.endsWith("\n")).toBe(true);
   });
+
+  // A Level README links to its Lessons by relative path: each link must come
+  // out as a panel link, never as the bare .md href GitHub would resolve.
+  test.each(["beginner", "intermediate", "advanced"])(
+    "rewrites the %s README's links to its Lessons",
+    (level) => {
+      const html = readFileSync(
+        join(first.outDir, level, "README.html"),
+        "utf8",
+      );
+      const hrefs = [...html.matchAll(/<a\b[^>]*\shref="([^"]+)"/g)].map(
+        (m) => m[1] ?? "",
+      );
+      expect(hrefs.length).toBeGreaterThan(0);
+      expect(
+        hrefs.filter((h) => /^(?!https?:|#)[^:]*\.md(#|$)/.test(h)),
+      ).toEqual([]);
+      expect(html).toMatch(new RegExp(`data-page="docs/${level}/0\\d-`));
+    },
+  );
 
   test("keeps every page under 100 KB", () => {
     for (const [file, body] of Object.entries(tree(first.outDir)))

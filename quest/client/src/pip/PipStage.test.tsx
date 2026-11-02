@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import { MemoryRouter, Route, Routes, useNavigate } from "react-router";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import type { PipModel } from "../../pip/contract";
+import { playing, snapshotOf, stepDown } from "../../e2e/snapshots";
 import { envelope } from "../../test/events";
 import { FakeEventSource } from "../../test/live";
 import { Command } from "../components/Command";
@@ -101,6 +102,32 @@ describe("Pip's stage in the app", () => {
       screen.getByRole("button", { name: "go /lesson/b-1/step" }).click();
     });
     expect(current().size).toBe("beside");
+  });
+
+  test("a Step-down on the step's route is Pip's Level-up moment", async () => {
+    stageAt("/lesson/b-1/step");
+    await act(async () => {
+      FakeEventSource.last.emit("snapshot", snapshotOf(playing));
+      await Promise.resolve();
+    });
+    const resting = current().restingGaze;
+    await act(async () => {
+      FakeEventSource.last.emit(
+        "snapshot",
+        snapshotOf(stepDown, { revision: 2 }),
+      );
+      await Promise.resolve();
+    });
+    expect(current().restingGaze).not.toEqual(resting);
+    expect(current().size).toBe("hero");
+    await act(async () => {
+      FakeEventSource.last.emit(
+        "snapshot",
+        snapshotOf(playing, { revision: 3 }),
+      );
+      await Promise.resolve();
+    });
+    expect(current().restingGaze).toEqual(resting);
   });
 
   test("events from the stream reach the director, each ID once", async () => {
@@ -307,6 +334,48 @@ describe("Pip's stage in the app", () => {
       });
       act(() => {
         vi.advanceTimersByTime(HINT_UNUSED_MS - 1000);
+      });
+      expect(showing()).toBe("false");
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+      expect(showing()).toBe("true");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test("a wall clock that steps back or forward moves no Pip timing", () => {
+    vi.useFakeTimers({
+      toFake: ["setTimeout", "clearTimeout", "performance", "Date"],
+    });
+    try {
+      function Help() {
+        return <output data-testid="help">{String(useHelpShowing())}</output>;
+      }
+      function Step() {
+        usePipStep("b-1:0", true);
+        return <Pip size="beside" />;
+      }
+      render(
+        <MemoryRouter initialEntries={["/lesson/b-1/step"]}>
+          <PipStageProvider>
+            <Help />
+            <Routes>
+              <Route path="/lesson/:id/step" element={<Step />} />
+            </Routes>
+          </PipStageProvider>
+        </MemoryRouter>,
+      );
+      const showing = () => screen.getByTestId("help").textContent;
+      // An hour back, then two forward: only the time that passes counts.
+      act(() => {
+        vi.setSystemTime(Date.now() - 3_600_000);
+        vi.advanceTimersByTime(HINT_UNUSED_MS / 2);
+      });
+      act(() => {
+        vi.setSystemTime(Date.now() + 7_200_000);
+        vi.advanceTimersByTime(HINT_UNUSED_MS / 2 - 1000);
       });
       expect(showing()).toBe("false");
       act(() => {

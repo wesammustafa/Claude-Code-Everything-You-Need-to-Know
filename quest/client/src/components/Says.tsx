@@ -31,6 +31,17 @@ export interface SaysProps {
    * them, and the live region would say them again.
    */
   textKey?: string;
+  /**
+   * Shown in the bubble after the words but outside its live region, for
+   * what changes too often to be said (a running clock).
+   */
+  aside?: ReactNode;
+  /**
+   * Shown in the bubble under the words, outside the live region: controls
+   * (the help offer) that a screen reader should reach, not hear again with
+   * every status.
+   */
+  after?: ReactNode;
   children: ReactNode;
 }
 
@@ -47,7 +58,14 @@ export interface SaysProps {
  * tone, so the director has started the Reaction by the time React commits
  * the tone; the bubble never waits on the rig.
  */
-export function Says({ tone = "idle", pip, textKey, children }: SaysProps) {
+export function Says({
+  tone = "idle",
+  pip,
+  textKey,
+  aside,
+  after,
+  children,
+}: SaysProps) {
   const entrance = saysEntrance(useMotionTokens());
   return (
     <div className="flex items-start gap-3.5" data-tone={tone}>
@@ -55,9 +73,7 @@ export function Says({ tone = "idle", pip, textKey, children }: SaysProps) {
       {/* As tall as the beside Pip, so a short bubble centres on him. */}
       <div className="grid min-h-19 min-w-0 flex-1 items-center">
         <div
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
+          data-says-bubble=""
           className={cx(
             "relative min-w-0 rounded-lg border px-4.5 py-3.25 shadow-md",
             "transition-[border-color,background-color] duration-(--duration-base) ease-out",
@@ -67,16 +83,27 @@ export function Says({ tone = "idle", pip, textKey, children }: SaysProps) {
             TONES[tone],
           )}
         >
-          <m.div
-            key={textKey}
-            data-says-words=""
-            className="relative grid"
-            initial={entrance.initial}
-            animate={entrance.animate}
-            transition={entrance.transition}
-          >
-            {children}
-          </m.div>
+          <div className="flex items-baseline gap-2">
+            <div
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+              className="min-w-0 flex-1"
+            >
+              <m.div
+                key={textKey}
+                data-says-words=""
+                className="relative grid"
+                initial={entrance.initial}
+                animate={entrance.animate}
+                transition={entrance.transition}
+              >
+                {children}
+              </m.div>
+            </div>
+            {aside}
+          </div>
+          {after}
         </div>
       </div>
     </div>

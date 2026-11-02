@@ -9,6 +9,14 @@ export const DEV = "http://127.0.0.1:4321";
 export const ONLY_LOOPBACK =
   "--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1";
 
+const COLD_START = "cold-start.spec.ts";
+const CHROMIUM = {
+  ...devices["Desktop Chrome"],
+  launchOptions: {
+    args: [ONLY_LOOPBACK],
+  },
+};
+
 // Playwright on the built client, Chromium only, served by `vite preview` on
 // 127.0.0.1; the Pip Playground's specs alone run on the dev server. Every host name but 127.0.0.1 fails to resolve, so a request
 // anywhere else could never succeed; the tests also record and refuse one.
@@ -26,12 +34,16 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: {
-        ...devices["Desktop Chrome"],
-        launchOptions: {
-          args: [ONLY_LOOPBACK],
-        },
-      },
+      testIgnore: COLD_START,
+      use: CHROMIUM,
+    },
+    {
+      // The cold-start budget times the page, so it runs alone: after every
+      // other spec, its own runs one at a time (the spec is serial).
+      name: "cold-start",
+      testMatch: COLD_START,
+      dependencies: ["chromium"],
+      use: CHROMIUM,
     },
   ],
   webServer: [

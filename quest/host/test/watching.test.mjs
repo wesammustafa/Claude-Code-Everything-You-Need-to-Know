@@ -95,6 +95,31 @@ test("the poll looks every 500 ms and asks again for what the beat waits on at m
   assert.equal(quiet.adapters.checks.calls.length, 0);
 });
 
+// 254 D25: the run a change the watcher saw asks for says so on its
+// run-start, for Pip to think through; the poll's and the opening run's do not.
+test("a run the watcher's change starts carries changed on its run-start; the poll's and the beat's opening run's do not", async () => {
+  const { host, clock, adapters, heard } = fakeHost({
+    saved: AT_W3,
+    checks: () => w3(false),
+  });
+  const starts = () =>
+    heard
+      .filter((h) => h.input.type === "run-start")
+      .map((h) => h.input.changed);
+  await host.open();
+  host.start();
+  host.dispatch({ type: "lesson.open", lesson: "b-1" });
+  await turn();
+  assert.deepEqual(starts(), [false], "the beat's opening run");
+  await clock.advance(500);
+  await turn();
+  assert.deepEqual(starts(), [false, false], "the poll's run");
+  clock.spend(400);
+  adapters.fire(ROOT);
+  await turn();
+  assert.deepEqual(starts(), [false, false, true], "the watcher's run");
+});
+
 // spec: watching
 test("a change within 400 ms of a save is the save's own, and one at 400 ms counts", async () => {
   const { host, clock, adapters, heard } = fakeHost({ saved: AT_W3 });
@@ -247,6 +272,55 @@ test("the work folder has its own watcher, armed again as the Learner moves to a
     1,
     "one watcher on the copy",
   );
+});
+
+// spec: watching
+test("a worked: copy fresh json beat with the Work folder in another repository decides on the copy's file, never on the Work folder's", async () => {
+  const settings = ".claude/settings.json";
+  const rules = (deny) =>
+    `{ "permissions": { "deny": ${JSON.stringify(deny)} } }\n`;
+  const freshJson = workedInCopy.replace(
+    "- verify: check 0\n- watching: .claude/skills/tdd/SKILL.md\n",
+    `- verify: json ${settings} permissions.deny.0 fresh\n`,
+  );
+  const course = threeLevels({ "i-1": freshJson });
+  const { host, adapters, clock, heard } = atI1({
+    course,
+    folders: { [MINE]: fine(MINE) },
+    checks: () => ({ items: [] }),
+  });
+  adapters.files.write(`${MINE}/${settings}`, rules([]));
+  adapters.files.write(`${WORK}/${settings}`, rules([]));
+  await host.open();
+  host.start();
+  host.dispatch({ type: "lesson.start", help: "planned" });
+  await turn();
+  const status = () => host.snapshot().lesson.beat?.status;
+  assert.equal(host.snapshot().lesson.step.id, "W1");
+  assert.deepEqual(
+    heard
+      .filter((h) => h.input.type === "stamp")
+      .map((h) => h.input.dir ?? null),
+    [WORK],
+    "the fresh stamp is the copy's file",
+  );
+  assert.deepEqual(adapters.armed(), [ROOT, WORK], "watched in the copy");
+  // The Work folder's file changes: nothing to decide on.
+  clock.spend(400);
+  adapters.files.write(`${MINE}/${settings}`, rules(["Read(./.env)"]));
+  adapters.fire(MINE);
+  clock.spend(2_000);
+  await turn();
+  assert.notEqual(status(), "done", "the Work folder's file is not the beat's");
+  // The copy's file changes: the beat passes with no Check again.
+  const checked = adapters.checks.calls.length;
+  adapters.files.write(`${WORK}/${settings}`, rules(["Read(./.env)"]));
+  adapters.fire(WORK);
+  clock.spend(2_000);
+  await turn();
+  assert.equal(host.snapshot().lesson.step.id, "W1");
+  assert.equal(status(), "done", JSON.stringify(host.snapshot().lesson.beat));
+  assert.equal(adapters.checks.calls.length, checked, "no Check ran");
 });
 
 // The selectors the host reads off the engine's state alone (209's, lifted

@@ -133,6 +133,8 @@ export interface StairStep {
 /** The overview, before the Lesson starts. */
 export interface OverviewLesson extends LessonHead {
   phase: "overview";
+  /** Every step Start will play, in play order, warm-ups first: the planned help, no step current. */
+  steps: StepSummary[];
   /** The page's intro, or null for a Lesson with no step file. */
   intro: {
     /** What the Lesson teaches the Learner to do. */
@@ -150,6 +152,10 @@ export interface OverviewLesson extends LessonHead {
     /** Null where less help changes no step. */
     less: StairStep[] | null;
   };
+  /** The Lesson's Check items, in order: what the check looks for. */
+  check: string[];
+  /** Each You need line here and the commands no PATH folder has: [] when all are found, null until the host has answered for every one. */
+  needs: { quote: string; missing: string[] | null }[];
   /** What the overview has to say before the Learner starts. */
   notes: OverviewNote[];
   /** Where this Lesson's Work folder is, while the overview asks. */
@@ -201,7 +207,7 @@ export interface FolderQuestion {
   checking: boolean;
 }
 
-/** A step in the playing Lesson's list. */
+/** A step in an active Lesson's outline (overview, playing, step-down). */
 export interface StepSummary {
   id: StepId;
   part: string;
@@ -289,6 +295,9 @@ export interface CodeView {
   copy: string;
 }
 
+/** The one place that decides a beat (ticket 285). */
+export type DecidedBy = "check" | "watch" | "learner" | "session" | "answer";
+
 export interface BeatView {
   /** Its place in the step, from 0. */
   index: number;
@@ -307,6 +316,16 @@ export interface BeatView {
   self: string | null;
   /** The label of the button that says the session ended, or null. */
   doneLabel: string | null;
+  /** What decides the beat: check and watch take check.run, learner step.markDone, session session.ended, answer the question's own. */
+  decidedBy: DecidedBy;
+  /** The Work folder the beat's last result ran in; null in the Practice copy or before any run. */
+  ranIn: string | null;
+  /**
+   * The Work folder the step runs in and a waiting beat watches, from the
+   * step's own folder, so it is known before any first look; null when the
+   * step runs in the Practice copy or its new copy is not given yet.
+   */
+  watches: string | null;
   /** A long wait: its words, or null for the app's own. Null when none. */
   wait: { text: string | null } | null;
   /** Why it matters: the line on the card at Guided, and all its reasons. */
@@ -388,6 +407,10 @@ export interface StepDownLesson extends LessonHead {
   phase: "step-down";
   from: HelpTier;
   to: HelpTier;
+  /** The step it opens on: its place in play order, from 0, of every step, warm-ups first. */
+  step: { id: StepId; title: string; index: number; of: number };
+  /** Every step in play order, warm-ups first; the step it opens on is current. */
+  steps: StepSummary[];
   /** The steps from this one on, counted by tier. */
   toCome: { tier: HelpTier; count: number }[];
   /** More help would give a step more help (never at the Check). */

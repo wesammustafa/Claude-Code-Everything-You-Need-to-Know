@@ -4,6 +4,10 @@
 export const COLUMN =
   "mx-auto grid max-w-column gap-5 px-5 pt-8 pb-24 [&>*]:min-w-0";
 
+/** The Lesson workspace: COLUMN with room below for the sticky action bar. */
+export const WORKSPACE_COLUMN =
+  "mx-auto grid max-w-column gap-5 px-5 pt-8 pb-[calc(var(--action-bar-height)+--spacing(8))] [&>*]:min-w-0";
+
 /** The Learning journey: a wider page. */
 export const WIDE =
   "mx-auto grid max-w-wide gap-5.5 px-6 pt-9 pb-24 max-sm:px-5";

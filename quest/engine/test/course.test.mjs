@@ -51,6 +51,7 @@ describe("course manifest", () => {
       Array.from({ length: 23 }, (_, index) => index + 1),
     );
     expect(JSON.stringify(course)).not.toContain("source-commit");
+    for (const l of course.lessons) expect(l).not.toHaveProperty("stuck");
   });
 
   test("the course loader reads the compiled course", async () => {
@@ -76,6 +77,29 @@ describe("course manifest", () => {
       expect(entry.fingerprint).toBe(lesson.fingerprint);
       expect(entry.legacyFingerprint).toBe(lesson.legacyFingerprint);
       expect(entry.legacyFingerprint).toMatch(/^[0-9a-f]{64}$/);
+      expect(entry).not.toHaveProperty("stuck");
+    }
+  });
+
+  // A course.json compiled before ticket 281 still carries a stuck URL on
+  // every Lesson; it must load the same and drop the field.
+  test("courseFrom loads an older course file with a stuck URL", async () => {
+    const compiled = compileCourse(manifestValue, stepFiles, pages, checks);
+    const { courseFrom } = await import("../src/course.ts");
+    const older = {
+      ...compiled,
+      lessons: compiled.lessons.map((l) => ({
+        ...l,
+        stuck: "https://example.com",
+      })),
+    };
+    const clean = courseFrom(compiled);
+    const course = courseFrom(older);
+    expect(course.map((entry) => entry.id)).toEqual(clean.map((e) => e.id));
+    for (const [index, entry] of course.entries()) {
+      expect(entry.fingerprint).toBe(clean[index].fingerprint);
+      expect(entry.legacyFingerprint).toBe(clean[index].legacyFingerprint);
+      expect(entry).not.toHaveProperty("stuck");
     }
   });
 

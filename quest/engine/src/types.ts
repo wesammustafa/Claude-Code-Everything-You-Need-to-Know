@@ -44,7 +44,6 @@ export interface CourseEntry {
   work?: true;
   title?: string;
   url?: string;
-  stuck?: string;
   items: string[];
   slow?: number[];
   content?: LessonContent | null;
@@ -74,6 +73,9 @@ export interface LessonProgress {
   complete: boolean;
   warm: StepId[];
   recalled: StepId[];
+  // The warm-ups a long wait's box showed in this lesson (TRIAGE-2 Q3),
+  // saved so a resume does not ask them again (ticket 287).
+  whileShown: StepId[];
   stamps: Record<string, string>;
   bottomAt: StepId | null;
   fingerprint?: string;
@@ -150,14 +152,20 @@ export interface BeatState {
   ended: boolean;
   opened: number;
   eased: boolean;
-  run: { asked: number } | null;
+  run: { asked: number; changed?: boolean } | null;
+  // The poll's run going unmarked: its r number (254 D25).
+  quiet?: number;
   look: string | null;
   touched: boolean;
-  whileRuns?: { id: StepId; answer: number | null };
+  whileRuns?: { id: StepId; answer: number | null; at: string };
   codespace?: boolean;
   // The first answer the beat started from: undefined until there is one.
   baseline?: string | null | undefined;
   slowWait?: boolean;
+  // The folder the beat's last result ran in (ticket 285).
+  ranIn?: string | null;
+  // s.asks when the beat opened: an r numbered at or below it is older.
+  asksAtOpen?: number;
   fail?: Failing | Dirty | null | undefined;
   error?: string | null;
   same?: boolean;
@@ -191,7 +199,6 @@ export interface EngineState {
   missed: string[];
   missedNow: string[];
   answeredNow: string[];
-  whileShown: string[];
   welcomed: boolean;
   lesson: LessonId;
   phase: "overview" | "playing" | "step-down" | "complete";
@@ -285,6 +292,8 @@ export type HostInput = ResultFields &
     | {
         type: "run-start";
         run: "check" | "git" | "probe";
+        // A change the host's file watcher saw asked for it.
+        changed?: boolean;
         items?: number[] | null;
         name?: string;
       }

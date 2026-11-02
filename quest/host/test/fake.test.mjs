@@ -87,6 +87,30 @@ test("the fake files read as the real ones: a glob's newest match, ties to the l
   }
 });
 
+test("the fake files tell a folder from a file as the real ones do", () => {
+  const r = real();
+  const f = fake();
+  try {
+    for (const { dir, adapters } of [r, f]) {
+      if (adapters === r.adapters) {
+        writeFileSync(join(dir, ".practice"), "not a folder");
+        mkdirSync(join(dir, "made"));
+      } else {
+        adapters.files.write(join(dir, ".practice"), "not a folder");
+        adapters.files.folder(join(dir, "made"));
+      }
+      assert.deepEqual(
+        [".practice", "made", "missing"].map((p) =>
+          adapters.files.isFolder(join(dir, p)),
+        ),
+        [false, true, false],
+      );
+    }
+  } finally {
+    r.done();
+  }
+});
+
 test("the fake store fails as the real one where .practice is a file", () => {
   const r = real();
   const f = fake();

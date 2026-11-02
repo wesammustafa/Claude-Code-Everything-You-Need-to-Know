@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import { renderWithMotion, setMotionSwitch } from "../../test/motion";
 import {
   expectStylesFromTokens,
@@ -105,9 +105,11 @@ test("disabled, takes no answer", async () => {
   expect(
     screen.getByRole("radio", { name: "It reads nothing" }),
   ).not.toBeChecked();
+  // Still focusable, so a disconnect never drops focus (255).
   expect(
     screen.getByRole("radio", { name: "It reads nothing" }),
-  ).toBeDisabled();
+  ).toHaveAttribute("aria-disabled", "true");
+  expect(screen.getByRole("group")).toHaveAttribute("aria-disabled", "true");
 });
 
 test("its reason opens through its height, or under reduced motion only fades", async () => {
@@ -157,4 +159,54 @@ test("its words keep the copy rules", () => {
   expect(own).toBe("Right Not yet");
   expect(own).not.toMatch(/key|press|stuck|wrong|fail/i);
   expect(container.textContent).not.toContain(String.fromCodePoint(0x2014));
+});
+
+test("with submit, moving between answers sends nothing; the button or the form sends the selection once (247)", async () => {
+  const user = userEvent.setup();
+  const onSubmit = vi.fn();
+  render(<Harness submit={{ label: "Check my answer", onSubmit }} />);
+  const send = screen.getByRole("button", { name: "Check my answer" });
+  expect(send).toHaveAttribute("aria-disabled", "true");
+  await user.tab();
+  await user.keyboard("{Enter}");
+  expect(onSubmit).not.toHaveBeenCalled();
+  await user.keyboard(" ");
+  await user.keyboard("{ArrowDown}{ArrowDown}{ArrowUp}");
+  expect(onSubmit).not.toHaveBeenCalled();
+  expect(send).not.toHaveAttribute("aria-disabled");
+  await user.keyboard("{Enter}");
+  expect(onSubmit).toHaveBeenCalledExactlyOnceWith("b");
+  await user.click(send);
+  expect(onSubmit).toHaveBeenCalledTimes(2);
+});
+
+test("draws each mark with its own word: a guess has none, a shown answer says The answer (247)", () => {
+  const { container } = renderWithMotion(
+    <Choice
+      legend="Q"
+      options={OPTIONS}
+      value={null}
+      onChange={() => undefined}
+      result={[
+        { id: "a", state: "shown" },
+        { id: "b", state: "notYet" },
+        { id: "c", state: "chosen" },
+      ]}
+    />,
+  );
+  const word = (state: string) =>
+    container.querySelector(`[data-state=${state}] > span.text-sm`)
+      ?.textContent ?? null;
+  expect(word("shown")).toBe("The answer");
+  expect(word("notYet")).toBe("Not yet");
+  expect(word("chosen")).toBeNull();
+  expect(container.querySelector("[data-state=chosen]")).toHaveClass(
+    "border-accent-mark",
+  );
+  expect(
+    screen.getByText("Claude Code reads it at the start of a session."),
+  ).toBeInTheDocument();
+  expect(screen.getByText("Only the files it needs.")).toBeInTheDocument();
+  for (const node of container.querySelectorAll("[class]"))
+    expectStylesFromTokens(node.getAttribute("class") ?? "");
 });

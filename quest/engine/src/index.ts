@@ -72,6 +72,7 @@ export {
   longWait,
   missingNeeds,
   moreHelpGives,
+  needLines,
   nextLessonOf,
   offered,
   pickWarmups,

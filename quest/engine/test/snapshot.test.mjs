@@ -17,6 +17,8 @@ import {
   driver,
   finished,
   finishedBefore,
+  beatOf,
+  folderKey,
   gitResult,
   pending,
   playUntil,
@@ -25,6 +27,7 @@ import {
   running,
   save,
   stepOf,
+  stepsOf,
   struggles,
   withCode,
 } from "./drive.mjs";
@@ -250,12 +253,28 @@ test("overview: a fresh b-1's intro, its planned and less-help staircases, its s
   assert.equal(v.folderQuestion, null);
   assert.deepEqual(v.notes, []);
   assert.equal(v.resumable, false);
-  // The staircase is the help the play starts with.
+  // The outline is every step to come, none done or current.
+  assert.ok(v.steps.length > 0);
+  assert.ok(v.steps.every((x) => x.state === "todo"));
+  // The staircase is the help the play starts with, and the outline is
+  // the play's, warm-ups included.
   d.start();
   assert.deepEqual(
     view(d).steps.map(({ part, tier }) => ({ part, tier })),
     v.staircase.planned,
   );
+  assert.deepEqual(
+    v.steps.map(({ part, tier }) => ({ part, tier })),
+    v.staircase.planned,
+  );
+  const fields = ({ id, title, part, optional, tier }) => ({
+    id,
+    title,
+    part,
+    optional,
+    tier,
+  });
+  assert.deepEqual(v.steps.map(fields), view(d).steps.map(fields));
   const s = project(d.state);
   assert.equal(s.learner.name, "Sam");
   assert.equal(s.learner.welcomed, true);
@@ -265,6 +284,23 @@ test("overview: a fresh b-1's intro, its planned and less-help staircases, its s
     ["beginner", "intermediate", "advanced"],
   );
   assert.equal(s.course.next, "b-1");
+});
+
+test("overview: a resumable Lesson's outline shows its ticked steps done, the rest to do, and none current", () => {
+  const d = at("b-1", { step: "W3", beat: 0, done: ["W1", "W2"] });
+  // The overview of a saved place, as the app shows it before a resume.
+  const v = project({ ...d.state, phase: "overview", beat: null }).lesson;
+  assert.equal(v.phase, "overview");
+  assert.equal(v.resumable, true);
+  assert.deepEqual(
+    v.steps.filter((x) => x.state === "done").map((x) => x.id),
+    ["W1", "W2"],
+  );
+  assert.ok(
+    v.steps
+      .filter((x) => !["W1", "W2"].includes(x.id))
+      .every((x) => x.state === "todo"),
+  );
 });
 
 test("overview: i-1 asks for the Intermediate work folder, says what the host found, and starts nothing until it has an answer", () => {
@@ -336,6 +372,27 @@ test("overview: the page's Windows note shows on native Windows only", () => {
   }
 });
 
+test("overview: every Lesson's overview lists its Check items in order, slow items kept", () => {
+  const check = (id) => {
+    const d = driver({
+      course,
+      saved: save({ lessons: finishedBefore(id) }),
+    });
+    d.open(id);
+    assert.deepEqual([d.state.phase, d.state.lesson], ["overview", id]);
+    return view(d).check;
+  };
+  for (const { id } of course) assert.deepEqual(check(id), lesson(id).items);
+  // Slow items stay where the Lesson lists them.
+  assert.deepEqual(lesson("b-3").slow, [1]);
+  assert.equal(check("b-3")[1], lesson("b-3").items[1]);
+  assert.deepEqual(lesson("b-capstone").slow, [3, 4]);
+  assert.deepEqual(
+    check("b-capstone").slice(3, 5),
+    lesson("b-capstone").items.slice(3, 5),
+  );
+});
+
 test("overview: a lesson with no lesson file is never opened, and its overview, where the app opens on it, says nothing", () => {
   const b1Only = course.map((l) =>
     l.id === "b-1" ? l : { ...l, content: null },
@@ -347,8 +404,17 @@ test("overview: a lesson with no lesson file is never opened, and its overview, 
   assert.deepEqual([d.state.lesson, d.state.phase], ["b-2", "overview"]);
   const v = view(d);
   assert.deepEqual(
-    [v.intro, v.staircase, v.notes, v.folderQuestion, v.start],
-    [null, { planned: [], less: null }, [], null, null],
+    [
+      v.intro,
+      v.staircase,
+      v.check,
+      v.needs,
+      v.notes,
+      v.folderQuestion,
+      v.start,
+      v.steps,
+    ],
+    [null, { planned: [], less: null }, [], [], [], null, null, []],
   );
   assert.equal(project(d.state).course.next, null);
 });
@@ -369,6 +435,29 @@ test("playing: a resume with no beat open names its steps and the step it opens 
     ["done", "done", "current", "todo"],
   );
   assert.equal(v.hints.available, false);
+});
+
+// scenarios.spec keyboard b-1 (254): b-1's item 0 is slow, so a poll leaves
+// it out (a placeholder marked slow). A poll that lands after r passed the
+// beat must not take its line away.
+test("a passed beat keeps the verification lines of the run that passed it: a later poll that leaves the slow item out removes none", () => {
+  const d = at("b-1", { step: "W3", beat: 0, done: ["W1", "W2"] });
+  const eff = pending(d, "check");
+  const left = checkItems(d.state, false).map((it) => ({ ...it, slow: true }));
+  d.send(checkResult(eff, left));
+  assert.equal(view(d).beat.status, "waiting");
+  d.run();
+  d.send(
+    checkResult(pending(d, "check"), checkItems(d.state, true), {
+      asked: d.state.beat.asked,
+    }),
+  );
+  const passed = [{ text: lesson("b-1").items[0], pass: true }];
+  assert.equal(view(d).beat.status, "done");
+  assert.deepEqual(view(d).beat.verification, passed);
+  d.send(checkResult(eff, left));
+  assert.equal(view(d).beat.status, "done");
+  assert.deepEqual(view(d).beat.verification, passed);
 });
 
 test("playing: a do beat's lines with its commands for this platform and the practice copy's path, the watched tick, what it checks while it runs, and its verification lines", () => {
@@ -552,7 +641,101 @@ test("playing: the exact command behind the hints fills in the practice copy's p
   );
 });
 
+test("playing: after a failed Check and a Check again that still fails, the hints advance one rung at a time to a check rung holding the failing item's message (rehoming row 422)", () => {
+  const d = at("b-1", { step: "W3", beat: 0, done: ["W1", "W2"] });
+  const eff = pending(d, "check");
+  d.send(checkResult(eff, checkItems(d.state, false)));
+  d.run();
+  d.send(
+    checkResult(pending(d, "check"), checkItems(d.state, false), {
+      asked: d.state.beat.asked,
+    }),
+  );
+  const message = checkItems(d.state, false)[0].hint;
+  let count = view(d).hints.shown.length;
+  for (let i = 0; i < 8 && view(d).hints.shown.at(-1)?.kind !== "check"; i++) {
+    d.hint();
+    const next = view(d).hints.shown.length;
+    assert.equal(next, count + 1, "one rung at a time");
+    count = next;
+  }
+  const last = view(d).hints.shown.at(-1);
+  assert.equal(last?.kind, "check");
+  assert.equal(last.text, message);
+});
+
 // ---- render.mjs's rules -----------------------------------------------------------
+test("warm-ups on the plan count as steps: b-2 has 15 with one, 14 with none, 16 from an older save with two", () => {
+  const steps = (missed, place) => {
+    const d = driver({
+      course,
+      saved: save({
+        missed,
+        lessons: {
+          "b-1": finished(lesson("b-1")),
+          ...(place ? { "b-2": place } : {}),
+        },
+      }),
+    });
+    d.open("b-2");
+    if (!place) d.start();
+    return view(d).steps.map((x) => x.id);
+  };
+  const one = steps(["status"]);
+  assert.equal(one.length, 15);
+  assert.equal(one[0], "R2");
+  assert.equal(steps([]).length, 14);
+  const older = steps([], { step: "W1", beat: 0, warm: ["R1", "R2"] });
+  assert.equal(older.length, 16);
+  assert.deepEqual(older.slice(0, 2), ["R1", "R2"]);
+});
+
+test("a card entry waits for a step of its own lesson: the capstone's, though b-3 teaches its skill, and b-1's", () => {
+  const cardWith = (lessons) =>
+    project(driver({ course, saved: save({ lessons }) }).state).learner.card;
+  assert.deepEqual(cardWith({}), []);
+  const before = cardWith(finishedBefore("b-capstone"));
+  assert.ok(
+    before.some((e) => e.lesson === "b-3" && e.skill === "review-diff"),
+  );
+  assert.ok(before.some((e) => e.lesson === "b-1"));
+  assert.ok(before.every((e) => e.lesson !== "b-capstone"));
+  const after = cardWith({
+    ...finishedBefore("b-capstone"),
+    "b-capstone": finished(lesson("b-capstone")),
+  });
+  assert.ok(after.some((e) => e.lesson === "b-capstone"));
+});
+
+test("a saved new copy for a-5 or the Advanced capstone leaves each lesson's done state alone", () => {
+  const lessonsOf = (d) =>
+    project(d.state).course.levels.flatMap((l) => l.lessons);
+  for (const id of ["a-5", "a-capstone"]) {
+    const without = driver({
+      course,
+      saved: save({ lessons: finishedBefore(id) }),
+    });
+    const key = folderKey(without.state, id);
+    const d = driver({
+      course,
+      saved: save({
+        lessons: finishedBefore(id),
+        folders: { [key]: NEW_COPY },
+      }),
+    });
+    assert.ok(
+      project(d.state).learner.workFolders.some((f) => f.path === NEW_COPY),
+      `${id}: the new copy is saved`,
+    );
+    assert.equal(lessonsOf(d).find((x) => x.id === id).complete, false, id);
+    assert.deepEqual(
+      lessonsOf(d).map((x) => x.complete),
+      lessonsOf(without).map((x) => x.complete),
+      id,
+    );
+  }
+});
+
 test("the warm-up explainer: on the Level's first warm-up the Learner plays, not on a later one, and not on the step after it", () => {
   const b2 = driver({
     course,
@@ -638,6 +821,39 @@ test("a beat's Windows note shows on native Windows only", () => {
   }
 });
 
+test("the cd line quotes the practice copy's folder: plain, POSIX single quotes, Windows double quotes", () => {
+  const cd = (facts) => {
+    const d = at("b-1", { step: "W3", beat: 1, done: ["W1", "W2"] }, { facts });
+    return view(d)
+      .beat.lines.map((l) => l.text)
+      .find((t) => t.startsWith("cd "));
+  };
+  assert.equal(cd({ root: "/home/sam/practice" }), "cd /home/sam/practice");
+  assert.equal(
+    cd({ root: "/home/sam/Sam's practice" }),
+    "cd '/home/sam/Sam'\\''s practice'",
+  );
+  assert.equal(
+    cd({ root: "C:\\Users\\Sam\\my practice", win32: true }),
+    'cd "C:\\Users\\Sam\\my practice"',
+  );
+});
+
+test("a run line's <your repo> shows the Work folder, shell-quoted when it has a space", () => {
+  const MINE = "/home/sam/code/my app";
+  const d = at(
+    "i-1",
+    { step: "C", beat: 0 },
+    { saved: { folders: { intermediate: MINE } } },
+  );
+  const texts = view(d).beat.lines.map((l) => l.text);
+  assert.ok(
+    texts.includes("npm run check -- i-1 --dir '/home/sam/code/my app'"),
+    texts.join("\n"),
+  );
+  assert.ok(texts.every((t) => !t.includes("<your repo>")));
+});
+
 test("an i-1 step in the Learner's own repository names that folder", () => {
   const MINE = "/home/sam/code/my-app";
   const d = driver({
@@ -660,19 +876,112 @@ test("an i-1 step in the Learner's own repository names that folder", () => {
   assert.equal(view(d).step.where.folder, MINE);
 });
 
+test("a waiting beat names the Work folder it watches before the first look; the Practice copy names none", () => {
+  const MINE = "/home/sam/code/my-app";
+  const d = driver({
+    course,
+    saved: save({
+      lessons: finishedBefore("i-1"),
+      folders: { intermediate: MINE },
+    }),
+  });
+  d.open("i-1");
+  playUntil(
+    d,
+    (s) =>
+      Boolean(s.beat) &&
+      stepOf(s).part !== "Worked example" &&
+      beatOf(s).verify.kind === "check",
+  );
+  assert.equal(view(d).beat.ranIn, null, "no first look yet");
+  assert.equal(view(d).beat.watches, MINE);
+  const b = driver();
+  playUntil(b, (s) => Boolean(s.beat) && beatOf(s).verify.kind === "check");
+  assert.equal(view(b).beat.watches, null);
+});
+
 // ---- step-down and complete --------------------------------------------------------
-test("step-down: from and to, the steps still to come, and no more help into the Check", () => {
+test("step-down: from and to, the steps still to come, and no more help into the Check, and the step it opens on", () => {
   const d = driver({ course });
   playUntil(d, (s) => s.phase === "step-down");
   let v = view(d);
   assert.deepEqual([v.from, v.to], [d.state.levelFrom, d.state.levelTo]);
+  assert.deepEqual(v.step, {
+    id: stepOf(d.state).id,
+    title: stepOf(d.state).title,
+    index: d.state.pos.step,
+    of: stepsOf(d.state).length,
+  });
+  assert.deepEqual([v.step.id, v.step.index], ["Y1", 7]);
+  const opensOn = v.step.id;
+  const of = v.step.of;
+  // A Step-down on the first step still names it.
+  const first = project({
+    ...d.state,
+    pos: { ...d.state.pos, step: 0 },
+  }).lesson;
+  assert.deepEqual(
+    [first.step.id, first.step.index, first.step.of],
+    [stepsOf(d.state)[0].id, 0, of],
+  );
   assert.ok(v.toCome.reduce((n, x) => n + x.count, 0) > 0);
   assert.equal(v.moreHelp, true);
+  // The outline: steps passed are done, the one it opens on current, the
+  // rest to do; the next play frame lists the same.
+  const outlinePinned = (v) => {
+    assert.equal(v.steps.length, v.step.of);
+    assert.equal(v.steps[v.step.index].id, v.step.id);
+    assert.deepEqual(
+      v.steps.map((x) => x.state),
+      v.steps.map((_, i) =>
+        i < v.step.index ? "done" : i === v.step.index ? "current" : "todo",
+      ),
+    );
+    return v.steps.map(({ id, state }) => ({ id, state }));
+  };
+  let outline = outlinePinned(v);
   d.accept();
+  assert.equal(stepOf(d.state).id, opensOn);
+  // `of` counts every step the playing outline lists.
+  assert.equal(view(d).steps.length, of);
+  assert.deepEqual(
+    view(d).steps.map(({ id, state }) => ({ id, state })),
+    outline,
+  );
   playUntil(d, (s) => s.phase === "step-down" && stepOf(s).part === "Check");
   v = view(d);
+  assert.deepEqual([v.step.id, v.step.title], ["C", "Check"]);
+  assert.equal(v.step.index, v.step.of - 1);
   assert.equal(v.moreHelp, false);
   assert.deepEqual(v.toCome, [{ tier: "challenge", count: 1 }]);
+  outline = outlinePinned(v);
+  assert.equal(outline.at(-1).state, "current");
+  d.accept();
+  assert.deepEqual(
+    view(d).steps.map(({ id, state }) => ({ id, state })),
+    outline,
+  );
+});
+
+test("step-down: its step count includes the warm-ups, as the outline does", () => {
+  const d = driver({
+    course,
+    saved: save({
+      missed: ["start"],
+      lessons: { "b-1": finished(course.find((l) => l.id === "b-1")) },
+    }),
+  });
+  d.open("b-2");
+  d.start();
+  assert.equal(stepOf(d.state).part, "Warm-up");
+  const outline = view(d).steps.length;
+  const v = project({
+    ...d.state,
+    phase: "step-down",
+    levelFrom: "guided",
+    levelTo: "hinted",
+  }).lesson;
+  assert.deepEqual([v.step.index, v.step.of], [0, outline]);
 });
 
 test("complete: b-1's Badge and first time, its check summary, the help used, and a next lesson in the same Level", () => {

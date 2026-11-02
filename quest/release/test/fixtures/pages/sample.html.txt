@@ -28,7 +28,7 @@ echo "&lt;script&gt;alert(1)&lt;/script&gt;"
 <h2 id="links">Links</h2>
 <ul>
 <li>A live page: <a href="https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/v0000.00/docs/intermediate/05-hooks.md#worked-example" data-page="docs/intermediate/05-hooks.md" data-fragment="worked-example">Hooks</a>.</li>
-<li>A Level README: <a href="https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/v0000.00/docs/intermediate/README.md">Intermediate</a>.</li>
+<li>A Level README: <a href="https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/v0000.00/docs/intermediate/README.md" data-page="docs/intermediate/README.md">Intermediate</a>.</li>
 <li>An example file: <a href="https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/v0000.00/examples/intermediate/05-hooks/dot-claude/hooks/protect-files.sh">protect-files.sh</a>.</li>
 <li>A folder: <a href="https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/tree/v0000.00/examples/intermediate/05-hooks">the hooks example</a>.</li>
 <li>Another site: <a href="https://code.claude.com/docs/en/hooks-guide">hooks guide</a>.</li>

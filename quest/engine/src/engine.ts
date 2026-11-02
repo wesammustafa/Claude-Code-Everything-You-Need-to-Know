@@ -15,6 +15,7 @@ import type {
   LessonId,
 } from "@quest/contract";
 import {
+  decidedBy,
   fingerprint,
   GIT,
   isChoice,
@@ -101,7 +102,6 @@ export const ENGINE_FIELDS = [
   "now",
   "missedNow",
   "answeredNow",
-  "whileShown",
   "lesson",
   "phase",
   "pos",
@@ -138,6 +138,7 @@ const blankProgress = (): LessonProgress => ({
   complete: false,
   warm: [],
   recalled: [],
+  whileShown: [],
   stamps: {},
   bottomAt: null,
 });
@@ -165,12 +166,15 @@ export function initialState({
   facts,
   now = 0,
   epoch = 0,
+  dir,
 }: {
   course: CourseEntry[];
   saved?: SavedProgress | null;
   facts: Facts;
   now?: number;
   epoch?: number;
+  /** The folder --dir gave: the opening lesson's level's work folder. */
+  dir?: string | undefined;
 }): EngineState {
   const progress: Record<LessonId, LessonProgress> = {};
   // The lessons whose steps changed since the Learner started them, and of
@@ -207,6 +211,9 @@ export function initialState({
     // fingerprint.
     pr.warm = pr.warm.filter((id) => content.warmup.some((w) => w.id === id));
     pr.recalled = pr.recalled.filter((id) =>
+      content.warmup.some((w) => w.id === id),
+    );
+    pr.whileShown = pr.whileShown.filter((id) =>
       content.warmup.some((w) => w.id === id),
     );
     const steps = playOrder(content, pr);
@@ -253,7 +260,7 @@ export function initialState({
       answeredNow.push(`${l.id}.${w.id}`);
   }
   const p = of(next);
-  return {
+  const s: EngineState = {
     course,
     facts,
     progress,
@@ -262,9 +269,6 @@ export function initialState({
     missed: saved?.missed ?? [],
     missedNow: [],
     answeredNow,
-    // The warm-ups a long wait's box asked in this sitting (ticket 150), in
-    // memory only: `lesson.id`.
-    whileShown: [],
     welcomed,
     // The Learner's place: the active lesson and its phase, 'overview',
     // 'playing' (a resume waits there with no beat open until the lesson
@@ -312,6 +316,13 @@ export function initialState({
     // overview's note until it starts again, in memory.
     changed,
   };
+  // --dir answers the folder question of the level the app opens on, as a
+  // folder.choose would: the old folder's results and fresh stamps go. A
+  // Beginner lesson has no level folder, and a lesson in a new copy keeps
+  // the copy it was given.
+  const level = levelKey(s);
+  if (dir !== undefined && level) setFolder(s, level, dir, []);
+  return s;
 }
 
 // Where the Learner is (ticket 207): on a step card or on an overview. The
@@ -452,6 +463,9 @@ export const currentStep = (s: EngineState) =>
   must(stepOf(s), `no step ${String(s.pos.step)} in ${s.lesson}`);
 export const currentBeat = (s: EngineState) =>
   must(beatOf(s), `no beat ${String(s.pos.beat)} in ${s.lesson}`);
+// The beat's key, as the card's data-beat renders it.
+export const beatKeyOf = (s: EngineState) =>
+  `${s.lesson}:${currentStep(s).id}:${String(s.pos.beat)}`;
 // The beat on the card's state, where the caller knows there is one.
 export const beatState = (s: EngineState) =>
   must(s.beat, "no beat on the card");
@@ -812,15 +826,24 @@ export const introOptions = (s: EngineState) => [
   "less",
   ...(offered(s) ? ["first"] : []),
 ];
+// The commands a You need line names that the host found on no PATH folder.
+const absent = (s: EngineState, commands: string[]) =>
+  commands.filter((c) => s.commands[c] === false);
 // Each You need line with the commands it names that the host found on no PATH
 // folder. Nothing until the host has looked.
 export const missingNeeds = (s: EngineState) =>
   needsHere(s)
-    .map((n) => ({
-      quote: n.quote,
-      names: n.commands.filter((c) => s.commands[c] === false),
-    }))
+    .map((n) => ({ quote: n.quote, names: absent(s, n.commands) }))
     .filter((n) => n.names.length);
+// Each You need line here with the commands the host found on no PATH
+// folder: [] when it found them all, null until it has answered for each.
+export const needLines = (s: EngineState) =>
+  needsHere(s).map((n) => ({
+    quote: n.quote,
+    missing: n.commands.some((c) => s.commands[c] === undefined)
+      ? null
+      : absent(s, n.commands),
+  }));
 // What the host found wrong with the lesson's work folder, where it isn't the
 // copy (ticket 86): 'missing', 'gitBroken', 'notGit' or 'noPractice'. Null
 // until the host has looked, and where all is well.
@@ -1010,7 +1033,7 @@ function whileRunsPick(s: EngineState) {
   const pool = must(contentOf(s), `no content for ${s.lesson}`).warmup.filter(
     (w) =>
       !p.warm.includes(w.id) &&
-      !s.whileShown.includes(`${s.lesson}.${w.id}`) &&
+      !p.whileShown.includes(w.id) &&
       first(w).ask &&
       first(w).kind !== "type" &&
       first(w).options.length &&
@@ -1021,9 +1044,9 @@ function whileRunsPick(s: EngineState) {
   );
 }
 // The box's warm-up step, its first beat and the answer picked (an option's
-// index, or null), while the long wait lasts; else null.
-export function whileRunsOf(s: EngineState) {
-  const box = longWait(s) ? s.beat?.whileRuns : undefined;
+// index, or null), until the step changes (286); else null.
+export function whileRunsBox(s: EngineState) {
+  const box = onCard(s) ? s.beat.whileRuns : undefined;
   if (!box) return null;
   const step = must(contentOf(s), `no content for ${s.lesson}`).warmup.find(
     (w) => w.id === box.id,
@@ -1036,6 +1059,9 @@ export function whileRunsOf(s: EngineState) {
       }
     : null;
 }
+// The box while the long wait lasts; else null.
+export const whileRunsOf = (s: EngineState) =>
+  longWait(s) ? whileRunsBox(s) : null;
 // A question still open in the box: rule 3 holds ambient motion beside it.
 export const whileRunsOpen = (s: EngineState) =>
   whileRunsOf(s)?.answer === null;
@@ -1073,18 +1099,26 @@ function openBeat(s: EngineState, effects: Effect[]) {
     ended: false,
     opened: s.now,
     eased: Boolean(p.easedSteps[step.id]),
-    // The run the card says "Checking" for, from the moment its child really
-    // starts (`run-start`) until the status leaves "opening": { asked }. And
+    // The Check run going, from the moment its child really starts
+    // (`run-start`) until the status leaves "opening", or, for one a change
+    // the watcher saw started while it was not, until a result lands:
+    // { asked, changed }. And
     // the last look at what the beat watches, as a digest, so a look that
     // differs from the one before is a change (work.changed), unless a file
     // change already said so since the last look. In memory.
     run: null,
     look: null,
     touched: false,
+    asksAtOpen: s.asks,
   };
+  const prev = s.beat?.whileRuns;
   s.beat = st;
-  const offer = beat.wait ? whileRunsPick(s) : null;
-  if (offer) st.whileRuns = { id: offer, answer: null };
+  // The box lasts until the step changes (ticket 286): any beat of the same
+  // step keeps it, a back onto its wait included, so one step asks one.
+  const at = `${s.lesson}.${step.id}`;
+  const offer = prev?.at !== at && beat.wait ? whileRunsPick(s) : null;
+  if (prev?.at === at) st.whileRuns = prev;
+  else if (offer) st.whileRuns = { id: offer, answer: null, at };
   s.lastActivity = s.now;
   if (beat.codespace && s.facts.codespace) {
     st.status = "already";
@@ -1111,6 +1145,13 @@ function openBeat(s: EngineState, effects: Effect[]) {
   } else if (beat.verify.kind === "probe") {
     st.status = "opening";
     effects.push(probeAsk(must(watching(s), "a probe beat watches a probe")));
+  }
+  // A box offered is on screen at once, so it counts as shown now (ticket
+  // 287): "Not now" only hides it in the client, and the save below keeps
+  // it for a resume.
+  if (offer && st.whileRuns?.id === offer && st.status !== "already") {
+    const shown = progressOf(s).whileShown;
+    if (!shown.includes(offer)) shown.push(offer);
   }
   effects.push({ type: "save" });
 }
@@ -1705,9 +1746,10 @@ function decide(
   st.stale = false;
   if (!failing) {
     st.status = st.baseline === undefined ? "already" : "done";
-    // The run that passed the lesson's whole check: its done line counts
-    // these, not a later poll's, which leaves the slow items out.
-    if (beat.verify.all) st.passed = ev.items;
+    // The run that passed the beat: its done lines are these, not a later
+    // poll's, which leaves the slow items out (b-1's item 0, or the whole
+    // check's slow items).
+    st.passed = ev.items;
     st.evidence = ev.evidence ?? null;
     // The file a glob matched, for the card to name (106).
     st.found = ev.found ?? null;
@@ -2065,8 +2107,7 @@ const ACTIONS: ActionHandlers = {
   "step.markDone"(s, _a, effects) {
     if (!answering(s) || openQuestion(s)) return false;
     const beat = currentBeat(s);
-    const v = beat.verify.kind;
-    if (v !== "self" && v !== "none" && beat.kind !== "self") return false;
+    if (decidedBy(beat) !== "learner") return false;
     beatState(s).status = "done";
     advance(s, effects);
     return true;
@@ -2076,16 +2117,18 @@ const ACTIONS: ActionHandlers = {
   "session.ended"(s, _a, effects) {
     if (!answering(s) || openQuestion(s)) return false;
     const beat = currentBeat(s);
-    if (beat.verify.kind !== "git-clean" || !beat.doneLabel) return false;
+    if (decidedBy(beat) !== "session") return false;
     const st = beatState(s);
     st.ended = true;
     st.explicit = true;
     effects.push(gitAsk(must(watching(s), "a git-clean beat watches git")));
     return true;
   },
-  "check.run"(s, _a, effects) {
+  "check.run"(s, a, effects) {
     const w = watching(s);
-    if (!w || yesNo(s)) return false;
+    // A late Check again for a beat already passed (292) must not run the
+    // beat after it.
+    if (!w || yesNo(s) || a.beat !== beatKeyOf(s)) return false;
     const beat = currentBeat(s);
     const st = beatState(s);
     st.explicit = true;
@@ -2144,13 +2187,21 @@ const ACTIONS: ActionHandlers = {
     effects.push({ type: "save" });
     return true;
   },
-  // The long wait's question: answered once, scored nothing.
-  "waitQuestion.answer"(s, { option }) {
-    const box = whileRunsOpen(s) && !yesNo(s) && whileRunsOf(s);
-    if (!box || !inRange(option, box.beat.options.length)) return false;
+  // The long wait's question: answered once, during or after the wait, until
+  // the step changes; scored nothing.
+  "waitQuestion.answer"(s, { option }, effects) {
+    const box = !yesNo(s) && whileRunsBox(s);
+    if (
+      !box ||
+      box.answer !== null ||
+      !inRange(option, box.beat.options.length)
+    )
+      return false;
     must(beatState(s).whileRuns, "a long wait has its question").answer =
       option;
-    s.whileShown.push(`${s.lesson}.${box.step.id}`);
+    const shown = progressOf(s).whileShown;
+    if (!shown.includes(box.step.id)) shown.push(box.step.id);
+    effects.push({ type: "save" });
     return true;
   },
   "stepDown.accept"(s, _a, effects) {
@@ -2265,6 +2316,17 @@ function apply(
     ev.dir !== resultFolder(s, ev)
   )
     ev = { ...ev, type: "stale" };
+  // The folder this beat's last result ran in (ticket 285). An r's result
+  // asked for before the beat opened is an earlier beat's run.
+  if (
+    result &&
+    s.beat &&
+    !(ev.asked && ev.asked <= (s.beat.asksAtOpen ?? 0)) &&
+    ev.type !== "stale" &&
+    ev.dir != null &&
+    (ev.lesson ?? s.lesson) === s.lesson
+  )
+    s.beat.ranIn = ev.dir;
   const look = lookAt(s, ev);
   switch (ev.type) {
     case "check":
@@ -2272,10 +2334,12 @@ function apply(
       break;
     case "run-start": {
       // A child really started (the host's run-start: what it runs, the r
-      // number it carries and its folder). Only the run the card says
-      // "Checking" for counts, as for `running`: what the beat watches, in
-      // its folder, asked by the latest r, or by the beat opening when no r
-      // is out. A later r's run keeps the one run going.
+      // number it carries and its folder). A run of what the beat watches
+      // counts, in its folder, asked by the latest r, or by no r when none
+      // is out: while the status is "opening" (the beat opening, or r), or,
+      // whatever the status, one a change the host's file watcher saw asked
+      // for (254 D25, owner 2026-11-01). The timed poll's run is not one. A
+      // later r's run keeps the one run going. A done beat has no run.
       const w = watching(s);
       const asked = ev.asked ?? 0;
       const watched =
@@ -2287,15 +2351,24 @@ function apply(
             ? Boolean(w?.git)
             : w?.probe?.name === ev.name;
       if (
-        s.beat?.status !== "opening" ||
+        !s.beat ||
+        ["done", "already"].includes(s.beat.status) ||
         !w ||
         !watched ||
         ev.dir !== w.dir ||
         asked !== (s.beat.asked || 0)
       )
         break;
+      // The poll's run: not one yet, but a change the watcher sees while it
+      // goes makes it one, since its result may be the change's answer.
+      if (s.beat.status !== "opening" && !ev.changed) {
+        if (!s.beat.run) s.beat.quiet = asked;
+        break;
+      }
       if (s.beat.run) s.beat.run.asked = asked;
-      else s.beat.run = { asked };
+      else
+        s.beat.run =
+          s.beat.status === "opening" ? { asked } : { asked, changed: true };
       break;
     }
     case "running": {
@@ -2409,6 +2482,8 @@ function apply(
       // A file changed or git moved: the learner is working, so no "stuck?" offer.
       s.lastActivity = s.now;
       if (s.beat) s.beat.idle = false;
+      if (s.beat?.quiet !== undefined && !s.beat.run)
+        s.beat.run = { asked: s.beat.quiet, changed: true };
       // A change moments.ts says (work.changed): the look it brings says
       // nothing more.
       if (watching(s) && s.beat && !s.beat.run) s.beat.touched = true;
@@ -2483,7 +2558,12 @@ export function reduce(prev: EngineState, input: EngineInput) {
   if (typeof input.epoch === "number") s.epoch = input.epoch;
   const handled = apply(s, input, effects);
   settle(prev, s, effects);
-  // A started run ends as the status leaves "opening".
-  if (s.beat?.run && s.beat.status !== "opening") s.beat.run = null;
+  // A started run ends as the status leaves "opening"; one that started
+  // while it was not (the watcher's) ends when a result lands.
+  const st = s.beat;
+  const result = RESULTS.some((t) => t === input.type);
+  if (st && result) delete st.quiet;
+  if (st?.run && st.status !== "opening" && (!st.run.changed || result))
+    st.run = null;
   return { state: s, effects, events: momentsOf(prev, s, handled) };
 }

@@ -12,8 +12,10 @@ import { LiveProvider, useConnection } from "../live/LiveProvider";
 import type { Connection } from "../live/store";
 import { PagePanelProvider } from "../pages/PagePanel";
 import { PipStageProvider } from "../pip/PipStage";
+import { PendingMoment } from "../screens/LevelComplete";
 import { useCourseSnapshot } from "../screens/lesson";
 import { useLessonRoute } from "../screens/useLessonRoute";
+import { SaveNotices } from "./SaveNotices";
 import { TopBar } from "./TopBar";
 
 /** How long the wait for the first snapshot lasts before the screen says it is busy, so a snapshot that comes at once shows no flash. */
@@ -114,7 +116,8 @@ export function Shell() {
  * the page's scroll padding, so focus never lands behind it. Until the first
  * snapshot, once that wait is noticeable, the screen is marked busy
  * (`aria-busy`, `data-connection="waiting"`) for the styles to show. On a
- * Lesson's route the path follows the engine's place (useLessonRoute).
+ * Lesson's route the path follows the engine's place (useLessonRoute). On
+ * Welcome and the journey a Level or course moment still waiting gets a link.
  */
 function Frame(): ReactNode {
   const location = useLocation();
@@ -133,6 +136,7 @@ function Frame(): ReactNode {
       <div ref={top} data-top="" className="sticky top-0 z-20">
         {!welcome && <TopBar />}
         <Notice kind={NOTICES[connection]} />
+        <SaveNotices />
       </div>
       <div
         ref={screen}
@@ -143,6 +147,7 @@ function Frame(): ReactNode {
           : {})}
         className="animate-rise"
       >
+        {(welcome || location.pathname === "/journey") && <PendingMoment />}
         <Outlet />
       </div>
     </div>

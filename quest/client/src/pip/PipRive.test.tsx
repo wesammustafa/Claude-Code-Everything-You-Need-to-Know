@@ -20,6 +20,7 @@ import {
   PipRive,
   type PipRiveProps,
 } from "./PipRive";
+import { PIP_READY_MARK } from "../../pip/ready";
 
 // Rive's React runtime, faked: each view model property records what the
 // adapter writes into it, in order, and each trigger records that it fired.
@@ -322,6 +323,24 @@ describe("Pip's Rive adapter", () => {
       vi.advanceTimersToNextFrame();
     });
     expect(onDrawn).toHaveBeenCalledTimes(1);
+  });
+
+  test("marks Pip ready once, when the bound rig starts rendering, before any frame is drawn", () => {
+    performance.clearMarks(PIP_READY_MARK);
+    onTestFinished(() => {
+      performance.clearMarks(PIP_READY_MARK);
+    });
+    const ready = () => performance.getEntriesByName(PIP_READY_MARK, "mark");
+    rive.bound = false;
+    const { rerender } = render(<PipRive {...props()} />);
+    expect(ready()).toHaveLength(0);
+    rive.bound = true;
+    rerender(<PipRive {...props()} />);
+    expect(rive.instance.startRendering).toHaveBeenCalled();
+    expect(ready()).toHaveLength(1);
+    // A second Pip on the page keeps the first mark.
+    render(<PipRive {...props()} />);
+    expect(ready()).toHaveLength(1);
   });
 
   test("with a gaze away from the Learner, hands over only once the turn has settled", () => {

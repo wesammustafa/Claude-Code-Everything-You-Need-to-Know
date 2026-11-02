@@ -23,6 +23,7 @@ import {
   finishedBefore,
   hintAvailable,
   initialState,
+  keyOf,
   liveCourse,
   b1Only,
   checkError,
@@ -296,9 +297,18 @@ function script() {
   w.open("a-2");
   const box = whileRunsOf(w.state);
   assert.ok(box, "a-2 W3 offers a question while it runs");
-  w.waitAnswer(0);
+  assert.deepEqual(
+    w.state.progress["a-2"].whileShown,
+    [box.step.id],
+    "a box offered counts as shown",
+  );
+  const answered = w.waitAnswer(0);
   assert.equal(whileRunsOf(w.state).answer, 0);
-  assert.deepEqual(w.state.whileShown, [`a-2.${box.step.id}`]);
+  assert.deepEqual(w.state.progress["a-2"].whileShown, [box.step.id]);
+  assert.ok(
+    answered.effects.some((e) => e.type === "save"),
+    "an answer saves at once",
+  );
 
   for (const each of drivers) {
     seen.effects.push(...each.effects);
@@ -471,7 +481,9 @@ test("an action whose guard fails changes nothing: on a fresh overview, nothing 
     "stepDown.back",
     "lesson.next",
   ]) {
-    const r = reduce(s, { type, option: 0, text: "x", take: true });
+    // check.run carries the current beat, so its watch guard refuses it.
+    const beat = keyOf(s);
+    const r = reduce(s, { type, option: 0, text: "x", take: true, beat });
     assert.deepEqual([r.state, r.effects], [s, []], type);
   }
   assert.deepEqual(reduce(s, { type: "lesson.open", lesson: "nope" }).state, s);

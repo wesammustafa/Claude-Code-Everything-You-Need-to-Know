@@ -11,6 +11,7 @@ import { LEVEL_NAMES, lessonEyebrow, lessonLabel } from "../course/labels";
 import { usePagePanel } from "../pages/PagePanel";
 import { summaryOf, useCourseSnapshot } from "../screens/lesson";
 import { BrandMark } from "./BrandMark";
+import { SettingsBody } from "./Settings";
 
 const NAV_LINK =
   "inline-flex h-8.5 items-center gap-1.75 rounded-md px-3 text-sm font-semibold text-muted no-underline " +
@@ -119,7 +120,9 @@ export function TopBar() {
   };
   const pages = usePagePanel();
   const steps =
-    active && snapshot.lesson.phase === "playing"
+    active &&
+    snapshot.lesson.phase !== "complete" &&
+    snapshot.lesson.steps.length > 0
       ? snapshot.lesson.steps
       : null;
   const card = snapshot?.learner.card ?? [];
@@ -215,9 +218,7 @@ export function TopBar() {
         {steps ? (
           <StepOutline steps={steps} />
         ) : (
-          <p className="text-sm text-muted">
-            The step outline shows once the Lesson starts.
-          </p>
+          <p className="text-sm text-muted">No step outline for this Lesson.</p>
         )}
       </Panel>
       <Panel
@@ -240,10 +241,12 @@ export function TopBar() {
         </Button>
       </Panel>
       <Panel title="Settings" open={panel === "settings"} onClose={closePanel}>
-        <p className="text-sm text-muted">
-          Theme, motion, Work folders and help show here. The theme follows your
-          system setting.
-        </p>
+        <SettingsBody
+          onOpenPage={(path) => {
+            setPanel(null);
+            pages.open(path);
+          }}
+        />
       </Panel>
     </header>
   );

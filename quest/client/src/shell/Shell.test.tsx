@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test } from "vitest";
 import type { Snapshot } from "@quest/contract";
 import {
   complete,
@@ -10,6 +10,7 @@ import {
   overviewAt,
   playing,
   snapshotOf,
+  stepDown,
 } from "../../e2e/snapshots";
 import { renderConnected } from "../../test/connected";
 import { routes } from "../routes";
@@ -123,12 +124,11 @@ describe("the shell", () => {
     ["/lesson/b-3/step", true],
     ["/", false],
   ])(
-    "on %s the notice's live region sits in flow at the top, under any top bar, outside the animated screen",
+    "on %s the notice's strip sits in flow at the top, under any top bar, outside the animated screen",
     (path, topBar) => {
       renderAt(path);
-      const region = document.querySelector<HTMLElement>(
-        "[data-notice-region]",
-      );
+      // The strip; its live region sits in <body>, kept live (268).
+      const region = document.querySelector<HTMLElement>("[data-notice-strip]");
       const top = document.querySelector<HTMLElement>("[data-top]");
       const screenFrame = document.querySelector<HTMLElement>("[data-screen]");
       expect(region).not.toBeNull();
@@ -398,13 +398,38 @@ describe("the Steps outline", () => {
     expect(current[0]).toHaveTextContent(/^Check.*current$/);
   });
 
-  test("before the Lesson starts, the outline says when it shows", async () => {
+  test("on the overview, the outline lists the steps to come", async () => {
     const user = userEvent.setup();
     renderConnected("/lesson/b-4", atB4);
     await user.click(screen.getByRole("button", { name: "Steps" }));
+    const dialog = screen.getByRole("dialog", { name: "Steps" });
+    const items = within(dialog).getAllByRole("listitem");
+    const { steps } = overviewAt("b-4");
+    expect(items).toHaveLength(steps.length);
+    expect(items[0]).toHaveTextContent(steps[0]?.title ?? "");
+    expect(items[0]).toHaveTextContent("to do");
+    expect(dialog.querySelector('[aria-current="step"]')).toBeNull();
+  });
+
+  test("on a Step-down, the step it opens on is current", async () => {
+    const user = userEvent.setup();
+    renderConnected("/lesson/b-1/step", snapshotOf(stepDown));
+    await user.click(screen.getByRole("button", { name: "Steps" }));
+    const dialog = screen.getByRole("dialog", { name: "Steps" });
+    const current = within(dialog)
+      .getAllByRole("listitem")
+      .filter((item) => item.getAttribute("aria-current") === "step");
+    expect(current).toHaveLength(1);
+    expect(current[0]).toHaveTextContent(/^Check.*current$/);
+  });
+
+  test("on a complete Lesson, the outline says there is none", async () => {
+    const user = userEvent.setup();
+    renderConnected("/lesson/b-1/complete", snapshotOf(complete));
+    await user.click(screen.getByRole("button", { name: "Steps" }));
     expect(
       within(screen.getByRole("dialog", { name: "Steps" })).getByText(
-        "The step outline shows once the Lesson starts.",
+        "No step outline for this Lesson.",
       ),
     ).toBeInTheDocument();
   });
@@ -500,5 +525,111 @@ describe("Electives", () => {
     expect(screen.getByRole("tab", { name: /^Beginner/ })).toHaveAccessibleName(
       expect.stringMatching(/^Beginner\d+ of \d+$/),
     );
+  });
+});
+
+describe("Settings", () => {
+  const root = document.documentElement;
+  afterEach(() => {
+    delete root.dataset.theme;
+    delete root.dataset.motion;
+    localStorage.clear();
+  });
+
+  async function openSettings() {
+    const user = userEvent.setup();
+    const page = renderConnected("/lesson/b-1/play", snapshotOf(playing));
+    await user.click(screen.getByRole("button", { name: "Settings" }));
+    const dialog = screen.getByRole("dialog", { name: "Settings" });
+    return { user, page, dialog };
+  }
+
+  test("the gear opens it", async () => {
+    const { dialog } = await openSettings();
+    expect(dialog).toBeInTheDocument();
+  });
+
+  test("the theme moves by keyboard and stays in this browser; System clears it", async () => {
+    const { user, dialog } = await openSettings();
+    const theme = within(dialog).getByRole("group", { name: "Theme" });
+    within(theme).getByRole("radio", { name: "System" }).focus();
+    await user.keyboard("{ArrowRight}");
+    expect(within(theme).getByRole("radio", { name: "Dark" })).toBeChecked();
+    expect(root.dataset.theme).toBe("dark");
+    expect(localStorage.getItem("quest.theme")).toBe("dark");
+    await user.keyboard("{ArrowRight}");
+    expect(root.dataset.theme).toBe("light");
+    expect(localStorage.getItem("quest.theme")).toBe("light");
+    await user.click(within(theme).getByRole("radio", { name: "System" }));
+    expect(root).not.toHaveAttribute("data-theme");
+    expect(localStorage.getItem("quest.theme")).toBeNull();
+  });
+
+  test("motion overrides the system setting both ways", async () => {
+    const { user, dialog } = await openSettings();
+    const motion = within(dialog).getByRole("group", { name: "Motion" });
+    await user.click(within(motion).getByRole("radio", { name: "Reduced" }));
+    expect(root.dataset.motion).toBe("reduce");
+    expect(localStorage.getItem("quest.motion")).toBe("reduce");
+    await user.click(within(motion).getByRole("radio", { name: "Full" }));
+    expect(root.dataset.motion).toBe("full");
+    expect(localStorage.getItem("quest.motion")).toBe("full");
+  });
+
+  test("Help opens Commands by level and the Glossary in the page panel", async () => {
+    const { user, page, dialog } = await openSettings();
+    await user.click(
+      within(dialog).getByRole("button", { name: "Commands by level" }),
+    );
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Commands by level",
+      }),
+    ).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("button", { name: "Settings" }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Settings" })).getByRole(
+        "button",
+        { name: "Glossary" },
+      ),
+    );
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Glossary" }),
+    ).toBeInTheDocument();
+    expect(page.pageFetches).toEqual([
+      "/pages/index.json",
+      "/pages/reference/commands.html",
+      "/pages/reference/glossary.html",
+    ]);
+  });
+
+  test("shows the release from the page index, the nonaffiliation and Codespaces lines, and an empty Work folders slot", async () => {
+    const { dialog } = await openSettings();
+    const release = await within(dialog).findByText("Release v0000.00");
+    expect(release).toHaveAttribute("data-ref", "v0000.00");
+    expect(
+      within(dialog).getByText(
+        "An independent educational project. Not affiliated with or endorsed by Anthropic.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(
+        "In a Codespace, keep the port private: the app is for you alone.",
+      ),
+    ).toBeInTheDocument();
+    const folders = within(dialog).getByRole("region", {
+      name: "Work folders",
+    });
+    expect(folders).toHaveAttribute("data-settings", "work-folders");
+    expect(folders.children).toHaveLength(1);
+  });
+
+  test("Escape returns focus to the gear and posts nothing", async () => {
+    const { user, page } = await openSettings();
+    await user.keyboard("{Escape}");
+    expect(screen.getByRole("button", { name: "Settings" })).toHaveFocus();
+    expect(page.posts).toEqual([]);
   });
 });

@@ -120,6 +120,29 @@ test("makes the fixed layers beside the page inert too, even one that mounts whi
   root.remove();
 });
 
+test("leaves a live region marked data-keep-live beside the page live, open or mounted while open", async () => {
+  const user = userEvent.setup();
+  const { root } = renderInRoot(true);
+  const kept = document.createElement("div");
+  kept.setAttribute("data-keep-live", "");
+  document.body.append(kept);
+  await user.click(screen.getByRole("button", { name: "Open settings" }));
+  expect(root).toHaveAttribute("inert");
+  expect(kept).not.toHaveAttribute("inert");
+  const late = document.createElement("div");
+  late.setAttribute("data-keep-live", "");
+  document.body.append(late);
+  const other = document.createElement("div");
+  document.body.append(other);
+  await waitFor(() => {
+    expect(other).toHaveAttribute("inert");
+  });
+  expect(late).not.toHaveAttribute("inert");
+  await user.keyboard("{Escape}");
+  for (const el of [kept, late, other]) el.remove();
+  root.remove();
+});
+
 test("holds the page still: scroll locked, the scrollbar's width kept as padding", async () => {
   const user = userEvent.setup();
   const html = document.documentElement;
