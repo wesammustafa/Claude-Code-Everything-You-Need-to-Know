@@ -131,6 +131,7 @@ export const scenarios = [
       helpers.write(dir, { '.practice/i-capstone-agents.txt': 'Explore\n' });
     },
   },
+  { item: 12, name: 'a log naming a reviewer that is not committed', files: { '.claude/agents/reviewer.md': REVIEWER('Read, Grep, Glob'), '.practice/i-capstone-agents.txt': 'reviewer\n' } },
 
   { item: 13, name: 'no committed settings file', files: { [SHARED]: TEAM } },
   { item: 13, name: 'the ask rule still TODO', setup: committed({ [SHARED]: json({ permissions: { allow: ['Bash(npm test)'], ask: ['TODO: a command the team approves each time'] } }) }) },

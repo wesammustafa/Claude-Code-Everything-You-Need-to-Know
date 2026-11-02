@@ -22,13 +22,15 @@ The brief is in `capstone/intermediate-brief.md` in your practice copy: set the 
 5. **A second opinion that can't change anything.** Before we commit, we want each change reviewed by something that can only read the code.
 6. **The docs in a browser.** Claude should open the docs in a browser through Chrome DevTools MCP, which we reviewed at one version. Everyone runs that version, and nothing leaves our machines that doesn't need to: usage statistics, CrUX lookups and update checks stay off.
 7. **One official plugin.** Everyone in the repository should get `claude-code-setup` from the official marketplace.
-8. **A real bug, fixed with your setup.** Reproduce the malformed-percent bug in `capstone/intermediate-bug.md` with your link-check workflow: a link such as `[broken](bad%.md)` crashes the checker instead of producing its normal broken-link report. Fix it with Claude while your protection keeps `samples/` unchanged, and tell Claude not to commit until your reviewer has reviewed the fix: in auto mode, Claude Code blocks an action that goes against a boundary you state in the conversation ([Boundaries you state in conversation](https://code.claude.com/docs/en/permission-modes#boundaries-you-state-in-conversation)). Malformed percent escapes are broken links; valid percent-encoded paths must still resolve. Add a regression test that fails before the repair and passes after it. If your copy runs lesson 5's test gate, expect it to send Claude back to work when Claude stops while that test fails. Before you commit, have your reviewer review the fix in a session started with `claude --settings .practice/i-capstone-hook.json`, lesson 6's delegation log with its own log file:
+8. **A real bug, fixed with your setup.** Reproduce the malformed-percent bug in `capstone/intermediate-bug.md` with your link-check workflow: a link such as `[broken](bad%.md)` crashes the checker with `URIError: URI malformed` instead of producing its normal broken-link report. Fix it with Claude while your protection keeps `samples/` unchanged, and tell Claude not to commit until your reviewer has reviewed the fix: in auto mode, Claude Code blocks an action that goes against a boundary you state in the conversation ([Boundaries you state in conversation](https://code.claude.com/docs/en/permission-modes#boundaries-you-state-in-conversation)). Malformed percent escapes are broken links; valid percent-encoded paths must still resolve. Add a regression test that fails before the repair and passes after it. If your copy runs lesson 5's test gate, expect it to send Claude back to work when Claude stops while that test fails. Before the review, commit your setup (the skill, the reviewer, the settings and the server file) and keep the fix and its test uncommitted: the check reads your reviewer from git. Before you commit the fix, have your reviewer review it in a session started with `claude --settings .practice/i-capstone-hook.json`, lesson 6's delegation log with its own log file:
 
    ```json
    {"hooks":{"SubagentStart":[{"hooks":[{
      "type":"command","command":"jq -r '.agent_type' >> \"$CLAUDE_PROJECT_DIR/.practice/i-capstone-agents.txt\""
    }]}]}}
    ```
+
+   The hook writes the log when Claude spawns a subagent ([SubagentStart](https://code.claude.com/docs/en/hooks#subagentstart)). A review in a session started without the hook file, or one Claude does itself without your reviewer, is not logged, so the check fails.
 
    Then commit the source fix and its regression test together.
 
@@ -68,6 +70,6 @@ When every box on this page is ticked, you're ready for the [Advanced level](../
 
 ---
 
-<sub>Sources: [Advanced setup](https://code.claude.com/docs/en/setup) · [All settings](https://code.claude.com/docs/en/settings-reference) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Automate actions with hooks](https://code.claude.com/docs/en/hooks-guide) · the [Intermediate lessons](README.md), which cite the official pages for each step.</sub>
+<sub>Sources: [Advanced setup](https://code.claude.com/docs/en/setup) · [All settings](https://code.claude.com/docs/en/settings-reference) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Automate actions with hooks](https://code.claude.com/docs/en/hooks-guide) · [Hooks reference](https://code.claude.com/docs/en/hooks) · the [Intermediate lessons](README.md), which cite the official pages for each step.</sub>
 
 <sub>← [Install and manage plugins](08-plugins.md) · [Intermediate index](README.md) · [Advanced index](../advanced/README.md) → · [Stuck on this capstone?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=i-capstone)</sub>

@@ -99,7 +99,10 @@ const delegated = {
     const log = repo.read('.practice/i-capstone-agents.txt');
     if (log === null) return 'There is no delegation log. Start a session with `claude --settings .practice/i-capstone-hook.json`, the hook file the capstone gives, and have your reviewer review the fix.';
     const ran = log.split(/\r?\n/).map((l) => l.trim());
-    return reviewers(repo).some((name) => ran.includes(name)) ? true : 'The log names no committed reviewer. In a session started with the hook file, ask Claude to have your reviewer review the fix.';
+    const committed = reviewers(repo);
+    if (committed.some((name) => ran.includes(name))) return true;
+    if (!committed.length) return 'The log names no committed reviewer, because no reviewer is committed yet: the check reads `.claude/agents/` from git. Commit your reviewer, keep the fix uncommitted, then run the check again.';
+    return 'The log names no committed reviewer. In a session started with the hook file, ask Claude to have your reviewer review the fix.';
   },
 };
 
