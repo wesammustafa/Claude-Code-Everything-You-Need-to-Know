@@ -6,7 +6,7 @@ import { fullCourse, playing, snapshotOf } from "../../e2e/snapshots";
 import { renderConnected } from "../../test/connected";
 import { refusalText } from "../screens/folderWords";
 
-const COPY = "/home/sam/practice";
+const COPY = "/home/ali/practice";
 const withFolders = (workFolders: Snapshot["learner"]["workFolders"]) => {
   const base = snapshotOf(playing, { course: fullCourse });
   return { ...base, learner: { ...base.learner, workFolders } };
@@ -32,7 +32,7 @@ describe("Settings' Work folders", () => {
     const { region } = await openFolders(
       withFolders([
         { key: "intermediate", path: COPY },
-        { key: "a-5", path: "/home/sam/actions" },
+        { key: "a-5", path: "/home/ali/actions" },
       ]),
     );
     const rows = region.querySelectorAll("[data-work-folder]");
@@ -43,7 +43,7 @@ describe("Settings' Work folders", () => {
     ]);
     expect(row(region, "intermediate")).toHaveTextContent("This practice copy");
     expect(row(region, "advanced")).toHaveTextContent("Not chosen yet");
-    expect(row(region, "a-5")).toHaveTextContent("/home/sam/actions");
+    expect(row(region, "a-5")).toHaveTextContent("/home/ali/actions");
     expect(row(region, "a-5")).toHaveTextContent(a5?.title ?? "missing");
     expect(region).toHaveTextContent(
       "Changing a folder clears the Check results found in the old one.",
@@ -53,7 +53,7 @@ describe("Settings' Work folders", () => {
 
   test("Change opens the form in place; a Level's sends the copy, a new copy's a path, and a refusal is worded", async () => {
     const { user, page, region } = await openFolders(
-      withFolders([{ key: "a-5", path: "/home/sam/actions" }]),
+      withFolders([{ key: "a-5", path: "/home/ali/actions" }]),
     );
     await user.click(
       within(row(region, "advanced")).getByRole("button", { name: /Change/ }),
@@ -76,7 +76,7 @@ describe("Settings' Work folders", () => {
       within(row(region, "a-5")).getByRole("button", { name: /Change/ }),
     );
     expect(within(region).queryByRole("radio")).toBeNull();
-    await user.type(within(region).getByRole("textbox"), "/home/sam/other");
+    await user.type(within(region).getByRole("textbox"), "/home/ali/other");
     page.refuse(400, { error: "folder", reason: "outside-home" });
     await user.click(
       within(region).getByRole("button", { name: "Use this folder" }),
@@ -92,7 +92,7 @@ describe("Settings' Work folders", () => {
 
   test("Change puts focus in the form; Cancel, a send and Escape give it back to Change, and Escape leaves Settings open", async () => {
     const { user, region } = await openFolders(
-      withFolders([{ key: "a-5", path: "/home/sam/actions" }]),
+      withFolders([{ key: "a-5", path: "/home/ali/actions" }]),
     );
     const change = (key: string) =>
       within(row(region, key)).getByRole("button", { name: /Change/ });

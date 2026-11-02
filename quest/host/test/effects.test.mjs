@@ -21,7 +21,7 @@ import {
   checkRun,
 } from "./scripted.mjs";
 
-const MINE = "/home/sam/mine";
+const MINE = "/home/ali/mine";
 const inputs = (heard, type) =>
   heard.filter((h) => h.input.type === type).map((h) => h.input);
 // A host whose `waitQuestion.answer` asks for `effects`: the way in for an

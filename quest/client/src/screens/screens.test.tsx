@@ -57,7 +57,7 @@ import { WAITING_LINE } from "./Welcome";
 // quote from the snapshot (Copy rules): a word about Claude Code is never
 // the app's.
 const APP_WORDS: readonly RegExp[] = [
-  /^Hi Sam!$/,
+  /^Hi Ali!$/,
   /^Learn Claude Code by using it\.$/,
   /^Every lesson happens in a real project, your Practice copy, with this page beside your terminal\.$/,
   /^This page$/,
@@ -192,7 +192,7 @@ describe("Welcome", () => {
       "/",
       snapshotOf(overview, { welcomed: false }),
     );
-    expect(screen.getByText("Hi Sam!")).toBeInTheDocument();
+    expect(screen.getByText("Hi Ali!")).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
         level: 1,
@@ -426,7 +426,7 @@ describe("Lesson overview", () => {
       snapshotOf(
         {
           ...i1,
-          folderQuestion: q({ current: "/home/sam/practice", open: false }),
+          folderQuestion: q({ current: "/home/ali/practice", open: false }),
         },
         { course: fullCourse, revision: 2 },
       ),
@@ -436,19 +436,19 @@ describe("Lesson overview", () => {
     expect(screen.getByRole("button", { name: "Start" })).toHaveFocus();
     page.send(
       snapshotOf(
-        { ...i1, folderQuestion: q({ current: "/home/sam/app", open: false }) },
+        { ...i1, folderQuestion: q({ current: "/home/ali/app", open: false }) },
         { course: fullCourse, revision: 3 },
       ),
     );
     expect(
       screen.getByRole("region", { name: "Work folder" }),
-    ).toHaveTextContent("Work folder: /home/sam/app");
+    ).toHaveTextContent("Work folder: /home/ali/app");
     await user.click(screen.getByRole("button", { name: "Change" }));
     expect(page.posts).toEqual([{ type: "folder.ask", key: "intermediate" }]);
     // Editing a saved answer can be left with Cancel.
     page.send(
       snapshotOf(
-        { ...i1, folderQuestion: q({ current: "/home/sam/app" }) },
+        { ...i1, folderQuestion: q({ current: "/home/ali/app" }) },
         { course: fullCourse, revision: 4 },
       ),
     );
@@ -1238,7 +1238,7 @@ describe("Lesson workspace, every step (246)", () => {
   test("row C: a passed Check that ran in a Work folder says to run it in the Practice copy too", () => {
     renderConnected(
       "/lesson/b-1/step",
-      snapshotOf(ranInWork(watchPassed, "/home/sam/work")),
+      snapshotOf(ranInWork(watchPassed, "/home/ali/work")),
     );
     expect(document.querySelector("[data-ran-in]")).toHaveTextContent(
       RUN_IT_TOO,
@@ -1256,7 +1256,7 @@ describe("Lesson workspace, every step (246)", () => {
   test("row C: no run-it-too line before the Check passes", () => {
     renderConnected(
       "/lesson/b-1/step",
-      snapshotOf(ranInWork(watchNotYet, "/home/sam/work")),
+      snapshotOf(ranInWork(watchNotYet, "/home/ali/work")),
     );
     expect(document.querySelector("[data-ran-in]")).toBeNull();
     expect(document.body.textContent).not.toContain(RUN_IT_TOO);

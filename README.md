@@ -8,7 +8,7 @@ Claude Code Quest is a learning app that opens in your browser beside Claude Cod
 [![Verified against Claude Code v2.1.308 (stable)](https://img.shields.io/badge/verified-v2.1.308_stable-2e6e57)](CHANGELOG.md#v202612---2026-11-01) [![Edition release date](https://img.shields.io/github/release-date/wesammustafa/Claude-Code-Everything-You-Need-to-Know?label=edition&color=2e6e57)](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/releases/latest) [![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/license-PolyForm_Noncommercial_1.0.0-5b6470)](LICENSE) [![Mentioned in Awesome Claude Code](https://awesome.re/mentioned-badge.svg)](https://github.com/hesreallyhim/awesome-claude-code)
 
 <p align="center">
-  <!-- Captured on 2026-11-01 from the Claude Code Quest app on its practice stream, against the guide baseline Claude Code v2.1.308 (stable). -->
+  <!-- Captured on 2026-11-02 from the Claude Code Quest app on its practice stream, against the guide baseline Claude Code v2.1.308 (stable). -->
   <img src="assets/readme/pip-step-done.gif" width="720" alt="In Claude Code Quest, the Learner corrects the claim in step 9 of Beginner lesson 1: the step's check passes, its progress dash turns green, Pip, a small blocky robot with two antennas, throws his arms up with sparks around him, and his speech bubble says That step is done." />
   <br />
   <sub><b>Pass a step, and Pip cheers with you.</b></sub>
@@ -38,10 +38,10 @@ Start where you are and climb. Each level ends with a capstone that puts it all 
 **[Start Advanced](docs/advanced/README.md)**
 
 <p align="center">
-  <!-- Captured on 2026-11-01 from the Claude Code Quest app on its practice stream, against the guide baseline Claude Code v2.1.308 (stable). -->
-  <img src="assets/readme/pip-level-done.gif" width="560" alt="From the Beginner capstone's complete screen to Beginner level complete: Pip throws his arms up under falling confetti above the level's six badges and the Start the Intermediate level button." />
+  <!-- Captured on 2026-11-02 from the Claude Code Quest app on its practice stream, against the guide baseline Claude Code v2.1.308 (stable). -->
+  <img src="assets/readme/pip-level-done.gif" width="560" alt="From the Beginner capstone's complete screen to Beginner level complete: Pip throws his arms up in a burst of sparks above the level's six badges and the Start the Intermediate level button." />
   <br />
-  <sub><b>Finish a level, and Pip celebrates under confetti.</b></sub>
+  <sub><b>Finish a level, and Pip celebrates.</b></sub>
 </p>
 
 <a id="install"></a>
@@ -83,7 +83,7 @@ The template's `progress.yml` workflow and `.gitattributes` replace yours. Your 
 Pip works beside you. He cheers your wins, and the help gets lighter as you get the hang of each skill, until you do it on your own.
 
 <p align="center">
-  <!-- Captured on 2026-11-01 from the Claude Code Quest app on its practice stream, against the guide baseline Claude Code v2.1.308 (stable). -->
+  <!-- Captured on 2026-11-02 from the Claude Code Quest app on its practice stream, against the guide baseline Claude Code v2.1.308 (stable). -->
   <img src="assets/readme/pip-looks-around.gif" width="360" alt="On Claude Code Quest's welcome screen, Pip turns his head and eyes to follow the pointer in a circle around him, then settles to rest." />
 </p>
 

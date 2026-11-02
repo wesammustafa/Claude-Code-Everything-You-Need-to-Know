@@ -97,7 +97,7 @@ test("facts main sends later count: a Linux-only need is missing once the facts 
     facts: { linux: false },
     saved: save({
       lessons: finishedBefore("i-1", lessons),
-      folders: { intermediate: "/home/sam/code/my-app" },
+      folders: { intermediate: "/home/ali/code/my-app" },
     }),
   });
   assert.deepEqual([d.state.phase, d.state.lesson], ["overview", "i-1"]);
