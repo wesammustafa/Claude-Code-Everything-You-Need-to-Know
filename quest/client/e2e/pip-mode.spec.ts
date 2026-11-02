@@ -51,6 +51,11 @@ const modes = (page: Page) =>
 
 /** Idle, Thinking while the run is out, then the line's state and Idle. */
 async function checkTo(page: Page, state: string, run: () => Promise<void>) {
+  // A run the file watcher started on an earlier change (the folder renamed
+  // back) may still be out: let it finish so the watch starts at rest.
+  await expect(pip(page)).toHaveAttribute("data-pip-mode", "idle", {
+    timeout: 30_000,
+  });
   await watchModes(page);
   await run();
   await expect(card(page)).toHaveAttribute("data-state", state, {

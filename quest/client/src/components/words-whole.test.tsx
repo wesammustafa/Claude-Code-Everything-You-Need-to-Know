@@ -58,7 +58,7 @@ const CASES: readonly [string, () => ReactElement, string[]][] = [
   [
     "Notice",
     () => <Notice kind="reconnecting" />,
-    ["Reconnecting to Claude Code Quest", "Your place is saved."],
+    ["Reconnecting to Claude Code Quest.", "Your place is saved."],
   ],
 ];
 

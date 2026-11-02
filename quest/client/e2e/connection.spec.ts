@@ -48,8 +48,9 @@ test("after 15 seconds with the health request failing too, it says Claude Code 
     { timeout: 20_000 },
   );
   await expect(notice(page)).toContainText("npm run learn");
+  // The Copy is in the strip; the live region holds only the words (268).
   await expect(
-    notice(page).getByRole("button", { name: /Copy/ }),
+    page.locator("[data-notice]").getByRole("button", { name: /Copy/ }),
   ).toBeVisible();
 
   // The server is back: the next stream answers, and the notice goes.

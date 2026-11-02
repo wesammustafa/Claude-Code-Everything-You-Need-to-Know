@@ -59,6 +59,27 @@ test("a new rung takes focus from the caller, and reads in order", async () => {
   const rung = container.querySelector("[data-pip-target=hint]");
   expect(rung).toHaveFocus();
   expect(rung).toHaveTextContent("Hint 1. Look in src/.");
+  // The focus it is given draws the ring, inside the rung (268).
+  expect(stateUtilities(rung?.className ?? "", "focus-visible")).toEqual(
+    expect.arrayContaining(["outline-2", "-outline-offset-2", "outline-focus"]),
+  );
+});
+
+test("the exact-command question, given focus, draws the focus ring (268)", () => {
+  render(
+    <Hints
+      hints={HINTS}
+      shown={1}
+      onShowNext={() => undefined}
+      confirm={{ onTake: vi.fn(), onDecline: vi.fn() }}
+    />,
+  );
+  const question = screen.getByText(/Show the exact command\?/);
+  expect(question).toHaveFocus();
+  expect(question.className).not.toContain("focus:outline-none");
+  expect(stateUtilities(question.className, "focus-visible")).toEqual(
+    expect.arrayContaining(["outline-2", "outline-offset-2", "outline-focus"]),
+  );
 });
 
 test("says why no further hint can open, in place of the button", () => {

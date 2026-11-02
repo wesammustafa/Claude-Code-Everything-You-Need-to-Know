@@ -134,3 +134,13 @@ test("the aside shows in the bubble but outside the live region", () => {
     status.closest("[data-says-bubble]")?.querySelector("[data-aside]"),
   ).not.toBeNull();
 });
+
+test("what comes after the words shows in the bubble, outside the live region", () => {
+  renderWithMotion(
+    <Says after={<button type="button">Show the hint</button>}>Not yet</Says>,
+  );
+  const status = screen.getByRole("status");
+  const button = screen.getByRole("button", { name: "Show the hint" });
+  expect(status).not.toContainElement(button);
+  expect(status.closest("[data-says-bubble]")).toContainElement(button);
+});

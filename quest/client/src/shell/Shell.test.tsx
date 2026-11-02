@@ -124,12 +124,11 @@ describe("the shell", () => {
     ["/lesson/b-3/step", true],
     ["/", false],
   ])(
-    "on %s the notice's live region sits in flow at the top, under any top bar, outside the animated screen",
+    "on %s the notice's strip sits in flow at the top, under any top bar, outside the animated screen",
     (path, topBar) => {
       renderAt(path);
-      const region = document.querySelector<HTMLElement>(
-        "[data-notice-region]",
-      );
+      // The strip; its live region sits in <body>, kept live (268).
+      const region = document.querySelector<HTMLElement>("[data-notice-strip]");
       const top = document.querySelector<HTMLElement>("[data-top]");
       const screenFrame = document.querySelector<HTMLElement>("[data-screen]");
       expect(region).not.toBeNull();
