@@ -191,7 +191,9 @@ describe("the replay's contract", () => {
     expect(assembled.stderr).toContain(join(typed, "rel"));
     expect(run(replayCli, []).status).toBe(2);
     expect(run(replayCli, ["--bogus", "x"]).stderr).toMatch(/Usage/);
-  });
+    // Five CLI processes and a git replay: well under a second alone, but
+    // past Vitest's 5 s default when the whole suite loads the machine.
+  }, 30_000);
 });
 
 /** A PATH whose `claude` prints the baseline version, as on a Learner's machine. */

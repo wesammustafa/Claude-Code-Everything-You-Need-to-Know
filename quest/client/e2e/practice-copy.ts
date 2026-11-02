@@ -1,6 +1,6 @@
 // A fresh Practice copy in a temporary folder, built from practice-template/
 // with the built server bundle in its learn/, and the app run there the way
-// `npm run learn` runs it. The copy is a git repository committed by "Sam
+// `npm run learn` runs it. The copy is a git repository committed by "Ali
 // Learner", under a HOME of its own, so the developer's global git config
 // never reaches it. A stub `claude` on the server's PATH prints a version, as
 // checks/test/ladders/b-1.mjs does, unless QUEST_E2E_REAL_CLAUDE=1 asks for
@@ -31,7 +31,7 @@ const BUNDLE = join(repo, "quest/server/dist/learn");
 
 /** The version the stub prints: the CHANGELOG baseline the course is stamped at. */
 export const STUB_VERSION = "2.1.308 (Claude Code)";
-export const LEARNER = { name: "Sam Learner", email: "sam@example.com" };
+export const LEARNER = { name: "Ali Learner", email: "ali@example.com" };
 
 const START_MS = 15_000;
 const STOP_MS = 10_000;

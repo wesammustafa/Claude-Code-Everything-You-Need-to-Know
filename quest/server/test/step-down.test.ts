@@ -11,7 +11,7 @@ const course = loadCourse(
   fileURLToPath(new URL("../../../practice-template", import.meta.url)),
 );
 const folders = Object.fromEntries(
-  [...FOLDER_KEYS].map((key) => [key, `/home/sam/work-${key}`]),
+  [...FOLDER_KEYS].map((key) => [key, `/home/ali/work-${key}`]),
 );
 const MILESTONES = ["lesson.completed", "level.completed", "course.completed"];
 
