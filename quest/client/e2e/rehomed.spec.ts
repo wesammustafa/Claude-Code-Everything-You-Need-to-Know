@@ -287,3 +287,24 @@ for (const width of [720, 1440])
       },
     );
   });
+
+test("a welcomed copy at Welcome offers Continue to the next Lesson, never Start the first lesson, and it opens that Lesson (302)", async ({
+  page,
+}) => {
+  await withCopy(
+    () => saveBefore("b-2"),
+    async (copy) => {
+      await page.goto(copy.url);
+      const go = page.getByRole("button", { name: /^Continue: / });
+      await expect(go).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Start the first lesson" }),
+      ).toHaveCount(0);
+      const title = ((await go.textContent()) ?? "").replace(/^Continue: /, "");
+      expect(title).not.toBe("");
+      await go.click();
+      await expect(page).toHaveURL(/#\/lesson\/b-2$/);
+      await expect(heading(page)).toHaveText(title);
+    },
+  );
+});
