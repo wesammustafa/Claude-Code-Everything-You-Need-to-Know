@@ -31,6 +31,7 @@ import {
   tryFirst,
   watching,
   where,
+  keyOf,
 } from "./drive.mjs";
 
 // A saved place in lesson 1, opened.
@@ -451,7 +452,7 @@ test("review fixes: starting over asks first", () => {
   const d = driver({
     saved: save({ lessons: { "b-1": { step: "Y3", done: ["W1"] } } }),
   });
-  d.refused("check.run");
+  d.refused("check.run", { beat: keyOf(d.state) });
   assert.deepEqual(
     [d.state.phase, d.state.beat],
     ["playing", null],

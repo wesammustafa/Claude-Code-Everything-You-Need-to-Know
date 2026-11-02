@@ -65,7 +65,10 @@ export const actionSchema = z.discriminatedUnion("type", [
   }),
   bare("step.markDone"),
   bare("session.ended"),
-  bare("check.run"),
+  z.strictObject({
+    type: z.literal("check.run"),
+    beat: z.string().min(1).max(200),
+  }),
   bare("hint.next"),
   z.strictObject({ type: z.literal("hint.takeExact"), take: z.boolean() }),
   z.strictObject({ type: z.literal("waitQuestion.answer"), option }),

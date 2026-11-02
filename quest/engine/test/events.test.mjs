@@ -10,19 +10,23 @@ import {
   checkItems,
   checkResult,
   course,
+  courseWith,
   driver,
   finished,
   finishedBefore,
   gitLists,
   hintAvailable,
   IDLE_MS,
+  keyOf,
   onReading,
   pending,
   playUntil,
+  respond,
   running,
   save,
   stepOf,
 } from "./drive.mjs";
+import { DEMO_B2 } from "./fixtures/course.mjs";
 import { C } from "../src/copy.ts";
 
 const lesson = (id) => course.find((l) => l.id === id);
@@ -201,6 +205,44 @@ test("every check.started is followed by exactly one ending: the baseline, an un
     assert.deepEqual(types(d.last), ["check.ended"]);
     assert.deepEqual(tally(d.events), { started: 1, ended: 1 });
   }
+});
+
+test("a late Check again for a beat the watcher passed leaves the next beat untouched (292)", () => {
+  // DEMO_B2's W1 and Y1 are both watched check beats.
+  const d = driver({
+    course: courseWith({ "b-2": DEMO_B2 }),
+    saved: save({
+      lessons: {
+        "b-1": finished(lesson("b-1")),
+        "b-2": {
+          warm: ["R1", "R2", "R3"],
+          done: ["R1", "R2", "R3"],
+          levels: ["challenge"],
+          step: "W1",
+          beat: 0,
+        },
+      },
+    }),
+  });
+  d.open("b-2");
+  const eff = pending(d, "check");
+  const old = keyOf(d.state);
+  d.send({ ...runStart(eff), changed: true });
+  d.send(checkResult(eff, checkItems(d.state, true)));
+  assert.deepEqual(types(d.last), ["check.passed", "step.completed"]);
+  d.act("step.continue");
+  respond(d, pending(d, "stamp"));
+  assert.equal(stepOf(d.state).id, "Y1");
+  const card = () => [d.state.beat.status, d.state.beat.run];
+  const at = card();
+  d.refused("check.run", { beat: old });
+  assert.deepEqual(card(), at, "the next beat is untouched");
+  d.refused("check.run");
+  d.act("check.run", { beat: keyOf(d.state) });
+  assert.equal(d.state.beat.status, "opening");
+  assert.ok(
+    d.last.effects.some((e) => e.type === "check" || e.type === "probe"),
+  );
 });
 
 test("a run a change the watcher saw started while the beat says Not yet or waits is a Check run (254 D25): check.started, then one ending", () => {

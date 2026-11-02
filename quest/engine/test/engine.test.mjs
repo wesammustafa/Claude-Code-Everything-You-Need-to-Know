@@ -23,6 +23,7 @@ import {
   finishedBefore,
   hintAvailable,
   initialState,
+  keyOf,
   liveCourse,
   b1Only,
   checkError,
@@ -480,7 +481,9 @@ test("an action whose guard fails changes nothing: on a fresh overview, nothing 
     "stepDown.back",
     "lesson.next",
   ]) {
-    const r = reduce(s, { type, option: 0, text: "x", take: true });
+    // check.run carries the current beat, so its watch guard refuses it.
+    const beat = keyOf(s);
+    const r = reduce(s, { type, option: 0, text: "x", take: true, beat });
     assert.deepEqual([r.state, r.effects], [s, []], type);
   }
   assert.deepEqual(reduce(s, { type: "lesson.open", lesson: "nope" }).state, s);

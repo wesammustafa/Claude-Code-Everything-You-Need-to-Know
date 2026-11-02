@@ -5,7 +5,11 @@
 import { test } from "vitest";
 import assert from "node:assert/strict";
 import {
+  b1Only,
+  courseWith,
+  DEMO_B2,
   DEMO_I1,
+  finished,
   finishedBefore,
   threeLevels,
 } from "../../engine/test/drive.mjs";
@@ -18,6 +22,7 @@ import {
   VERSION,
   w3,
   WORK,
+  checkRun,
 } from "./scripted.mjs";
 
 const results = (heard) =>
@@ -53,7 +58,7 @@ test("r's check whose evidence changed while it ran runs again, and that run car
   await turn();
   adapters.checks.calls[0].resolve(w3(false));
   await turn();
-  host.dispatch({ type: "check.run" });
+  host.dispatch(checkRun(host));
   await turn();
   assert.equal(adapters.checks.calls.length, 2, "r's run");
   adapters.files.write(`${WORK}/${VERSION}`, "2.1.285 (Claude Code)\n");
@@ -94,7 +99,7 @@ test("r's run waits behind a poll's and keeps its slow items and number when ano
   host.dispatch({ type: "lesson.open", lesson: "b-1" });
   await turn();
   // The beat's opening run is held; r, then a poll, ask while it runs.
-  host.dispatch({ type: "check.run" });
+  host.dispatch(checkRun(host));
   // Past the save's quiet window, so the watcher's change counts.
   clock.spend(400);
   adapters.fire(ROOT);
@@ -180,10 +185,10 @@ test("r pressed again while r's run runs joins it", async () => {
   await turn();
   adapters.checks.calls[0].resolve(w3(false));
   await turn();
-  host.dispatch({ type: "check.run" });
+  host.dispatch(checkRun(host));
   await turn();
   assert.equal(adapters.checks.calls.length, 2, "r's run");
-  host.dispatch({ type: "check.run" });
+  host.dispatch(checkRun(host));
   await turn();
   assert.equal(adapters.checks.calls.length, 2, "the second r joined it");
   adapters.checks.calls[1].resolve(w3(false));
@@ -245,4 +250,57 @@ test("a probe, a stamp probe and a prerequisite check wait while a check child r
   await turn();
   assert.equal(adapters.checks.calls.length, 2, "the prerequisite's check");
   assert.deepEqual(adapters.checks.calls[1].items, [1]);
+});
+
+// Ticket 292: a Check again pressed on a beat that passed before it arrived.
+test("a late Check again for a passed beat changes nothing on the beat after it", async () => {
+  const course = courseWith({ "b-2": DEMO_B2 });
+  const lesson = course.find((l) => l.id === "b-2");
+  const { host, adapters } = fakeHost({
+    course,
+    saved: {
+      format: 1,
+      welcomed: true,
+      lessons: {
+        "b-1": finished(b1Only[0]),
+        "b-2": {
+          warm: ["R1", "R2", "R3"],
+          done: ["R1", "R2", "R3"],
+          levels: ["challenge"],
+          step: "W1",
+          beat: 0,
+        },
+      },
+    },
+  });
+  await host.open();
+  host.dispatch({ type: "lesson.open", lesson: "b-2" });
+  await turn();
+  const item = (pass) => ({
+    items: [{ index: 0, text: lesson.items[0], pass, hint: pass ? "" : "x" }],
+  });
+  adapters.checks.calls[0].resolve(item(false));
+  await turn();
+  const late = checkRun(host);
+  host.dispatch(late);
+  await turn();
+  adapters.checks.calls[1].resolve(item(true));
+  await turn();
+  assert.equal(host.snapshot().lesson.beat.status, "done");
+  host.dispatch({ type: "step.continue" });
+  await turn();
+  assert.equal(host.snapshot().lesson.step.id, "Y1");
+  adapters.checks.calls.at(-1).resolve(item(false));
+  await turn();
+  assert.notEqual(host.snapshot().lesson.beat.status, "opening");
+  const before = host.snapshot().lesson.beat;
+  const calls = adapters.checks.calls.length;
+  host.dispatch(late);
+  await turn();
+  assert.deepEqual(
+    host.snapshot().lesson.beat,
+    before,
+    "the beat is untouched",
+  );
+  assert.equal(adapters.checks.calls.length, calls, "no check ran");
 });

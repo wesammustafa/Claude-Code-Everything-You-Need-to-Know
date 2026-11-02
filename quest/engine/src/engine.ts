@@ -463,6 +463,9 @@ export const currentStep = (s: EngineState) =>
   must(stepOf(s), `no step ${String(s.pos.step)} in ${s.lesson}`);
 export const currentBeat = (s: EngineState) =>
   must(beatOf(s), `no beat ${String(s.pos.beat)} in ${s.lesson}`);
+// The beat's key, as the card's data-beat renders it.
+export const beatKeyOf = (s: EngineState) =>
+  `${s.lesson}:${currentStep(s).id}:${String(s.pos.beat)}`;
 // The beat on the card's state, where the caller knows there is one.
 export const beatState = (s: EngineState) =>
   must(s.beat, "no beat on the card");
@@ -2121,9 +2124,11 @@ const ACTIONS: ActionHandlers = {
     effects.push(gitAsk(must(watching(s), "a git-clean beat watches git")));
     return true;
   },
-  "check.run"(s, _a, effects) {
+  "check.run"(s, a, effects) {
     const w = watching(s);
-    if (!w || yesNo(s)) return false;
+    // A late Check again for a beat already passed (292) must not run the
+    // beat after it.
+    if (!w || yesNo(s) || a.beat !== beatKeyOf(s)) return false;
     const beat = currentBeat(s);
     const st = beatState(s);
     st.explicit = true;
