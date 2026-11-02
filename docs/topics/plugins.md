@@ -1,6 +1,6 @@
 # Plugins
 
-<sub>Topic · Verified against Claude Code v2.1.308 (stable) on 2026-10-26</sub>
+<sub>Topic · Verified against Claude Code v2.1.309 (stable) on 2026-11-02</sub>
 
 Bundles of skills, agents, hooks and MCP servers, usually installed from a marketplace.
 

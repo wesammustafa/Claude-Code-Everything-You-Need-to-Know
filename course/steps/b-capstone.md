@@ -1,6 +1,6 @@
 ---
 lesson: b-capstone
-stamp: "Verified against Claude Code v2.1.308 (stable) on 2026-10-25"
+stamp: "Verified against Claude Code v2.1.309 (stable) on 2026-11-02"
 badge: Beginner
 ---
 

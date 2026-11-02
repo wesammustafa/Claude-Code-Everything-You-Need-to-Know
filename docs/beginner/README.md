@@ -1,6 +1,6 @@
 # Beginner
 
-<sub>**Beginner** · about 2½ hours · Verified against Claude Code v2.1.308 (stable) on 2026-10-26</sub>
+<sub>**Beginner** · about 2½ hours · Verified against Claude Code v2.1.309 (stable) on 2026-11-02</sub>
 
 One session, one change, done well. You start Claude Code safely and check what it tells you against the code, decide when it asks and when to plan first, take a change from request to commit and catch what it gets wrong, stop or rewind a wrong turn and keep the conversation focused, and give the project a memory that new sessions follow.
 

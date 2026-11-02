@@ -1,6 +1,6 @@
 # Verify UI changes in the browser with Claude in Chrome
 
-<sub>**Intermediate** · Elective · about 15 minutes · Needs: [Connect a tool with MCP](../07-mcp.md) · Verified against Claude Code v2.1.308 (stable) on 2026-10-26</sub>
+<sub>**Intermediate** · Elective · about 15 minutes · Needs: [Connect a tool with MCP](../07-mcp.md) · Verified against Claude Code v2.1.309 (stable) on 2026-11-02</sub>
 
 ## Goal
 

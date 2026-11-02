@@ -1,6 +1,6 @@
 # <a id="goal-loop-and-routines"></a>`/loop` and cloud scheduled tasks
 
-<sub>**Advanced** · Elective · about 15 minutes, plus run time · Needs: [Put bounds on autonomous runs](../07-bounded-runs.md) · Verified against Claude Code v2.1.308 (stable) on 2026-10-26</sub>
+<sub>**Advanced** · Elective · about 15 minutes, plus run time · Needs: [Put bounds on autonomous runs](../07-bounded-runs.md) · Verified against Claude Code v2.1.309 (stable) on 2026-11-02</sub>
 
 > [!NOTE]
 > "Scheduled tasks are in research preview. Behavior, limits, and the API surface may change." ([Automate work with scheduled tasks](https://code.claude.com/docs/en/routines))

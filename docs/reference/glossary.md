@@ -1,6 +1,6 @@
 # Glossary
 
-<sub>Verified against Claude Code v2.1.308 (stable) on 2026-10-26</sub>
+<sub>Verified against Claude Code v2.1.309 (stable) on 2026-11-02</sub>
 
 The words this guide uses for its own parts. For Claude Code's terms, such as hooks, subagents or compaction, see the official [Glossary](https://code.claude.com/docs/en/glossary).
 

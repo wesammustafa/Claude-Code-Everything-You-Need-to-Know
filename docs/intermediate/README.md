@@ -1,6 +1,6 @@
 # Intermediate
 
-<sub>**Intermediate** · about 4 hours · Verified against Claude Code v2.1.308 (stable) on 2026-10-26</sub>
+<sub>**Intermediate** · about 4 hours · Verified against Claude Code v2.1.309 (stable) on 2026-11-02</sub>
 
 One developer's setup. You shape Claude Code to your own project: skills, project memory, model and effort, permissions and the sandbox, hooks, subagents, MCP servers and plugins.
 
