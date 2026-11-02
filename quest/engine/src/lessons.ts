@@ -45,7 +45,7 @@ export const DROPPED: Readonly<Record<string, string>> = {
   source: "the manifest names the page",
   "source-commit": "the Stamp dates the page",
   page: "the manifest names the page",
-  stuck: "the manifest derives the report-a-problem link",
+  stuck: "the page panel builds the lesson-feedback link from the Lesson id",
   next: "the manifest's order gives the next Lesson",
 };
 

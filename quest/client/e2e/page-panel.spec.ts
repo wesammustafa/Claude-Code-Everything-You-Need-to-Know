@@ -156,10 +156,14 @@ test.describe("a page with a diagram and callouts, and heading links", () => {
     page,
     context,
   }) => {
+    // The hooks page links its example's README, which the release does not
+    // render (MCP's only such link was its Level README, now a page).
     await servePages(context);
-    await openAt(page, "/#/lesson/i-7", overviewAt("i-7"));
+    await openAt(page, "/#/lesson/i-5", overviewAt("i-5"));
     await readButton(page).click();
-    const dialog = page.getByRole("dialog", { name: MCP });
+    const dialog = page.getByRole("dialog", {
+      name: titleOf("docs/intermediate/05-hooks.md"),
+    });
     const outside = dialog
       .locator(`.page-prose a[href^="${GUIDE}/blob/"]:not([data-page])`)
       .first();
@@ -220,25 +224,21 @@ test.describe("which page Read the full lesson opens", () => {
     ).toBeVisible();
   });
 
-  test("a Level index warm-up links the Level's README on GitHub", async ({
+  test("a Level index warm-up opens the Level's README in the panel", async ({
     page,
     context,
   }) => {
-    await servePages(context);
+    const asked = await servePages(context);
     await openAt(page, "/#/lesson/i-1/step", indexWarmupI1);
-    const link = page.getByRole("link", { name: "Read the full lesson" });
-    await expect(link).toHaveAttribute(
-      "href",
-      `${GUIDE}/blob/main/docs/beginner/README.md`,
-    );
-    await expect(link).toHaveAttribute("target", "_blank");
-    await expect(link).toHaveAttribute("rel", "noopener noreferrer");
-    // Pointing at it loads the index; the href then names the release ref.
-    await link.hover();
-    await expect(link).toHaveAttribute(
-      "href",
-      `${GUIDE}/blob/${pageIndex.ref}/docs/beginner/README.md`,
-    );
+    await readButton(page).click();
+    const dialog = page.getByRole("dialog", {
+      name: titleOf("docs/beginner/README.md"),
+    });
+    await expect(dialog).toBeVisible();
+    expect(asked).toContain("/pages/beginner/README.html");
+    await expect(
+      dialog.getByRole("link", { name: "Stuck on this lesson? Tell us" }),
+    ).toHaveAttribute("href", /lesson=i-1/);
   });
 });
 
@@ -292,4 +292,32 @@ test("Your card opens during a check, the check's result still lands, and Comman
   await expect(commands).toBeHidden();
   await expect(page.getByRole("button", { name: "Your card" })).toBeFocused();
   await expect(page.getByText("That step is done.")).toBeVisible();
+});
+
+test("Settings Help opens Commands by level and the Glossary in the panel, and shows the release the pages came from", async ({
+  page,
+  context,
+}) => {
+  await servePages(context);
+  await openAt(page, "/#/journey", overviewAt("b-1"));
+  const gear = page.getByRole("button", { name: "Settings" });
+  for (const path of [
+    "docs/reference/commands.md",
+    "docs/reference/glossary.md",
+  ]) {
+    await gear.click();
+    const settings = page.getByRole("dialog", { name: "Settings" });
+    await expect(settings.locator("[data-ref]")).toHaveAttribute(
+      "data-ref",
+      pageIndex.ref,
+    );
+    await settings.getByRole("button", { name: titleOf(path) }).click();
+    const panel = page.getByRole("dialog", { name: titleOf(path) });
+    await expect(
+      panel.getByRole("heading", { level: 1, name: titleOf(path) }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(panel).toBeHidden();
+    await expect(gear).toBeFocused();
+  }
 });

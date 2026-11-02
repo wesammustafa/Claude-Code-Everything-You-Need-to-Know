@@ -236,6 +236,8 @@ function RigPip({ model, size, className, onScreenChange, rig }: RigPipProps) {
       ref={box}
       aria-hidden="true"
       data-pip={size}
+      // The director's mode, for tests that follow Pip through a play.
+      data-pip-mode={model.mode}
       data-pip-rendering={rendering}
       data-pip-playing={String(rigShown && onScreen && !hidden)}
       data-pip-reaction={shownReaction ?? undefined}

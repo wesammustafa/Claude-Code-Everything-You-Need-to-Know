@@ -353,6 +353,32 @@ describe("a hidden tab's waiting Reaction", () => {
 });
 
 describe("milestones", () => {
+  test("a notice ahead of a completion does not block it, and stays listed", () => {
+    const { store, source } = tab();
+    const notice: Milestone = {
+      id: "a.1",
+      revision: 1,
+      serverTime: 0,
+      type: "notice",
+      kind: "unreadable",
+    };
+    const lesson = milestoneOf("a.2");
+    const level: Milestone = {
+      id: "a.3",
+      revision: 1,
+      serverTime: 0,
+      type: "level.completed",
+      level: "beginner",
+    };
+    source().emit("snapshot", snap("a", 3, [notice, lesson, level]));
+    expect(store.getState().milestone).toEqual(lesson);
+    source().emit("snapshot", snap("a", 4, [notice, level]));
+    expect(store.getState().milestone).toEqual(level);
+    expect(store.getState().snapshot?.milestones[0]).toEqual(notice);
+    source().emit("snapshot", snap("a", 5, [notice]));
+    expect(store.getState().milestone).toBeNull();
+  });
+
   test("the oldest pending one no tab showed, claimed and sent as milestone.shown", async () => {
     const { store, source, calls } = tab();
     const first = milestoneOf("a.1");

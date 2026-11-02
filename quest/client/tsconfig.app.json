@@ -13,6 +13,7 @@
     "e2e/snapshots.ts",
     "pip/contract.ts",
     "pip/posters.ts",
+    "pip/ready.ts",
     "pip/contract-page"
   ]
 }

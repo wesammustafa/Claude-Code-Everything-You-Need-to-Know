@@ -32,7 +32,10 @@ test.each<[SaysTone, string]>([
   ["offer", "border-accent-edge"],
 ])("the %s bubble takes its status colour from tokens", (tone, border) => {
   render(<Says tone={tone}>Status</Says>);
-  const bubble = screen.getByRole("status");
+  const bubble = screen
+    .getByRole("status")
+    .closest<HTMLElement>("[data-says-bubble]");
+  if (!bubble) throw new Error("no bubble");
   expect(bubble.className).toContain(border);
   // The border's change is a CSS transition, from tokens.
   expect(bubble.className).toContain("duration-(--duration-base)");
@@ -119,4 +122,15 @@ test("Pip's Reaction starts no later than the commit that gives the bubble its n
   });
   const first = commits.find((c) => c.tone === "passed");
   expect(first?.reaction).toBe(passed.id);
+});
+
+test("the aside shows in the bubble but outside the live region", () => {
+  renderWithMotion(
+    <Says aside={<span data-aside="">4 s</span>}>Checking</Says>,
+  );
+  const status = screen.getByRole("status");
+  expect(status).not.toHaveTextContent("4 s");
+  expect(
+    status.closest("[data-says-bubble]")?.querySelector("[data-aside]"),
+  ).not.toBeNull();
 });

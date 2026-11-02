@@ -122,3 +122,64 @@ test("its words keep the copy rules", () => {
   expect(container.textContent).not.toMatch(/press|stuck|wrong|fail/i);
   expect(container.textContent).not.toContain(String.fromCodePoint(0x2014));
 });
+
+test("the exact-command question takes the next rung's place and its focus, and each answer calls its handler (247)", async () => {
+  const user = userEvent.setup();
+  const onTake = vi.fn();
+  const onDecline = vi.fn();
+  render(
+    <Hints
+      hints={[...HINTS, ""]}
+      shown={2}
+      onShowNext={() => undefined}
+      confirm={{ onTake, onDecline }}
+    />,
+  );
+  expect(screen.queryByRole("button", { name: "Another hint" })).toBeNull();
+  const question = screen.getByText(
+    "Show the exact command? This step then counts as Every command shown.",
+  );
+  expect(question).toHaveFocus();
+  await user.click(
+    screen.getByRole("button", { name: "Show the exact command" }),
+  );
+  await user.click(screen.getByRole("button", { name: "Not now" }));
+  expect(onTake).toHaveBeenCalledOnce();
+  expect(onDecline).toHaveBeenCalledOnce();
+});
+
+test("two rungs that read the same both show, and a rung may be drawn by the caller (247)", () => {
+  const { container } = render(
+    <Hints
+      hints={["Look again.", "Look again.", <code key="c">git status</code>]}
+      shown={3}
+      onShowNext={() => undefined}
+    />,
+  );
+  const rungs = container.querySelectorAll("[data-hint-rung]");
+  expect(rungs).toHaveLength(3);
+  expect(rungs[1]).toHaveTextContent("Hint 2. Look again.");
+  expect(rungs[2]).toHaveTextContent("Hint 3.git status");
+});
+
+test("Not now gives focus back to the button that opens the next rung (247)", async () => {
+  const user = userEvent.setup();
+  const props = {
+    hints: [...HINTS, ""],
+    shown: 2,
+    onShowNext: () => undefined,
+  };
+  const { rerender } = render(
+    <Hints
+      {...props}
+      confirm={{
+        onTake: vi.fn(),
+        onDecline: () => {
+          rerender(<Hints {...props} />);
+        },
+      }}
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: "Not now" }));
+  expect(screen.getByRole("button", { name: "Another hint" })).toHaveFocus();
+});

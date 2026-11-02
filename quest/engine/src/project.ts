@@ -33,10 +33,12 @@ import type {
   Snapshot,
   StairStep,
   StepDownLesson,
+  StepId,
   StepSummary,
   StepView,
 } from "@quest/contract";
 import {
+  decidedBy,
   must,
   READS,
   type Beat,
@@ -63,6 +65,7 @@ import {
   hidesRuns,
   hintAvailable,
   hintStatus,
+  inCopy,
   isDone,
   isLastBeat,
   lessonIn,
@@ -74,6 +77,7 @@ import {
   levelsOf,
   missingNeeds,
   moreHelpGives,
+  needLines,
   nextLessonOf,
   offered,
   pickWarmups,
@@ -91,7 +95,7 @@ import {
   toFinish,
   tryFirst,
   unmet,
-  whileRunsOf,
+  whileRunsBox,
 } from "./engine.ts";
 import { mix, TIERS } from "./tiers.ts";
 import type { CourseEntry, EngineState, HintRung } from "./types.ts";
@@ -239,13 +243,41 @@ const stairs = (
 ): StairStep[] =>
   steps.map((x, i) => ({ part: x.part, tier: tierAt(tiers, i) }));
 
+// Each step's line in the outline; current -1 means no step is current.
+const outlineOf = (
+  steps: readonly Step[],
+  tiers: readonly (HelpTier | undefined)[],
+  done: readonly StepId[],
+  current: number,
+  passedNow: boolean,
+): StepSummary[] =>
+  steps.map((x, i) => ({
+    id: x.id,
+    part: x.part,
+    title: x.title,
+    tier: tierAt(tiers, i),
+    state:
+      i === current
+        ? passedNow
+          ? "done"
+          : "current"
+        : done.includes(x.id)
+          ? "done"
+          : "todo",
+    optional: Boolean(x.optional),
+  }));
+
 // The steps and tiers the overview's start will play: with the warm-ups it
 // would pick, and the help as planned or with less help.
-function planOf(s: EngineState, lessHelp: boolean) {
+function startedCopy(s: EngineState, lessHelp: boolean) {
   const st = asStarted(s);
   const p = progressOf(st);
   p.lessHelp = lessHelp;
   p.warm = pickWarmups(s);
+  return st;
+}
+function planOf(s: EngineState, lessHelp: boolean) {
+  const st = startedCopy(s, lessHelp);
   return stairs(stepsOf(st), tiersOf(st));
 }
 
@@ -256,8 +288,11 @@ function overviewOf(s: EngineState, head: LessonHead): OverviewLesson {
     return {
       ...head,
       phase: "overview",
+      steps: [],
       intro: null,
       staircase: { planned: [], less: null },
+      check: [],
+      needs: [],
       notes: [],
       folderQuestion: null,
       start: null,
@@ -267,9 +302,11 @@ function overviewOf(s: EngineState, head: LessonHead): OverviewLesson {
   const planned = planOf(s, false);
   const less = planOf(s, true);
   const lessDiffers = JSON.stringify(less) !== JSON.stringify(planned);
+  const st = startedCopy(s, false);
   return {
     ...head,
     phase: "overview",
+    steps: outlineOf(stepsOf(st), tiersOf(st), p.done, -1, false),
     intro: {
       can: [...c.intro.can],
       payoff: c.intro.payoff ?? null,
@@ -277,6 +314,8 @@ function overviewOf(s: EngineState, head: LessonHead): OverviewLesson {
       read: c.intro.read ?? null,
     },
     staircase: { planned, less: lessDiffers ? less : null },
+    check: [...lessonIn(s).items],
+    needs: needLines(s),
     notes: notesOf(s, c),
     folderQuestion: folderQuestionOf(s),
     start: asksFolder(s)
@@ -339,21 +378,7 @@ function playingOf(s: EngineState, head: LessonHead): PlayingLesson {
   const current = s.beat ? s.pos.step : steps.findIndex((x) => x.id === p.step);
   // A step counts as passed once its last beat is done, by any route.
   const passedNow = Boolean(s.beat) && isDone(s.beat) && isLastBeat(s);
-  const list: StepSummary[] = steps.map((x, i) => ({
-    id: x.id,
-    part: x.part,
-    title: x.title,
-    tier: tierAt(tiers, i),
-    state:
-      i === current
-        ? passedNow
-          ? "done"
-          : "current"
-        : p.done.includes(x.id)
-          ? "done"
-          : "todo",
-    optional: Boolean(x.optional),
-  }));
+  const list = outlineOf(steps, tiers, p.done, current, passedNow);
   if (!s.beat)
     return {
       ...head,
@@ -493,6 +518,12 @@ const codeView = (line: CodeLine): CodeView => ({
 const looksAtFile = (beat: Beat) =>
   beat.verify.kind === "check" || READS.has(beat.verify.kind);
 
+// The Work folder the current step runs in, as the watcher picks it.
+function watchesOf(s: EngineState): string | null {
+  const dir = folderOf(s, s.lesson, currentStep(s));
+  return dir && !inCopy(s, dir) ? dir : null;
+}
+
 function beatView(s: EngineState): BeatView {
   const beat = currentBeat(s);
   const st = beatState(s);
@@ -528,6 +559,7 @@ function beatView(s: EngineState): BeatView {
   const tier = tierOf(s);
   const answered = Boolean(st.answer);
   const f = st.feedback;
+  const from = fromFolderOf(s, currentStep(s));
   return {
     index: s.pos.beat,
     kind: beat.kind,
@@ -539,6 +571,9 @@ function beatView(s: EngineState): BeatView {
     ask: beat.ask ?? null,
     self: beat.self ?? null,
     doneLabel: beat.doneLabel ?? null,
+    decidedBy: decidedBy(beat),
+    ranIn: st.ranIn && !inCopy(s, st.ranIn) ? st.ranIn : null,
+    watches: watchesOf(s),
     wait: beat.wait ? { text: beat.wait.text ?? null } : null,
     why: {
       onCard:
@@ -561,16 +596,24 @@ function beatView(s: EngineState): BeatView {
             return {
               text: o.text,
               ...(shown
-                ? { kind: o.kind, ...(o.because ? { because: o.because } : {}) }
+                ? {
+                    kind: o.kind,
+                    ...(o.because
+                      ? { because: fromPage(from, o.because) }
+                      : {}),
+                  }
                 : {}),
             };
           }),
     answer: {
       picked: st.answer?.index ?? null,
       feedback: f?.kind ?? null,
-      because: f?.because ?? f?.hint ?? null,
+      because: fromPage(from, f?.because ?? f?.hint ?? null),
       point: f?.point ?? null,
-      reveal: beat.ask && isDone(st) ? (beat.reveal ?? null) : null,
+      reveal: fromPage(
+        from,
+        beat.ask && isDone(st) ? (beat.reveal ?? null) : null,
+      ),
       recall: recallOf(s, beat),
     },
     status: st.status === "opening" ? "checking" : st.status,
@@ -665,7 +708,7 @@ function hintsView(s: EngineState): HintsView {
 }
 
 function waitQuestionOf(s: EngineState): PlayingLesson["waitQuestion"] {
-  const box = whileRunsOf(s);
+  const box = whileRunsBox(s);
   if (!box) return null;
   const { beat, answer } = box;
   const picked =
@@ -684,9 +727,78 @@ function waitQuestionOf(s: EngineState): PlayingLesson["waitQuestion"] {
       picked === null
         ? null
         : picked.kind !== "right" && picked.because
-          ? picked.because
-          : (beat.reveal ?? null),
+          ? fromPage(fromFolderOf(s, box.step), picked.because)
+          : fromPage(fromFolderOf(s, box.step), beat.reveal ?? null),
   };
+}
+
+// ---- a warm-up's words from another page --------------------------------------
+// A warm-up quotes the page it comes from: a Level index
+// (docs/<level>/README.md) or an earlier Lesson's page. A relative link in
+// those words is that page's, so it is resolved against the page's folder
+// to a repository path, as the page panel opens them.
+function fromFolderOf(s: EngineState, step: Step): string | null {
+  if (step.part !== "Warm-up" || !step.from) return null;
+  const index = /^(.+)-index$/.exec(step.from);
+  if (index) return `docs/${index[1] ?? ""}/`;
+  const entry = s.course.find((l) => l.id === step.from);
+  if (!entry) return null;
+  if (entry.page?.startsWith("docs/"))
+    return entry.page.slice(0, entry.page.lastIndexOf("/") + 1);
+  return `docs/${entry.level}/`;
+}
+
+function resolveFrom(folder: string, href: string): string {
+  if (/^[a-z][a-z0-9+.-]*:/i.test(href) || /^[/#]/.test(href)) return href;
+  const parts = folder.split("/").filter(Boolean);
+  for (const part of href.split("/")) {
+    if (part === "..") parts.pop();
+    else if (part !== ".") parts.push(part);
+  }
+  return parts.join("/");
+}
+
+/** A warm-up's words with their relative links resolved against its page. */
+// Each `[label](href)` is found as /\[([^\]]+)\]\(([^)\s]+)\)/g would find
+// it, in one pass: that regex backtracks quadratically on a run of "[".
+// Every "[" up to a "]" shares that "]", and every href start up to the
+// next ")" or space shares that stop, so each is looked up once.
+export function fromPage(folder: string | null, text: string): string;
+export function fromPage(
+  folder: string | null,
+  text: string | null,
+): string | null;
+export function fromPage(
+  folder: string | null,
+  text: string | null,
+): string | null {
+  if (folder === null || text === null) return text;
+  let out = "";
+  let done = 0;
+  let close = -1;
+  let stop = -1; // the first ")" or space at or after the last href start
+  for (let open = text.indexOf("["); open >= 0;) {
+    if (close <= open) {
+      close = text.indexOf("]", open + 1);
+      if (close < 0) break;
+    }
+    const start = close + 2;
+    if (close > open + 1 && text[close + 1] === "(") {
+      if (stop < start) {
+        stop = start;
+        while (stop < text.length && !/[)\s]/.test(text[stop] ?? "")) stop++;
+      }
+      if (stop > start && text[stop] === ")") {
+        const href = text.slice(start, stop);
+        out += `${text.slice(done, open)}[${text.slice(open + 1, close)}](${resolveFrom(folder, href)})`;
+        done = stop + 1;
+        open = text.indexOf("[", done);
+        continue;
+      }
+    }
+    open = text.indexOf("[", open + 1);
+  }
+  return out + text.slice(done);
 }
 
 // ---- a Step-down and the lesson's end ----------------------------------------
@@ -699,11 +811,19 @@ const byTier = (tiers: readonly HelpTier[]) =>
 function stepDownOf(s: EngineState, head: LessonHead): StepDownLesson {
   const steps = stepsOf(s);
   const tiers = tiersOf(s);
+  const opensOn = currentStep(s);
   return {
     ...head,
     phase: "step-down",
     from: must(s.levelFrom, "a step-down has its level"),
     to: must(s.levelTo, "a step-down has its level"),
+    step: {
+      id: opensOn.id,
+      title: opensOn.title,
+      index: s.pos.step,
+      of: steps.length,
+    },
+    steps: outlineOf(steps, tiers, progressOf(s).done, s.pos.step, false),
     toCome: byTier(
       tiers
         .map((_, i) => tierAt(tiers, i))

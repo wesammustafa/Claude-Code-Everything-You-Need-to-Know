@@ -43,7 +43,7 @@ export function Notice({ kind }: NoticeProps) {
                     Claude Code Quest stopped. Start it again in your terminal:
                   </span>
                 </span>
-                <Command text="npm run learn" fit />
+                <Command text="npm run learn" fit announce={false} />
               </>
             )}
           </div>

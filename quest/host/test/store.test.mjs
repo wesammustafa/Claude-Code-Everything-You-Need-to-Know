@@ -155,6 +155,40 @@ test("saved state: recalled keeps only warm-up ids, and an old file loads with n
   );
 });
 
+test("saved state: whileShown keeps only warm-up ids, and an old file loads with none", () => {
+  const data = sanitize({
+    lessons: { "a-2": { whileShown: ["R1", "a-2.R1", "W3", 3, null, "R2"] } },
+  });
+  assert.deepEqual(data.lessons["a-2"].whileShown, ["R1", "R2"]);
+  assert.deepEqual(
+    sanitize({ lessons: { "a-2": { step: "W3" } } }).lessons["a-2"].whileShown,
+    [],
+  );
+  withRepo(
+    () => repo(),
+    (dir) => {
+      mkdirSync(join(dir, ".practice"));
+      // Written before `whileShown` was saved.
+      writeFileSync(
+        storePath(dir),
+        JSON.stringify({
+          format: 1,
+          welcomed: true,
+          lessons: { "a-2": { step: "W3", beat: 1, done: ["W1", "W2"] } },
+        }),
+      );
+      assert.deepEqual(loadState(dir).lessons["a-2"].whileShown, []);
+      const saved = sanitize({ lessons: { "a-2": { whileShown: ["R1"] } } });
+      assert.equal(saveState(dir, saved), true);
+      assert.deepEqual(
+        loadState(dir).lessons["a-2"].whileShown,
+        ["R1"],
+        "it survives a save and a load",
+      );
+    },
+  );
+});
+
 test("saved state: moreHelpAt keeps a step id, an old keepGuided maps to the saved step, anything else drops", () => {
   const one = (p) => sanitize({ lessons: { "b-1": p } }).lessons["b-1"];
   assert.equal(one({ keepGuided: true, step: "Y1" }).moreHelpAt, "Y1");
@@ -253,6 +287,7 @@ test("saved state: FORMAT stays 1, and a learn.json today's app wrote loads with
             complete: true,
             warm: [],
             recalled: [],
+            whileShown: [],
             stamps: {},
             bottomAt: "W3",
           },
@@ -268,6 +303,7 @@ test("saved state: FORMAT stays 1, and a learn.json today's app wrote loads with
             complete: false,
             warm: ["R1", "R2"],
             recalled: ["R1"],
+            whileShown: ["R2"],
             stamps: { "Y1.0": "1:2:abc" },
             bottomAt: null,
           },

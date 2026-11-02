@@ -1,9 +1,15 @@
 import type { Server } from "node:http";
 import type { Adapters } from "@quest/host";
 import { afterEach, describe, expect, test } from "vitest";
+import { fileURLToPath } from "node:url";
+import { loadCourse } from "@quest/engine/course";
+import { BEGINNER_LINE } from "../src/dir.ts";
 import { tryListen } from "../src/listen.ts";
 import { startWith, stopAll, type Kit } from "./start-kit.ts";
 
+const TEMPLATE = fileURLToPath(
+  new URL("../../../practice-template", import.meta.url),
+);
 const kits: Kit[] = [];
 afterEach(() => {
   for (const kit of kits.splice(0)) stopAll(kit);
@@ -80,7 +86,7 @@ describe("start", () => {
   });
 
   test("an unknown argument prints the usage line and exits 2", async () => {
-    for (const argv of [["--calm"], ["extra"], ["--dir"]]) {
+    for (const argv of [["--calm"], ["extra"], ["--dir", "/x", "extra"]]) {
       const kit = await launch({ argv });
       expect(kit.stderr).toEqual([
         "Usage: npm run learn [-- --dir <folder>]\n",
@@ -91,13 +97,29 @@ describe("start", () => {
     }
   });
 
-  test("--dir is accepted and not read yet", async () => {
-    const kit = await launch({ argv: ["--dir", "/x"] });
-    expect(kit.stderr).toEqual([
-      "--dir is not read yet: starting without it.\n",
-    ]);
+  test("a bare --dir starts without a folder and says why", async () => {
+    for (const argv of [["--dir"], ["--dir="]]) {
+      const kit = await launch({ argv });
+      expect(kit.stderr).toEqual([
+        "--dir needs a folder: starting without it.\n",
+      ]);
+      expect(kit.exits).toEqual([]);
+      expect(kit.started).not.toBeNull();
+      expect(kit.hostOptions[0]?.ahead).toBeUndefined();
+    }
+  });
+
+  test("--dir on a Beginner lesson starts without it and says why", async () => {
+    const kit = await launch({
+      argv: ["--dir", "/x"],
+      loadCourse: () => loadCourse(TEMPLATE),
+      realAdapters: () =>
+        ({ store: { load: () => null } }) as unknown as Adapters,
+    });
+    expect(kit.stderr).toEqual([`${BEGINNER_LINE}\n`]);
     expect(kit.exits).toEqual([]);
     expect(kit.started).not.toBeNull();
+    expect(kit.hostOptions[0]?.ahead).toBeUndefined();
   });
 
   test("announce: false prints no address and opens nothing (dev)", async () => {

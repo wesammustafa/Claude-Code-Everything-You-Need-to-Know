@@ -3,7 +3,10 @@
 // the help each finished step used; and each skill's Mastery from it.
 import { test } from "vitest";
 import assert from "node:assert/strict";
+import { isDeepStrictEqual } from "node:util";
 import {
+  ACTION_TYPES,
+  cardOf,
   course,
   driver,
   finished,
@@ -14,6 +17,7 @@ import {
   save,
   snapshot as toSave,
   stepOf,
+  whileRunsOf,
 } from "./drive.mjs";
 import { fingerprint } from "../src/content.ts";
 import { HELP_USED } from "../src/index.ts";
@@ -450,4 +454,197 @@ test("learner.saving follows root .practice/, and its coming saves the place", (
     facts: { practiceDir: true, saveKept: true },
   });
   assert.equal(learner(kept).saving, false);
+});
+
+// ---- Your card ----------------------------------------------------------------
+// Rehoming row 174: opening the card is local in the browser (244), so the
+// engine side is that reading it changes nothing and its entries move only
+// with a finished step's save.
+test("Your card reads the saved done list: reading it changes nothing and asks for no save, there is no card action, and an entry joins the save only with a finished step", () => {
+  assert.deepEqual(
+    ACTION_TYPES.filter((t) => /card/i.test(t)),
+    [],
+  );
+  const d = driver({ course });
+  let prev = null;
+  let grew = 0;
+  const look = (s) => {
+    const clone = structuredClone(s);
+    const n = d.effects.length;
+    project(s);
+    cardOf(s);
+    assert.ok(isDeepStrictEqual(s, clone), "reading the card changed state");
+    assert.equal(d.effects.length, n, "reading the card asked for effects");
+    const card = project(s).learner.card;
+    if (prev) {
+      // A step is finished when it joins the done list (by a pass, a click
+      // or going on: going on marks no step.completed), in a save.
+      const saved = d.effects
+        .slice(prev.effects)
+        .some((e) => e.type === "save");
+      const doneOf = (x) => x.progress["b-1"]?.done ?? [];
+      const finishedNow = doneOf(s).filter(
+        (id) => !doneOf(prev.state).includes(id),
+      );
+      if (card.length > prev.card.length) {
+        grew += 1;
+        assert.ok(saved, "the card grew with no save");
+        assert.deepEqual(finishedNow, [stepOf(prev.state).id]);
+        for (const e of card.slice(prev.card.length))
+          assert.equal(e.skill, stepOf(prev.state).skill);
+      } else {
+        assert.deepEqual(card, prev.card);
+        // A step that finishes with no new entry is one whose skill has no
+        // card line or is on the card already.
+        for (const id of finishedNow) {
+          const { skill } = stepOf(prev.state);
+          assert.equal(id, stepOf(prev.state).id);
+          assert.ok(
+            !s.course
+              .find((l) => l.id === "b-1")
+              .content.card.some((e) => e.skill === skill) ||
+              prev.card.some((e) => e.skill === skill),
+            "a step finished with no card entry",
+          );
+        }
+        // Any other save (a place save) leaves the done list as it was.
+        if (finishedNow.length === 0)
+          assert.deepEqual(doneOf(s), doneOf(prev.state));
+      }
+    }
+    prev = {
+      state: s,
+      card,
+      effects: d.effects.length,
+    };
+  };
+  playUntil(d, (s) => s.phase === "complete", { look });
+  assert.ok(grew > 0, "b-1 adds no card entry");
+  assert.deepEqual(
+    learner(driver({ course, saved: toSave(d.state) })).card,
+    learner(d).card,
+  );
+});
+
+// ---- the long wait's question -------------------------------------------------
+// TRIAGE-2 Q3 (ticket 287): the questions shown are saved with the progress.
+test("a waiting question shown is saved with the progress, and a resumed lesson does not ask it again", () => {
+  const atW3 = (lessons, steps = course) =>
+    driver({
+      course: steps,
+      saved: save({
+        lessons: {
+          ...finishedBefore("a-2"),
+          "a-2": { step: "W3", beat: 1, done: ["W1", "W2"], warm: [] },
+          ...lessons,
+        },
+      }),
+    });
+  for (const answer of [true, false]) {
+    const d = atW3();
+    d.open("a-2");
+    const box = whileRunsOf(d.state);
+    assert.ok(box, "a-2 W3 offers a question while it runs");
+    if (answer) d.waitAnswer(0);
+    const resumed = driver({
+      course,
+      saved: { ...toSave(d.state), format: 1 },
+    });
+    assert.deepEqual(resumed.state.progress["a-2"].whileShown, [box.step.id]);
+    resumed.open("a-2");
+    assert.equal(stepOf(resumed.state).id, "W3");
+    const again = whileRunsOf(resumed.state);
+    assert.ok(
+      !again || again.step.id !== box.step.id,
+      `${answer ? "an answered" : "an unanswered"} question is not asked again`,
+    );
+  }
+  // An id that is no warm-up of the lesson loads as none.
+  const odd = atW3({
+    "a-2": { step: "W3", beat: 1, done: ["W1", "W2"], whileShown: ["R9"] },
+  });
+  assert.deepEqual(odd.state.progress["a-2"].whileShown, []);
+  // A restart, and a save of other steps, clear the list.
+  const r = atW3();
+  r.open("a-2");
+  assert.equal(r.state.progress["a-2"].whileShown.length, 1);
+  r.restart("a-2");
+  assert.deepEqual(r.state.progress["a-2"].whileShown, []);
+  const other = atW3(
+    {
+      "a-2": {
+        step: "W3",
+        beat: 1,
+        done: ["W1", "W2"],
+        whileShown: ["R1"],
+        fingerprint: OLD,
+      },
+    },
+    printed(),
+  );
+  assert.deepEqual(other.state.progress["a-2"].whileShown, []);
+});
+
+// Ticket 287: each lesson keeps its own list. a-2 has shown both of its
+// questions, yet a-3, whose warm-ups reuse the ids R1 and R2, still asks one.
+test("a waiting question shown in one lesson does not stop another lesson with the same warm-up id from asking it", () => {
+  const d = driver({
+    course,
+    saved: save({
+      lessons: {
+        ...finishedBefore("a-3"),
+        "a-2": {
+          ...finished(lesson("a-2")),
+          whileShown: ["R1", "R2"],
+        },
+        "a-3": { step: "W3", beat: 1, done: ["W1", "W2"], warm: [] },
+      },
+    }),
+  });
+  assert.deepEqual(d.state.progress["a-2"].whileShown, ["R1", "R2"]);
+  d.open("a-3");
+  const box = whileRunsOf(d.state);
+  assert.ok(box, "a-3 W3 offers a question while it runs");
+  assert.ok(["R1", "R2"].includes(box.step.id));
+  assert.deepEqual(d.state.progress["a-3"].whileShown, [box.step.id]);
+  assert.deepEqual(d.state.progress["a-2"].whileShown, ["R1", "R2"]);
+});
+
+// Ticket 287 D2: a wait beat that opens "already" in a Codespace shows no
+// box, so its question is not recorded as shown.
+test("a wait beat that opens already in a Codespace does not count its question as shown", () => {
+  const steps = course.map((l) =>
+    l.id === "a-2"
+      ? {
+          ...l,
+          content: {
+            ...l.content,
+            steps: l.content.steps.map((x) =>
+              x.id === "W3"
+                ? {
+                    ...x,
+                    beats: x.beats.map((b, i) =>
+                      i === 1 ? { ...b, codespace: true } : b,
+                    ),
+                  }
+                : x,
+            ),
+          },
+        }
+      : l,
+  );
+  const d = driver({
+    course: steps,
+    facts: { codespace: true },
+    saved: save({
+      lessons: {
+        ...finishedBefore("a-2"),
+        "a-2": { step: "W3", beat: 1, done: ["W1", "W2"], warm: [] },
+      },
+    }),
+  });
+  d.open("a-2");
+  assert.equal(d.state.beat.status, "already");
+  assert.equal(whileRunsOf(d.state), null, "no box shows");
+  assert.deepEqual(d.state.progress["a-2"].whileShown, []);
 });

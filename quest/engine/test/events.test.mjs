@@ -203,6 +203,87 @@ test("every check.started is followed by exactly one ending: the baseline, an un
   }
 });
 
+test("a run a change the watcher saw started while the beat says Not yet or waits is a Check run (254 D25): check.started, then one ending", () => {
+  const watched = (eff) => ({ ...runStart(eff), changed: true });
+  // While the beat says Not yet: the run starts, and a pass ends it.
+  {
+    const { d, eff } = onW3();
+    d.send(checkResult(eff, failing(d)));
+    rRun(d, failing(d));
+    assert.equal(d.state.beat.status, "fail");
+    const before = d.events.length;
+    d.send(watched(eff));
+    assert.deepEqual(once(d), [{ type: "check.started" }]);
+    assert.equal(d.state.beat.status, "fail", "the status stays as it was");
+    d.send(checkResult(eff, checkItems(d.state, true)));
+    assert.deepEqual(types(d.last), ["check.passed", "step.completed"]);
+    assert.equal(d.state.beat.run, null);
+    // A done beat has no run.
+    d.send(watched(eff));
+    assert.deepEqual(d.last.events, []);
+    assert.deepEqual(tally(d.events.slice(before)), { started: 1, ended: 1 });
+  }
+  // The same FAIL again ends it with no verdict.
+  {
+    const { d, eff } = onW3();
+    d.send(checkResult(eff, failing(d)));
+    d.send(watched(eff));
+    assert.deepEqual(once(d), [{ type: "check.started" }]);
+    d.send(checkResult(eff, failing(d)));
+    assert.deepEqual(types(d.last), ["check.ended"]);
+  }
+  // While the beat waits on a slow item: a Not yet ends it.
+  {
+    const { d, eff } = onW3();
+    d.send(
+      checkResult(
+        eff,
+        checkItems(d.state, false).map((it) => ({ ...it, slow: true })),
+      ),
+    );
+    assert.equal(d.state.beat.status, "waiting");
+    d.send(watched(eff));
+    assert.deepEqual(once(d), [{ type: "check.started" }]);
+    d.send(checkResult(eff, failing(d)));
+    assert.deepEqual(types(d.last), ["check.notYet"]);
+    assert.deepEqual(tally(d.events), { started: 1, ended: 1 });
+  }
+  // The poll's run that a change lands during: it becomes the change's run,
+  // since it may be the one that answers it.
+  {
+    const { d, eff } = onW3();
+    d.send(checkResult(eff, failing(d)));
+    d.send(runStart(eff));
+    assert.deepEqual(d.last.events, [], "the poll's run alone");
+    d.send({ type: "activity" });
+    assert.deepEqual(types(d.last), ["check.started"]);
+    d.send(checkResult(eff, checkItems(d.state, true)));
+    assert.deepEqual(types(d.last), ["check.passed", "step.completed"]);
+    // A change after the poll's result has no run to mark.
+    const { d: e, eff: f } = onW3();
+    e.send(checkResult(f, failing(e)));
+    e.send(runStart(f));
+    e.send(checkResult(f, failing(e)));
+    e.send({ type: "activity" });
+    assert.equal(tally(e.events).started, 0);
+  }
+  // r while the watcher's run goes keeps the one run: r's result ends it.
+  {
+    const { d, eff } = onW3();
+    d.send(checkResult(eff, failing(d)));
+    d.send(watched(eff));
+    d.run();
+    const again = d.last.effects.find((e) => e.type === "check");
+    assert.deepEqual(d.last.events, [], "r keeps the run going");
+    d.send(checkResult(eff, failing(d)));
+    assert.deepEqual(d.last.events, [], "the watcher's result is not r's");
+    d.send(runStart(again));
+    d.send(checkResult(again, failing(d)));
+    assert.deepEqual(types(d.last), ["check.notYet"]);
+    assert.deepEqual(tally(d.events), { started: 1, ended: 1 });
+  }
+});
+
 test("check.started never fires for a poll's run, a result about another folder, a stamp, or a beat that reads its file itself", () => {
   const { d, eff } = onW3();
   d.send(checkResult(eff, failing(d)));

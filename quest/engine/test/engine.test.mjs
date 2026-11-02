@@ -296,9 +296,18 @@ function script() {
   w.open("a-2");
   const box = whileRunsOf(w.state);
   assert.ok(box, "a-2 W3 offers a question while it runs");
-  w.waitAnswer(0);
+  assert.deepEqual(
+    w.state.progress["a-2"].whileShown,
+    [box.step.id],
+    "a box offered counts as shown",
+  );
+  const answered = w.waitAnswer(0);
   assert.equal(whileRunsOf(w.state).answer, 0);
-  assert.deepEqual(w.state.whileShown, [`a-2.${box.step.id}`]);
+  assert.deepEqual(w.state.progress["a-2"].whileShown, [box.step.id]);
+  assert.ok(
+    answered.effects.some((e) => e.type === "save"),
+    "an answer saves at once",
+  );
 
   for (const each of drivers) {
     seen.effects.push(...each.effects);

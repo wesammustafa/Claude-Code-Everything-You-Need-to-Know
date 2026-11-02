@@ -928,6 +928,8 @@ describe("following the pointer", () => {
     expect(director.nextWakeAt()).toBe(IDLE_SLEEP_MS);
     const step = setup({ screen: "step", reducedMotion: true });
     expect(step.director.send(point(left)).gaze).toEqual(REST);
+    const levelup = setup({ screen: "levelup", reducedMotion: true });
+    expect(levelup.director.send(point(left)).gaze).toEqual(FORWARD);
   });
 
   test("off while Pip is off-screen, a Panel is open or the lesson page is", () => {

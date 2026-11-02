@@ -3,7 +3,7 @@
 // states no Claude Code fact. The lesson test compares every quoted value
 // with the page. Parsing and compilation are pure: callers supply all text,
 // Check modules and probe definitions.
-import type { LevelId } from "@quest/contract";
+import type { DecidedBy, LevelId } from "@quest/contract";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { frontmatter, type FrontValue } from "./frontmatter.ts";
@@ -209,7 +209,6 @@ export interface LessonContent {
   terminals: Record<string, number> | null;
   title?: string;
   next?: string | null;
-  stuck?: string;
   page?: string;
 }
 // The lesson as parseLesson builds it, line by line: a beat's verify is its
@@ -350,6 +349,38 @@ export const SINCE_GIT: ReadonlySet<string> = new Set([
 // sets.
 export const isReadVerify = (v: Verify): v is ReadVerify => READS.has(v.kind);
 export const isGitVerify = (v: Verify): v is GitVerify => GIT.has(v.kind);
+// The one place that decides a beat: what the markDone and session.ended
+// guards accept, and what the card shows (ticket 285).
+export function decidedBy(beat: Beat): DecidedBy {
+  if (beat.kind === "self") return "learner";
+  const v = beat.verify;
+  switch (v.kind) {
+    case "self":
+    case "none":
+      return "learner";
+    case "answer":
+      return "answer";
+    case "check":
+      return "check";
+    case "git-clean":
+      return beat.doneLabel ? "session" : "watch";
+    case "file":
+    case "json":
+    case "match":
+    case "no-match":
+    case "git-changed":
+    case "git-only":
+    case "git-staged":
+    case "head-moved":
+    case "git-unchanged":
+    case "probe":
+      return "watch";
+    default: {
+      const never: never = v;
+      return never;
+    }
+  }
+}
 export const BEAT_KINDS: ReadonlySet<string> = new Set([
   "do",
   "predict",
@@ -1563,7 +1594,6 @@ const compiledCourseSchema = z.strictObject({
       stamp: z.string(),
       next: z.string().nullable(),
       url: z.url(),
-      stuck: z.url(),
       items: z.array(z.string()),
       content: z.unknown(),
       fingerprint: z.string().length(64),
@@ -1582,7 +1612,6 @@ export type CompiledLesson = ManifestLesson & {
   newCopy: boolean;
   next: string | null;
   url: string;
-  stuck: string;
   items: string[];
   content: LessonContent;
   fingerprint: string;
@@ -1697,7 +1726,6 @@ export function compileCourse(
         newCopy: entry.folder === "new-copy",
         next: path[at + 1]?.id ?? null,
         url: `${GUIDE}/blob/main/${entry.page}`,
-        stuck: `${GUIDE}/issues/new?template=lesson-feedback.yml&lesson=${entry.id}`,
         items: check.items.map((item) => item.text),
         content,
         fingerprint: print,

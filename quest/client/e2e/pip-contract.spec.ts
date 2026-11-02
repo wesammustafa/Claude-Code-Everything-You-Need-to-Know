@@ -556,6 +556,7 @@ for (const [playing, next] of [
   ["success", "retry"],
   ["celebration", "success"],
   ["success", "success"],
+  ["success", "greeting"],
 ] as const) {
   test(`${next} interrupting ${playing} blends in from Pip's pose, never from rest`, async ({
     page,
@@ -593,12 +594,18 @@ for (const [playing, next] of [
       steps[0],
       `${at}: the first frame stays near the pose Pip was in (gap ${String(gap)} px)`,
     ).toBeLessThanOrEqual(gap / 4);
-    // The 160 ms hand-over moves Pip no faster than the new Reaction moves on its own.
+    // The 160 ms hand-over closes the gap smoothly: no frame moves Pip more
+    // than the new Reaction's own pace plus twice the even per-frame share of
+    // the gap (gap / 10 over its first 10 frames). An eased blend peaks near
+    // 1.5x that share, so it passes on every renderer whatever whole-pixel
+    // rounding headTop sees; a one-frame jump spends most of the gap at once
+    // and fails (254 D29 amendment, owner 2026-11-01).
+    const cap = ownPace + 2 * (gap / 10);
     for (const [i, step] of steps.slice(0, 10).entries()) {
       expect(
         step,
-        `${at}: frame ${String(i + 1)} of the hand-over (the Reaction alone moves up to ${String(ownPace)} px a frame)`,
-      ).toBeLessThanOrEqual(ownPace + 3);
+        `${at}: frame ${String(i + 1)} of the hand-over (own pace ${String(ownPace)} px a frame, gap ${String(gap)} px, cap ${cap.toFixed(1)} px)`,
+      ).toBeLessThanOrEqual(cap);
     }
     // Then the new Reaction plays from its start, as it does on its own.
     for (let i = 11; i < alone.length; i++) {
@@ -609,6 +616,29 @@ for (const [playing, next] of [
     }
   });
 }
+
+test("Idle to Rest and back blends with no one-frame jump", async ({
+  page,
+}) => {
+  test.slow();
+  await openPaused(page);
+  await settle(page, 120);
+  // As the no-jump tests above: a frame that changes far more than both its
+  // neighbours is a snap, here at the end of a mode's blend.
+  for (const mode of ["rest", "idle"] as const) {
+    await setMode(page, mode);
+    const steps = (await sample(page, 16, 1, "step")) as number[];
+    for (let i = 1; i < 15; i++) {
+      const step = steps[i] ?? 0;
+      const around = Math.max(steps[i - 1] ?? 0, steps[i + 1] ?? 0);
+      expect(
+        step,
+        `to ${mode}: frame ${String(i + 1)} changes ${(step * 100).toFixed(1)}% of the canvas, its neighbours up to ${(around * 100).toFixed(1)}%`,
+      ).toBeLessThanOrEqual(around * 2.5 + 0.005);
+    }
+    await settle(page, 120);
+  }
+});
 
 /** Pip's highest top edge over 42 frames, sampled every third, from now. */
 const peak = async (page: Page) =>

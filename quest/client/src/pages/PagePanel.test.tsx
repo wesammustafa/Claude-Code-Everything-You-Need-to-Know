@@ -38,6 +38,13 @@ const INDEX: PageIndex = {
       title: "Commands by level",
       kind: "reference",
     },
+    {
+      path: "docs/intermediate/README.md",
+      url: "/pages/intermediate/README.html",
+      title: "Intermediate",
+      kind: "index",
+      level: "intermediate",
+    },
   ],
 };
 
@@ -51,6 +58,7 @@ const PAGES: Record<string, string> = {
 <picture class="diagram" data-light="/pages/d.light.svg" data-dark="/pages/d.dark.svg"><source media="(prefers-color-scheme: dark)" srcset="/pages/d.dark.svg" /><img src="/pages/d.light.svg" alt="A diagram" /></picture>
 <h2 id="check">Check</h2>
 <ul><li>[ ] shown as the release rendered it</li></ul>`,
+  "/pages/intermediate/README.html": `<h1 id="intermediate">Intermediate</h1><p>The Level.</p>`,
   "/pages/reference/commands.html": `<h1 id="commands">Commands by level</h1><p>Every command.</p>`,
 };
 
@@ -223,6 +231,17 @@ test("a lesson page ends with the feedback link for the Lesson it belongs to, no
   expect(
     screen.queryByRole("link", { name: "Stuck on this lesson? Tell us" }),
   ).toBeNull();
+});
+
+test("a Level index page's feedback link names the active Lesson", async () => {
+  await openPage("docs/intermediate/README.md");
+  await heading("Intermediate");
+  expect(
+    screen.getByRole("link", { name: "Stuck on this lesson? Tell us" }),
+  ).toHaveAttribute(
+    "href",
+    "https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=b-2",
+  );
 });
 
 test("Pip rests while open; Escape closes and focus returns to the opener", async () => {

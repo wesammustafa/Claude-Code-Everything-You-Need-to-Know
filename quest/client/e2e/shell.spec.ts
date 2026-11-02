@@ -169,22 +169,41 @@ test.describe("themes", () => {
     });
   }
 
-  test("a picked theme overrides the system setting", async ({ page }) => {
+  test("a theme picked in Settings by keyboard overrides the system setting, survives a reload, and System clears it", async ({
+    page,
+  }) => {
     await page.emulateMedia({ colorScheme: "light" });
     await page.goto("/#/journey");
-    await page.evaluate(() => {
-      document.documentElement.setAttribute("data-theme", "dark");
-    });
+    await page.getByRole("button", { name: "Settings" }).click();
+    const theme = page
+      .getByRole("dialog", { name: "Settings" })
+      .getByRole("group", { name: "Theme" });
+    await theme.getByRole("radio", { name: "System" }).focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    await expect
+      .poll(() => css(page, "body", "background-color"))
+      .toBe("rgb(11, 16, 32)");
+    await page.reload();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     await expect
       .poll(() => css(page, "body", "background-color"))
       .toBe("rgb(11, 16, 32)");
     await page.emulateMedia({ colorScheme: "dark" });
-    await page.evaluate(() => {
-      document.documentElement.setAttribute("data-theme", "light");
-    });
+    await page.getByRole("button", { name: "Settings" }).click();
+    await theme.getByRole("radio", { name: "Dark" }).focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
     await expect
       .poll(() => css(page, "body", "background-color"))
       .toBe("rgb(251, 246, 239)");
+    await page.keyboard.press("ArrowRight");
+    await expect(page.locator("html")).not.toHaveAttribute("data-theme");
+    await page.reload();
+    await expect(page.locator("html")).not.toHaveAttribute("data-theme");
+    await expect
+      .poll(() => css(page, "body", "background-color"))
+      .toBe("rgb(11, 16, 32)");
   });
 });
 
@@ -272,16 +291,61 @@ test.describe("motion", () => {
   // no screen shows a Disclosure until 245 brings back "What the check
   // looks for".
 
-  test("the Settings choice of full motion overrides the system's reduce", async ({
+  test("the Settings motion choice overrides the system both ways and survives a reload", async ({
     page,
   }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/#/journey");
-    await page.evaluate(() => {
-      document.documentElement.setAttribute("data-motion", "full");
-    });
+    await page.getByRole("button", { name: "Settings" }).click();
+    const motion = page
+      .getByRole("dialog", { name: "Settings" })
+      .getByRole("group", { name: "Motion" });
+    await motion.getByText("Full", { exact: true }).click();
+    await expect(page.locator("html")).toHaveAttribute("data-motion", "full");
     expect((await css(page, ":root", "--rise")).trim()).toBe("8px");
+    await page.reload();
+    expect((await css(page, ":root", "--rise")).trim()).toBe("8px");
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.getByRole("button", { name: "Settings" }).click();
+    await motion.getByText("Reduced", { exact: true }).click();
+    await expect(page.locator("html")).toHaveAttribute("data-motion", "reduce");
+    expect((await css(page, ":root", "--rise")).trim()).toBe("0px");
+    await page.reload();
+    expect((await css(page, ":root", "--rise")).trim()).toBe("0px");
   });
+});
+
+test("Settings: Tab reaches every control, and Escape returns focus to the gear", async ({
+  page,
+}) => {
+  await page.goto("/#/journey");
+  const gear = page.getByRole("button", { name: "Settings" });
+  await gear.click();
+  const dialog = page.getByRole("dialog", { name: "Settings" });
+  const reached: string[] = [];
+  for (let i = 0; i < 8; i++) {
+    await page.keyboard.press("Tab");
+    reached.push(
+      await page.evaluate(() => {
+        const el = document.activeElement;
+        if (!(el instanceof HTMLElement)) return "";
+        if (el instanceof HTMLInputElement)
+          return `${el.closest("fieldset")?.querySelector("legend")?.textContent ?? ""}:${el.value}`;
+        return el.getAttribute("aria-label") ?? el.textContent.trim();
+      }),
+    );
+  }
+  for (const control of [
+    "Theme:system",
+    "Motion:system",
+    "Commands by level",
+    "Glossary",
+  ])
+    expect(reached).toContain(control);
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(gear).toBeFocused();
 });
 
 test("the action bar is fixed to the window through a portal, outside the animated screen", async ({
@@ -784,6 +848,51 @@ test.describe("in a contrast theme (forced colours)", () => {
     expect(await fill(/, current$/)).toBe(await system(page, "Highlight"));
     expect(await fill(/^Lesson 2\b/)).toBe(await system(page, "Canvas"));
   });
+});
+
+test("Progress fits 390 px: the counts stack, the Badges and skill rows stay in their boxes", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("/#/progress");
+  await fontsSettled(page);
+  const skills = page.getByRole("region", { name: "Skills" });
+  await expect(skills.getByRole("listitem")).toHaveCount(3);
+  const fit = await page.evaluate(() => {
+    const rect = (el: Element) => el.getBoundingClientRect();
+    const inside = (el: Element, box: DOMRect) => {
+      const r = rect(el);
+      return r.left >= box.left - 0.5 && r.right <= box.right + 0.5;
+    };
+    const main = document.querySelector("main");
+    const column = main ? rect(main) : null;
+    const counts = [...document.querySelectorAll("main > ul > li")];
+    const skills = document.querySelector("[aria-labelledby=progress-skills]");
+    const badges = document.querySelector("[aria-labelledby=progress-badges]");
+    return {
+      sideways:
+        document.documentElement.scrollWidth -
+        document.documentElement.clientWidth,
+      countXs: [...new Set(counts.map((li) => Math.round(rect(li).x)))],
+      counts: counts.length,
+      badgesInside:
+        column !== null &&
+        badges !== null &&
+        [...badges.querySelectorAll("li")].every((li) =>
+          inside(li, rect(badges)),
+        ),
+      skillsInside:
+        skills !== null &&
+        [...skills.querySelectorAll("li")].every((li) =>
+          inside(li, rect(skills)),
+        ),
+    };
+  });
+  expect(fit.sideways).toBeLessThanOrEqual(0);
+  expect(fit.counts).toBe(2);
+  expect(fit.countXs).toHaveLength(1);
+  expect(fit.badgesInside).toBe(true);
+  expect(fit.skillsInside).toBe(true);
 });
 
 test.describe("the Learning journey at every width", () => {

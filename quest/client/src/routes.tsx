@@ -1,6 +1,7 @@
 import type { RouteObject } from "react-router";
 import { Journey } from "./screens/Journey";
 import { LessonComplete } from "./screens/LessonComplete";
+import { CourseComplete, LevelComplete } from "./screens/LevelComplete";
 import { LessonOverview } from "./screens/LessonOverview";
 import { NotFound } from "./screens/NotFound";
 import { Progress } from "./screens/Progress";
@@ -39,6 +40,8 @@ export const routes: RouteObject[] = [
       { path: "lesson/:lessonId/step", Component: Workspace },
       { path: "lesson/:lessonId/complete", Component: LessonComplete },
       { path: "progress", Component: Progress },
+      { path: "level/:levelId/complete", Component: LevelComplete },
+      { path: "course/complete", Component: CourseComplete },
       { path: "*", Component: NotFound },
     ],
   },

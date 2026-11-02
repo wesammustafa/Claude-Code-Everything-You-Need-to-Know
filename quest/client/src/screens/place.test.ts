@@ -2,13 +2,14 @@ import { describe, expect, test } from "vitest";
 import type { Snapshot } from "@quest/contract";
 import {
   complete,
+  courseDone,
   fullCourse,
   overviewAt,
   playing,
   snapshotOf,
   stepDown,
 } from "../../e2e/snapshots";
-import { journeyPlace, nodeState } from "./place";
+import { courseCounts, journeyPlace, levelOf, nodeState } from "./place";
 import { summaryOf } from "./lesson";
 
 const on = (
@@ -64,5 +65,30 @@ describe("nodeState", () => {
     const summary = summaryOf(snapshot, "b-2");
     if (!summary) throw new Error("b-2");
     expect(nodeState(summary, summary)).toBe("current");
+  });
+});
+
+describe("levelOf", () => {
+  test("names the Level a Lesson sits in", () => {
+    const snapshot = on(overviewAt("b-4"));
+    const summary = summaryOf(snapshot, "i-2");
+    if (!summary) throw new Error("i-2");
+    expect(levelOf(snapshot, summary)).toBe("intermediate");
+  });
+});
+
+describe("courseCounts", () => {
+  test("counts complete Lessons and Levels", () => {
+    expect(courseCounts(on(overviewAt("b-4")))).toEqual({
+      lessons: { done: 3, total: 23 },
+      levels: { done: 0, total: 3 },
+    });
+  });
+
+  test("a finished course counts every one", () => {
+    expect(courseCounts(snapshotOf(complete, { course: courseDone }))).toEqual({
+      lessons: { done: 23, total: 23 },
+      levels: { done: 3, total: 3 },
+    });
   });
 });

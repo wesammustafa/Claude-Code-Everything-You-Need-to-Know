@@ -11,7 +11,7 @@ Tick each item that applies, or write "n/a" after it. The full rules are in [CON
 - [ ] Renamed or removed headings keep an `<a id="old-slug"></a>` compatibility anchor.
 - [ ] Any new listing (an external tool, MCP server, skill, plugin, course or article for readers to use) links the accepted resource suggestion issue, or the content-review PR, that approved it: #___. No issue yet? [Suggest the resource](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=suggest-resource.yml) instead. See [Listing policy](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/main/CONTRIBUTING.md#listing-policy).
 - [ ] Tested in Claude Code vX.Y.Z on <OS>, or "smoke test only". Required when this PR touches `examples/` or `.claude/`.
-- [ ] Captures are taken in the practice template, cropped, scrubbed of personal details and captioned with the version and date. See [Diagrams and images](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/main/CONTRIBUTING.md#diagrams-and-images).
+- [ ] Captures are taken in Claude Code Quest, in a Practice copy, cropped, scrubbed of personal details and captioned with the version and date. See [Diagrams and images](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/main/CONTRIBUTING.md#diagrams-and-images).
 - [ ] Text in new diagrams and images reaches 4.5:1 contrast in GitHub's light and dark themes, and other marks 3:1.
 - [ ] I have personally verified any AI-assisted content in this PR.
 

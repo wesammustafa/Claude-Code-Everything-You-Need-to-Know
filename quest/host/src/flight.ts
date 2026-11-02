@@ -46,6 +46,8 @@ export interface Flags {
   slow: boolean;
   asked: number;
   lesson: unknown;
+  // A change the file watcher saw asked for this run (254 D25).
+  changed: boolean;
   report: () => number;
 }
 
@@ -53,6 +55,7 @@ interface Owed {
   slow: boolean;
   asked: number;
   lesson: unknown;
+  changed: boolean;
 }
 
 // The run under way: its arguments, its flags, and its promise.
@@ -65,6 +68,7 @@ interface Run<A extends unknown[], R> {
 export interface Ask {
   slow?: boolean | undefined;
   asked?: number | undefined;
+  changed?: boolean | undefined;
 }
 
 export function owing<A extends unknown[], R>(
@@ -80,7 +84,12 @@ export function owing<A extends unknown[], R>(
     ) => boolean;
   } = {},
 ): (ask?: Ask, ...args: A) => Promise<R> {
-  const none: Owed = { slow: false, asked: 0, lesson: undefined };
+  const none: Owed = {
+    slow: false,
+    asked: 0,
+    lesson: undefined,
+    changed: false,
+  };
   let owed = none;
   // The run under way, from its start until it reports or ends: waiting in
   // the lane (oneAtATime) counts.
@@ -99,7 +108,7 @@ export function owing<A extends unknown[], R>(
     });
     return run.promise;
   });
-  return ({ slow, asked }: Ask = {}, ...args: A) => {
+  return ({ slow, asked, changed }: Ask = {}, ...args: A) => {
     if (
       covers &&
       current &&
@@ -115,6 +124,7 @@ export function owing<A extends unknown[], R>(
       slow: was.slow || Boolean(slow),
       asked: Math.max(was.asked, asked ?? 0),
       lesson: args[0],
+      changed: was.changed || Boolean(changed),
     };
     return go(...args);
   };

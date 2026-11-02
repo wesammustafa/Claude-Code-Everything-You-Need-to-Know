@@ -152,3 +152,14 @@ test("the stop line names the copy, in plain text", () => {
     "Claude Code Quest stopped. To start it again, run npm run learn in /home/l/practice.",
   );
 });
+
+test("with the Lesson's Work folder elsewhere, the stop line still names the Practice copy (rehoming row 685)", () => {
+  const line = stopLine({
+    copy: "/home/l/practice",
+    work: "/home/l/own-repo",
+  });
+  expect(line).toBe(
+    "Claude Code Quest stopped. To start it again, run npm run learn in /home/l/practice.",
+  );
+  expect(line).not.toContain("own-repo");
+});

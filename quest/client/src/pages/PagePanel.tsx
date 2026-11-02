@@ -272,15 +272,21 @@ export function PagePanelProvider({ children }: { children: ReactNode }) {
   const value = useMemo(() => ({ open }), [open]);
 
   // Feedback names the Lesson whose page is shown, which after a link swap
-  // or on a warm-up's recalled page is not the active one.
-  const shownPath = loaded.state === "ready" ? loaded.entry.path : undefined;
-  const lessonId = snapshot?.course.levels
-    .flatMap((level) => level.lessons)
-    .find((summary) => summary.page === shownPath)?.id;
+  // or on a warm-up's recalled page is not the active one. An index page has
+  // no Lesson of its own, so its feedback names the active one.
+  const shown = loaded.state === "ready" ? loaded.entry : undefined;
+  const lessonId =
+    shown?.kind === "index"
+      ? snapshot?.lesson.id
+      : snapshot?.course.levels
+          .flatMap((level) => level.lessons)
+          .find((summary) => summary.page === shown?.path)?.id;
   const feedback =
-    loaded.state === "ready" &&
+    shown !== undefined &&
     lessonId !== undefined &&
-    (loaded.entry.kind === "lesson" || loaded.entry.kind === "capstone");
+    (shown.kind === "lesson" ||
+      shown.kind === "capstone" ||
+      shown.kind === "index");
 
   return (
     <PagePanelContext.Provider value={value}>

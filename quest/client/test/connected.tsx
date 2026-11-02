@@ -22,6 +22,8 @@ export interface Connected {
   hold: () => { release: () => Promise<void> };
   /** The snapshot the next answers carry. */
   answer: (snapshot: Snapshot) => void;
+  /** The next answer is this refusal (a 400's body, say) instead. */
+  refuse: (status: number, body: unknown) => void;
   /** Every GET under /pages/, oldest first. */
   pageFetches: string[];
 }
@@ -44,6 +46,12 @@ export const PAGE_INDEX = {
       kind: "reference",
     },
     {
+      path: "docs/reference/glossary.md",
+      url: "/pages/reference/glossary.html",
+      title: "Glossary",
+      kind: "reference",
+    },
+    {
       path: "docs/beginner/electives/notes.md",
       url: "/pages/beginner/electives/notes.html",
       title: "Keep notes with Claude",
@@ -59,6 +67,8 @@ const PAGES: Record<string, string> = {
     '<h1 id="install">Install, sign in and look around</h1><p>The lesson.</p>',
   "/pages/reference/commands.html":
     '<h1 id="commands">Commands by level</h1><p>Every command.</p>',
+  "/pages/reference/glossary.html":
+    '<h1 id="glossary">Glossary</h1><p>Every term.</p>',
   "/pages/beginner/electives/notes.html":
     '<h1 id="notes">Keep notes with Claude</h1><p>An elective.</p>',
 };
@@ -79,6 +89,7 @@ export function renderConnected(
   let shown = snapshot;
   let next: Snapshot | null = null;
   let gate: Promise<void> | null = null;
+  let refusal: { status: number; body: unknown } | null = null;
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string, init?: RequestInit) => {
@@ -94,6 +105,11 @@ export function renderConnected(
       const body = JSON.parse(init?.body as string) as { action: QuestAction };
       posts.push(body.action);
       if (gate) await gate;
+      if (refusal) {
+        const { status, body: refused } = refusal;
+        refusal = null;
+        return Response.json(refused, { status });
+      }
       const reply = next ?? shown;
       return Response.json({ revision: reply?.revision, snapshot: reply });
     }),
@@ -127,6 +143,9 @@ export function renderConnected(
     },
     answer(data) {
       next = data;
+    },
+    refuse(status, body) {
+      refusal = { status, body };
     },
   };
 }

@@ -29,7 +29,12 @@ test('the e2e job runs npm run e2e with no filter', () => {
 test('npm run e2e is the whole Playwright suite', () => {
   assert.equal(pkg.scripts.e2e, 'playwright test -c quest/client/playwright.config.ts');
   const config = readFileSync(join(root, 'quest/client/playwright.config.ts'), 'utf8');
-  assert.doesNotMatch(config, /\b(grep|grepInvert|testIgnore|testMatch)\s*:/);
+  assert.doesNotMatch(config, /\b(grep|grepInvert)\s*:/);
+  // A spec may move to its own project (the cold start runs alone, ticket
+  // 240) only if the project that ignores it is matched by another, so every
+  // spec still runs in one of them.
+  const filters = (key) => [...config.matchAll(new RegExp(`\\b${key}\\s*:\\s*([^,\\n]+)`, 'g'))].map((m) => m[1].trim()).sort();
+  assert.deepEqual(filters('testIgnore'), filters('testMatch'));
   assert.ok(existsSync(join(root, 'quest/client/e2e/security.spec.ts')));
 });
 
