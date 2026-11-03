@@ -9,7 +9,7 @@
 # installed; anywhere else it asks Claude Code to ring the terminal bell.
 # Requires: bash and jq. Platforms: macOS, Linux, WSL2.
 # Remove: delete its Notification entry from ~/.claude/settings.json, then this file.
-# Not yet tested in a session at this edition's version
+# Tested in Claude Code v2.1.309 (stable) on Linux, 2026-11-03
 set -u
 
 input=$(cat)
