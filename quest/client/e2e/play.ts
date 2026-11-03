@@ -1,6 +1,8 @@
 // Moves on the workspace, as a Learner makes them, shared by the specs that
 // drive the built app in a Practice copy (practice-copy.ts): the b-1 slice,
 // Work folders and the verify-kind matrix.
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { expect, type Page } from "@playwright/test";
 import { lessonOrder } from "../../release/src/replay.mjs";
 import { repoRoot, type PracticeCopy } from "./practice-copy.ts";
@@ -128,8 +130,26 @@ export function saveAt(
   const save = JSON.parse(saveBefore(id, folders)) as {
     lessons: Record<string, unknown>;
   };
-  save.lessons[id] = { step, beat };
+  // Saved under the Lesson's current steps, so a Lesson changed since the
+  // Terminal app (one with no fingerprint is taken as its) keeps the place.
+  save.lessons[id] = { step, beat, fingerprint: fingerprintOf(id) };
   return JSON.stringify(save);
+}
+
+let prints: Map<string, string> | null = null;
+/** Lesson `id`'s fingerprint in the compiled course. */
+function fingerprintOf(id: string): string | undefined {
+  prints ??= new Map(
+    (
+      JSON.parse(
+        readFileSync(
+          join(import.meta.dirname, "../../engine/dist/course.json"),
+          "utf8",
+        ),
+      ) as { lessons: { id: string; fingerprint?: string }[] }
+    ).lessons.flatMap((l) => (l.fingerprint ? [[l.id, l.fingerprint]] : [])),
+  );
+  return prints.get(id);
 }
 
 /**

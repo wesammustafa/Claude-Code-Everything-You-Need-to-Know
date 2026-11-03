@@ -201,6 +201,24 @@ const put =
     mkdirSync(dirname(join(dir, path)), { recursive: true });
     writeFileSync(join(dir, path), text);
   };
+/**
+ * Writes `text` at `path` from the git root (above the copy's project/, or
+ * a Work folder of its own), where Claude Code keeps `.claude/settings.local.json` (ticket 295), and
+ * keeps it out of git as Claude Code does.
+ */
+const putRoot =
+  (path: string, text: string): Stage =>
+  (dir) => {
+    const top = spawnSync("git", ["rev-parse", "--show-toplevel"], {
+      cwd: dir,
+      env: gitEnv(),
+      encoding: "utf8",
+    }).stdout.trim();
+    const at = join(top, path);
+    mkdirSync(dirname(at), { recursive: true });
+    writeFileSync(at, text);
+    exclude(path, true)(dir);
+  };
 /** Adds `line` at the end of `path`. */
 const add =
   (path: string, line: string): Stage =>
@@ -233,9 +251,12 @@ const executable =
   (dir) => {
     chmodSync(join(dir, path), 0o755);
   };
-/** Keeps `path` out of git as Claude Code keeps its local settings file out. */
+/**
+ * Keeps `path` out of git as Claude Code keeps its local settings file out:
+ * from the folder, or with `atRoot` from the git root.
+ */
 const exclude =
-  (path: string): Stage =>
+  (path: string, atRoot = false): Stage =>
   (dir) => {
     const ask = (...args: string[]) =>
       spawnSync("git", args, {
@@ -244,7 +265,8 @@ const exclude =
         encoding: "utf8",
       }).stdout.trim();
     const file = join(dir, ask("rev-parse", "--git-path", "info/exclude"));
-    appendFileSync(file, `/${ask("rev-parse", "--show-prefix")}${path}\n`);
+    const prefix = atRoot ? "" : ask("rev-parse", "--show-prefix");
+    appendFileSync(file, `/${prefix}${path}\n`);
   };
 /** Rewrites the JSON file at `path` from Lesson `id`'s solution, changed by `edit`. */
 const solutionJson =
@@ -353,12 +375,9 @@ const API_KEY =
 const FIVE_WHYS = ".claude/skills/five-whys/SKILL.md";
 const LOADED = ".practice/i-2-loaded.txt";
 
-const SANDBOX_LOCAL = all(
-  put(
-    ".claude/settings.local.json",
-    '{\n  "sandbox": { "enabled": true }\n}\n',
-  ),
-  exclude(".claude/settings.local.json"),
+const SANDBOX_LOCAL = putRoot(
+  ".claude/settings.local.json",
+  '{\n  "sandbox": { "enabled": true }\n}\n',
 );
 export const STAGE: Record<string, Stage> = {
   // i-1: the worked example's downloaded skill, the partial tdd skill, the
@@ -488,12 +507,9 @@ export const STAGE: Record<string, Stage> = {
   ),
   "i-7:Y5.1": restore("i-7", ".practice/demo.html"),
   // i-8: the language server plugin trialled locally, and a committed change.
-  "i-8:W2.2": all(
-    put(
-      ".claude/settings.local.json",
-      '{\n  "enabledPlugins": { "typescript-lsp@claude-plugins-official": true }\n}\n',
-    ),
-    exclude(".claude/settings.local.json"),
+  "i-8:W2.2": putRoot(
+    ".claude/settings.local.json",
+    '{\n  "enabledPlugins": { "typescript-lsp@claude-plugins-official": true }\n}\n',
   ),
   "i-8:W3.2": smallCommit(),
   // a-1: a remote to push to, the two worked-example worktrees on the
@@ -753,8 +769,9 @@ function beatsOf(id: string): Map<string, CourseBeat> {
  */
 export function takeOutFresh(id: string, dir: string): Taken {
   const taken = new Map<string, TakenFile>();
-  for (const beat of beatsOf(id).values()) {
+  for (const [key, beat] of beatsOf(id)) {
     const path = beat.evidence;
+    const step = key.slice(id.length + 1).replace(/\.\d+$/, "");
     // A match reads only the lines added since the step opened; every other
     // fresh look counts any change, so a newer time does for those.
     if (
@@ -767,11 +784,15 @@ export function takeOutFresh(id: string, dir: string): Taken {
     if (found === null || taken.has(found) || !existsSync(join(dir, found)))
       continue;
     const file = join(dir, found);
-    taken.set(found, { bytes: readFileSync(file), mode: statSync(file).mode });
+    taken.set(found, {
+      bytes: readFileSync(file),
+      mode: statSync(file).mode,
+      step,
+    });
     rmSync(file);
     // A glob's beat names the glob: it is put back under that name too.
     if (found !== path)
-      taken.set(path, { bytes: Buffer.alloc(0), mode: 0, as: found });
+      taken.set(path, { bytes: Buffer.alloc(0), mode: 0, as: found, step });
   }
   return taken;
 }
@@ -783,6 +804,8 @@ interface TakenFile {
   mode: number;
   /** For a glob, the path of the file it found. */
   as?: string;
+  /** The step whose beat reads it. */
+  step?: string;
 }
 
 /** The newest file a one-folder glob such as `dir/*.js` matches, or null. */
@@ -806,8 +829,34 @@ function newestMatch(dir: string, glob: string): string | null {
 
 /** Puts back what takeOutFresh took: `path`, or all of it. */
 function putBack(taken: Taken, dir: string, path?: string) {
+  putBackWhere(taken, dir, path, () => true);
+}
+
+/**
+ * Puts back every file whose step has opened, and says whether it put any
+ * back. A file for a step not yet open stays out: back before its step
+ * opens, it is in that step's fresh stamp, and its beat can never see it
+ * change.
+ */
+function putBackOpened(taken: Taken, dir: string, opened: Set<string>) {
+  return putBackWhere(
+    taken,
+    dir,
+    undefined,
+    (file) => file.step === undefined || opened.has(file.step),
+  );
+}
+
+function putBackWhere(
+  taken: Taken,
+  dir: string,
+  path: string | undefined,
+  keep: (file: TakenFile) => boolean,
+): boolean {
   const want = path === undefined ? undefined : (taken.get(path)?.as ?? path);
+  let wrote = false;
   for (const [at, file] of taken) {
+    if (!keep(file)) continue;
     if (file.as !== undefined) {
       if (want === undefined || file.as === want) taken.delete(at);
       continue;
@@ -817,7 +866,9 @@ function putBack(taken: Taken, dir: string, path?: string) {
     writeFileSync(join(dir, at), file.bytes);
     chmodSync(join(dir, at), file.mode & 0o777);
     taken.delete(at);
+    wrote = true;
   }
+  return wrote;
 }
 
 export interface WalkOptions {
@@ -896,8 +947,14 @@ export async function walkLesson(
   const picks = new Map<string, number>();
   const beats = beatsOf(id);
   const taken = opts.taken ?? new Map<string, TakenFile>();
+  const opened = new Set<string>();
   for (let moves = 0; ; moves += 1) {
-    const now = newest(await frames());
+    const seen = await frames();
+    // Every frame counts: a step that opened and closed between two polls
+    // shows only in an older frame.
+    for (const frame of seen)
+      if (frame.lesson === id && frame.step !== null) opened.add(frame.step);
+    const now = newest(seen);
     if (now?.phase === "complete" && now.lesson === id) break;
     if (moves === 400)
       throw new Error(
@@ -930,8 +987,9 @@ export async function walkLesson(
           env: gitEnv(),
           encoding: "utf8",
         });
+        const recent = (await frames()).slice(-6);
         throw new Error(
-          `${key} never passed. git status:\n${status.stdout}${status.stderr}\nThe page says:\n${says}`,
+          `${key} never passed. git status:\n${status.stdout}${status.stderr}\nThe page says:\n${says}\nLast frames: ${JSON.stringify(recent)}`,
         );
       }
       // The step's fresh stamps are taken as it opens: let them land first.
@@ -943,10 +1001,13 @@ export async function walkLesson(
         stage(stepDir);
       } else if (evidence !== undefined && taken.has(evidence))
         putBack(taken, stepDir, evidence);
-      else if (taken.size > 0 && tried > 1)
+      else if (!(
+        taken.size > 0 &&
+        tried > 1 &&
         // A git or whole-Lesson look wants the work back in place.
-        putBack(taken, stepDir);
-      else freshen(stepDir);
+        putBackOpened(taken, stepDir, opened)
+      ))
+        freshen(stepDir);
       // A watched beat looks again by itself on a change; a Check, or a
       // watch that saw nothing new, waits for Check again.
       if (now.decidedBy === "watch") {

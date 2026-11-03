@@ -27,6 +27,9 @@ const pages = Object.fromEntries(
   ].map((page) => [page, readFileSync(`${root}${page}`, "utf8")]),
 );
 const checks = { lessons, probes: { PROBES, probeError } };
+// The Lessons whose Steps changed since the legacy commit, so a Terminal app
+// save of them starts again at the overview: i-2's W4 is self-verified (304).
+const CHANGED_SINCE_LEGACY = ["i-2"];
 
 describe("course manifest", () => {
   test("validates and compiles all 23 Lessons from their pages and step files", () => {
@@ -127,12 +130,18 @@ describe("course manifest", () => {
       expect(lesson.legacyFingerprint).toBe(data.lessons[lesson.id]);
       expect(dist.lessons[at].legacyFingerprint).toBe(data.lessons[lesson.id]);
     }
-    // Unchanged since that commit: relax this for a Lesson whose Steps change.
+    // Unchanged since that commit, but for the Lessons whose Steps changed.
     for (const lesson of course.lessons)
-      expect(
-        lesson.legacyFingerprint,
-        `${lesson.id} unchanged since ${data.commit}`,
-      ).toBe(lesson.fingerprint);
+      if (CHANGED_SINCE_LEGACY.includes(lesson.id))
+        expect(
+          lesson.legacyFingerprint,
+          `${lesson.id} changed since ${data.commit}`,
+        ).not.toBe(lesson.fingerprint);
+      else
+        expect(
+          lesson.legacyFingerprint,
+          `${lesson.id} unchanged since ${data.commit}`,
+        ).toBe(lesson.fingerprint);
   });
 
   test("rejects malformed legacy fingerprints with their file and line", () => {

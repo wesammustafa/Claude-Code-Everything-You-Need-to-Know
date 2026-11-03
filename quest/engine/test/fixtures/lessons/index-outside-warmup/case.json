@@ -1,6 +1,4 @@
 {
-  "origin": "lesson-quotes-index-outside-warmup",
-  "was": "fail",
   "expect": "fail",
   "about": "A Worked example step with a from line naming its Level index: only a warm-up quotes a Level index, and the parser rejects the line.",
   "problems": [

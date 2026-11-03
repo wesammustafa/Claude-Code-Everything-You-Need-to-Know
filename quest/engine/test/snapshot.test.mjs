@@ -32,6 +32,7 @@ import {
   withCode,
 } from "./drive.mjs";
 import { project, startedLesson } from "../src/index.ts";
+import { fingerprint } from "../src/content.ts";
 
 const lesson = (id) => course.find((l) => l.id === id);
 // A driver on a saved place, the lesson opened.
@@ -97,7 +98,7 @@ const EXCLUDED = [
   "firstCompletion",
 ];
 const SENTINEL = `SENTINEL-${"x".repeat(4_000)}`;
-const DECOYS = ["/home/sam/decoy-missing", "/home/sam/decoy-probe"];
+const DECOYS = ["/home/ali/decoy-missing", "/home/ali/decoy-probe"];
 const SAVED_ANSWER = "ANSWER-SENTINEL";
 const SAVED_STAMP = "STAMP-SENTINEL";
 const GIT_PATH = "GIT-SENTINEL.txt";
@@ -214,7 +215,7 @@ function walk(look) {
     course,
     saved: save({
       lessons: finishedBefore("a-5"),
-      folders: { advanced: "/home/sam/advanced-work" },
+      folders: { advanced: "/home/ali/advanced-work" },
     }),
   });
   n.open("a-5");
@@ -276,7 +277,7 @@ test("overview: a fresh b-1's intro, its planned and less-help staircases, its s
   });
   assert.deepEqual(v.steps.map(fields), view(d).steps.map(fields));
   const s = project(d.state);
-  assert.equal(s.learner.name, "Sam");
+  assert.equal(s.learner.name, "Ali");
   assert.equal(s.learner.welcomed, true);
   assert.deepEqual(s.learner.workFolders, []);
   assert.deepEqual(
@@ -318,24 +319,24 @@ test("overview: i-1 asks for the Intermediate work folder, says what the host fo
     checking: false,
   });
   assert.equal(view(d).start, null);
-  d.folderChoose("intermediate", { path: "/home/sam/gone" });
+  d.folderChoose("intermediate", { path: "/home/ali/gone" });
   assert.equal(view(d).folderQuestion.checking, true);
   d.send(probed(pending(d, "folder"), { missing: true }));
   assert.deepEqual(
     [view(d).folderQuestion.problem, view(d).folderQuestion.checking],
     ["missing", false],
   );
-  d.folderChoose("intermediate", { path: "/home/sam/work" });
+  d.folderChoose("intermediate", { path: "/home/ali/work" });
   d.send(probed(pending(d, "folder")));
   const q = view(d).folderQuestion;
   assert.deepEqual(
     [q.current, q.open, q.problem],
-    ["/home/sam/work", false, null],
+    ["/home/ali/work", false, null],
   );
   assert.notEqual(view(d).start, null);
   const s = project(d.state);
   assert.deepEqual(s.learner.workFolders, [
-    { key: "intermediate", path: "/home/sam/work" },
+    { key: "intermediate", path: "/home/ali/work" },
   ]);
   const i1 = s.course.levels[1].lessons[0];
   assert.deepEqual(i1.folder, {
@@ -608,9 +609,10 @@ test("playing: at Challenge before a first try, why the hints wait: run the chec
   );
   r.run();
   assert.equal(view(r).hints.unavailable, null, "r is a try");
+  // A save made under i-2's steps as they are now, so its place holds.
   const p = at(
     "i-2",
-    { step: "Y5", beat: 0 },
+    { step: "Y5", beat: 0, fingerprint: fingerprint(lesson("i-2").content) },
     { course: withHint("i-2", "Y5", 0) },
   );
   assert.equal(view(p).step.tier, "challenge");
@@ -828,19 +830,19 @@ test("the cd line quotes the practice copy's folder: plain, POSIX single quotes,
       .beat.lines.map((l) => l.text)
       .find((t) => t.startsWith("cd "));
   };
-  assert.equal(cd({ root: "/home/sam/practice" }), "cd /home/sam/practice");
+  assert.equal(cd({ root: "/home/ali/practice" }), "cd /home/ali/practice");
   assert.equal(
-    cd({ root: "/home/sam/Sam's practice" }),
-    "cd '/home/sam/Sam'\\''s practice'",
+    cd({ root: "/home/ali/Ali's practice" }),
+    "cd '/home/ali/Ali'\\''s practice'",
   );
   assert.equal(
-    cd({ root: "C:\\Users\\Sam\\my practice", win32: true }),
-    'cd "C:\\Users\\Sam\\my practice"',
+    cd({ root: "C:\\Users\\Ali\\my practice", win32: true }),
+    'cd "C:\\Users\\Ali\\my practice"',
   );
 });
 
 test("a run line's <your repo> shows the Work folder, shell-quoted when it has a space", () => {
-  const MINE = "/home/sam/code/my app";
+  const MINE = "/home/ali/code/my app";
   const d = at(
     "i-1",
     { step: "C", beat: 0 },
@@ -848,14 +850,14 @@ test("a run line's <your repo> shows the Work folder, shell-quoted when it has a
   );
   const texts = view(d).beat.lines.map((l) => l.text);
   assert.ok(
-    texts.includes("npm run check -- i-1 --dir '/home/sam/code/my app'"),
+    texts.includes("npm run check -- i-1 --dir '/home/ali/code/my app'"),
     texts.join("\n"),
   );
   assert.ok(texts.every((t) => !t.includes("<your repo>")));
 });
 
 test("an i-1 step in the Learner's own repository names that folder", () => {
-  const MINE = "/home/sam/code/my-app";
+  const MINE = "/home/ali/code/my-app";
   const d = driver({
     course,
     saved: save({
@@ -877,7 +879,7 @@ test("an i-1 step in the Learner's own repository names that folder", () => {
 });
 
 test("a waiting beat names the Work folder it watches before the first look; the Practice copy names none", () => {
-  const MINE = "/home/sam/code/my-app";
+  const MINE = "/home/ali/code/my-app";
   const d = driver({
     course,
     saved: save({

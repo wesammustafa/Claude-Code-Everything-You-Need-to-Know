@@ -79,9 +79,9 @@ test('npm run upgrade:verify is the upgrade proof with nothing added', () => {
   assert.equal(release.scripts['upgrade:verify'], 'node src/upgrade.mjs');
 });
 
-test('the required checks job needs template and fails unless it succeeded', () => {
+test('the required checks job needs template and fails unless it succeeded or was not needed', () => {
   const checks = job('checks');
   assert.match(checks, /^\s+needs: \[[^\]]*\btemplate\b[^\]]*\]$/m);
   assert.match(checks, /^\s+if: always\(\)$/m);
-  assert.match(checks, /all\(\.\[\]; \.result == "success"\)/);
+  assert.match(checks, /\.changes\.result == "success" and \.guide\.result == "success" and all\(\.\[\]; \.result == "success" or \.result == "skipped"\)/);
 });

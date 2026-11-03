@@ -1574,11 +1574,10 @@ test("back lines: a later step, a step the lesson lacks, another lesson, a warm-
   );
 });
 
-// The guide's quote check (lesson-quotes) compares a `- key: "…"` line whose
-// whole value is a quote, so the quote after a back line's step id is one it
-// doesn't read yet: until it does, a back line's why is the app's own words,
+// The lesson test compares a `- key: "…"` line whose whole value is a quote,
+// so the quote after a back line's step id is one it doesn't read yet: until it does, a back line's why is the app's own words,
 // which name no command or code.
-test("back lines: each why is the app's own words until the guide's quote check reads them, and names no command", () => {
+test("back lines: each why is the app's own words until the lesson test reads them, and names no command", () => {
   for (const [id, l] of Object.entries(parsed)) {
     const backs = [
       ...l.ladder.map((r) => r.back),
@@ -1588,7 +1587,7 @@ test("back lines: each why is the app's own words until the guide's quote check 
       assert.equal(
         back.quoted,
         false,
-        `${id}:${back.line}: a back line quotes the page before the guide's quote check reads it`,
+        `${id}:${back.line}: a back line quotes the page before the lesson test reads it`,
       );
       assert.doesNotMatch(
         back.text,
@@ -2668,6 +2667,37 @@ test("lesson 3 starts from the clean tree lesson 2 committed", () => {
     !readFileSync(join(dir, "b-2.md"), "utf8").includes("git stash"),
     "b-2 stashes nothing",
   );
+});
+
+// Dry-run fixes (ticket 304): the log read waits for the learner, since a
+// match on ^include passes from the session-start line, and every prompt a
+// beat refers to is on screen.
+test("i-2 read beats wait for the learner and show their prompts", () => {
+  const live = join(root, "practice-template", "learn", "lessons", "i-2.md");
+  for (const lesson of [
+    parsed["i-2"],
+    parseLesson(
+      readFileSync(live, "utf8"),
+      "practice-template/learn/lessons/i-2.md",
+    ),
+  ]) {
+    const step = (id) => lesson.steps.find((s) => s.id === id);
+    const read = step("W4").beats.at(-1);
+    assert.equal(read.verify.kind, "self");
+    assert.ok(read.doneLabel);
+    assert.ok(
+      step("Y2").beats.some((b) =>
+        b.lines.some(
+          (line) => line.key === "run" && line.text.includes("Read src/cli.js"),
+        ),
+      ),
+    );
+    assert.ok(
+      !step("Y4").beats.some((b) =>
+        b.lines.some((line) => /now has a `?path_glob_match/.test(line.text)),
+      ),
+    );
+  }
 });
 
 test("capstone prepares committed memory and preserves its Windows reproduction warning", () => {
