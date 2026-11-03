@@ -20,7 +20,7 @@ badge: Beginner
 - verify: check 5
 - watching: the committed CLAUDE.md
 - goal: "A committed `CLAUDE.md` in your copy that names the test command, `npm test`"
-- note: "A teammate filed the bug report in `capstone/beginner-bug.md` in your practice copy: the tool says every link resolves and exits with code 0. Read it first: its "What should happen" section is what done means."
+- note: "A teammate filed the bug report in `capstone/beginner-bug.md` at the root of your practice copy, outside `project/` (`../capstone/beginner-bug.md` from `project/`): the tool says every link resolves and exits with code 0. Read it first: its "What should happen" section is what done means."
 - hint: "If you skipped lesson 5: start `claude` in your copy's `project/` folder and run `/init`."
 - hint: "In the new `CLAUDE.md`, delete what it says about `npm run check`, including any rule to keep your work off `main`: that rule is for the template repository, not your copy."
 - hint: "Make sure the file names `npm test`, then end that session with `/exit`, so the task starts in a new one."
@@ -33,7 +33,7 @@ badge: Beginner
 - verify: self
 - goal: "Reproduce the bug before you fix it."
 - do: "make a new folder outside your practice copy and save `{ "files": ["docs"] }` in it as `linkcheck.json`."
-- hint: "Then run `npm run linkcheck -- <that folder>` in your copy: until the bug is fixed, it prints `All relative links resolve.`"
+- hint: "Then run `npm run linkcheck -- <that folder>` in your copy's `project/` folder: until the bug is fixed, it prints `All relative links resolve.`"
 - win-note: "**Windows:** save the file with `'{ "files": ["docs"] }' | Set-Content <that folder>\linkcheck.json`, not `>`."
 
 ### T2 | The task step 2 of 8 | Start in plan mode
@@ -42,8 +42,8 @@ badge: Beginner
 - where: terminal
 - beat: do
 - verify: self
-- goal: "Start a new session in your copy."
-- hint: "start `claude` in your copy"
+- goal: "Start a new session in your copy's `project/` folder."
+- hint: "start `claude` in your copy's `project/` folder"
 - beat: do
 - where: claude
 - verify: self
@@ -78,7 +78,7 @@ badge: Beginner
 - verify: check 0 fresh since T3
 - evidence: .practice/capstone-before.txt
 - goal: "While the final plan is on screen, in your own terminal, save `git status --porcelain` to `.practice/capstone-before.txt`."
-- hint: "If you skipped the lessons: create the `.practice/` folder in your copy"
+- hint: "If you skipped the lessons: create the `.practice/` folder in your copy's `project/` folder"
 - hint: "`mkdir -p .practice`; **Windows:** `New-Item -ItemType Directory -Force .practice`"
 - watching: .practice/capstone-before.txt
 - beat: do
