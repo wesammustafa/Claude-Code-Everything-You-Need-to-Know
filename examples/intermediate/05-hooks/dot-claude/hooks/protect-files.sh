@@ -8,7 +8,7 @@
 # Claude as the reason. It sees only Edit and Write, not shell commands.
 # Requires: bash and jq. Platforms: macOS, Linux, WSL2.
 # Remove: delete its PreToolUse entry from .claude/settings.json, then this file.
-# Not yet tested in a session at this edition's version
+# Tested in Claude Code v2.1.309 (stable) on Linux, 2026-11-03
 
 INPUT=$(cat)
 FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
