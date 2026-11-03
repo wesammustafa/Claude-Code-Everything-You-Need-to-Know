@@ -121,13 +121,16 @@ describe("the generated files", () => {
     expect(text).not.toContain(String.fromCharCode(0x2014));
   });
 
-  test("the root package.json has only learn, no dependencies, Node 22 or later", () => {
+  test("the root package.json has only learn and the forwarding check, no dependencies, Node 22 or later", () => {
     expect(rootPackage()).toEqual({
       name: "claude-code-practice",
       version: "0.0.0",
       private: true,
       type: "module",
-      scripts: { learn: "node learn/app.mjs" },
+      scripts: {
+        learn: "node learn/app.mjs",
+        check: "cd project && node ../checks/run.mjs",
+      },
       engines: { node: ">=22" },
     });
   });
@@ -303,6 +306,20 @@ describe("the tree checks", () => {
       }),
     );
     expect(layoutProblems(dir)).toHaveLength(2);
+    for (const scripts of [
+      { ...(rootPackage().scripts as Record<string, string>), linkcheck: "x" },
+      { learn: "node learn/app.mjs", check: "node checks/run.mjs" },
+    ]) {
+      dir = cleanTree();
+      expect(layoutProblems(dir)).toEqual([]);
+      writeFileSync(
+        join(dir, "package.json"),
+        JSON.stringify({ ...rootPackage(), scripts }),
+      );
+      const problems = layoutProblems(dir);
+      expect(problems).toHaveLength(1);
+      expect(problems[0]).toContain("learn and check");
+    }
     dir = cleanTree();
     writeFileSync(
       join(dir, "project/package.json"),
