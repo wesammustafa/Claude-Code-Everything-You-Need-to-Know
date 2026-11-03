@@ -335,7 +335,7 @@ test("check.started never fires for a poll's run, a result about another folder,
   // Another folder's run while r's goes.
   d.run();
   const again = d.last.effects.find((e) => e.type === "check");
-  d.send({ ...runStart(again), dir: "/home/sam/elsewhere" });
+  d.send({ ...runStart(again), dir: "/home/ali/elsewhere" });
   assert.deepEqual(d.last.events, []);
   // A file the beat reads itself starts no child: a pass with no run.
   const f = onReading("file notes.txt");

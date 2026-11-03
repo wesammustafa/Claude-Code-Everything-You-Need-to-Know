@@ -1,0 +1,7 @@
+{
+  "expect": "fail",
+  "about": "The Level index changed a line a warm-up quotes: the lesson test compares every step file with its page and fails.",
+  "problems": [
+    "course/steps/i-1\\.md:17: quotes \"One developer's setup\\.\" \\(R1 \\| Warm-up \\| Whose setup\\), which is not in docs/intermediate/README\\.md"
+  ]
+}

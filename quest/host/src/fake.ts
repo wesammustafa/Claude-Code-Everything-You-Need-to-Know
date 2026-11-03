@@ -301,7 +301,7 @@ export function fakeAdapters({
   tree = {},
   checks: checkAnswer,
   probes: probeAnswer,
-  git: { ask = [null, "Sam"] as GitAsk, status } = {},
+  git: { ask = [null, "Ali"] as GitAsk, status } = {},
   folders: looks = {},
   commands: names = [],
   saved = null,

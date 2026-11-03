@@ -1,6 +1,4 @@
 {
-  "origin": "lesson-quotes-index-gone",
-  "was": "fail",
   "expect": "fail",
   "about": "The Level index reworded a line and a code block that a warm-up quotes from it, though the warm-up's own Lesson still has the old line.",
   "problems": [
