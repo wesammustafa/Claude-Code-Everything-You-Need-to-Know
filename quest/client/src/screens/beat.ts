@@ -171,7 +171,7 @@ export function statusOf(beat: BeatView): StatusWords {
 /** A line of the Check as the card shows it, before it is drawn. */
 export interface BeatCheckLine {
   text: string;
-  state: "waiting" | "pass" | "notYet" | "broken";
+  state: "waiting" | "pass" | "notYet" | "broken" | "pending";
   /** The Not yet words, in the page's words (InlineText). */
   fail?: string;
   /** The file a glob matched. */
@@ -199,11 +199,13 @@ export function checkLines(beat: BeatView): BeatCheckLine[] {
     const lines: BeatCheckLine[] = beat.verification.map((line) => {
       const state = running
         ? "waiting"
-        : line.pass
-          ? "pass"
-          : broken
-            ? "broken"
-            : "notYet";
+        : line.pending
+          ? "pending"
+          : line.pass
+            ? "pass"
+            : broken
+              ? "broken"
+              : "notYet";
       const out: BeatCheckLine = { text: line.text, state };
       if (state === "notYet" && !failShown && beat.fail !== null) {
         out.fail = beat.fail;

@@ -226,6 +226,19 @@ export function initialState({
     else if (!(pr.beat >= 0 && pr.beat < step.beats.length)) pr.beat = 0;
     else if (!beatShown(pr, must(step.beats[pr.beat], "a saved beat")))
       pr.beat = shownBefore(pr, step, pr.beat);
+    // A saved pass holds only at the saved place, on a check beat (314).
+    const kept = pr.passedCheck;
+    if (
+      kept &&
+      !(
+        kept.step === pr.step &&
+        kept.beat === pr.beat &&
+        Array.isArray(kept.items) &&
+        steps.find((x) => x.id === pr.step)?.beats[pr.beat]?.verify.kind ===
+          "check"
+      )
+    )
+      delete pr.passedCheck;
   }
   // A lesson the Learner was in the middle of that changed opens at its
   // overview, with its note.
@@ -1128,7 +1141,20 @@ function openBeat(s: EngineState, effects: Effect[]) {
   if (prev?.at === at) st.whileRuns = prev;
   else if (offer) st.whileRuns = { id: offer, answer: null, at };
   s.lastActivity = s.now;
-  if (beat.codespace && s.facts.codespace) {
+  // A check beat that passed here before the app closed stays passed, with
+  // the run that passed it (ticket 314); a pass saved at another place is
+  // over.
+  const kept = p.passedCheck;
+  const keeps =
+    beat.verify.kind === "check" &&
+    kept?.step === step.id &&
+    kept.beat === s.pos.beat;
+  if (kept && !keeps) delete p.passedCheck;
+  if (keeps) {
+    st.status = "done";
+    st.baseline = null;
+    st.passed = clone(must(kept, "a kept pass").items);
+  } else if (beat.codespace && s.facts.codespace) {
     st.status = "already";
     st.codespace = true;
   } else if (beat.verify.kind === "check") {
@@ -1797,6 +1823,14 @@ function decide(
     // onCheck only decides a result for the lesson on screen.
     const entry = s.checks[s.lesson];
     if (entry && ev.items) entry.passed = mergePassed(entry.passed, ev.items);
+    // Saved too, so a reopen keeps the beat passed (ticket 314): a slow
+    // item runs only on Check again, so a fresh look could not pass it.
+    if (beat.verify.kind === "check" && ev.items)
+      progressOf(s).passedCheck = {
+        step: currentStep(s).id,
+        beat: s.pos.beat,
+        items: clone(ev.items),
+      };
     st.evidence = ev.evidence ?? null;
     // The file a glob matched, for the card to name (106).
     st.found = ev.found ?? null;

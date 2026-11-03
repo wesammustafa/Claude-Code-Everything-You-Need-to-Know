@@ -534,3 +534,90 @@ test('slow check: i-5 "Commit the hooks" runs its gate item on arrival', async (
     await copy.dispose();
   }
 });
+
+// The first beat of `step` in `lesson` that checks only slow items, from the
+// compiled course, so a beat added before it moves the test with it.
+function slowOnlyBeat(lesson: string, step: string): number {
+  const course = JSON.parse(
+    readFileSync(
+      join(import.meta.dirname, "../../engine/dist/course.json"),
+      "utf8",
+    ),
+  ) as {
+    lessons: {
+      id: string;
+      slow?: number[];
+      content?: {
+        steps: {
+          id: string;
+          beats: {
+            verify: { kind: string; all?: boolean; items?: number[] };
+          }[];
+        }[];
+      };
+    }[];
+  };
+  const l = course.lessons.find((x) => x.id === lesson);
+  const beats = l?.content?.steps.find((x) => x.id === step)?.beats ?? [];
+  const at = beats.findIndex(
+    (b) =>
+      b.verify.kind === "check" &&
+      !b.verify.all &&
+      (b.verify.items ?? []).length > 0 &&
+      (b.verify.items ?? []).every((i) => (l?.slow ?? []).includes(i)),
+  );
+  if (at < 0) throw new Error(`${lesson} ${step}: no slow-only check beat`);
+  return at;
+}
+
+test("reopen: an i-capstone check beat that passed stays passed after the app restarts", async ({
+  page,
+}) => {
+  // A T8 beat checks only a slow item, which runs on arrival (309)
+  // and passes on the replayed copy. Its pass is saved (ticket 314), so after
+  // a restart it opens passed: no Check runs, and no Check again is asked.
+  const beat = slowOnlyBeat("i-capstone", "T8");
+  const copy = practiceCopy({ through: "i-capstone" });
+  try {
+    copy.write(
+      ".practice/learn.json",
+      saveAt("i-capstone", "T8", beat, folderFor("i-capstone", copy)),
+    );
+    await copy.start();
+    await openAt(page, copy);
+    await expect(lines(page).last()).toHaveAttribute("data-state", "ok", {
+      timeout: 90_000,
+    });
+    await expect
+      .poll(() => {
+        const saved = copy.saved() as {
+          lessons?: Record<
+            string,
+            { passedCheck?: { step: string; beat: number } }
+          >;
+        } | null;
+        return saved?.lessons?.["i-capstone"]?.passedCheck ?? null;
+      })
+      .toMatchObject({ step: "T8", beat });
+
+    await copy.restart();
+    const sent = actionsOf(page);
+    const opened = page.waitForResponse(
+      (response) =>
+        response.url().endsWith("/api/actions") &&
+        response.request().postData()?.includes('"lesson.open"') === true,
+    );
+    await openAt(page, copy);
+    const reply = (await (await opened).json()) as {
+      snapshot?: { lesson?: { beat?: { status?: string } } };
+    };
+    expect(reply.snapshot?.lesson?.beat?.status).toBe("done");
+    await expect(lines(page).last()).toHaveAttribute("data-state", "ok");
+    await expect(page.locator("main")).not.toContainText(
+      "Everything else passes",
+    );
+    expect(sent.filter((a) => a.type === "check.run")).toHaveLength(0);
+  } finally {
+    await copy.dispose();
+  }
+});

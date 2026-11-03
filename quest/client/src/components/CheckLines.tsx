@@ -4,9 +4,11 @@ import { Icon } from "./Icon";
 
 /**
  * Where a line of the Check stands: still being checked, met, not met yet,
- * or not known because the Check could not run (rose, never a judgement).
+ * not known because the Check could not run (rose, never a judgement), or a
+ * slow line that runs only on Check again (ticket 314).
  */
-export type CheckLineState = "waiting" | "pass" | "notYet" | "broken";
+export type CheckLineState =
+  "waiting" | "pass" | "notYet" | "broken" | "pending";
 
 export interface CheckLine {
   /** The Check's line, in the engine's words. */
@@ -61,6 +63,14 @@ const LOOKS: Record<
     icon: "circle",
     text: "text-text",
     evidence: "border-wait",
+  },
+  pending: {
+    data: "pending",
+    said: "Runs on Check again: ",
+    mark: "bg-teal-soft text-teal",
+    icon: "circle",
+    text: "text-muted",
+    evidence: "border-teal",
   },
   broken: {
     data: "broken",

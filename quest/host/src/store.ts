@@ -136,6 +136,37 @@ function helpOf(x: unknown) {
   return Object.keys(help).length ? { help } : {};
 }
 
+// The check beat that passed at the saved place (ticket 314): its step,
+// beat and the passing run's items, each item's words capped; nothing when
+// any part is not what the app saves.
+function passedCheckOf(x: unknown) {
+  if (typeof x !== "object" || !x) return {};
+  const v = x as Loose;
+  const step = stepId(v.step);
+  if (!step || !Number.isInteger(v.beat) || (v.beat as number) < 0) return {};
+  if (!Array.isArray(v.items) || v.items.length > 64) return {};
+  const items = [];
+  for (const it of v.items as unknown[]) {
+    const i = (typeof it === "object" && it ? it : {}) as Loose;
+    if (
+      !Number.isInteger(i.index) ||
+      (i.index as number) < 0 ||
+      typeof i.text !== "string" ||
+      typeof i.pass !== "boolean"
+    )
+      return {};
+    items.push({
+      index: i.index,
+      text: i.text.slice(0, 300),
+      pass: i.pass,
+      hint: typeof i.hint === "string" ? i.hint.slice(0, 300) : "",
+      ...(i.slow === true ? { slow: true } : {}),
+      ...(i.local === true ? { local: true } : {}),
+    });
+  }
+  return { passedCheck: { step, beat: v.beat, items } };
+}
+
 // Keeps only what the app saves, so a hand-edited or newer file can't
 // smuggle anything in.
 export function sanitize(input: unknown): Saved {
@@ -198,6 +229,7 @@ export function sanitize(input: unknown): Saved {
       bottomAt: stepId(p.bottomAt),
       ...fingerprintOf(p.fingerprint),
       ...helpOf(p.help),
+      ...passedCheckOf(p.passedCheck),
     };
   }
   // The work folders the learner chose (ticket 86): one per later level and

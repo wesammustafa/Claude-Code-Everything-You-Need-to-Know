@@ -300,6 +300,27 @@ describe("checkLines", () => {
     ]);
   });
 
+  test("a checked beat: a slow item the run left out is pending, and Not yet goes to the first item not met (314)", () => {
+    expect(
+      checkLines(
+        beat({
+          decidedBy: "check",
+          verification: [
+            { text: "slow", pass: false, pending: true },
+            { text: "one", pass: true },
+            { text: "two", pass: false },
+          ],
+          status: "fail",
+          fail: "Not there",
+        }),
+      ),
+    ).toEqual([
+      { text: "slow", state: "pending" },
+      { text: "one", state: "pass" },
+      { text: "two", state: "notYet", fail: "Not there" },
+    ]);
+  });
+
   test("a checked beat: waiting while it runs, evidence under the passed group", () => {
     expect(
       checkLines(
