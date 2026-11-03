@@ -8,6 +8,7 @@ import { tmpdir } from 'node:os';
 import { delimiter, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { openRepo } from '../repo.mjs';
+import { inPlan, planPaths } from '../paths.mjs';
 import { items as b3Items, testsPass } from '../lessons/b-3.mjs';
 import { write } from './helpers.mjs';
 
@@ -297,6 +298,36 @@ test('b-2 accepts a plan path written as the full path into the repository', () 
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+// A Practice copy (ticket 298): the git root holds project/, where the
+// checks run, so `git status --porcelain` prints `project/src/a.js`. A plan
+// written that way counts as well as one written from project/.
+test('b-2 accepts plan paths written from the git root above project/, in a Practice copy', () => {
+  const top = repo();
+  const dir = join(top, 'project');
+  mkdirSync(dir);
+  for (const entry of ['package.json', 'src', 'test', 'samples']) cpSync(join(root, entry), join(dir, entry), { recursive: true });
+  writeFileSync(join(top, '.git', 'info', 'exclude'), '.practice/\n');
+  write(dir, {
+    'src/config.js': solvedConfig,
+    ...planned,
+    '.practice/b-2-plan.txt': 'project/src/a.js\nsrc/b.js\n',
+    '.practice/b-2-after.txt': ' M project/src/a.js\n M project/src/b.js\n',
+  });
+  try {
+    const { code, out } = check(['b-2', '--dir', dir]);
+    assert.equal(code, 0, out);
+  } finally {
+    rmSync(top, { recursive: true, force: true });
+  }
+});
+
+test('planPaths drops the folder prefix only from paths that start with it', () => {
+  const plan = planPaths('project/src/a.js\nsrc/b.js\n./project/test/c.js\nother/d.js\n', '/x/project', 'project/');
+  assert.deepEqual([...plan], ['src/a.js', 'src/b.js', 'test/c.js', 'other/d.js']);
+  assert.ok(inPlan(plan, 'src/a.js'));
+  assert.deepEqual([...planPaths('project/src/a.js\n', '/x')], ['project/src/a.js']);
 });
 
 test('b-2 asks for the after snapshot when it is missing', () => {

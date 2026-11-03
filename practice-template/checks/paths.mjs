@@ -55,16 +55,21 @@ function inRepo(dir, path) {
 
 // The paths in a plan file, one per line, in git's form: `./src/a.js`,
 // `src\a.js`, `` `src/a.js` `` and a full path into the repository all
-// become `src/a.js`.
+// become `src/a.js`. In a Practice copy, where the checked folder sits
+// below the git root at `prefix`, a path written from the root
+// (`project/src/a.js`, as `git status --porcelain` prints it) counts too
+// (ticket 298).
 /**
  * @param {string | null | undefined} text
  * @param {string} dir
+ * @param {string} [prefix]
  */
-export function planPaths(text, dir) {
+export function planPaths(text, dir, prefix = '') {
+  const local = (/** @type {string} */ path) => (prefix && path.startsWith(prefix) ? path.slice(prefix.length) : path);
   return new Set((text ?? '').split(/\r?\n/)
     .map((line) => line.trim().replace(/^`(.*)`$/, '$1').replace(/\\/g, '/'))
     .filter(Boolean)
-    .map((path) => (isAbsolute(path) ? inRepo(dir, path) : path.replace(/^(\.\/)+/, ''))));
+    .map((path) => (isAbsolute(path) ? inRepo(dir, path) : local(path.replace(/^(\.\/)+/, '')))));
 }
 
 // git lists a new, untracked folder as `dir/`, not the files in it, so the
