@@ -89,7 +89,7 @@ export const items = [
     text: 'the commit in `.practice/capstone-commit.txt` changes only files listed in `.practice/capstone-plan.txt`, including a test',
     local: true,
     check(repo) {
-      const plan = planPaths(repo.read('.practice/capstone-plan.txt'), repo.dir);
+      const plan = planPaths(repo.read('.practice/capstone-plan.txt'), repo.dir, repo.prefix);
       if (!plan.size) return 'Save the files the plan will change, one per line, to `.practice/capstone-plan.txt` before you approve.';
       const { files, error } = savedCommit(repo);
       if (error) return error;

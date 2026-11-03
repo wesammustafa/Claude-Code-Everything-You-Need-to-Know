@@ -74,7 +74,7 @@ export const items = [
       // and stays five lines in a 60x20 hint box so the card keeps its Goal
       // and border.
       if (!statusPaths(after, repo.prefix).length) return '`.practice/b-2-after.txt` lists no changed file yet. Approve the plan you reviewed; if Claude Code asks, read each request: plain Yes, or No if it does more than the plan needs. Once `git status` lists changes, save it again.';
-      const planned = planPaths(plan, repo.dir);
+      const planned = planPaths(plan, repo.dir, repo.prefix);
       const extra = statusPaths(after, repo.prefix).filter((path) => !inPlan(planned, path));
       if (extra.length) return `Changed but not in the plan: ${extra.join(', ')}. Compare the plan you approved with what Claude changed.`;
       return true;
