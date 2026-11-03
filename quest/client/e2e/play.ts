@@ -153,14 +153,14 @@ function fingerprintOf(id: string): string | undefined {
 }
 
 /**
- * To Lesson `id`'s overview: from Welcome to the course's next Lesson, or,
- * where that is another (a-5 with no new copy saved is not next), by its
- * route and Open this lesson.
+ * To Lesson `id`'s overview: from Welcome's Continue (the copy is welcomed)
+ * to the course's next Lesson, or, where that is another (a-5 with no new
+ * copy saved is not next), by its route and Open this lesson.
  */
 export async function openLesson(page: Page, copy: PracticeCopy, id?: string) {
   if (id === undefined) {
     await page.goto(copy.url);
-    await page.getByRole("button", { name: "Start the first lesson" }).click();
+    await page.getByRole("button", { name: /^Continue: / }).click();
   } else {
     await page.goto(`${copy.url}/#/lesson/${id}`);
     const open = page.getByRole("button", { name: "Open this lesson" });

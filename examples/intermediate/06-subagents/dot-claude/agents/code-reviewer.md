@@ -4,7 +4,7 @@
 # Side effects: none. Its only tools are Read, Grep and Glob: it can read and search files, and can't edit them or run commands.
 # Requires: Claude Code. Platforms: any.
 # Remove: delete .claude/agents/code-reviewer.md.
-# Tested in Claude Code v2.1.285 (stable) on macOS, 2026-10-06
+# Not yet tested in a session at this edition's version
 name: code-reviewer
 description: Reviews code changes for bugs, missing tests, unclear code and exposed secrets, and reports findings by severity. Use after writing or changing code, before committing. Read-only; give it the changed files or the diff to review.
 tools: Read, Grep, Glob

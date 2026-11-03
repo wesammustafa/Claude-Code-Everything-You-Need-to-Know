@@ -814,6 +814,17 @@ test("the Why line on the card: at Guided on do and ask beats, the beat's first 
   assert.ok(view(typed).beat.why.all.length > 0);
 });
 
+test("playing: i-1's Y2 card closes its do list with a line that another edit follows the question", () => {
+  const d = at("i-1", { step: "Y2", beat: 0 });
+  const lines = view(d).beat.lines;
+  assert.deepEqual(
+    lines.map((l) => l.kind),
+    ["goal", "do", "do", "say"],
+  );
+  assert.equal(lines.at(-1).text, "One more edit follows the question.");
+  assert.ok(lines.at(-2).text.endsWith("keeping the Red step's style;"));
+});
+
 test("a beat's Windows note shows on native Windows only", () => {
   for (const win32 of [false, true]) {
     const d = at("b-1", { step: "C", beat: 0 }, { facts: { win32 } });

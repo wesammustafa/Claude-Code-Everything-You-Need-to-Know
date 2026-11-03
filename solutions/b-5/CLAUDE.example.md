@@ -6,7 +6,6 @@ A small command-line tool that reports relative Markdown links whose file is mis
 
 - Run the tests: `npm test`
 - Check a folder: `npm run linkcheck -- <folder>`
-- npm scripts: @package.json
 
 ## Conventions
 
