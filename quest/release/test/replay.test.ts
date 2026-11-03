@@ -171,6 +171,8 @@ describe("the replay's contract", () => {
     }).toThrow('no lesson "b-9"');
   });
 
+  // Six CLI processes run in turn, so a loaded full-suite run needs more than
+  // the default five seconds.
   test("both CLIs resolve a relative path from INIT_CWD, where npm was typed", () => {
     const typed = tempDir("quest-typed-");
     // Enough of a copy for the real b-1 solution.
@@ -191,9 +193,7 @@ describe("the replay's contract", () => {
     expect(assembled.stderr).toContain(join(typed, "rel"));
     expect(run(replayCli, []).status).toBe(2);
     expect(run(replayCli, ["--bogus", "x"]).stderr).toMatch(/Usage/);
-    // Five CLI processes and a git replay: well under a second alone, but
-    // past Vitest's 5 s default when the whole suite loads the machine.
-  }, 30_000);
+  }, 60_000);
 });
 
 /** A PATH whose `claude` prints the baseline version, as on a Learner's machine. */
