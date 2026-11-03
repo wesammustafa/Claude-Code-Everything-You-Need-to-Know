@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { realpathSync, utimesSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { check, commit, repo, setMode, withRepo, write } from './helpers.mjs';
+import { check, commit, repo, rootWrite, setMode, withRepo, write } from './helpers.mjs';
 import { buggyApp, fixedApp } from './fixtures/intermediate-app.mjs';
 
 // The tdd skill as lesson i-1's Your turn leaves it once finished.
@@ -651,6 +651,30 @@ test('i-7 fails for @latest, and for each data flow left on', () => {
   }
 });
 
+// In a Practice copy, Claude Code started at the git root writes .mcp.json
+// and the session's files there, above project/ where the check runs.
+test('i-7 passes in a Practice copy with .mcp.json, the demo and the screenshot at the git root above project/', () => {
+  withRepo(() => {
+    const dir = repo({}, { nested: true });
+    rootWrite(dir, { '.mcp.json': MCP(PINNED) });
+    commit(dir, 'Share Chrome DevTools MCP');
+    rootWrite(dir, { '.practice/demo.html': '<a href="#guide">Guide</a> <a href="#reference">Reference</a>\n<p id="link-count">Counting links...</p>\n<script>\nconst links = document.querySelectorAll(\'a\');\ndocument.querySelector(\'#link-count\').textContent = `${links.length} links ready`;\n</script>' });
+    rootWrite(dir, { '.practice/i-7-page.png': PNG });
+    return dir;
+  }, (dir) => {
+    const { code, out } = check(['i-7', '--dir', dir]);
+    assert.equal(code, 0, out);
+  });
+});
+
+test('i-7 says to run the lesson\'s claude mcp add command when there is no .mcp.json', () => {
+  withRepo(() => repo(), (dir) => {
+    const { out } = check(['i-7', '--dir', dir]);
+    assert.match(out, /claude mcp add --scope project/);
+    assert.doesNotMatch(out, /partial file/);
+  });
+});
+
 test('i-7 fails without a committed .mcp.json, and without a server running chrome-devtools-mcp', () => {
   withRepo(() => repo(), (dir) => {
     const { code, out } = check(['i-7', '--dir', dir]);
@@ -867,8 +891,8 @@ test('the Intermediate capstone fails without a skill, a reviewer or a hook, nam
 test('the Intermediate capstone names the capstone, not a lesson, for a missing .mcp.json, settings file or CLAUDE.md, or a server file without the server', () => {
   const noServer = JSON.stringify({ mcpServers: { other: { type: 'stdio', command: 'npx', args: ['-y', 'other-mcp@1.0.0'] } } }, null, 2);
   for (const [setup, says, own] of [
-    [{ omit: ['.mcp.json'] }, ['There is no .mcp.json at the repository root. Write the one the capstone asks for there, as in lesson 7.'], [['i-7', 'Save the partial file from the lesson\'s Your turn there.']]],
-    [{ files: { '.mcp.json': noServer } }, ['No server in .mcp.json runs chrome-devtools-mcp. Add it under `mcpServers`, as in lesson 7.'], [['i-7', 'Add it under `mcpServers`, as in the lesson.']]],
+    [{ omit: ['.mcp.json'] }, ['There is no .mcp.json at the repository root. Write the one the capstone asks for there, as in lesson 7.'], [['i-7', 'Run the `claude mcp add --scope project` command from the lesson\'s Your turn step 2 there.']]],
+    [{ files: { '.mcp.json': noServer } }, ['No server in .mcp.json runs chrome-devtools-mcp. Add it under `mcpServers`, as in lesson 7.'], [['i-7', 'Run the `claude mcp add --scope project` command from the lesson\'s Your turn step 2 again.']]],
     [{ omit: ['.claude/settings.json'] }, [
       'There is no committed .claude/settings.json that parses as JSON. Add the `enabledPlugins` entry the capstone asks for and commit it, as in lesson 8.',
       'There is no .claude/settings.json. Write the team settings the capstone asks for there, as in lesson 4.',

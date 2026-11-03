@@ -30,12 +30,20 @@ export const items = [
   {
     text: 'the committed `.mcp.json` runs chrome-devtools-mcp at an exact version, with usage statistics, CrUX lookups and update checks off',
     check(repo) {
+      // Here, else at the git root above project/ in a Practice copy, where
+      // `claude mcp add --scope project` writes it when Claude Code started
+      // there (ticket 295's fallback).
       let text;
-      try {
-        text = repo.git('show', 'HEAD:./.mcp.json');
-      } catch {
-        return repo.exists('.mcp.json') ? '.mcp.json is not committed. Run `git add .mcp.json` and commit it: project-scope servers are shared through it.' : 'There is no .mcp.json at the repository root. Save the partial file from the lesson\'s Your turn there.';
+      for (const spec of ['HEAD:./.mcp.json', 'HEAD:.mcp.json']) {
+        try {
+          text = repo.git('show', spec);
+          break;
+        } catch {
+          // Not committed at this place: try the next.
+        }
       }
+      if (text === undefined)
+        return repo.find('.mcp.json') ? '.mcp.json is not committed. Run `git add .mcp.json` and commit it: project-scope servers are shared through it.' : 'There is no .mcp.json at the repository root. Run the `claude mcp add --scope project` command from the lesson\'s Your turn step 2 there.';
       let value;
       try {
         value = JSON.parse(text);
@@ -43,7 +51,7 @@ export const items = [
         return `The committed .mcp.json is not valid JSON: ${/** @type {Error} */ (error).message}`;
       }
       const s = server(value);
-      if (!s) return 'No server in .mcp.json runs chrome-devtools-mcp. Add it under `mcpServers`, as in the lesson.';
+      if (!s) return 'No server in .mcp.json runs chrome-devtools-mcp. Run the `claude mcp add --scope project` command from the lesson\'s Your turn step 2 again.';
       /** @type {string[]} */
       const args = (s.args ?? []).map(String);
       const pkg = args.find((a) => a.startsWith('chrome-devtools-mcp'));
@@ -58,12 +66,12 @@ export const items = [
     text: '`.practice/i-7-page.png` holds a PNG image of the repaired page',
     local: true,
     check(repo) {
-      const path = join(repo.dir, SHOT);
+      const path = repo.find(SHOT)?.abs ?? join(repo.dir, SHOT);
       if (!existsSync(path)) return `There is no ${SHOT}. Ask Claude to use the chrome-devtools tools to open a page and save a screenshot to ${SHOT}.`;
       if (!readFileSync(path).subarray(0, 8).equals(PNG_SIGNATURE)) return `${SHOT} isn't a PNG image. Ask Claude to save the screenshot again, as a PNG.`;
       // The capture shows the repaired page only if it was saved after the
       // demo's last change.
-      const demo = join(repo.dir, DEMO);
+      const demo = repo.find(DEMO)?.abs ?? join(repo.dir, DEMO);
       return !existsSync(demo) || statSync(path).mtimeMs >= statSync(demo).mtimeMs ? true : `${SHOT} is older than your last change to ${DEMO}. Capture the page again after the repair.`;
     },
   },
@@ -71,7 +79,7 @@ export const items = [
     text: 'the demo script displays `2 links ready` without a script error',
     local: true,
     check(repo) {
-      const html = repo.read(DEMO);
+      const html = repo.readAny(DEMO);
       if (html === null) return `There is no ${DEMO}. Save the broken page from the Worked example, then use MCP to diagnose and repair it.`;
       const result = spawnSync(process.execPath, ['--max-old-space-size=32', DEMO_RUNNER], {
         input: html, encoding: 'utf8', timeout: 1500, maxBuffer: 16384, env: {},
