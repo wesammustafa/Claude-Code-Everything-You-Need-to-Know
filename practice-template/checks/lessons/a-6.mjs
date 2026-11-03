@@ -107,7 +107,7 @@ function settingsHint(repo, settings, marketplaces, page) {
     if (repo.exists(SETTINGS)) return commitHint(repo, SETTINGS);
     // The caller passes at least one passing marketplace, with a plugin.
     const [m] = /** @type {[Marketplace]} */ (marketplaces);
-    return `There is no committed ${code(SETTINGS)}. Create it with ${code(m.name)} under \`extraKnownMarketplaces\`, at the path ${code(relativePath(m.root))}, and \`"enabledPlugins": { "${/** @type {Entry} */ (m.plugins[0]).name}@${m.name}": true }\`, ${page.settings}, and commit it.`;
+    return `There is no committed ${code(SETTINGS)}. Create it with ${code(m.name)} under \`extraKnownMarketplaces\`, at the path ${code(relativePath(m.top))}, and \`"enabledPlugins": { "${/** @type {Entry} */ (m.plugins[0]).name}@${m.name}": true }\`, ${page.settings}, and commit it.`;
   }
   if (settings.error) return `The committed ${code(SETTINGS)} isn't valid JSON: ${settings.error}`;
   if (!isObject(settings.value)) return `The committed ${code(SETTINGS)} isn't a JSON object.`;
@@ -373,7 +373,7 @@ export function strictValidation(record = VALIDATE) {
       const plugin = mainPlugin(repo);
       const save = `\`claude plugin validate ${shell(relativePath(plugin.dir))} --strict --json > ${record}\``;
       const text = repo.read(record);
-      if (text === null || !text.trim()) return `There is no ${code(record)} yet. From the repository's root, once the plugin is in place, run ${save}.`;
+      if (text === null || !text.trim()) return `There is no ${code(record)} yet. From your repository (in a Practice copy, \`project/\`), once the plugin is in place, run ${save}.`;
       let report;
       try {
         report = JSON.parse(text);
@@ -403,7 +403,7 @@ export function strictValidation(record = VALIDATE) {
         });
         if (ok) return true;
         const rel = relative(real(repo.dir) ?? repo.dir, where);
-        if (!rel || rel.startsWith('..') || isAbsolute(rel)) return `${code(record)} records a validation of ${code(target)}, ${rel ? 'outside this repository' : 'the repository itself'}, not of a plugin directory in it. Validate the plugin folder again, from the repository's root.`;
+        if (!rel || rel.startsWith('..') || isAbsolute(rel)) return `${code(record)} records a validation of ${code(target)}, ${rel ? 'outside this repository' : 'the repository itself'}, not of a plugin directory in it. Validate the plugin folder again, from your repository (in a Practice copy, \`project/\`).`;
         return `${code(record)} records a validation of ${code(rel.replace(/\\/g, '/'))}, which isn't a committed plugin directory (${listed}). Run ${save}.`;
       }
       // A path that isn't on this machine was saved elsewhere: it must end in
@@ -414,7 +414,7 @@ export function strictValidation(record = VALIDATE) {
         const own = d ? d.split('/') : [];
         return (own.length && ends(own)) || ends([...own, '.claude-plugin', 'plugin.json']);
       })) return true;
-      return `${code(record)} records a validation of ${code(target)}, which isn't on this machine and doesn't end in a committed plugin directory. Validate the plugin folder again, from the repository's root.`;
+      return `${code(record)} records a validation of ${code(target)}, which isn't on this machine and doesn't end in a committed plugin directory. Validate the plugin folder again, from your repository (in a Practice copy, \`project/\`).`;
     },
   };
 }
