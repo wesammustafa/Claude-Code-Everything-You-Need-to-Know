@@ -218,8 +218,8 @@ function asCapstone(item, ...swaps) {
 }
 
 const pinnedServer = asCapstone(/** @type {Item} */ (mcp[0]),
-  ['Save the partial file from the lesson\'s Your turn there.', 'Write the one the capstone asks for there, as in lesson 7.'],
-  ['Add it under `mcpServers`, as in the lesson.', 'Add it under `mcpServers`, as in lesson 7.']);
+  ['Run the `claude mcp add --scope project` command from the lesson\'s Your turn step 2 there.', 'Write the one the capstone asks for there, as in lesson 7.'],
+  ['Run the `claude mcp add --scope project` command from the lesson\'s Your turn step 2 again.', 'Add it under `mcpServers`, as in lesson 7.']);
 const setupPlugin = asCapstone(/** @type {Item} */ (plugins[0]), ['Add the `enabledPlugins` entry from the lesson and commit it.', 'Add the `enabledPlugins` entry the capstone asks for and commit it, as in lesson 8.']);
 const teamRules = asCapstone(/** @type {Item} */ (scopes[0]), ['Save the partial file from the lesson\'s Your turn there.', 'Write the team settings the capstone asks for there, as in lesson 4.']);
 const imports = asCapstone(/** @type {Item} */ (memory[0]), ['Commit the one you organize in this lesson.', 'Commit the one the capstone asks for, as in lesson 2.']);
