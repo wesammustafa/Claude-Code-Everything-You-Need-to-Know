@@ -962,6 +962,12 @@ test('the Intermediate capstone wants the review of the fix logged, by a committ
       assert.match(out, hint);
     });
   }
+  withRepo(capstoneRepo({ omit: ['.claude/agents/reviewer.md'], log: 'reviewer\n' }), (dir) => {
+    write(dir, { '.claude/agents/reviewer.md': '---\nname: reviewer\ndescription: Reviews changes before a commit and reports problems by severity, without editing anything.\ntools: Read, Grep, Glob\n---\n\nReview the changes you are given.\n' });
+    const { code, out } = check(['i-capstone', '--dir', dir]);
+    assert.equal(code, 1, out);
+    assert.match(out, /no reviewer is committed yet/);
+  });
 });
 
 test('the Intermediate capstone wants a person to approve a push', () => {

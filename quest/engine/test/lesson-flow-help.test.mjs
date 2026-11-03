@@ -431,7 +431,7 @@ test("warm-ups set the help: misses inside a lesson only mark a warm-up, and a g
   // In a lesson with warm-ups, a step's own wrong pick eases nothing either.
   const w = fresh("b-2");
   playUntil(w, atStep("W1"));
-  assert.equal(beatOf(w.state).kind, "do");
+  assert.equal(beatOf(w.state).kind, "ask");
   playUntil(
     w,
     (s) =>

@@ -1430,8 +1430,7 @@ function parseVerify(
   if (beat.kind !== "do")
     return { kind: beat.kind === "self" ? "self" : "answer" };
   // Its line's text: each beat's verify is parsed once.
-  const v =
-    (beat.verify as string | undefined) ?? (beat.ask ? "answer" : "none");
+  const v = (beat.verify as string | undefined) ?? "none";
   if (v === "check all") return { kind: "check", all: true };
   // `fresh`: it counts only once the beat's evidence file has changed since
   // its step opened (or since the step `since` names), so a step that redoes
@@ -1444,6 +1443,10 @@ function parseVerify(
     ? { fresh: true, since: fresh[1] ?? null }
     : {};
   const at = `${file}:${String(beat.line)}`;
+  if (base === "answer")
+    throw new Error(
+      `${at}: verify: answer is only for an ask beat; this do beat needs beat: ask`,
+    );
   // The beats that read a file themselves: its evidence is its own file.
   const own = (path: string | undefined) => {
     const named = must(path, `${at}: a path`);
@@ -1556,10 +1559,8 @@ function parseVerify(
       path: gitPath(must(scoped[2], `${at}: a git path`)),
     };
   // `git-staged`: git status says a path is staged.
-  if (["git-clean", "git-staged", "answer", "self", "none"].includes(v))
-    return {
-      kind: v as "git-clean" | "git-staged" | "answer" | "self" | "none",
-    };
+  if (["git-clean", "git-staged", "self", "none"].includes(v))
+    return { kind: v as "git-clean" | "git-staged" | "self" | "none" };
   throw new Error(`${at}: unknown verify value ${v}`);
 }
 

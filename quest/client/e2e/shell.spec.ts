@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "./live.ts";
+import { overview, snapshotOf } from "./snapshots.ts";
 import { servePages } from "./pages.ts";
 import { watch } from "./watch.ts";
 
@@ -208,6 +209,10 @@ test.describe("themes", () => {
 });
 
 test.describe("states from tokens", () => {
+  // Welcome's first-run button: a welcomed copy shows Continue instead.
+  test.use({
+    routedSnapshots: { other: snapshotOf(overview, { welcomed: false }) },
+  });
   test.beforeEach(async ({ page }) => {
     await page.emulateMedia({
       colorScheme: "dark",
@@ -256,6 +261,10 @@ test.describe("states from tokens", () => {
 });
 
 test.describe("motion", () => {
+  // Welcome's first-run button: a welcomed copy shows Continue instead.
+  test.use({
+    routedSnapshots: { other: snapshotOf(overview, { welcomed: false }) },
+  });
   test("full motion: screens rise 8 px over 360 ms", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.goto("/#/journey");
