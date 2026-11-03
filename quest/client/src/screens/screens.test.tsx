@@ -65,7 +65,8 @@ const APP_WORDS: readonly RegExp[] = [
   /^Your terminal$/,
   /^is the other window: each step says what to do there$/,
   /^Start the first lesson$/,
-  /^See all three levels first$/,
+  /^See all three levels( first)?$/,
+  /^Continue: $/,
   /^Welcome back\.$/,
   /^Continue$/,
   /^Step \d+ of \d+$/,
@@ -240,6 +241,58 @@ describe("Welcome", () => {
     await waitFor(() => {
       expect(page.router.state.location.pathname).toBe("/lesson/b-1/step");
     });
+  });
+
+  test("a welcomed copy not mid-Lesson continues to the course's next Lesson", async () => {
+    const user = userEvent.setup();
+    const at = snapshotOf(overviewAt("b-4"), {
+      welcomed: true,
+      course: fullCourse,
+    });
+    const page = renderConnected("/", at);
+    const title = overviewAt("b-4").title.replaceAll("`", "");
+    expect(
+      screen.queryByRole("button", { name: "Start the first lesson" }),
+    ).not.toBeInTheDocument();
+    expect(document.title).toMatch(/^Welcome back/);
+    expect(unquoted(at)).toEqual([]);
+    const held = page.hold();
+    await user.click(
+      screen.getByRole("button", { name: `Continue: ${title}` }),
+    );
+    expect(page.posts).toEqual([{ type: "lesson.open", lesson: "b-4" }]);
+    page.answer({ ...at, revision: at.revision + 1 });
+    await held.release();
+    await waitFor(() => {
+      expect(page.router.state.location.pathname).toBe("/lesson/b-4");
+    });
+  });
+
+  test("a welcomed copy with a complete Lesson opens the course's next with lesson.open", async () => {
+    const user = userEvent.setup();
+    const page = renderConnected(
+      "/",
+      snapshotOf(complete, { welcomed: true, course: fullCourse }),
+    );
+    await user.click(screen.getByRole("button", { name: /^Continue: / }));
+    expect(page.posts).toEqual([
+      { type: "lesson.open", lesson: fullCourse.next },
+    ]);
+  });
+
+  test("a welcomed copy with nothing next offers no Start or Continue", () => {
+    renderConnected(
+      "/",
+      snapshotOf(complete, { welcomed: true, course: courseDone }),
+    );
+    expect(
+      screen.queryByRole("button", {
+        name: /^(Start the first lesson|Continue)/,
+      }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "See all three levels" }),
+    ).toBeInTheDocument();
   });
 });
 
