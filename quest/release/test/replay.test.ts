@@ -271,6 +271,48 @@ describe("the Intermediate solutions on an assembled copy", () => {
   }, 600_000);
 });
 
+// b-5's solution writes CLAUDE.md with no @ import, so i-2's first step
+// (adding one) can pass; i-2's solution adds it.
+describe("a copy seeded through b-5", () => {
+  const checkI2 = join(repoRoot, "practice-template/checks/lessons/i-2.mjs");
+  const imports = async (text: string) =>
+    (
+      (await import(checkI2)) as { imports: (text: string) => string[] }
+    ).imports(text);
+  // i-2 W1's own pattern, from its `verify: match CLAUDE.md <re> fresh` line.
+  const w1 = (() => {
+    const steps = readFileSync(join(repoRoot, "course/steps/i-2.md"), "utf8");
+    const m = steps.match(/^- verify: match CLAUDE\.md (\S+) fresh$/m);
+    if (!m) throw new Error("i-2 W1 verify line not found");
+    return new RegExp(m[1] as string, "m");
+  })();
+  const committed = async (through: string) => {
+    const copy = await assembledCopy();
+    for (const id of order.slice(0, order.indexOf(through) + 1))
+      applyLesson({ repoRoot, copy, id });
+    const project = join(copy, "project");
+    return { project, text: gitIn(project, "show", "HEAD:./CLAUDE.md") };
+  };
+
+  test("commits a CLAUDE.md with no @ import", async () => {
+    const { text } = await committed("b-5");
+    expect(await imports(text)).toEqual([]);
+    // Nothing W1 matches is there before i-2, so fresh or not, W1 waits.
+    expect(text).not.toMatch(w1);
+  }, 300_000);
+
+  test("gains the package.json import from i-2's solution", async () => {
+    const { project, text } = await committed("i-2");
+    expect(await imports(text)).toContain("package.json");
+    expect(text).toMatch(w1);
+    // Under Commands, where b-5 had it and the page shows it.
+    expect(text.indexOf("@package.json")).toBeLessThan(
+      text.indexOf("## Conventions"),
+    );
+    expect(existsSync(join(project, "package.json"))).toBe(true);
+  }, 300_000);
+});
+
 /**
  * A bin folder of stand-ins for the tools that reach the network. Each logs
  * its name and fails, so a solution that calls one fails and the log shows it.

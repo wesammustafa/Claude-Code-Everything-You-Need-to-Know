@@ -1,8 +1,14 @@
 #!/bin/sh
-# i-2: commit two rules scoped with paths:, save the lesson's hook file, and
-# write the load log its InstructionsLoaded hook writes when a session imports
-# package.json and reads a file the CLI rule covers.
+# i-2: import package.json into CLAUDE.md, commit two rules scoped with
+# paths:, save the lesson's hook file, and write the load log its
+# InstructionsLoaded hook writes when a session imports package.json and reads
+# a file the CLI rule covers.
 set -eu
+# The import goes at the end of the Commands list, where the page shows it.
+awk '{ print } /^- Check a folder:/ { print "- npm scripts: @package.json" }' CLAUDE.md > CLAUDE.md.new
+mv CLAUDE.md.new CLAUDE.md
+git add CLAUDE.md
+git commit -q -m "Import the npm scripts into CLAUDE.md"
 mkdir -p .claude/rules
 cp "$SOLUTION/.claude/rules/cli.md" "$SOLUTION/.claude/rules/testing.md" .claude/rules/
 git add .claude/rules/cli.md .claude/rules/testing.md
