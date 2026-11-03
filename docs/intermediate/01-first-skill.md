@@ -112,7 +112,7 @@ The team wants a test-first workflow for requested features, while explanation-o
 You are done when all of these are true:
 
 - [ ] The finished skill is committed with no TODO left: `git grep -n TODO HEAD -- .claude/skills/tdd` prints nothing.
-- [ ] It can run as `/tdd` and load on its own: `git show HEAD:.claude/skills/tdd/SKILL.md` shows a description of what it does and when to use it, and no `disable-model-invocation: true`.
+- [ ] It can run as `/tdd` and load on its own: `git show HEAD:./.claude/skills/tdd/SKILL.md` shows a description of what it does and when to use it, and no `disable-model-invocation: true`.
 - [ ] The commit saved in `.practice/i-1-commit.txt` holds a test and the code it tests: `git show --stat $(cat .practice/i-1-commit.txt)` lists both.
 - [ ] Self-check (not tested): `/tdd` ran the skill, a cleared conversation loaded `tdd` on its own for a feature request, and a question didn't load `tdd`.
 

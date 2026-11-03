@@ -93,7 +93,7 @@ Audit a proposed team setup in your own repository. A teammate suggests `Bash(np
 
 You are done when all of these are true:
 
-- [ ] The committed `.claude/settings.json` denies reading `.env` and `.env.*` files and allows one test command: `git show HEAD:.claude/settings.json | jq .permissions` shows them.
+- [ ] The committed `.claude/settings.json` denies reading `.env` and `.env.*` files and allows one test command: `git show HEAD:./.claude/settings.json | jq .permissions` shows them.
 - [ ] It asks before a command the team approves each time, such as `Bash(git push *)`, in `permissions.ask`.
 - [ ] The sandbox is on, and your personal file stays out of git: `jq .sandbox .claude/settings.local.json` shows `"enabled": true` (in a Practice copy, `jq .sandbox ../.claude/settings.local.json`), and `git ls-files .claude/settings.local.json` prints nothing.
 - [ ] Self-check (not tested): you inspected the active rules and sandbox configuration, and Claude's attempted write outside the project failed without an unsandboxed retry.

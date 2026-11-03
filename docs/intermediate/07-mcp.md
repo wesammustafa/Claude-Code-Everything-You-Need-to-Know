@@ -87,7 +87,7 @@ Give every teammate the exact browser server you reviewed, then use it to fix th
 
 You are done when all of these are true:
 
-- [ ] The committed `.mcp.json` pins the package to an exact version and turns off usage statistics, CrUX lookups and update checks: `git show HEAD:.mcp.json | jq '.mcpServers["chrome-devtools"]'` shows them.
+- [ ] The committed `.mcp.json` pins the package to an exact version and turns off usage statistics, CrUX lookups and update checks: `git show HEAD:./.mcp.json | jq '.mcpServers["chrome-devtools"]'` shows them.
 - [ ] `.practice/i-7-page.png` holds a PNG image of the repaired page, saved after the repair.
 - [ ] The demo script displays `2 links ready` without a script error; a hardcoded count doesn't pass.
 - [ ] Self-check (not tested): you reviewed the first MCP tool call, used the project's server to read the real console error, and verified the repaired count and clean console after reloading.

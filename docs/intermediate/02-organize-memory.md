@@ -96,7 +96,7 @@ A teammate's rule never takes effect. Find out why, and fix it.
 
 You are done when all of these are true:
 
-- [ ] The committed `CLAUDE.md` imports a file that exists: `git show HEAD:CLAUDE.md | grep '@'` shows the import.
+- [ ] The committed `CLAUDE.md` imports a file that exists: `git show HEAD:./CLAUDE.md | grep '@'` shows the import.
 - [ ] Every committed rule with `paths:` matches a file: for each pattern, `git ls-files ':(glob)<pattern>'` lists at least one file.
 - [ ] The log shows the import and a scoped rule loading: `grep -E '^(include|path_glob_match)' .practice/i-2-loaded.txt` prints at least one line of each kind.
 - [ ] Self-check (not tested): you can say which of your instruction files load at the start and which load later, and how you saw each one load.

@@ -89,7 +89,7 @@ Share only the plugin the team chose, so nobody pulls in the trial you're still 
 
 You are done when all of these are true:
 
-- [ ] The committed settings turn the plugin on for the project: `git show HEAD:.claude/settings.json | jq .enabledPlugins` shows `"claude-code-setup@claude-plugins-official": true`.
+- [ ] The committed settings turn the plugin on for the project: `git show HEAD:./.claude/settings.json | jq .enabledPlugins` shows `"claude-code-setup@claude-plugins-official": true`.
 - [ ] It's installed at project scope and enabled: `jq '.[] | select(.id == "claude-code-setup@claude-plugins-official") | {scope, enabled, projectEnabled}' .practice/i-8-plugins.json` shows `"project"`, `true` and `true`.
 - [ ] Your code intelligence trial is installed at local scope and stays out of the committed settings: `jq '.[] | select(.scope == "local") | .id' .practice/i-8-plugins.json` shows your `-lsp` plugin.
 - [ ] Self-check (not tested): you verified an LSP definition or reference, and chose a recommendation that fills a real gap.

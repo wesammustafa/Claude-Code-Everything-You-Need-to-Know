@@ -96,7 +96,7 @@ Hand the noisy search for untested code to a read-only helper, and keep only its
 
 You are done when all of these are true:
 
-- [ ] The committed subagent has its name and a description of when to use it: `git show HEAD:.claude/agents/test-gaps.md | head -5`.
+- [ ] The committed subagent has its name and a description of when to use it: `git show HEAD:./.claude/agents/test-gaps.md | head -5`.
 - [ ] Its tools only read code: the `tools` line names tools such as `Read`, `Grep` and `Glob`, and no tool that edits files, runs commands or reaches the web, such as `Edit`, `Bash` or `WebFetch`.
 - [ ] Claude delegated to it: `grep -x test-gaps .practice/i-6-agents.txt` prints `test-gaps`.
 - [ ] Self-check (not tested): the subagent's file reads stayed out of your conversation, and only its summary came back. You compared both reviews of the same commit with the actual diff, and tested a finding before acting on it.

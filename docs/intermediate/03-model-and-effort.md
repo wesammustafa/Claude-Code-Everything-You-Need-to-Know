@@ -76,8 +76,8 @@ A changelog entry is routine work: give it only what it needs, and keep root-cau
 
 You are done when all of these are true:
 
-- [ ] The committed skill picks a smaller model and a low or medium effort: `git show HEAD:.claude/skills/changelog/SKILL.md | grep -E '^(model|effort):'` shows both.
-- [ ] A committed `CHANGELOG.md` has a `- ` entry under `## Unreleased`: `git show HEAD:CHANGELOG.md` shows it.
+- [ ] The committed skill picks a smaller model and a low or medium effort: `git show HEAD:./.claude/skills/changelog/SKILL.md | grep -E '^(model|effort):'` shows both.
+- [ ] A committed `CHANGELOG.md` has a `- ` entry under `## Unreleased`: `git show HEAD:./CHANGELOG.md` shows it.
 - [ ] Self-check (not tested): you checked the investigation against a cited file and the entry against the staged diff, and can explain why the tasks use different settings.
 
 Run `npm run check -- i-3 --dir <your repo>` from your practice copy, or `npm run check -- i-3` in the copy itself.
