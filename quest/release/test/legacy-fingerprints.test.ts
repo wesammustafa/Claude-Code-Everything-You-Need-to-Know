@@ -1,6 +1,6 @@
 // The legacy fingerprints generator (ticket 256): the in-repo template copy
-// is byte-identical to the commit the data file names, so it yields the
-// committed data.
+// is the commit the data file names, but for the Lessons whose Steps changed
+// since, so it yields the committed data for every other Lesson.
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
@@ -12,18 +12,32 @@ const manifest: unknown = JSON.parse(read("course/manifest.json"));
 const data = JSON.parse(read("course/legacy-fingerprints.json")) as {
   template: string;
   commit: string;
+  lessons: Record<string, string>;
 };
+// i-2's W4 is self-verified since the legacy commit (304).
+const CHANGED_SINCE_LEGACY = ["i-2"];
 
 describe("legacy fingerprints", () => {
   test("the template's Lesson files yield the committed data", () => {
-    expect(
-      legacyFingerprints(
-        `${root}practice-template/learn/lessons`,
-        manifest,
-        data.commit,
-        data.template,
-      ),
-    ).toEqual(data);
+    const now = legacyFingerprints(
+      `${root}practice-template/learn/lessons`,
+      manifest,
+      data.commit,
+      data.template,
+    );
+    const unchanged = (lessons: Record<string, string>) =>
+      Object.fromEntries(
+        Object.entries(lessons).filter(
+          ([id]) => !CHANGED_SINCE_LEGACY.includes(id),
+        ),
+      );
+    for (const id of CHANGED_SINCE_LEGACY)
+      expect(now.lessons[id], `${id} changed`).not.toBe(data.lessons[id]);
+    expect({ ...now, lessons: unchanged(now.lessons) }).toEqual({
+      ...data,
+      lessons: unchanged(data.lessons),
+    });
+    expect(Object.keys(now.lessons)).toEqual(Object.keys(data.lessons));
   });
 
   test("a missing Lesson file throws with its path", () => {
