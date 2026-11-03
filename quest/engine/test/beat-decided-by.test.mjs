@@ -206,7 +206,7 @@ test("ranIn: null in the Practice copy and before a run", () => {
 });
 
 test("ranIn: the saved Work folder a result ran in, per beat", () => {
-  const MINE = "/home/sam/code/my-app";
+  const MINE = "/home/ali/code/my-app";
   const lessons = threeLevels({ "i-1": DEMO_I1 });
   const d = driver({
     course: lessons,
@@ -219,11 +219,11 @@ test("ranIn: the saved Work folder a result ran in, per beat", () => {
   assert.equal(watching(d.state).dir, MINE);
   assert.equal(view(d).ranIn, null, "before any result");
   const eff = lastOf(d.effects, "check");
-  d.send(checkResult({ ...eff, dir: "/home/sam/elsewhere" }, []));
+  d.send(checkResult({ ...eff, dir: "/home/ali/elsewhere" }, []));
   assert.equal(view(d).ranIn, null, "a stale result leaves it");
   d.send(checkResult(eff, []));
   assert.equal(view(d).ranIn, MINE);
-  d.send(checkResult({ ...eff, dir: "/home/sam/elsewhere" }, []));
+  d.send(checkResult({ ...eff, dir: "/home/ali/elsewhere" }, []));
   assert.equal(view(d).ranIn, MINE, "a stale one changes nothing");
   const at = where(d.state);
   d.open("i-1");

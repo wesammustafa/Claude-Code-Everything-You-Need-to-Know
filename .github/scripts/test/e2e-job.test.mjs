@@ -38,9 +38,9 @@ test('npm run e2e is the whole Playwright suite', () => {
   assert.ok(existsSync(join(root, 'quest/client/e2e/security.spec.ts')));
 });
 
-test('the required checks job needs e2e and fails unless it succeeded', () => {
+test('the required checks job needs e2e and fails unless it succeeded or was not needed', () => {
   const checks = job('checks');
   assert.match(checks, /^\s+needs: \[[^\]]*\be2e\b[^\]]*\]$/m);
   assert.match(checks, /^\s+if: always\(\)$/m);
-  assert.match(checks, /all\(\.\[\]; \.result == "success"\)/);
+  assert.match(checks, /\.changes\.result == "success" and \.guide\.result == "success" and all\(\.\[\]; \.result == "success" or \.result == "skipped"\)/);
 });

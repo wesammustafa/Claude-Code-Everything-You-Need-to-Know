@@ -10,6 +10,27 @@ permissions:
   contents: read
 
 jobs:
+  # Which jobs this pull request needs, from the files it changes
+  # (.github/scripts/ci-scope.mjs): a README or check-script change runs only
+  # guide, an app unit test change adds quest, and anything that reaches the
+  # build, the template or the app runs every job. A push to main and a
+  # manual run run every job.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.scope.outputs.code }}
+      app: ${{ steps.scope.outputs.app }}
+      platforms: ${{ steps.scope.outputs.platforms }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ -n "$BASE_SHA" ]; then node .github/scripts/ci-scope.mjs --base "$BASE_SHA"; else node .github/scripts/ci-scope.mjs; fi
+
   guide:
     runs-on: ubuntu-latest
     steps:
@@ -33,6 +54,8 @@ jobs:
           node .github/scripts/check.mjs --mode pr --base "$base"
 
   quest:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -63,6 +86,8 @@ jobs:
   # pinned to the CHANGELOG baseline, and the font instance check reads the
   # PostScript name only on macOS, the one platform that gives it.
   e2e:
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -103,6 +128,8 @@ jobs:
   # start-up budgets run only on Ubuntu's, and their numbers go to the job
   # summary.
   template:
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -165,6 +192,8 @@ jobs:
   # replay, Chromium and an exit code on SIGTERM, which Windows never gives.
   # The upgrade proof runs on all three, in the template job.
   platforms:
+    needs: changes
+    if: needs.changes.outputs.platforms == 'true'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -187,16 +216,17 @@ jobs:
   # The ruleset on main requires this job's check run, which GitHub names after
   # the job id. Renaming the job, or giving it a name:, would block every merge.
   # GitHub reports a skipped job as success and lets a skipped required check
-  # through, so this job always runs and fails unless every job it needs
-  # succeeded.
+  # through, so this job always runs and fails unless changes and guide
+  # succeeded and every other job succeeded or was skipped because changes
+  # found nothing for it to test.
   checks:
-    needs: [guide, quest, e2e, template, platforms]
+    needs: [changes, guide, quest, e2e, template, platforms]
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - name: Fail unless every needed job succeeded
+      - name: Fail unless every needed job succeeded or was not needed
         env:
           NEEDS: ${{ toJSON(needs) }}
         run: |
           echo "$NEEDS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
-          echo "$NEEDS" | jq -e 'all(.[]; .result == "success")' > /dev/null
+          echo "$NEEDS" | jq -e '.changes.result == "success" and .guide.result == "success" and all(.[]; .result == "success" or .result == "skipped")' > /dev/null

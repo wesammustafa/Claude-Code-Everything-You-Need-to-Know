@@ -12,6 +12,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import {
   ACTION_TYPES,
+  altOf,
   evidence,
   folderOf,
   initialState,
@@ -477,16 +478,22 @@ export function createHost({
           ? (r.head ?? "")
           : statusStamp(r.paths);
     }
-    return files.stamp(dirOf(e.dir), e.path as string);
+    return files.stamp(dirOf(e.dir), e.path as string, e.alt);
   }
 
   // A file's bytes and its state, read now in the lesson's folder: local and
   // quick, with no process. The engine decides what they mean. A glob reads
-  // the file it matches now, and says which (`found`).
-  const file = (path: string, asked: number | undefined, dir: string) => {
+  // the file it matches now, and says which (`found`). With `alt`, the git
+  // root above the folder too, where a file there is found as `../...`.
+  const file = (
+    path: string,
+    asked: number | undefined,
+    dir: string,
+    alt?: string,
+  ) => {
     queueMicrotask(() => {
       if (closed) return;
-      const found = files.match(dir, path);
+      const found = files.match(dir, path, alt);
       input({
         type: "file",
         path,
@@ -588,7 +595,7 @@ export function createHost({
     for (const e of effects) {
       if (e.type === "check")
         void check(e, e.lesson, e.items, e.evidence, dirOf(e.dir));
-      else if (e.type === "file") file(e.path, e.asked, dirOf(e.dir));
+      else if (e.type === "file") file(e.path, e.asked, dirOf(e.dir), e.alt);
       else if (e.type === "stamp")
         void stampNow(e).then((stamp) => {
           if (!closed) input({ type: "stamp", key: e.key, stamp, dir: e.dir });
@@ -623,7 +630,7 @@ export function createHost({
     const ask = { changed };
     if (w.check)
       void check(ask, w.check.lesson, w.check.items, evidence(s), dir);
-    if (w.file) file(w.file, 0, dir);
+    if (w.file) file(w.file, 0, dir, altOf(s, w.dir).alt);
     if (w.git) void gitRun(ask, dir, w.files, w.head);
     if (w.probe) void probe(ask, dir, w.probe.name, w.probe.args);
   }
