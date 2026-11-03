@@ -201,8 +201,11 @@ const componentCount = (/** @type {Components} */ c) => c.skills.length + c.agen
  * @typedef {{ stage: number, hint?: string, name?: string, dir?: string, manifest?: string, ok?: true, components?: Components }} Entry
  */
 
+// `root` is the marketplace's folder from the repository's folder, and `top`
+// the same folder from the git root, where Claude Code resolves a relative
+// settings `path`: in a Practice copy, `project/team-marketplace`.
 /**
- * @typedef {{ path: string, root: string, entries: Entry[], plugins: Entry[], stage: number, hint?: string | undefined, name?: any, entry?: number }} Marketplace
+ * @typedef {{ path: string, root: string, top: string, entries: Entry[], plugins: Entry[], stage: number, hint?: string | undefined, name?: any, entry?: number }} Marketplace
  */
 
 /**
@@ -257,8 +260,8 @@ function reviewEntry(repo, marketplace, entry, index, committed) {
  */
 function reviewMarketplace(repo, path, committed) {
   const root = folder(posix.dirname(posix.dirname(path)));
-  /** @type {{ path: string, root: string, entries: Entry[], plugins: Entry[] }} */
-  const base = { path, root, entries: [], plugins: [] };
+  /** @type {{ path: string, root: string, top: string, entries: Entry[], plugins: Entry[] }} */
+  const base = { path, root, top: folder(`${gitPrefix(repo)}${root}`), entries: [], plugins: [] };
   const parsed = manifestJson(headText(repo, path) ?? '');
   if (parsed.error) return { ...base, stage: 0, hint: `The committed ${code(path)} isn't valid JSON: ${parsed.error}` };
   const value = parsed.value;
@@ -272,6 +275,16 @@ function reviewMarketplace(repo, path, committed) {
   const best = entries.reduce((a, b) => (b.stage > a.stage ? b : a));
   return { ...marketplace, stage: 4, entry: best.stage, hint: best.hint, entries, plugins: entries.filter((e) => e.ok) };
 }
+
+// The repository's folder from its git root, such as `project/`; '' at the
+// root.
+const gitPrefix = (/** @type {Repo} */ repo) => {
+  try {
+    return repo.prefix;
+  } catch {
+    return '';
+  }
+};
 
 // The committed plugin folders: each holds a committed
 // .claude-plugin/plugin.json. The root is ''.
@@ -332,7 +345,9 @@ export function committedSettings(repo) {
 const BLOCK = (/** @type {string} */ name, /** @type {string} */ dir) => `\`"extraKnownMarketplaces": { "${name}": { "source": { "source": "directory", "path": "${relativePath(dir)}" } } }\``;
 
 // Where a settings source points, as a folder relative to the repository, or
-// a problem with it, as `{ dir }` or `{ hint }`.
+// a problem with it, as `{ dir }` or `{ hint }`. Claude Code resolves a
+// relative `path` from the repository's main checkout, its git root, so in a
+// Practice copy the path starts with `./project/`.
 /**
  * @param {unknown} source
  * @param {string} key
@@ -340,9 +355,9 @@ const BLOCK = (/** @type {string} */ name, /** @type {string} */ dir) => `\`"ext
  * @returns {{ dir: string, hint?: undefined } | { hint: string, dir?: undefined }}
  */
 function sourceFolder(source, key, marketplace) {
-  const want = relativePath(marketplace.root);
+  const want = relativePath(marketplace.top);
   const label = `\`${key}.${marketplace.name}\``;
-  if (!isObject(source)) return { hint: `${label} has no \`source\` object. Write ${BLOCK(marketplace.name, marketplace.root)}.` };
+  if (!isObject(source)) return { hint: `${label} has no \`source\` object. Write ${BLOCK(marketplace.name, marketplace.top)}.` };
   const type = source.source;
   if (type !== 'directory' && type !== 'file') return { hint: `${label} registers the marketplace from ${typeof type === 'string' ? `a ${code(type)} source` : 'a source without a type'}. Register the committed folder instead: \`"source": { "source": "directory", "path": "${want}" }\`.` };
   const { path } = source;
@@ -351,9 +366,15 @@ function sourceFolder(source, key, marketplace) {
   if (/^(?:\/|~|[A-Za-z]:|\\\\)/.test(path)) return { hint: `${label} has the \`path\` ${code(path)}, a path on your machine, which a teammate's clone doesn't have. Write it relative to the repository: \`"path": "${target}"\`.` };
   if (path.includes('\\')) return { hint: `${label} writes its \`path\` with a backslash, ${code(path)}, which isn't a folder separator on macOS or Linux. Write \`"path": "${target}"\`.` };
   if (path.split('/').includes('..')) return { hint: `${label} has the \`path\` ${code(path)}, whose \`..\` leaves the repository. Write \`"path": "${target}"\`.` };
-  const resolved = type === 'directory' ? folder(path) : folder(path) === inside(marketplace.root, '.claude-plugin/marketplace.json') ? marketplace.root : null;
-  if (resolved !== marketplace.root) return { hint: `${label} has the \`path\` ${code(path)}, but the marketplace is in ${code(marketplace.path)}. Write \`"path": "${target}"\`.` };
-  return { dir: resolved };
+  const { root, top } = marketplace;
+  const file = (/** @type {string} */ dir) => folder(path) === inside(dir, '.claude-plugin/marketplace.json');
+  const resolved = type === 'directory' ? folder(path) : file(top) ? top : file(root) ? root : null;
+  if (resolved !== top) {
+    // A path from the repository's folder, which sits below the git root.
+    const above = resolved === root ? `, and Claude Code reads a relative \`path\` from the git root, the folder above ${code(top.slice(0, top.length - root.length).replace(/\/?$/, '/'))}` : '';
+    return { hint: `${label} has the \`path\` ${code(path)}, but the marketplace is in ${code(marketplace.path)}${above}. Write \`"path": "${target}"\`.` };
+  }
+  return { dir: root };
 }
 
 // How far settings get for one marketplace: 0, no marketplace registered;
@@ -365,16 +386,16 @@ function sourceFolder(source, key, marketplace) {
  * @returns {{ stage: number, hint?: string }}
  */
 function reviewRegistration(settings, marketplace) {
-  const { name, root } = marketplace;
+  const { name, root, top } = marketplace;
   const canonical = own(settings, 'extraKnownMarketplaces');
   const key = canonical ? 'extraKnownMarketplaces' : 'additionalMarketplaces';
   const known = settings[key];
-  if (!isObject(known)) return { stage: 0, hint: `The committed \`${SETTINGS}\` registers no marketplace. Add ${BLOCK(name, root)} and commit.` };
+  if (!isObject(known)) return { stage: 0, hint: `The committed \`${SETTINGS}\` registers no marketplace. Add ${BLOCK(name, top)} and commit.` };
   if (!own(known, name)) {
     if (canonical && own(settings.additionalMarketplaces, name)) return { stage: 1, hint: `The committed \`${SETTINGS}\` sets both \`extraKnownMarketplaces\` and its other spelling, \`additionalMarketplaces\`, and Claude Code then reads only \`extraKnownMarketplaces\`, so ${code(name)} under \`additionalMarketplaces\` is ignored. Move it into \`extraKnownMarketplaces\` and commit.` };
     const other = Object.keys(known).find((k) => sourceFolder(known[k]?.source, key, { ...marketplace, name: k }).dir === root);
     if (other !== undefined) return { stage: 1, hint: `\`${key}\` registers the marketplace under the key ${code(other)}, but the key must be the marketplace's \`name\` from ${code(marketplace.path)}, ${code(name)}. Rename the key, and commit.` };
-    return { stage: 1, hint: `\`${key}\` in the committed \`${SETTINGS}\` registers no marketplace named ${code(name)}. Add ${BLOCK(name, root)} and commit.` };
+    return { stage: 1, hint: `\`${key}\` in the committed \`${SETTINGS}\` registers no marketplace named ${code(name)}. Add ${BLOCK(name, top)} and commit.` };
   }
   const where = sourceFolder(known[name]?.source, key, marketplace);
   if (where.hint) return { stage: 2, hint: `${where.hint} Then commit.` };

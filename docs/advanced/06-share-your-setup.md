@@ -25,7 +25,7 @@ A plugin shares skills, agents and hooks as one unit, and a marketplace is a fol
 
 Your teammates keep asking how the repository's Claude Code setup works. Share a skill that explains it with everyone who clones the repository.
 
-1. At your repository's root, download this guide's [example marketplace](../../examples/advanced/06-share-your-setup/README.md) into `team-marketplace/`. Read each file before you commit it:
+1. In your repository (in a Practice copy, `project/`), download this guide's [example marketplace](../../examples/advanced/06-share-your-setup/README.md) into `team-marketplace/`. Read each file before you commit it:
 
    ```bash
    base=https://raw.githubusercontent.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/main/examples/advanced/06-share-your-setup
@@ -57,7 +57,7 @@ Your teammates keep asking how the repository's Claude Code setup works. Share a
    }
    ```
 
-   The key under `extraKnownMarketplaces` is the marketplace's `name` ([Manage Claude Code plugins for your organization](https://code.claude.com/docs/en/plugins/org#require-a-marketplace-and-its-plugins)), and the plugin's id is `<entry name>@<marketplace name>`, here `team-kit@team-tools` ([Entry name and manifest name](https://code.claude.com/docs/en/plugins/loading#entry-name-and-manifest-name)). A `directory` source names a local folder in `path` ([All settings](https://code.claude.com/docs/en/settings-reference#extraknownmarketplaces)). The example's [`settings.snippet.json`](../../examples/advanced/06-share-your-setup/settings.snippet.json) holds the same keys plus a deny rule for `.env`, for a repository that has none.
+   The key under `extraKnownMarketplaces` is the marketplace's `name` ([Manage Claude Code plugins for your organization](https://code.claude.com/docs/en/plugins/org#require-a-marketplace-and-its-plugins)), and the plugin's id is `<entry name>@<marketplace name>`, here `team-kit@team-tools` ([Entry name and manifest name](https://code.claude.com/docs/en/plugins/loading#entry-name-and-manifest-name)). A `directory` source names a local folder in `path` ([All settings](https://code.claude.com/docs/en/settings-reference#extraknownmarketplaces)). A relative `path` resolves against your repository's main checkout, its root ([Require plugins per repository](https://code.claude.com/docs/en/plugins/org#require-plugins-per-repository)): in a Practice copy, whose root is the folder above `project/`, write `"path": "./project/team-marketplace"`. The example's [`settings.snippet.json`](../../examples/advanced/06-share-your-setup/settings.snippet.json) holds the same keys plus a deny rule for `.env`, for a repository that has none.
 4. Commit both:
 
    ```bash
@@ -66,7 +66,7 @@ Your teammates keep asking how the repository's Claude Code setup works. Share a
    ```
 
    If git reports a path as ignored, `git check-ignore -v <path>` shows the rule that matches it; add the path with `git add -f`, as in [Intermediate lesson 1](../intermediate/01-first-skill.md).
-5. Start `claude` at the repository's root, and accept the trust dialog if it appears. After the session starts, Claude Code registers the marketplace your settings declare and loads `team-kit` from it, with no install command ([Plugin loading reference](https://code.claude.com/docs/en/plugins/loading#plugins-and-marketplaces-that-aren%E2%80%99t-on-disk-at-session-start)). Run `/team-kit:onboard` ([Add components to a plugin](https://code.claude.com/docs/en/plugins/components#skills)). Claude reads the committed setup and explains what the repository shares and what stays personal; your wording will differ. The subagent loads too, as `team-kit:config-reviewer` ([Add components to a plugin](https://code.claude.com/docs/en/plugins/components#agents)).
+5. Start `claude` in your repository (in a Practice copy, `project/`), and accept the trust dialog if it appears. After the session starts, Claude Code registers the marketplace your settings declare and loads `team-kit` from it, with no install command ([Plugin loading reference](https://code.claude.com/docs/en/plugins/loading#plugins-and-marketplaces-that-aren%E2%80%99t-on-disk-at-session-start)). Run `/team-kit:onboard` ([Add components to a plugin](https://code.claude.com/docs/en/plugins/components#skills)). Claude reads the committed setup and explains what the repository shares and what stays personal; your wording will differ. The subagent loads too, as `team-kit:config-reviewer` ([Add components to a plugin](https://code.claude.com/docs/en/plugins/components#agents)).
 6. Turn the plugin off for yourself only. Add this key to `.claude/settings.local.json`, beside the sandbox setting Intermediate lesson 4 saved there: in a Practice copy, at the repository root, the folder above `project/` ([Where Claude Code keeps the local file in a git repository](https://code.claude.com/docs/en/settings#where-claude-code-keeps-the-local-file-in-a-git-repository)); if `enabledPlugins` is already there, add the `team-kit` line to it. If you're creating the file, wrap the key in `{ }`:
 
    ```json
@@ -75,7 +75,7 @@ Your teammates keep asking how the repository's Claude Code setup works. Share a
    }
    ```
 
-   Save the file, then run `/reload-plugins` ([Plugin commands reference](https://code.claude.com/docs/en/plugins/cli-reference#reload-plugins)). `/team-kit:onboard` is gone from your session, while the committed file still turns the plugin on for everyone else: your local file outranks the project's ([All settings](https://code.claude.com/docs/en/settings-reference#enabledplugins)). Then delete the entry, save the file and run `/reload-plugins` again. If `git status` lists `.claude/settings.local.json`, don't commit it: Your turn adds it to `.gitignore`.
+   Save the file, then run `/reload-plugins` ([Plugin commands reference](https://code.claude.com/docs/en/plugins/cli-reference#reload-plugins)). `/team-kit:onboard` is gone from your session, while the committed file still turns the plugin on for everyone else: your local file outranks the project's ([All settings](https://code.claude.com/docs/en/settings-reference#enabledplugins)). Then delete the entry, save the file and run `/reload-plugins` again. If `git status` lists `.claude/settings.local.json`, don't commit it: Your turn adds it to `.gitignore`. In a Practice copy, a file you created by hand in the folder above `project/` can show as `../.claude/`, which the rule in `project/.gitignore` doesn't cover: leave it out of your commits.
 
 ## Your turn
 
@@ -84,7 +84,7 @@ Your teammates keep asking how the repository's Claude Code setup works. Share a
 **Acceptance criteria:**
 
 - The component lives in `team-marketplace/plugins/team-kit/`, as `skills/<name>/SKILL.md`, `agents/<name>.md` or an entry in `hooks/hooks.json`, and the original is gone from `.claude/`; a moved hook is also gone from `.claude/settings.json`.
-- `claude plugin validate ./team-marketplace/plugins/team-kit --strict` passes. Save its report for the check, from the repository's root: `claude plugin validate ./team-marketplace/plugins/team-kit --strict --json > .practice/a-6-validate.json`.
+- `claude plugin validate ./team-marketplace/plugins/team-kit --strict` passes. Save its report for the check, from your repository (in a Practice copy, `project/`): `claude plugin validate ./team-marketplace/plugins/team-kit --strict --json > .practice/a-6-validate.json`.
 - A committed `.gitignore` lists `.claude/settings.local.json` and `CLAUDE.local.md`, and git tracks neither. The rule Claude Code adds for the local settings file goes in your global git excludes file, which teammates don't share ([Settings files and precedence](https://code.claude.com/docs/en/settings#keep-personal-settings-out-of-a-repository)), and the docs say to create `CLAUDE.local.md` by hand and add it to `.gitignore` yourself ([Explore the .claude directory](https://code.claude.com/docs/en/claude-directory#what%E2%80%99s-not-shown)). Add its rule even if you have no `CLAUDE.local.md`.
 - Everything is committed, and in a new session the component runs under the plugin's name, such as `/team-kit:tdd` or the `team-kit:test-gaps` subagent.
 
@@ -102,7 +102,7 @@ You are done when all of these are true:
 
 Run `npm run check -- a-6 --dir <your repo>` from your practice copy.
 
-If the first item fails, run `claude plugin validate ./team-marketplace` and compare the entry's `name` with the plugin's `plugin.json`. If the second fails, check that the key under `extraKnownMarketplaces` is the marketplace's `name`, that the `path` is relative, such as `./team-marketplace`, and that the plugin's value is `true`, not `"true"`. If the third fails, run `git status`: the original may still be committed under `.claude/`, or the plugin's copy may not be committed yet. If the fourth fails, run `git rm --cached` on the tracked file, add both lines to `.gitignore` and commit.
+If the first item fails, run `claude plugin validate ./team-marketplace` and compare the entry's `name` with the plugin's `plugin.json`. If the second fails, check that the key under `extraKnownMarketplaces` is the marketplace's `name`, that the `path` is relative, such as `./team-marketplace` (`./project/team-marketplace` in a Practice copy), and that the plugin's value is `true`, not `"true"`. If the third fails, run `git status`: the original may still be committed under `.claude/`, or the plugin's copy may not be committed yet. If the fourth fails, run `git rm --cached` on the tracked file, add both lines to `.gitignore` and commit.
 
 ## Watch out
 
