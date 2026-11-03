@@ -1,62 +1,43 @@
-# Claude Code: Everything You Need to Know <img src="assets/brand/pip.svg" width="40" height="40" alt="Pip, the Claude Code Quest mascot: a small blocky robot with two antennas" align="top" />
+<a id="claude-code-everything-you-need-to-know-"></a>
+<div align="center">
 
-**Learn everything you need to use Claude Code well, one small step at a time, with Pip cheering you on.**
+<img src="assets/brand/pip.svg" width="96" height="96" alt="Pip, the Claude Code Quest mascot: a small blocky robot with two antennas" />
 
-Claude Code Quest is a learning app that opens in your browser beside Claude Code. It shows you one step, you try it in your own practice copy, and it checks your work and cheers when you get it right. Three levels take you from your first session to a setup your team shares.\
-**[Start in 3 steps](#try-it-now)** · [The three levels](#pick-your-level) · [Meet Pip](#meet-pip) · [Everything in the guide](#everything-in-the-guide)
+# Claude Code: Everything You Need to Know
+
+**Learn to use Claude Code well, one small step at a time, with Pip cheering you on.**
+
+Claude Code Quest is a learning app that opens in your browser beside Claude Code.<br />
+It shows you one step, you try it in your own practice copy, and it checks your work and cheers when you get it right.
+
+### [Start in 3 steps](#try-it-now)
+
+<sub>[The three levels](#pick-your-level) &nbsp;·&nbsp; [Meet Pip](#meet-pip) &nbsp;·&nbsp; [Everything in the guide](#everything-in-the-guide)</sub>
 
 [![Verified against Claude Code v2.1.308 (stable)](https://img.shields.io/badge/verified-v2.1.308_stable-2e6e57)](CHANGELOG.md#v202612---2026-11-01) [![Edition release date](https://img.shields.io/github/release-date/wesammustafa/Claude-Code-Everything-You-Need-to-Know?label=edition&color=2e6e57)](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/releases/latest) [![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/license-PolyForm_Noncommercial_1.0.0-5b6470)](LICENSE) [![Mentioned in Awesome Claude Code](https://awesome.re/mentioned-badge.svg)](https://github.com/hesreallyhim/awesome-claude-code)
 
-<p align="center">
-  <!-- Captured on 2026-11-02 from the Claude Code Quest app on its practice stream, against the guide baseline Claude Code v2.1.308 (stable). -->
-  <img src="assets/readme/pip-step-done.gif" width="720" alt="In Claude Code Quest, the Learner corrects the claim in step 9 of Beginner lesson 1: the step's check passes, its progress dash turns green, Pip, a small blocky robot with two antennas, throws his arms up with sparks around him, and his speech bubble says That step is done." />
-  <br />
-  <sub><b>Pass a step, and Pip cheers with you.</b></sub>
-</p>
+<br />
 
-<a id="-choose-your-path"></a>
-## Pick your level
+<!-- Captured on 2026-11-02 from the Claude Code Quest app on its practice stream, against the guide baseline Claude Code v2.1.308 (stable). -->
+<img src="assets/readme/pip-step-done.gif" width="760" alt="In Claude Code Quest, the Learner corrects the claim in step 9 of Beginner lesson 1: the step's check passes, its progress dash turns green, Pip, a small blocky robot with two antennas, throws his arms up with sparks around him, and his speech bubble says That step is done." />
+<br />
+<sub><b>Pass a step, and Pip cheers with you.</b></sub>
 
-Start where you are and climb. Each level ends with a capstone that puts it all together. Not sure where to start? Each level page opens with a "You're ready for this level if you can" list.
-
-### Beginner
-**You'll learn to** start Claude Code safely, plan before it changes things, take one change from request to commit, and give your project a memory.\
-**You'll finish by** fixing a reported bug, from plan to commit.\
-<sub>5 lessons · a capstone · 3 Electives · about 2½ hours</sub>\
-**[Start Beginner](docs/beginner/README.md)**
-
-### Intermediate
-**You'll learn to** shape Claude Code to your own project with skills, memory, permissions, hooks, subagents, MCP servers and plugins.\
-**You'll finish by** getting a repository ready for a new teammate.\
-<sub>8 lessons · a capstone · 4 Electives · about 4 hours</sub>\
-**[Start Intermediate](docs/intermediate/README.md)**
-
-### Advanced
-**You'll learn to** run sessions in parallel, run Claude Code unattended in scripts and CI, share a setup with your team, and keep autonomous runs within limits you set.\
-**You'll finish by** adding CI review your team can share.\
-<sub>7 lessons · a capstone · 5 Electives · about 4 hours, plus run time</sub>\
-**[Start Advanced](docs/advanced/README.md)**
-
-<p align="center">
-  <!-- Captured on 2026-11-02 from the Claude Code Quest app on its practice stream, against the guide baseline Claude Code v2.1.308 (stable). -->
-  <img src="assets/readme/pip-level-done.gif" width="560" alt="From the Beginner capstone's complete screen to Beginner level complete: Pip throws his arms up in a burst of sparks above the level's six badges and the Start the Intermediate level button." />
-  <br />
-  <sub><b>Finish a level, and Pip celebrates.</b></sub>
-</p>
+</div>
 
 <a id="install"></a>
 ## Try it now
 
 You need a Claude subscription (Pro, Max, Ultra, Team or Enterprise), a Claude Console account, or access through a supported cloud provider ([Quickstart](https://code.claude.com/docs/en/quickstart)), plus Node.js LTS and git.
 
-1. Make your practice copy: open [claude-code-practice](https://github.com/wesammustafa/claude-code-practice), select **Use this template** > **Create a new repository**, and clone your copy. Or open your copy in a Codespace.
-2. In your copy, start the app:
+1. **Make your practice copy.** Open [claude-code-practice](https://github.com/wesammustafa/claude-code-practice), select **Use this template** > **Create a new repository**, and clone your copy. Or open your copy in a Codespace.
+2. **Start the app** in your copy:
 
    ```bash
    npm run learn
    ```
 
-3. Claude Code Quest opens in your browser (in a Codespace, open the address it prints). Keep a terminal beside it: Claude Code Quest tells you what to type there and checks each step.
+3. **Keep a terminal beside it.** Claude Code Quest opens in your browser (in a Codespace, open the address it prints). It tells you what to type in the terminal and checks each step.
 
 Claude Code Quest has no AI in it and changes none of your work. Prefer to read? Every lesson works from its page alone.
 
@@ -77,6 +58,29 @@ The template's `progress.yml` workflow and `.gitattributes` replace yours. Your 
 
 </details>
 
+<a id="-choose-your-path"></a>
+## Pick your level
+
+Three levels take you from your first session to a setup your team shares. Start where you are and climb: each level ends with a capstone that puts it all together, and each level page opens with a "You're ready for this level if you can" list.
+
+### Beginner
+**You'll learn to** start Claude Code safely, plan before it changes things, take one change from request to commit, and give your project a memory.\
+**You'll finish by** fixing a reported bug, from plan to commit.\
+<sub>5 lessons · a capstone · 3 Electives · about 2½ hours</sub>\
+**[Start Beginner](docs/beginner/README.md)**
+
+### Intermediate
+**You'll learn to** shape Claude Code to your own project with skills, memory, permissions, hooks, subagents, MCP servers and plugins.\
+**You'll finish by** getting a repository ready for a new teammate.\
+<sub>8 lessons · a capstone · 4 Electives · about 4 hours</sub>\
+**[Start Intermediate](docs/intermediate/README.md)**
+
+### Advanced
+**You'll learn to** run sessions in parallel, run Claude Code unattended in scripts and CI, share a setup with your team, and keep autonomous runs within limits you set.\
+**You'll finish by** adding CI review your team can share.\
+<sub>7 lessons · a capstone · 5 Electives · about 4 hours, plus run time</sub>\
+**[Start Advanced](docs/advanced/README.md)**
+
 <a id="help-that-fades-as-you-learn"></a>
 ## Meet Pip
 
@@ -84,7 +88,12 @@ Pip works beside you. He cheers your wins, and the help gets lighter as you get 
 
 <p align="center">
   <!-- Captured on 2026-11-02 from the Claude Code Quest app on its practice stream, against the guide baseline Claude Code v2.1.308 (stable). -->
-  <img src="assets/readme/pip-looks-around.gif" width="360" alt="On Claude Code Quest's welcome screen, Pip turns his head and eyes to follow the pointer in a circle around him, then settles to rest." />
+  <img src="assets/readme/pip-level-done.gif" width="280" alt="From the Beginner capstone's complete screen to Beginner level complete: Pip throws his arms up in a burst of sparks above the level's six badges and the Start the Intermediate level button." />
+  &nbsp;
+  <!-- Captured on 2026-11-02 from the Claude Code Quest app on its practice stream, against the guide baseline Claude Code v2.1.308 (stable). -->
+  <img src="assets/readme/pip-looks-around.gif" width="404" alt="On Claude Code Quest's welcome screen, Pip turns his head and eyes to follow the pointer in a circle around him, then settles to rest." />
+  <br />
+  <sub><b>Finish a level, and Pip celebrates. On the welcome screen, he follows your pointer.</b></sub>
 </p>
 
 <a id="-whats-inside"></a><a id="-reading-tips"></a>
@@ -126,11 +135,17 @@ Pip works beside you. He cheers your wins, and the help gets lighter as you get 
 
 ---
 
-Found something stale? [Report it with a source](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=stale-content.yml). Stuck on a lesson? Use the link at the bottom of that lesson. Independent community guide, not affiliated with or endorsed by Anthropic.
+<div align="center">
 
-If Claude Code Quest helped you, a star helps other learners find it.
+Found something stale? [Report it with a source](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=stale-content.yml). Stuck on a lesson? Use the link at the bottom of that lesson.
+
+**If Claude Code Quest helped you, a star helps other learners find it.**
 
 [PolyForm Noncommercial License 1.0.0](LICENSE) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md)
+
+<sub>Independent community guide, not affiliated with or endorsed by Anthropic.</sub>
+
+</div>
 
 <a id="links-from-the-previous-edition"></a><a id="sdlc"></a><a id="what-are-llms-and-how-do-they-differ-from-ai-tools-like-claude-code"></a><a id="what-is-claude-code"></a><a id="claude-code-setup"></a><a id="1-install"></a><a id="2-authenticate"></a><a id="3-run-your-first-prompt"></a><a id="prompt-engineering-deep-dive"></a><a id="1-explore--plan--code--commit"></a><a id="2-test-driven-workflow-write-tests--code--commit"></a><a id="4-optional-generate-a-claudemd"></a><a id="3-visual-iteration-code--screenshot--iterate--commit"></a><a id="claude-opus-46-the-latest-powerhouse"></a><a id="claude-opus-47-the-latest-flagship"></a><a id="the-claude-5-era-todays-model-lineup"></a><a id="effort-levels"></a><a id="4-effort-levels--how-hard-claude-thinks"></a><a id="claude-commands"></a><a id="built-in-slash-commands"></a><a id="day-1-essentials"></a><a id="custom-slash-commands"></a><a id="claude-skills"></a><a id="your-first-skill-in-3-minutes"></a><a id="want-more-depth"></a><a id="what-are-skills"></a><a id="built-in-vs-custom-skills"></a><a id="skills-faq"></a><a id="creating-custom-skills"></a><a id="available-skills-reference"></a><a id="using-skills-in-workflow"></a><a id="troubleshooting-skills"></a><a id="skills-best-practices"></a><a id="hooks"></a><a id="setting-up-claude-hooks"></a><a id="setting-up-hooks"></a><a id="hook-events"></a><a id="hook-input"></a><a id="hook-output"></a><a id="security-considerations"></a><a id="hook-execution-details-and-debugging"></a><a id="execution--debugging"></a><a id="2-general-purpose-subagents--when-one-claude-isnt-enough"></a><a id="3-specialized-subagents--drop-in-role-prompts"></a><a id="ai-agents"></a><a id="running-agents-in-parallel"></a><a id="subagents--running-agents-in-parallel"></a><a id="orchestrating-specialists-from-the-main-session"></a><a id="1-git-worktrees--parallel-branches-parallel-sessions"></a><a id="agent-teams-experimental---2026"></a><a id="agent-teams-experimental"></a><a id="enable-it"></a><a id="the-example-that-justifies-the-cost"></a><a id="staff-a-team-with-the-role-prompts-you-already-have"></a><a id="three-things-that-catch-people-out"></a><a id="monitoring-and-the-naming-trap"></a><a id="best-practices"></a><a id="dynamic-workflows"></a><a id="try-it-in-2-minutes--no-script-required"></a><a id="starting-your-own"></a><a id="beyond-one-terminal--the-2026-automation-surface"></a><a id="model-context-protocol-mcp"></a><a id="the-nm-problem-mcp-solves"></a><a id="three-pillars"></a><a id="the-mcp-registry--self-discovering-agents"></a><a id="the-mcp-ecosystem-today"></a><a id="fast-mode"></a><a id="fast-mode-"></a><a id="beyond-your-own-skills--the-ecosystem"></a><a id="featured-mcp-servers"></a><a id="more-mcp-servers-worth-knowing"></a><a id="super-claude-framework"></a><a id="the-bmad-method--ai-agent-framework"></a><a id="updates--deprecations-february-2026"></a><a id="updates--deprecations"></a><a id="updates--deprecations-as-of-july-2026"></a><a id="faq"></a><a id="references"></a><a id="steal-this-setup"></a><a id="5-bonus-steal-this-repos-setup"></a><a id="-when-to-use-what"></a>
 
