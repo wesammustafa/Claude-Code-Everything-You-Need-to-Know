@@ -49,7 +49,7 @@
     "team-tools": {
       "source": {
         "source": "directory",
-        "path": "./team-marketplace"
+        "path": "./project/team-marketplace"
       }
     }
   }

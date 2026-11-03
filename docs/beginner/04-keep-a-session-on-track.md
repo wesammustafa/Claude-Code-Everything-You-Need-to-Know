@@ -93,7 +93,7 @@ Try a teammate's rename script, then undo all of it: another tool imports `findL
    Run node practice/b-4/rename-export.mjs, which renames findLinks in src/links.js. Then update its callers with your file editing tool, not a shell command.
    ```
 
-3. In the second terminal, save what git sees: `git status --porcelain > .practice/b-4-before-rewind.txt`. It lists `src/links.js`, which the script changed, and the callers Claude updated, `src/check-links.js` and usually `test/links.test.js`.
+3. In the second terminal, save what git sees: `git status --porcelain > .practice/b-4-before-rewind.txt`. It lists `src/links.js`, which the script changed, and the callers Claude updated, `src/check-links.js` and usually `test/links.test.js`. In a Practice copy each path starts with `project/`: porcelain prints paths from the root of the repository, the folder above `project/`.
 4. You're staying on this task, and Claude should remember what it tried, so this time use **Restore code**. Before you rewind, decide which of those files it will put back. Then rewind the step 2 prompt with **Restore code**, and save what git sees: `git status --porcelain > .practice/b-4-after-rewind.txt`.
 
    If the menu offers only **Restore conversation**, the summarize options and **Never mind**, Claude updated the callers in a way rewind doesn't track, usually with commands: choose **Never mind**, press `Esc`, run `git restore src test`, and repeat from step 2.

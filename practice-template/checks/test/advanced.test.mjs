@@ -2114,7 +2114,7 @@ const VALID_REPORT = (dir, plugin) => reportOf(join(realpathSync(dir), plugin, '
 
 function shareRepo({
   root = MARKETPLACE_ROOT, market = TEAM_MARKET, settings = SHARED_SETTINGS, gitignore = PERSONAL_IGNORE,
-  move = [['.claude/agents/test-gaps.md', 'agents/test-gaps.md']], files = {}, report = VALID_REPORT, after,
+  move = [['.claude/agents/test-gaps.md', 'agents/test-gaps.md']], files = {}, report = VALID_REPORT, after, nested = false,
 } = {}) {
   return () => {
     const plugin = under(root, 'plugins/team-kit');
@@ -2125,7 +2125,7 @@ function shareRepo({
       '.claude/skills/tdd/SKILL.md': TDD_SKILL,
       '.claude/agents/test-gaps.md': TEST_GAPS,
       [PROTECT_HOOK]: '#!/bin/bash\nexit 0\n',
-    });
+    }, { nested });
     commit(dir, 'Start');
     write(dir, {
       [under(root, '.claude-plugin/marketplace.json')]: typeof market === 'string' ? market : json(market),
@@ -2206,6 +2206,43 @@ test('a-6 accepts a marketplace at the repository\'s root, registered as . or ./
       assert.equal(code, 0, `${path}: ${out}`);
     });
   }
+});
+
+// Claude Code resolves a relative `path` from the git root, the folder above
+// project/ in a Practice copy.
+test('a-6 accepts in a Practice copy a registration by the path from the git root', () => {
+  for (const source of [
+    { source: 'directory', path: './project/team-marketplace' },
+    { source: 'directory', path: 'project/team-marketplace/' },
+    { source: 'file', path: './project/team-marketplace/.claude-plugin/marketplace.json' },
+  ]) {
+    withRepo(shareRepo({ nested: true, settings: registered(source) }), (dir) => {
+      const { code, out } = a6(dir);
+      assert.equal(code, 0, `${JSON.stringify(source)}: ${out}`);
+      assert.match(out, /4 of 4 passed/);
+    });
+  }
+  withRepo(shareRepo({ nested: true, root: '', settings: registered({ source: 'directory', path: './project' }) }), (dir) => {
+    assert.equal(settingsHint(dir), true);
+  });
+});
+
+test('a-6 fails in a Practice copy a registration by the path from project/, which Claude Code reads from the git root', () => {
+  withRepo(shareRepo({ nested: true }), (dir) => {
+    assert.equal(settingsHint(dir), '`extraKnownMarketplaces.team-tools` has the `path` `./team-marketplace`, but the marketplace is in `team-marketplace/.claude-plugin/marketplace.json`, and Claude Code reads a relative `path` from the git root, the folder above `project/`. Write `"path": "./project/team-marketplace"`. Then commit.');
+  });
+  withRepo(shareRepo({ nested: true, settings: registered({ source: 'file', path: './team-marketplace/.claude-plugin/marketplace.json' }) }), (dir) => {
+    assert.match(String(settingsHint(dir)), /from the git root, the folder above `project\/`\. Write `"path": "\.\/project\/team-marketplace\/\.claude-plugin\/marketplace\.json"`/);
+  });
+  withRepo(shareRepo({ nested: true, root: '', settings: registered({ source: 'directory', path: '.' }) }), (dir) => {
+    assert.match(String(settingsHint(dir)), /the folder above `project\/`\. Write `"path": "\.\/project"`/);
+  });
+  withRepo(shareRepo({ nested: true, settings: registered({ source: 'directory', path: './elsewhere' }) }), (dir) => {
+    assert.match(String(settingsHint(dir)), /has the `path` `\.\/elsewhere`, but the marketplace is in `team-marketplace\/\.claude-plugin\/marketplace\.json`\. Write `"path": "\.\/project\/team-marketplace"`/);
+  });
+  withRepo(shareRepo({ nested: true, settings: null }), (dir) => {
+    assert.match(String(settingsHint(dir)), /at the path `\.\/project\/team-marketplace`/);
+  });
 });
 
 test('a-6 says how to start without a marketplace, to commit one, and to rename a folder still called dot-claude-plugin/', () => {
@@ -2554,7 +2591,7 @@ test('a-6 reads the saved validation, and says what is wrong with it', () => {
   const other = mkdtempSync(join(tmpdir(), 'other-'));
   try {
     for (const [report, hint] of [
-      [null, `There is no \`.practice/a-6-validate.json\` yet. From the repository's root, once the plugin is in place, run ${save}.`],
+      [null, `There is no \`.practice/a-6-validate.json\` yet. From your repository (in a Practice copy, \`project/\`), once the plugin is in place, run ${save}.`],
       ['✔ Validation passed\n', /holds the text report\. Save the JSON one, with `--json`/],
       ['oops', /isn't JSON\. Save the report unchanged/],
       [[], /it has no `success`/],
