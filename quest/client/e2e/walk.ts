@@ -1106,18 +1106,26 @@ export async function holdsScreen(page: Page) {
   if (!/\/step$/.test(new URL(page.url()).hash)) return;
   await expect(page.locator("[data-pip]").first()).toBeVisible();
   await namesNoKey(page);
-  // Scrolled to its end, the card's last line sits above the bar.
+  // Scrolled to its end, the card's last line sits above the bar. Pip's
+  // help offer opens with a height transition that glides the card down, so
+  // a scroll during it can leave the card's end under the bar: scroll and
+  // measure again until the layout holds still.
   const card = page.locator("main article").last();
   if ((await card.count()) === 0) return;
-  await card.evaluate((node) => {
-    node.scrollIntoView({ block: "end" });
-  });
-  const [box, over] = await Promise.all([
-    card.boundingBox(),
-    bar(page).boundingBox(),
-  ]);
-  if (box !== null && over !== null)
-    expect(box.y + box.height).toBeLessThanOrEqual(over.y + 1);
+  await expect
+    .poll(async () => {
+      await card.evaluate((node) => {
+        node.scrollIntoView({ block: "end" });
+      });
+      const [box, over] = await Promise.all([
+        card.boundingBox(),
+        bar(page).boundingBox(),
+      ]);
+      return box === null || over === null
+        ? 0
+        : box.y + box.height - (over.y + 1);
+    })
+    .toBeLessThanOrEqual(0);
 }
 
 /**
