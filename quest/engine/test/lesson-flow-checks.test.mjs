@@ -34,6 +34,8 @@ import {
   where,
   keyOf,
 } from "./drive.mjs";
+import { midway } from "./flow-places.mjs";
+import { project } from "../src/index.ts";
 import { fingerprint } from "../src/content.ts";
 
 // A saved place in lesson 1, opened.
@@ -520,6 +522,57 @@ test("review fixes: a result that misses an item decides nothing, and a slow ite
   assert.equal(d.state.beat.slowWait, true, "the card says to press r");
   d.run();
   assert.equal(pending(d, "check").slow, true, "r runs slow items too");
+});
+
+// An all-slow check beat runs its check on arrival (ticket 309): i-5's Y4
+// gate beat checks only item 2, which the manifest lists as slow.
+const onGate = () => {
+  const d = midway("i-5", "Y4", { beat: 1 });
+  assert.deepEqual(beatOf(d.state).verify.items, [2]);
+  return d;
+};
+const gateItem = (pass) => ({
+  index: 2,
+  text: "the committed gate gives each case's exit code",
+  pass,
+  hint: pass ? "" : "exit 2 while the tests fail",
+});
+test("an all-slow check beat runs its check on entry (ticket 309)", () => {
+  const d = onGate();
+  const eff = pending(d, "check");
+  assert.deepEqual(eff.items, [2]);
+  assert.equal(eff.slow, true, "the entry run includes the slow item");
+  assert.equal("asked" in eff, false, "the entry run is not an r-run");
+  const view = project(d.state).lesson.beat;
+  assert.equal(view.status, "checking");
+  assert.equal(view.checking, "HEAD:.claude/hooks/test-gate.sh");
+  d.send({ type: "check", lesson: "i-5", items: [gateItem(false)] });
+  // A do beat's arrival result is its baseline, so a failing item waits for
+  // the learner, now with its row in place of the slow-wait line.
+  const failed = project(d.state).lesson.beat;
+  assert.equal(failed.status, "waiting");
+  assert.equal(failed.slowWait, false);
+  assert.deepEqual(failed.verification, [
+    { text: gateItem(false).text, pass: false },
+  ]);
+  // A later poll runs without the slow item; the arrival answer stays.
+  d.send({
+    type: "check",
+    lesson: "i-5",
+    items: [{ ...gateItem(false), slow: true, hint: "" }],
+  });
+  const polled = project(d.state).lesson.beat;
+  assert.equal(polled.status, "waiting");
+  assert.equal(polled.slowWait, false, "a poll brings no slow-wait line back");
+  assert.deepEqual(polled.verification, failed.verification);
+  const ok = onGate();
+  ok.send({ type: "check", lesson: "i-5", items: [gateItem(true)] });
+  assert.equal(ok.state.beat.status, "already", "it passes on arrival");
+});
+test("a mixed check beat leaves its slow items for r on entry (ticket 309)", () => {
+  const d = midway("i-5", "Y4");
+  assert.deepEqual(beatOf(d.state).verify.items, [0, 1, 3]);
+  assert.equal("slow" in pending(d, "check"), false);
 });
 
 // Lessons after the first: warm-ups, a third terminal, and fresh checks.
