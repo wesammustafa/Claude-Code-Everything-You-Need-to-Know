@@ -30,7 +30,7 @@ Migrate one small folder in a single session, gated by a goal.
    printf '%s\n' 'import\.meta\.url' > .practice/a-3-pattern.txt
    ```
 
-   Then start `claude` at the root of your repository. A goal doesn't change your permission mode, and in auto mode, the mode a session starts in, goal turns run without waiting for you ([Set a goal](https://code.claude.com/docs/en/goal#set-a-goal), [Which mode a session starts in](https://code.claude.com/docs/en/permission-modes#which-mode-a-session-starts-in)).
+   Then start `claude` at the root of your repository, or in `project/` in your copy of the practice template. A goal doesn't change your permission mode, and in auto mode, the mode a session starts in, goal turns run without waiting for you ([Set a goal](https://code.claude.com/docs/en/goal#set-a-goal), [Which mode a session starts in](https://code.claude.com/docs/en/permission-modes#which-mode-a-session-starts-in)).
 2. Set the goal, with your own pattern and folder:
 
    ```text
