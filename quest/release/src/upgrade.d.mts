@@ -53,8 +53,10 @@ export function bytesMoved(options: {
   before: Snapshot;
   after: Snapshot;
   oldPackage: string;
+  oldPatches?: Record<string, string>;
   env: Env;
 }): StepResult;
+export function rewrittenTexts(copy: string): Record<string, string>;
 export function checkRuns(options: { copy: string; env: Env }): StepResult;
 export function firstSnapshot(
   url: string,
