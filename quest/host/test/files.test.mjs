@@ -2,7 +2,14 @@
 // stamp, a glob's newest match, and no file.
 import { test } from "vitest";
 import assert from "node:assert/strict";
-import { utimesSync, writeFileSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  utimesSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { grewFrom } from "../src/engine.ts";
 import {
@@ -96,4 +103,71 @@ test("stampOf says no file with an empty string, and a file it can't read just n
       assert.equal(stampOf(dir, "."), null, "a folder is no file to read");
     },
   );
+});
+
+// Ticket 295: a Practice copy's project/ sits below the git root, where
+// Claude Code keeps .claude/settings.local.json and Project-scope workflows.
+const copyTree = (fn) => {
+  const top = mkdtempSync(join(tmpdir(), "files-copy-"));
+  try {
+    mkdirSync(join(top, ".git"));
+    mkdirSync(join(top, "project", ".claude", "workflows"), {
+      recursive: true,
+    });
+    mkdirSync(join(top, ".claude", "workflows"), { recursive: true });
+    fn(top, join(top, "project"));
+  } finally {
+    rmSync(top, { recursive: true, force: true });
+  }
+};
+const LOCAL = ".claude/settings.local.json";
+const at = (file, s) => {
+  utimesSync(file, s, s);
+};
+
+test("with alt, a file only at the git root is read and stamped", () => {
+  copyTree((top, dir) => {
+    writeFileSync(join(top, LOCAL), "{}\n");
+    assert.equal(matchOf(dir, LOCAL, top), `../${LOCAL}`);
+    assert.equal(bytesOf(dir, matchOf(dir, LOCAL, top))?.toString(), "{}\n");
+    assert.notEqual(stampOf(dir, LOCAL, top), "");
+    assert.equal(stampOf(dir, "gone.json", top), "", "in neither place");
+  });
+});
+
+test("with alt, a file in both places reads project/", () => {
+  copyTree((top, dir) => {
+    writeFileSync(join(top, LOCAL), "root\n");
+    writeFileSync(join(dir, LOCAL), "project\n");
+    assert.equal(matchOf(dir, LOCAL, top), LOCAL);
+    assert.equal(
+      bytesOf(dir, matchOf(dir, LOCAL, top))?.toString(),
+      "project\n",
+    );
+  });
+});
+
+test("with alt, a glob takes the newest file across both bases", () => {
+  copyTree((top, dir) => {
+    const glob = ".claude/workflows/*.js";
+    writeFileSync(join(dir, ".claude/workflows/old.js"), "a");
+    at(join(dir, ".claude/workflows/old.js"), 1_000);
+    writeFileSync(join(top, ".claude/workflows/new.js"), "b");
+    at(join(top, ".claude/workflows/new.js"), 2_000);
+    assert.equal(matchOf(dir, glob, top), "../.claude/workflows/new.js");
+    assert.equal(bytesOf(dir, matchOf(dir, glob, top))?.toString(), "b");
+    at(join(dir, ".claude/workflows/old.js"), 3_000);
+    assert.equal(matchOf(dir, glob, top), ".claude/workflows/old.js");
+  });
+});
+
+test("alt equal to the folder is read once, and a call without alt is as before", () => {
+  copyTree((top, dir) => {
+    writeFileSync(join(top, LOCAL), "{}\n");
+    assert.equal(matchOf(top, LOCAL, top), LOCAL);
+    assert.equal(matchOf(top, ".claude/workflows/*.js", top), null);
+    assert.equal(matchOf(dir, LOCAL), LOCAL);
+    assert.equal(bytesOf(dir, LOCAL), null);
+    assert.equal(stampOf(dir, LOCAL), "");
+  });
 });
