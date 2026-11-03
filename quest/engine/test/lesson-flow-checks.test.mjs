@@ -36,6 +36,7 @@ import {
 } from "./drive.mjs";
 import { midway } from "./flow-places.mjs";
 import { project } from "../src/index.ts";
+import { fingerprint } from "../src/content.ts";
 
 // A saved place in lesson 1, opened.
 const at = (step, extra = {}) => {
@@ -1605,7 +1606,12 @@ test("h at CHALLENGE: every beat waits for a try only where a try can show", () 
           saved: save({
             lessons: {
               ...finishedBefore(l.id),
-              [l.id]: { step: step.id, beat: b, warm: [] },
+              [l.id]: {
+                step: step.id,
+                beat: b,
+                warm: [],
+                fingerprint: fingerprint(l.content),
+              },
             },
           }),
         });

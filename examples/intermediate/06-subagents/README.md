@@ -15,4 +15,4 @@ The file's header block, as comments at the top of its frontmatter, says what it
 
 Smoke test, without Claude: `bash test.sh`.
 
-Tested in Claude Code v2.1.285 (stable) on macOS, 2026-10-06
+Not yet tested in a session at this edition's version

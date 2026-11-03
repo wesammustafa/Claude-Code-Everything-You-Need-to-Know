@@ -271,6 +271,48 @@ describe("the Intermediate solutions on an assembled copy", () => {
   }, 600_000);
 });
 
+// b-5's solution writes CLAUDE.md with no @ import, so i-2's first step
+// (adding one) can pass; i-2's solution adds it.
+describe("a copy seeded through b-5", () => {
+  const checkI2 = join(repoRoot, "practice-template/checks/lessons/i-2.mjs");
+  const imports = async (text: string) =>
+    (
+      (await import(checkI2)) as { imports: (text: string) => string[] }
+    ).imports(text);
+  // i-2 W1's own pattern, from its `verify: match CLAUDE.md <re> fresh` line.
+  const w1 = (() => {
+    const steps = readFileSync(join(repoRoot, "course/steps/i-2.md"), "utf8");
+    const m = steps.match(/^- verify: match CLAUDE\.md (\S+) fresh$/m);
+    if (!m) throw new Error("i-2 W1 verify line not found");
+    return new RegExp(m[1] as string, "m");
+  })();
+  const committed = async (through: string) => {
+    const copy = await assembledCopy();
+    for (const id of order.slice(0, order.indexOf(through) + 1))
+      applyLesson({ repoRoot, copy, id });
+    const project = join(copy, "project");
+    return { project, text: gitIn(project, "show", "HEAD:./CLAUDE.md") };
+  };
+
+  test("commits a CLAUDE.md with no @ import", async () => {
+    const { text } = await committed("b-5");
+    expect(await imports(text)).toEqual([]);
+    // Nothing W1 matches is there before i-2, so fresh or not, W1 waits.
+    expect(text).not.toMatch(w1);
+  }, 300_000);
+
+  test("gains the package.json import from i-2's solution", async () => {
+    const { project, text } = await committed("i-2");
+    expect(await imports(text)).toContain("package.json");
+    expect(text).toMatch(w1);
+    // Under Commands, where b-5 had it and the page shows it.
+    expect(text.indexOf("@package.json")).toBeLessThan(
+      text.indexOf("## Conventions"),
+    );
+    expect(existsSync(join(project, "package.json"))).toBe(true);
+  }, 300_000);
+});
+
 /**
  * A bin folder of stand-ins for the tools that reach the network. Each logs
  * its name and fails, so a solution that calls one fails and the log shows it.
@@ -309,6 +351,56 @@ test("no Advanced git-step script runs a network tool by any path", () => {
       .replace(/'[^']*'/g, "''");
     expect(tool.test(code), id).toBe(false);
   }
+});
+
+describe("a copy seeded through i-1", () => {
+  test("commits both skills", async () => {
+    const copy = await assembledCopy();
+    for (const id of order.slice(0, order.indexOf("i-1") + 1))
+      applyLesson({ repoRoot, copy, id });
+    const project = join(copy, "project");
+    const skills = gitIn(
+      project,
+      "ls-tree",
+      "-r",
+      "--name-only",
+      "HEAD",
+      ".claude/skills",
+    );
+    expect(skills.split("\n")).toEqual(
+      expect.arrayContaining([
+        ".claude/skills/five-whys/SKILL.md",
+        ".claude/skills/tdd/SKILL.md",
+      ]),
+    );
+    // The committed skill is the one i-1 downloads, so the copy cannot drift.
+    const example =
+      "examples/intermediate/01-first-skill/dot-claude/skills/five-whys/SKILL.md";
+    expect(
+      gitIn(project, "show", "HEAD:./.claude/skills/five-whys/SKILL.md"),
+    ).toBe(readFileSync(join(repoRoot, example), "utf8").trim());
+    expect(gitIn(project, "status", "--porcelain")).toBe("");
+    expect(
+      readFileSync(join(project, ".practice/i-1-commit.txt"), "utf8").trim(),
+    ).toBe(gitIn(project, "rev-parse", "HEAD"));
+    expect(
+      gitIn(project, "ls-tree", "-r", "--name-only", "HEAD").split("\n"),
+    ).toEqual(expect.arrayContaining(["src/slug.js", "test/slug.test.js"]));
+  }, 300_000);
+
+  test("i-3 commits five-whys at high effort", async () => {
+    const copy = await assembledCopy();
+    for (const id of order.slice(0, order.indexOf("i-3") + 1))
+      applyLesson({ repoRoot, copy, id });
+    const project = join(copy, "project");
+    const skill = gitIn(
+      project,
+      "show",
+      "HEAD:./.claude/skills/five-whys/SKILL.md",
+    );
+    expect(skill).toMatch(/^---\neffort: high\n[\s\S]*?\nname: five-whys\n/);
+    expect(gitIn(project, "status", "--porcelain")).toBe("");
+  }, 300_000);
 });
 
 describe("the Advanced solutions on an assembled copy", () => {
