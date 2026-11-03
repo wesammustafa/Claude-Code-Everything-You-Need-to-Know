@@ -1574,11 +1574,10 @@ test("back lines: a later step, a step the lesson lacks, another lesson, a warm-
   );
 });
 
-// The guide's quote check (lesson-quotes) compares a `- key: "…"` line whose
-// whole value is a quote, so the quote after a back line's step id is one it
-// doesn't read yet: until it does, a back line's why is the app's own words,
+// The lesson test compares a `- key: "…"` line whose whole value is a quote,
+// so the quote after a back line's step id is one it doesn't read yet: until it does, a back line's why is the app's own words,
 // which name no command or code.
-test("back lines: each why is the app's own words until the guide's quote check reads them, and names no command", () => {
+test("back lines: each why is the app's own words until the lesson test reads them, and names no command", () => {
   for (const [id, l] of Object.entries(parsed)) {
     const backs = [
       ...l.ladder.map((r) => r.back),
@@ -1588,7 +1587,7 @@ test("back lines: each why is the app's own words until the guide's quote check 
       assert.equal(
         back.quoted,
         false,
-        `${id}:${back.line}: a back line quotes the page before the guide's quote check reads it`,
+        `${id}:${back.line}: a back line quotes the page before the lesson test reads it`,
       );
       assert.doesNotMatch(
         back.text,

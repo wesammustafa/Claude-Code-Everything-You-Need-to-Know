@@ -62,8 +62,8 @@ export const course: CourseView = {
 /** A first run: not welcomed yet, greeted by first name. */
 export const learner: LearnerView = {
   welcomed: false,
-  name: "Sam",
-  practiceCopy: "/home/sam/practice",
+  name: "Ali",
+  practiceCopy: "/home/ali/practice",
   workFolders: [],
   card: [],
   mastery: {},

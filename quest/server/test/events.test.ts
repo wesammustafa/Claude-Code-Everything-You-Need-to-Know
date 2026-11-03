@@ -435,7 +435,7 @@ describe("live", () => {
       {
         type: "folder.choose",
         key: "intermediate",
-        to: { path: "/home/sam/SENTINEL_folder_218" },
+        to: { path: "/home/ali/SENTINEL_folder_218" },
       },
     ])
       await kit.post(at(kit.host, action));
