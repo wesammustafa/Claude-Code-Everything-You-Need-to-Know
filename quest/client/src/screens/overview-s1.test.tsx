@@ -13,7 +13,7 @@ import {
 } from "../../e2e/snapshots";
 import { renderConnected } from "../../test/connected";
 
-const WORK = "/home/sam/work";
+const WORK = "/home/ali/work";
 
 /** fullCourse with i-1's Intermediate Work folder set, and that folder saved. */
 function withSavedFolder(lesson: OverviewLesson): Snapshot {

@@ -1,6 +1,4 @@
 {
-  "origin": "lesson-quotes-quote-gone",
-  "was": "fail",
   "expect": "fail",
   "about": "The page reworded a sentence the step file quotes.",
   "problems": [

@@ -10,11 +10,13 @@
 // page shares the CPU while it times.
 //
 // "Pip ready" is the app's performance mark (pip/ready.ts, set in
-// src/pip/PipRive.tsx): the runtime loaded, its WASM started, the rig
-// instantiated and its first frame requested. The first frame's own GPU work
-// is not gated (owner decision, 2026-11-02, ticket 240): on SwiftShader it is
-// a long software-GPU task that a Learner with a GPU does not pay. Its time,
-// "Pip first frame", is still logged in the table, outside the budget.
+// src/pip/PipRive.tsx): set on Rive's Load event, once the runtime, the rig
+// file, its artboard and state machine are set up and the file holds the view
+// model Pip binds, just before Rive draws frame 0 in the same task. Frame 0's
+// GPU work is not gated (owner decision, 2026-11-02, tickets 240 and 294): on
+// SwiftShader its flush alone is 1.3 to 2.1 s of software GPU that a Learner
+// with a GPU does not pay. Its time, "Pip first frame", is still logged in the
+// table, outside the budget.
 import { appendFileSync } from "node:fs";
 import { expect, test } from "./live.ts";
 import { PIP_READY_MARK } from "../pip/ready.ts";

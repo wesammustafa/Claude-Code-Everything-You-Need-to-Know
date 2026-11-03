@@ -14,7 +14,7 @@ import {
 } from "../../engine/test/drive.mjs";
 import { AT_W3, fakeHost, turn, w3 } from "./scripted.mjs";
 
-const MINE = "/home/sam/mine";
+const MINE = "/home/ali/mine";
 const b1 = course.find((l) => l.id === "b-1");
 // b-1 saved at its last beat, a self beat: one step.markDone finishes it.
 const AT_END = {
