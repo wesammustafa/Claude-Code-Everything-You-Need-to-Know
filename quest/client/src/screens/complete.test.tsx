@@ -115,6 +115,20 @@ describe("Lesson complete (249)", () => {
     ).toBeInTheDocument();
   });
 
+  test("check lines show code marks, not backticks (310)", () => {
+    renderConnected("/lesson/b-1/complete", snapshotOf(complete));
+    const check = screen.getByRole("region", { name: "The check" });
+    expect(
+      within(check).getByText("claude --version", { selector: "code" }),
+    ).toBeInTheDocument();
+    expect(
+      within(check).getByText("practice/b-1/onboarding.md", {
+        selector: "code",
+      }),
+    ).toBeInTheDocument();
+    expect(check.textContent).not.toContain("`");
+  });
+
   test("no reference link when the page index fails", async () => {
     pip.failIndex = true;
     renderConnected("/lesson/b-1/complete", snapshotOf(complete));
