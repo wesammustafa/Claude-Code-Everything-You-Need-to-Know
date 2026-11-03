@@ -1,6 +1,4 @@
 {
-  "origin": "lesson-quotes-step-added",
-  "was": "fail",
   "expect": "fail",
   "about": "The page gained a Worked example step, so the step file's step counts are wrong.",
   "problems": [

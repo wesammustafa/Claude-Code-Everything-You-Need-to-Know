@@ -6,7 +6,7 @@ import { fullCourse, overviewAt, snapshotOf } from "../../e2e/snapshots";
 import { renderConnected } from "../../test/connected";
 import { refusalText } from "../screens/folderWords";
 
-const COPY = "/home/sam/practice";
+const COPY = "/home/ali/practice";
 const question = (over: Partial<FolderQuestion> = {}): FolderQuestion => ({
   key: "intermediate",
   asks: "work",
@@ -57,13 +57,13 @@ describe("FolderForm", () => {
     expect(field()).toHaveAttribute("spellcheck", "false");
     expect(field()).toHaveAttribute("autocomplete", "off");
     expect(field()).toHaveAttribute("maxlength", "1024");
-    await user.type(field(), "  /home/sam/app ");
+    await user.type(field(), "  /home/ali/app ");
     await user.click(use());
     expect(page.posts).toEqual([
       {
         type: "folder.choose",
         key: "intermediate",
-        to: { path: "/home/sam/app" },
+        to: { path: "/home/ali/app" },
       },
     ]);
   });
@@ -106,7 +106,7 @@ describe("FolderForm", () => {
       "not-repo-root",
       "invalid",
     ];
-    await user.type(field(), "/home/sam/app");
+    await user.type(field(), "/home/ali/app");
     for (const reason of reasons) {
       page.refuse(
         400,
@@ -117,7 +117,7 @@ describe("FolderForm", () => {
       await user.click(use());
       await waitFor(() => {
         expect(screen.getByRole("alert")).toHaveTextContent(
-          refusalText(reason, "new-copy", "/home/sam/app", COPY),
+          refusalText(reason, "new-copy", "/home/ali/app", COPY),
         );
       });
     }
