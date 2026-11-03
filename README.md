@@ -1,4 +1,4 @@
-# Claude Code: Everything You Need to Know <img src="assets/brand/pip.svg" width="44" height="44" alt="Pip, the Claude Code Quest mascot: a small blocky robot with two antennas" align="right" />
+# Claude Code: Everything You Need to Know <img src="assets/brand/pip.svg" width="40" height="40" alt="Pip, the Claude Code Quest mascot: a small blocky robot with two antennas" align="top" />
 
 **Learn everything you need to use Claude Code well, one small step at a time, with Pip cheering you on.**
 
