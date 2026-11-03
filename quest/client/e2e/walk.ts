@@ -416,9 +416,9 @@ export const STAGE: Record<string, Stage> = {
   "i-2:Y4.2": (dir) => {
     add(LOADED, `path_glob_match\t${dir}/.claude/rules/cli.md`)(dir);
   },
-  // i-3: the effort line on i-1's downloaded skill (which i-1's solution
-  // leaves out, so it is downloaded again), the partial changelog skill, then
-  // its choices.
+  // i-3: the effort line on i-1's committed five-whys skill (which the walk
+  // takes out, as W4's fresh look reads it, so it is put back), the partial
+  // changelog skill, then its choices.
   "i-3:W4.0": (dir) => {
     if (!existsSync(join(dir, FIVE_WHYS))) STAGE["i-1:W1.0"]?.(dir);
     const text = readFileSync(join(dir, FIVE_WHYS), "utf8");
@@ -965,6 +965,27 @@ export async function walkLesson(
       await settled(frames, now);
       continue;
     }
+    // A Check of only slow items runs on arrival (309) and can pass at once
+    // on what an earlier replay committed: its stage still runs, so the work
+    // the page gave (a commit, say) lands as the Learner's would.
+    if (
+      now?.phase === "playing" &&
+      now.step !== null &&
+      now.beat !== null &&
+      now.status === "already" &&
+      now.decidedBy === "check"
+    ) {
+      const key = beatKey(id, now.step, now.beat);
+      const stage = STAGE[key];
+      if (stage !== undefined && !staged.has(key)) {
+        staged.add(key);
+        stage(
+          workedInCopy && worked.has(now.step)
+            ? join(copy.dir, "project")
+            : dir,
+        );
+      }
+    }
     if (
       now?.phase === "playing" &&
       now.step !== null &&
@@ -1122,18 +1143,26 @@ export async function holdsScreen(page: Page) {
   if (!/\/step$/.test(new URL(page.url()).hash)) return;
   await expect(page.locator("[data-pip]").first()).toBeVisible();
   await namesNoKey(page);
-  // Scrolled to its end, the card's last line sits above the bar.
+  // Scrolled to its end, the card's last line sits above the bar. Pip's
+  // help offer opens with a height transition that glides the card down, so
+  // a scroll during it can leave the card's end under the bar: scroll and
+  // measure again until the layout holds still.
   const card = page.locator("main article").last();
   if ((await card.count()) === 0) return;
-  await card.evaluate((node) => {
-    node.scrollIntoView({ block: "end" });
-  });
-  const [box, over] = await Promise.all([
-    card.boundingBox(),
-    bar(page).boundingBox(),
-  ]);
-  if (box !== null && over !== null)
-    expect(box.y + box.height).toBeLessThanOrEqual(over.y + 1);
+  await expect
+    .poll(async () => {
+      await card.evaluate((node) => {
+        node.scrollIntoView({ block: "end" });
+      });
+      const [box, over] = await Promise.all([
+        card.boundingBox(),
+        bar(page).boundingBox(),
+      ]);
+      return box === null || over === null
+        ? 0
+        : box.y + box.height - (over.y + 1);
+    })
+    .toBeLessThanOrEqual(0);
 }
 
 /**
