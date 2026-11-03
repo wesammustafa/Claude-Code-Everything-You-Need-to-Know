@@ -60,6 +60,20 @@ test("a line's own state wins over ok: still being checked, in teal", () => {
     expectStylesFromTokens(node.getAttribute("class") ?? "");
 });
 
+test("a slow line not run yet reads as running on Check again, in teal, from tokens (314)", () => {
+  const { container } = render(
+    <CheckLines
+      lines={[{ text: "the full suite passes", ok: false, state: "pending" }]}
+    />,
+  );
+  const [line] = screen.getAllByRole("listitem");
+  expect(line).toHaveAttribute("data-state", "pending");
+  expect(line).toHaveTextContent("Runs on Check again: the full suite passes");
+  expect(line?.innerHTML).toContain("text-teal");
+  for (const node of container.querySelectorAll("[class]"))
+    expectStylesFromTokens(node.getAttribute("class") ?? "");
+});
+
 test("marks Not yet in amber, never red, from tokens, and staggers the lines", () => {
   const { container } = render(<CheckLines lines={LINES} />);
   const items = screen.getAllByRole("listitem");

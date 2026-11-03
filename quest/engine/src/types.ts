@@ -80,6 +80,16 @@ export interface LessonProgress {
   bottomAt: StepId | null;
   fingerprint?: string;
   help?: Record<StepId, Mastery>;
+  // The Check items of the check beat that passed at the saved place, so a
+  // reopen keeps it passed instead of asking for Check again (ticket 314).
+  passedCheck?: PassedCheck;
+}
+
+// A passed check beat as the save keeps it: its place and the passing run.
+export interface PassedCheck {
+  step: StepId;
+  beat: number;
+  items: CheckItem[];
 }
 
 // What initialState reads from a save: any part may be missing.

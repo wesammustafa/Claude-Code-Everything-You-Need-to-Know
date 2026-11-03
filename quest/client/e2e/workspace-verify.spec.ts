@@ -534,3 +534,54 @@ test('slow check: i-5 "Commit the hooks" runs its gate item on arrival', async (
     await copy.dispose();
   }
 });
+
+test("reopen: an i-capstone check beat that passed stays passed after the app restarts", async ({
+  page,
+}) => {
+  // T8's fourth beat checks only a slow item, which runs on arrival (309)
+  // and passes on the replayed copy. Its pass is saved (ticket 314), so after
+  // a restart it opens passed: no Check runs, and no Check again is asked.
+  const copy = practiceCopy({ through: "i-capstone" });
+  try {
+    copy.write(
+      ".practice/learn.json",
+      saveAt("i-capstone", "T8", 4, folderFor("i-capstone", copy)),
+    );
+    await copy.start();
+    await openAt(page, copy);
+    await expect(lines(page).last()).toHaveAttribute("data-state", "ok", {
+      timeout: 90_000,
+    });
+    await expect
+      .poll(() => {
+        const saved = copy.saved() as {
+          lessons?: Record<
+            string,
+            { passedCheck?: { step: string; beat: number } }
+          >;
+        } | null;
+        return saved?.lessons?.["i-capstone"]?.passedCheck ?? null;
+      })
+      .toMatchObject({ step: "T8", beat: 4 });
+
+    await copy.restart();
+    const sent = actionsOf(page);
+    const opened = page.waitForResponse(
+      (response) =>
+        response.url().endsWith("/api/actions") &&
+        response.request().postData()?.includes('"lesson.open"') === true,
+    );
+    await openAt(page, copy);
+    const reply = (await (await opened).json()) as {
+      snapshot?: { lesson?: { beat?: { status?: string } } };
+    };
+    expect(reply.snapshot?.lesson?.beat?.status).toBe("done");
+    await expect(lines(page).last()).toHaveAttribute("data-state", "ok");
+    await expect(page.locator("main")).not.toContainText(
+      "Everything else passes",
+    );
+    expect(sent.filter((a) => a.type === "check.run")).toHaveLength(0);
+  } finally {
+    await copy.dispose();
+  }
+});

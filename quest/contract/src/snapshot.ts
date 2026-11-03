@@ -359,8 +359,11 @@ export interface BeatView {
   running: { n: number; m: number } | null;
   /** While checking, the watched path, relative to its folder, or null. */
   checking: string | null;
-  /** The Check items of the beat's last result. */
-  verification: { text: string; pass: boolean }[];
+  /**
+   * The Check items of the beat's last result. A slow item the run left out
+   * is pending: it runs on Check again (ticket 314).
+   */
+  verification: { text: string; pass: boolean; pending?: true }[];
   /** What the passing look saw: what a file holds, or what changed. */
   evidence: string | null;
   /** The file a glob matched, relative to its folder, or null. */
