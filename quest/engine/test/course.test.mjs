@@ -28,8 +28,9 @@ const pages = Object.fromEntries(
 );
 const checks = { lessons, probes: { PROBES, probeError } };
 // The Lessons whose Steps changed since the legacy commit, so a Terminal app
-// save of them starts again at the overview: i-2's W4 is self-verified (304).
-const CHANGED_SINCE_LEGACY = ["i-2"];
+// save of them starts again at the overview: i-2's W4 is self-verified (304),
+// and i-capstone has a commit-setup beat before delegation (313).
+const CHANGED_SINCE_LEGACY = ["i-2", "i-capstone"];
 
 describe("course manifest", () => {
   test("validates and compiles all 23 Lessons from their pages and step files", () => {
