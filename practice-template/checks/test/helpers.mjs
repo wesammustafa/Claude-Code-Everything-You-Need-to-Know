@@ -27,6 +27,12 @@ export function repo(files = {}, { nested = false } = {}) {
   return dir;
 }
 
+// Writes `files` at the git root above a nested repo's project/ folder, where
+// Claude Code keeps some files (ticket 295).
+export function rootWrite(dir, files) {
+  write(dirname(dir), files);
+}
+
 export function write(dir, files) {
   for (const [path, text] of Object.entries(files)) {
     mkdirSync(dirname(join(dir, path)), { recursive: true });

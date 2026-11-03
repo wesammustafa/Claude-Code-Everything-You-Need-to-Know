@@ -20,6 +20,7 @@ import {
   normalize,
   parseLesson,
   pending,
+  FACTS,
   PROJECT,
   READS,
   rungsOf,
@@ -1140,6 +1141,7 @@ test("a file check is done once its file holds a line, and a fresh one once it c
       key: "Y1.0",
       path: ".practice/b-2-plan.txt",
       dir: PROJECT,
+      alt: FACTS.root,
     },
   );
   assert.equal(d.state.phase, "step-down");
@@ -1681,6 +1683,7 @@ test("h at CHALLENGE: on a stale fresh beat, r is the try", () => {
     path,
     asked: d.state.asks,
     dir: PROJECT,
+    alt: FACTS.root,
   });
   d.send({
     type: "file",

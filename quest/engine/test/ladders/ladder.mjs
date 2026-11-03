@@ -15,6 +15,7 @@ import { chmodSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseLesson } from "../../src/course.ts";
+import { fingerprint } from "../../src/content.ts";
 import { lessons } from "../../../../practice-template/checks/lessons/index.mjs";
 import { openRepo } from "../../../../practice-template/checks/repo.mjs";
 import {
@@ -79,6 +80,11 @@ function climbToCheck(lesson, step, index, targets, sc, hint) {
           beat: index,
           warm: [],
           levels: ["hinted", "challenge"],
+          // Made under the Lesson's current steps, so a Lesson changed since
+          // the legacy commit keeps its place.
+          fingerprint: fingerprint(
+            liveCourse.find((l) => l.id === lesson.id).content,
+          ),
         },
       },
     },

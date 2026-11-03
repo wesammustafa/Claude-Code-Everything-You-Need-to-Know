@@ -208,7 +208,7 @@ Before you open a pull request, run the guide's checks on your working tree, fro
 node .github/scripts/check.mjs
 ```
 
-It needs Node.js LTS, git, Ruby (for YAML), jq (for the examples' smoke tests), [shellcheck](https://github.com/koalaman/shellcheck) and [lychee](https://github.com/lycheeverse/lychee) 0.24 on your `PATH`; set `LYCHEE` or `SHELLCHECK` to point at a binary elsewhere. Each rule prints `PASS`, `FAIL`, `WARN` or `SKIP` with its name, and the command exits non-zero if any rule fails. Pull request CI runs the same command with `--base` set to the target branch; diff-scoped rules compare against `origin/main` locally.
+It needs Node.js LTS, git, Ruby (for YAML), jq (for the examples' smoke tests), [shellcheck](https://github.com/koalaman/shellcheck) and [lychee](https://github.com/lycheeverse/lychee) 0.24 on your `PATH`; set `LYCHEE` or `SHELLCHECK` to point at a binary elsewhere. Each rule prints `PASS`, `FAIL`, `WARN` or `SKIP` with its name, and the command exits non-zero if any rule fails. Pull request CI runs the same command with `--base` set to the target branch; diff-scoped rules compare against `origin/main` locally. Pull request CI runs only the jobs its changed files need (`.github/scripts/ci-scope.mjs`): a change to README, `assets/`, the check scripts or the weekly workflows runs only these checks, a change to the app's unit tests adds the `quest` job, and anything that reaches the build, the template or the app runs every job, as a push to `main` does.
 
 | Rule | Fails when |
 |---|---|

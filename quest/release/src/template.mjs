@@ -151,8 +151,8 @@ export function layoutProblems(dir) {
     if (!existsSync(join(dir, at))) problems.push(`${at} is missing`);
   const pkg = readJson(join(dir, "package.json"));
   if (pkg) {
-    if (JSON.stringify(pkg.scripts) !== '{"learn":"node learn/app.mjs"}')
-      problems.push("package.json must have only the learn script");
+    if (JSON.stringify(pkg.scripts) !== JSON.stringify(rootPackage().scripts))
+      problems.push("package.json must have only the learn and check scripts");
     for (const key of [
       "dependencies",
       "devDependencies",
@@ -280,14 +280,17 @@ The app in \`learn/\` is under the [guide repository's license](${REPO}/blob/${r
 `;
 }
 
-/** The copy's root package.json: only `learn`, no dependencies. */
+/** The copy's root package.json: `learn`, plus `check`, which runs project's Check from the root; no dependencies. */
 export function rootPackage() {
   return {
     name: "claude-code-practice",
     version: "0.0.0",
     private: true,
     type: "module",
-    scripts: { learn: "node learn/app.mjs" },
+    scripts: {
+      learn: "node learn/app.mjs",
+      check: "cd project && node ../checks/run.mjs",
+    },
     engines: { node: ">=22" },
   };
 }

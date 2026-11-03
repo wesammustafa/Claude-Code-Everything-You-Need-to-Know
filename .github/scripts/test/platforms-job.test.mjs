@@ -42,7 +42,10 @@ test('the platforms job runs every step, in order, with no condition', () => {
     'npm run template -- "$RUNNER_TEMP/tpl"',
     'npm run startup -- "$RUNNER_TEMP/tpl"',
   ]);
-  assert.doesNotMatch(platforms, /^\s+(?:- )?if:/m);
+  // The one if: is the job's own, from the changes job; no step is skipped.
+  assert.deepEqual([...platforms.matchAll(/^\s+(?:- )?if:.*$/gm)].map((m) => m[0]), [
+    "    if: needs.changes.outputs.platforms == 'true'",
+  ]);
   assert.doesNotMatch(platforms, /continue-on-error/);
 });
 
@@ -63,11 +66,11 @@ test('the scripts the platforms job runs guard main() with isMain', () => {
   }
 });
 
-test('the required checks job needs platforms and fails unless it succeeded', () => {
+test('the required checks job needs platforms and fails unless it succeeded or was not needed', () => {
   const checks = job('checks');
   assert.match(checks, /^\s+needs: \[[^\]]*\bplatforms\b[^\]]*\]$/m);
   assert.match(checks, /^\s+if: always\(\)$/m);
-  assert.match(checks, /all\(\.\[\]; \.result == "success"\)/);
+  assert.match(checks, /\.changes\.result == "success" and \.guide\.result == "success" and all\(\.\[\]; \.result == "success" or \.result == "skipped"\)/);
 });
 
 test('no package script single-quotes a glob', () => {
