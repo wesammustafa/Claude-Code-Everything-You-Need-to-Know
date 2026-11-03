@@ -22,7 +22,7 @@ const PAST_BEGINNER = {
       ]),
   ),
 };
-const MINE = "/home/sam/mine";
+const MINE = "/home/ali/mine";
 const found = (path: string): FolderLook => ({
   path,
   missing: false,
@@ -36,9 +36,9 @@ function given(over: Partial<DirOptions> = {}) {
   const looked: string[] = [];
   const options: DirOptions = {
     dir: MINE,
-    cwd: "/home/sam",
-    env: { HOME: "/home/sam" },
-    root: "/home/sam/copy",
+    cwd: "/home/ali",
+    env: { HOME: "/home/ali" },
+    root: "/home/ali/copy",
     course,
     saved: PAST_BEGINNER,
     look: (path) => {
@@ -62,9 +62,9 @@ describe("dirAhead", () => {
   });
 
   test("a relative path is from the folder npm run learn ran in", async () => {
-    const { options, checked } = given({ dir: "code/app", cwd: "/home/sam" });
+    const { options, checked } = given({ dir: "code/app", cwd: "/home/ali" });
     await dirAhead(options);
-    expect(checked).toEqual(["/home/sam/code/app"]);
+    expect(checked).toEqual(["/home/ali/code/app"]);
   });
 
   test("on a Beginner lesson it is refused before anything is looked at", async () => {

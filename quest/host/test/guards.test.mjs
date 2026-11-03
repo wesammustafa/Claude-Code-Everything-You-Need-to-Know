@@ -136,7 +136,7 @@ test("prerequisite asks wait in line, and the latest takes the place of one wait
         {
           type: "prereqs",
           lesson: "i-1",
-          dir: "/home/sam/mine",
+          dir: "/home/ali/mine",
           requires: s.course.find((l) => l.id === "i-1").content.requires,
           asked: input.asked,
         },
@@ -150,7 +150,7 @@ test("prerequisite asks wait in line, and the latest takes the place of one wait
       format: 1,
       welcomed: true,
       lessons: finishedBefore("i-1", course),
-      folders: { intermediate: "/home/sam/mine" },
+      folders: { intermediate: "/home/ali/mine" },
     },
   });
   await host.open();
