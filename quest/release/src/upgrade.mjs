@@ -35,8 +35,10 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { sectionBlocks } from "../../../.github/scripts/lib/markdown.mjs";
 import {
+  PATCHES,
   SAVE,
   STARTER,
+  rewritePatchPaths,
   rewriteProjectPackage,
 } from "../../../practice-template/checks/upgrade.mjs";
 import { isMain } from "./is-main.mjs";
@@ -297,8 +299,29 @@ export function runCommands({ copy, lines, shell, scratch, env }) {
   return { ok: problems.length === 0, problems, output };
 }
 
+/**
+ * The texts the upgrade rewrites as it moves them: the lessons' patches, by
+ * their paths in the old layout.
+ * @param {string} copy
+ */
+export function rewrittenTexts(copy) {
+  return Object.fromEntries(
+    PATCHES.filter((p) => existsSync(join(copy, p))).map((p) => [
+      p,
+      readFileSync(join(copy, p), "utf8"),
+    ]),
+  );
+}
+
 /** Step 6: `after` holds every `before` path's bytes at its mapped path, and nothing the upgrade should remove. */
-export function bytesMoved({ copy, before, after, oldPackage, env }) {
+export function bytesMoved({
+  copy,
+  before,
+  after,
+  oldPackage,
+  oldPatches = {},
+  env,
+}) {
   const learner = Object.keys(before).filter(
     (p) =>
       inStarter(p) ||
@@ -318,6 +341,15 @@ export function bytesMoved({ copy, before, after, oldPackage, env }) {
         rewriteProjectPackage(oldPackage)
       )
         problems.push(`${to} is not the old one with check run from project/`);
+      continue;
+    }
+    if (from in oldPatches) {
+      if (
+        !existsSync(join(copy, to)) ||
+        readFileSync(join(copy, to), "utf8") !==
+          rewritePatchPaths(oldPatches[from])
+      )
+        problems.push(`${to} is not the old one with its paths from the root`);
       continue;
     }
     if (sameBytes({ [to]: before[from] }, { [to]: after[to] }).length)
@@ -492,6 +524,7 @@ export async function runUpgradeProof({
   let lines = [];
   let before = null;
   let oldPackage = "";
+  let oldPatches = {};
   const plan = [
     () => {
       const r = readmeCommands(
@@ -512,12 +545,20 @@ export async function runUpgradeProof({
     () => {
       const r = fn.learnerFiles({ repoRoot, copy, env });
       oldPackage = readFileSync(join(copy, "package.json"), "utf8");
+      oldPatches = rewrittenTexts(copy);
       before = snapshot(copy);
       return r;
     },
     () => fn.runCommands({ copy, lines, shell, scratch, env }),
     () =>
-      fn.bytesMoved({ copy, before, after: snapshot(copy), oldPackage, env }),
+      fn.bytesMoved({
+        copy,
+        before,
+        after: snapshot(copy),
+        oldPackage,
+        oldPatches,
+        env,
+      }),
     () => fn.checkRuns({ copy, env }),
     () => fn.learnResumes({ repoRoot, copy, env }),
   ];

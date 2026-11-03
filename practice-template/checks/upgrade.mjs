@@ -13,8 +13,9 @@
 //     git mv for what git tracks, so each file keeps its contents;
 //   3 moves the lesson files under .practice/ to project/.practice/, leaving
 //     the progress save and its unreadable-save backups at the root;
-//   4 points project/'s check script at ../checks/run.mjs, and takes the
-//     root package.json and .gitignore from the template;
+//   4 points project/'s check script at ../checks/run.mjs, takes the
+//     root package.json and .gitignore from the template, and starts the
+//     paths in the lessons' patches at the copy's root, where git reads them;
 //   5 removes the Terminal app's last files, moves any untracked file left
 //     in checks/, capstone/ or learn/ to .practice/upgrade-kept/ and names
 //     it, and leaves every other file, the Learner's own workflows and notes
@@ -41,6 +42,21 @@ export const REPLACED = ['checks', 'capstone', 'learn'];
 export const KEPT = '.practice/upgrade-kept';
 
 export const CHECK = 'node ../checks/run.mjs';
+
+/** The lessons' patches, in project/: `git apply` reads their paths from the copy's root. */
+export const PATCHES = ['practice/b-3/protocol-relative.patch'];
+
+/**
+ * A patch's text with each path that starts at project/'s top starting at
+ * the copy's root instead. Paths already under project/ and /dev/null stay,
+ * and so do the line endings.
+ * @param {string} text
+ */
+export function rewritePatchPaths(text) {
+  return text
+    .replace(/^diff --git a\/(?!project\/)(\S+) b\/(?!project\/)(\S+)/gm, 'diff --git a/project/$1 b/project/$2')
+    .replace(/^(---|\+\+\+) ([ab])\/(?!project\/)/gm, '$1 $2/project/');
+}
 
 /**
  * project/package.json's text with `check` run from project/ and the root's
@@ -203,6 +219,15 @@ function move(dir) {
   if (existsSync(pkg)) {
     writeFileSync(pkg, rewriteProjectPackage(readFileSync(pkg, 'utf8')));
     git(['add', '--', 'project/package.json'], dir);
+  }
+  for (const name of PATCHES) {
+    const file = join(project, name);
+    if (!existsSync(file)) continue;
+    const text = readFileSync(file, 'utf8');
+    const rewritten = rewritePatchPaths(text);
+    if (rewritten === text) continue;
+    writeFileSync(file, rewritten);
+    if (tracked(dir, `project/${name}`)) git(['add', '--', `project/${name}`], dir);
   }
   for (const path of ['package.json', '.gitignore']) {
     writeFileSync(join(dir, path), execFileSync('git', ['show', `FETCH_HEAD:./${path}`], { cwd: dir }));
