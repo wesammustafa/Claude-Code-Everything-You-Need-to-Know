@@ -1439,6 +1439,9 @@ test('the stand-in stops a script at the time limit, with whatever the script le
     const run = runStubbed(openRepo(dir), SCRIPT, { args: () => [beat], timeout: 1000 });
     assert.equal(run.timedOut, true);
     assert.ok(Date.now() - started < 10_000, 'the run went on past the time limit');
+    // A write the loop had begun as it was stopped may land a moment later:
+    // let it, then any further write means the loop still runs.
+    await wait(300);
     const last = statSync(beat).mtimeMs;
     await wait(600);
     assert.equal(statSync(beat).mtimeMs, last, 'the background loop is still running');
