@@ -4,8 +4,9 @@
 # run, commit the pull request workflow and its run record, tear the
 # workflow down, and land the last bug fix with its test.
 set -eu
-# The worktrees go where `claude --worktree` makes them, as in lesson 1.
-wt=.claude/worktrees
+# The worktrees go where `claude --worktree` makes them, at the git root
+# above project/, as in lesson 1.
+wt="$(git rev-parse --show-toplevel)/.claude/worktrees"
 git worktree add -q -b worktree-review-script "$wt/review-script"
 git worktree add -q -b worktree-team-kit "$wt/team-kit"
 # Each worktree is a checkout of the whole copy, so project/ is inside it.

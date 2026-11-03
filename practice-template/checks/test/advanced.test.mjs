@@ -180,6 +180,62 @@ test('a-1 fails for a rule that also ignores the rest of .claude/, quoting it', 
   }
 });
 
+// A repository laid out as a copy is, after lesson a-1: the checks run in
+// project/, and `claude --worktree` makes the worktrees at the git root
+// above it. `rootIgnore` is the root's committed .gitignore, `projectIgnore`
+// project/'s, and `pending` is written over the root's afterwards.
+function copyRepo({ rootIgnore = IGNORE, projectIgnore = '.practice/\n', pending } = {}) {
+  return () => {
+    const dir = repo({ '.gitignore': projectIgnore, 'README.md': '# demo\n' }, { nested: true });
+    const top = dirname(dir);
+    rootWrite(dir, { '.gitignore': rootIgnore });
+    commit(top, 'Start');
+    if (pending) rootWrite(dir, { '.gitignore': pending });
+    const names = ['docs-pass', 'test-pass'];
+    for (const name of names) git(top, 'worktree', 'add', '-q', '-b', `worktree-${name}`, `.claude/worktrees/${name}`);
+    for (const name of names) {
+      const at = join(top, '.claude', 'worktrees', name);
+      write(join(at, 'project'), { [`work/${name}.txt`]: `${name}\n` });
+      commit(at, `Work in ${name}`);
+    }
+    write(dir, { [LISTING]: `${git(dir, 'worktree', 'list', '--porcelain')}\n` });
+    git(dir, 'merge', '-q', '--ff-only', 'worktree-docs-pass');
+    git(dir, 'merge', '-q', '--no-ff', '--no-edit', 'worktree-test-pass');
+    for (const name of names) git(top, 'worktree', 'remove', `.claude/worktrees/${name}`);
+    return dir;
+  };
+}
+
+test('a-1 asks the git root for the rule when the checks run in project/ below it, as in a copy', () => {
+  withRepo(copyRepo(), (dir) => {
+    const { code, out } = a1(dir);
+    assert.equal(code, 0, out);
+  });
+  // The rule only in project/.gitignore misses the worktrees at the root.
+  withRepo(copyRepo({ rootIgnore: '.practice/\n', projectIgnore: IGNORE }), (dir) => {
+    const { code, out } = a1(dir);
+    assert.equal(code, 1, out);
+    assert.match(out, /No committed `\.gitignore` ignores `\.claude\/worktrees\/`/);
+    assert.match(out, /Claude Code makes that folder at the repository root, the folder above `project\/`, so that `\.gitignore` is `\.\.\/\.gitignore`\./);
+  });
+  withRepo(copyRepo({ rootIgnore: '.practice/\n', pending: IGNORE }), (dir) => {
+    const { code, out } = a1(dir);
+    assert.equal(code, 1, out);
+    assert.match(out, /`\.\.\/\.gitignore` ignores `\.claude\/worktrees\/`, but that rule isn't committed\. Run `git add \.\.\/\.gitignore`/);
+  });
+  // A root rule that hides the shared settings, the root's or project/'s.
+  for (const [rootIgnore, quoted] of [
+    ['.practice/\n.claude/\n', 'Line 2 of `../.gitignore`, `.claude/`, also ignores `../.claude/settings.json`'],
+    ['.practice/\n.claude/worktrees/\nproject/.claude/\n', 'Line 3 of `../.gitignore`, `project/.claude/`, also ignores `.claude/settings.json`'],
+  ]) {
+    withRepo(copyRepo({ rootIgnore }), (dir) => {
+      const { code, out } = a1(dir);
+      assert.equal(code, 1, out);
+      assert.ok(out.includes(quoted), out);
+    });
+  }
+});
+
 test('a-1 says how to save the listing when there is none, and does not pass the cleanup without it', () => {
   withRepo(parallelRepo({ listing: () => null }), (dir) => {
     const { code, out } = a1(dir);

@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { chmodSync, cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, cpSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { delimiter, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -134,6 +134,45 @@ test('a folder given without --dir is refused, not silently ignored', () => {
     assert.match(out, /node checks\/run\.mjs b-1 --dir/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// A copy's root script is `cd project && node ../checks/run.mjs`, so a
+// relative --dir typed at the root reaches run.mjs from project/. npm says
+// where it was typed in INIT_CWD.
+test('a relative --dir given to npm run check is from the folder it was typed in, and no --dir is the folder the check runs in', () => {
+  // The real path: on macOS the temporary folder is a symlink (/var to
+  // /private/var), and the check names a folder by the path it resolves.
+  const top = realpathSync.native(mkdtempSync(join(tmpdir(), 'practice-')));
+  try {
+    const project = join(top, 'project');
+    const mine = join(top, 'mine');
+    mkdirSync(project);
+    execFileSync('git', ['init', '-q', mine]);
+    write(project, { 'practice/b-1/onboarding.md': correctedNote });
+    const run = (args, env) => {
+      const { GITHUB_ACTIONS, NODE_TEST_CONTEXT, npm_lifecycle_event, INIT_CWD, ...rest } = process.env;
+      const result = spawnSync(process.execPath, [runner, ...args], { cwd: project, encoding: 'utf8', env: { ...rest, ...versionEnv(top), ...env } });
+      return { code: result.status, out: `${result.stdout}${result.stderr}` };
+    };
+    const typed = { npm_lifecycle_event: 'check', INIT_CWD: top };
+    // From the copy's root, `--dir mine` is top/mine, and `--dir project` is project/.
+    let { code, out } = run(['b-1', '--dir', 'mine'], typed);
+    assert.equal(code, 1, out);
+    assert.match(out, /Your turn uses the note in your practice copy/);
+    ({ code, out } = run(['b-1', '--dir', 'project'], typed));
+    assert.equal(code, 0, out);
+    // Without --dir, the folder the check runs in, wherever npm was run from.
+    ({ code, out } = run(['b-1'], typed));
+    assert.equal(code, 0, out);
+    // Run by node itself, or by another npm script, a path is from the current folder.
+    ({ code, out } = run(['b-1', '--dir', 'mine']));
+    assert.equal(code, 2, out);
+    assert.ok(out.includes(`no such folder: ${join(project, 'mine')}`), out);
+    ({ code, out } = run(['b-1', '--dir', 'mine'], { npm_lifecycle_event: 'test', INIT_CWD: top }));
+    assert.equal(code, 2, out);
+  } finally {
+    rmSync(top, { recursive: true, force: true });
   }
 });
 

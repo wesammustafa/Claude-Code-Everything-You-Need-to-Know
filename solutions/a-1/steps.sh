@@ -3,11 +3,13 @@
 # worktrees, save the listing while both exist, then merge both branches
 # and remove the worktrees.
 set -eu
-printf '.claude/worktrees/\n' >> .gitignore
-git add .gitignore
+# `claude --worktree` makes .claude/worktrees/ at the git root, the copy's
+# root above project/, so the rule goes in the .gitignore there.
+top=$(git rev-parse --show-toplevel)
+printf '.claude/worktrees/\n' >> "$top/.gitignore"
+git add :/.gitignore
 git commit -q -m "Ignore Claude Code worktrees"
-here=$(pwd -P)
-wt="$here/.claude/worktrees"
+wt="$top/.claude/worktrees"
 # Each worktree is a checkout of the whole copy, so project/ is inside it.
 git worktree add -q -b worktree-docs-pass "$wt/docs-pass"
 git worktree add -q -b worktree-test-pass "$wt/test-pass"
