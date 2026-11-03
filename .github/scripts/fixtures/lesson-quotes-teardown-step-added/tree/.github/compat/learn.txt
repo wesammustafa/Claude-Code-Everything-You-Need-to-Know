@@ -1,1 +1,0 @@
-a-capstone docs/advanced/capstone.md

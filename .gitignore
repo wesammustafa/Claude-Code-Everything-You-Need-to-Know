@@ -16,10 +16,14 @@
 # Logs folder
 logs/
 
-# Secrets
+# Secrets and personal Claude Code files
 .env
 .env.*
 !.env.example
+.claude.json
+CLAUDE.local.md
+.claude/settings.local.json
+.claude/worktrees/
 # Claude Code Quest: dependencies, build output under quest/, Playwright reports
 node_modules/
 quest/*/dist/

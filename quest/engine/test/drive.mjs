@@ -166,10 +166,10 @@ export const bareExit = course.map((l) =>
 );
 // The folder a learner gives for a lesson that runs in a new copy of the
 // template.
-export const NEW_COPY = "/home/sam/claude-actions-practice";
+export const NEW_COPY = "/home/ali/claude-actions-practice";
 export const FACTS = {
-  root: "/home/sam/claude-code-practice",
-  name: "Sam",
+  root: "/home/ali/claude-code-practice",
+  name: "Ali",
   gitError: null,
   practiceDir: true,
   codespace: false,
