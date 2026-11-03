@@ -119,7 +119,7 @@ export function LessonComplete() {
           <p className="text-sm text-muted">{`${String(passed)} of ${String(total)} lines pass`}</p>
           <CheckLines
             lines={lesson.checkSummary.map((line) => ({
-              text: line.text,
+              text: <InlineText text={line.text} />,
               ok: line.pass,
             }))}
           />

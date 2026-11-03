@@ -484,3 +484,53 @@ test('session: b-2 "Confirm no edit yet" waits for the session, says Not yet, th
     await copy.dispose();
   }
 });
+
+test('slow check: i-5 "Commit the hooks" runs its gate item on arrival', async ({
+  page,
+}) => {
+  // The beat checks only the slow gate item (ticket 309): it runs on
+  // arrival, so a row shows without Check again, never the slow-wait line.
+  const copy = practiceCopy({ through: "i-5" });
+  try {
+    copy.write(
+      ".practice/learn.json",
+      saveAt("i-5", "Y4", 1, folderFor("i-5", copy)),
+    );
+    // No recordStates: it holds snapshots until a line shows, and this beat
+    // shows none while its first look runs.
+    const sent = actionsOf(page);
+    await copy.start();
+    const opened = page.waitForResponse(
+      (response) =>
+        response.url().endsWith("/api/actions") &&
+        response.request().postData()?.includes('"lesson.open"') === true,
+    );
+    await openAt(page, copy);
+    const reply = (await (await opened).json()) as {
+      snapshot?: { lesson?: { beat?: { status?: string } } };
+    };
+    expect(reply.snapshot?.lesson?.beat?.status).toBe("checking");
+    await expect(heading(page)).toHaveText("Commit the hooks");
+    await expect(lines(page).last()).toHaveAttribute(
+      "data-state",
+      /^(ok|not-yet)$/,
+      { timeout: 60_000 },
+    );
+    await expect(page.locator("main")).not.toContainText(
+      "Everything else passes",
+    );
+    // Past a couple of host polls (POLL_CHECK_MS), which run without the
+    // slow item: the row stays.
+    await page.waitForTimeout(5_000);
+    await expect(page.locator("main")).not.toContainText(
+      "Everything else passes",
+    );
+    await expect(lines(page).last()).toHaveAttribute(
+      "data-state",
+      /^(ok|not-yet)$/,
+    );
+    expect(sent.filter((a) => a.type === "check.run")).toHaveLength(0);
+  } finally {
+    await copy.dispose();
+  }
+});

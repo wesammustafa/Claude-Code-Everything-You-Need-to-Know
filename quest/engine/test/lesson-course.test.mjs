@@ -28,6 +28,7 @@ import {
   where,
   keyOf,
 } from "./drive.mjs";
+import { project } from "../src/index.ts";
 
 // A lesson's overview, opened by the Learner.
 const onOverview = (id, saved = {}) => {
@@ -439,4 +440,75 @@ test("a passed Check step counts the run that passed it: a later poll that leave
       `${id} after a poll`,
     );
   }
+});
+
+// The completion screen's check lines (310): every item, slow ones from the
+// run that passed, not the last poll's placeholders.
+// spec: verify.value.check-all
+test("the completion summary lists every Check item, slow ones from the run that passed (310)", () => {
+  const ids = course
+    .filter(
+      (l) =>
+        l.content &&
+        SLOW[l.id] &&
+        l.content.steps.find((st) => st.id === "C")?.beats[0].verify.all,
+    )
+    .map((l) => l.id);
+  assert.ok(ids.includes("i-7"), ids.join(" "));
+  for (const id of ids) {
+    const d = driver({
+      course,
+      saved: save({
+        lessons: {
+          ...finishedBefore(id),
+          [id]: { step: "C", beat: 0, warm: [] },
+        },
+      }),
+    });
+    d.open(id);
+    const asked = d.run().effects.find((e) => e.type === "check")?.asked;
+    assert.ok(asked, id);
+    d.send({ ...result(id, () => true, { slow: false }), asked });
+    assert.ok(["done", "already"].includes(d.state.beat.status), id);
+    d.send(result(id, () => true, { slow: true }));
+    playUntil(d, (s) => s.phase === "complete");
+    assert.deepEqual(
+      project(d.state).lesson.checkSummary,
+      itemsOf(id).map((text) => ({ text, pass: true })),
+      id,
+    );
+  }
+  // i-7's three lines, its slow item 2 among them.
+  assert.equal(itemsOf("i-7").length, 3);
+});
+
+// a-capstone's last check beat is `check 8`, after `check all` (310).
+test("a-capstone's completion summary keeps every item of its check all beat after check 8 and a check error (310)", () => {
+  const d = driver({
+    course,
+    saved: save({ lessons: finishedBefore("a-capstone") }),
+  });
+  d.open("a-capstone");
+  playUntil(d, (s) => s.phase === "complete");
+  const all = itemsOf("a-capstone").map((text) => ({ text, pass: true }));
+  assert.deepEqual(project(d.state).lesson.checkSummary, all);
+  d.send({
+    type: "check-error",
+    lesson: "a-capstone",
+    message: "it took too long",
+  });
+  assert.deepEqual(project(d.state).lesson.checkSummary, all);
+});
+
+// A replay starts its summary afresh: the earlier play's passing runs go (310).
+test("restarting a finished lesson clears the passed runs its summary would show (310)", () => {
+  const d = driver({
+    course,
+    saved: save({ lessons: finishedBefore("i-7") }),
+  });
+  d.open("i-7");
+  playUntil(d, (s) => s.phase === "complete");
+  assert.ok(d.state.checks["i-7"]?.passed?.length);
+  d.restart("i-7");
+  assert.equal(d.state.checks["i-7"]?.passed, undefined);
 });
