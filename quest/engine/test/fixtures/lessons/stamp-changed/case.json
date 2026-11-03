@@ -1,6 +1,4 @@
 {
-  "origin": "lesson-quotes-stamp-changed",
-  "was": "fail",
   "expect": "fail",
   "about": "The page was re-stamped, so the step file must be re-verified and re-stamped too.",
   "problems": [

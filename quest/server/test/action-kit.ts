@@ -30,7 +30,7 @@ export function questHost({
     root: "/copy",
     course: loadCourse(TEMPLATE),
     saved,
-    env: { HOME: "/home/sam" },
+    env: { HOME: "/home/ali" },
     platform: "linux",
     adapters,
     instance: INSTANCE,

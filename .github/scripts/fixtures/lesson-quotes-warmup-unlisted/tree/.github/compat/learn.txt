@@ -1,2 +1,0 @@
-b-1 docs/beginner/01-demo.md
-b-2 docs/beginner/02-demo.md

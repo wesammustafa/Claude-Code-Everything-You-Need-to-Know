@@ -1289,7 +1289,7 @@ export const overviews = [
     folderQuestion: {
       key: "intermediate",
       asks: "work",
-      current: "/home/sam/work-intermediate",
+      current: "/home/ali/work-intermediate",
       problem: null,
       open: false,
       checking: false,
@@ -2395,7 +2395,7 @@ export const overviews = [
     folderQuestion: {
       key: "advanced",
       asks: "work",
-      current: "/home/sam/work-advanced",
+      current: "/home/ali/work-advanced",
       problem: null,
       open: false,
       checking: false,
@@ -2884,7 +2884,7 @@ export const overviews = [
     folderQuestion: {
       key: "a-5",
       asks: "new-copy",
-      current: "/home/sam/work-a-5",
+      current: "/home/ali/work-a-5",
       problem: null,
       open: false,
       checking: false,
@@ -3239,7 +3239,7 @@ export const overviews = [
     folderQuestion: {
       key: "a-capstone",
       asks: "new-copy",
-      current: "/home/sam/work-a-capstone",
+      current: "/home/ali/work-a-capstone",
       problem: null,
       open: false,
       checking: false,

@@ -18,8 +18,8 @@ import {
   WORK,
 } from "./scripted.mjs";
 
-const MINE = "/home/sam/mine";
-const OTHER = "/home/sam/other";
+const MINE = "/home/ali/mine";
+const OTHER = "/home/ali/other";
 const fine = (path) => ({
   path,
   missing: false,
@@ -323,7 +323,7 @@ test("close while git answers: open gives null, and start arms nothing", async (
   });
   const opening = host.open();
   host.close();
-  answer([null, "Sam"]);
+  answer([null, "Ali"]);
   assert.equal(await opening, null);
   assert.equal(host.snapshot(), null);
   host.start();

@@ -212,7 +212,7 @@ It needs Node.js LTS, git, Ruby (for YAML), jq (for the examples' smoke tests), 
 
 | Rule | Fails when |
 |---|---|
-| `internal-links` | A link or fragment inside the repo does not resolve, outside `course/steps/`, `practice-template/learn/lessons/` and `quest/engine/test/fixtures/reducer-course/` (whose quotes are checked against their pages), and `practice-template/project/samples/` (the linkcheck tests' deliberate broken link) |
+| `internal-links` | A link or fragment inside the repo does not resolve, outside `course/steps/`, `practice-template/learn/lessons/` and `quest/engine/test/fixtures/reducer-course/` (whose quoted links resolve from their Guide pages), and `practice-template/project/samples/` (the linkcheck tests' deliberate broken link) |
 | `anchor-diff` | An anchor in `anchors.txt`, or on the base branch, is gone |
 | `stub-paths` | A page path in `paths.txt` is gone |
 | `stamps` | A stamped page's Stamp is missing or malformed, or the trust strip disagrees with the CHANGELOG |
@@ -224,7 +224,8 @@ It needs Node.js LTS, git, Ruby (for YAML), jq (for the examples' smoke tests), 
 | `static-validation` | JSON, YAML, skill or agent frontmatter, a workflow script or a shell script does not parse or lint |
 | `inertness` | `examples/`, `practice-template/` or `solutions/` holds a path Claude Code can load on its own, or a marketplace manifest not renamed to `dot-claude-plugin/`, or the repository root holds a `.claude-plugin/` folder |
 | `smoke-tests` | An example's `test.sh` fails (only when the change touches `examples/`) |
-| `lesson-quotes` | With `LEARN_DIR` set to a practice template checkout's `learn/lessons` folder, or in the weekly run: a quoted line, a code block, the title, the Stamp or a step count in a lesson file of the template's learning app no longer matches its lesson (a warm-up's quotes and code blocks, the earlier lesson or the level index its `from` line names), or a code block has no closing fence. A step count compares a `Worked example`, `Your turn`, `The task` or `Tear down` `step N of M` heading with the numbered steps under that heading in the lesson; a `Your turn part N of M` heading is not counted. A level index page (`docs/<level>/README.md`) can be quoted from any level: `learn.txt` lists it as `<level>-index`, and on any run, pull requests included, the check fails when that id names a different page; only a warm-up names it, as `from: <level>-index`. A code block must equal a fenced block of the lesson line for line, blank lines included, less the indent of the lesson's fence, which must be at most three spaces and outside a quote or alert. On a pull request that changes a lesson or level index listed in `learn.txt`, it only warns |
+
+Step-file quotes are checked by the lesson test, `npm run test:lessons`, which the quest job runs on every pull request.
 
 Each rule has known-bad fixtures under `.github/scripts/fixtures/`, one folder per case: `fixture.json` names the rule, the expected result and, optionally, `output` patterns the check's output must match, `tree/` holds the files, `base/` the state before a change, and `generate.mjs` writes anything that would be live Claude Code config if committed. If you change a rule, run the self-test too:
 
@@ -241,7 +242,6 @@ Scheduled checks keep watch between editions. Each opens or updates one tracking
 | Weekly external links | Mondays | Broken external links |
 | Daily expiry markers | Daily | Expired facts in the guide |
 | Weekly version drift | Mondays | New Claude Code stable release |
-| Weekly lesson quotes | Mondays | Lesson quotes drifted from a lesson |
 
 Every month, the maintainer:
 
@@ -300,7 +300,7 @@ Callouts are GitHub alerts, at most two per lesson, each with one meaning:
 - The only animation is README's Pip GIFs, `assets/readme/pip-*.gif`: captures of Claude Code Quest that show Pip reacting, each with full alt text and within the Pip GIF budget below. No other page shows them.
 - Pip's art comes only from his rig (`quest/client/pip/`, rendered by the app's runtime or `npm run pip:build`), his icon SVG, or captures of the app. Never redraw him by hand.
 - The `images` check enforces the alt text, the Mermaid lines, the one-animation rule (it reads each PNG and WebP's header and fails an animated PNG or WebP), and the names, references and budget below.
-- New images go under `assets/`: `assets/brand/` for the guide's identity, `assets/lessons/<lesson-id>/` for captures and `assets/readme/` for README's. Names are kebab-case, and paths are explicit and relative. Budget: an SVG up to 50 KB, a capture up to 200 KB, the social card under 1 MB, and each Pip GIF up to `PIP_GIF_BUDGET`, 900 KB (the largest measured GIF plus about 15%). Every image that is not a capture ships its editable source beside it. Hand-drawn SVG is for the guide's identity pieces only.
+- New images go under `assets/`: `assets/brand/` for the guide's identity, `assets/lessons/<lesson-id>/` for captures and `assets/readme/` for README's. Names are kebab-case, and paths are explicit and relative. Budget: an SVG up to 50 KB, a capture up to 200 KB, the social card under 1 MB, and each Pip GIF up to `PIP_GIF_BUDGET`, 1400 KB (the largest measured GIF plus about 15%). Every image that is not a capture ships its editable source beside it. Hand-drawn SVG is for the guide's identity pieces only.
 
 ### Headings
 
@@ -398,6 +398,6 @@ Dependencies follow these rules:
 
 ## License
 
-By contributing, you agree your contributions are licensed under the MIT license (see [`LICENSE`](LICENSE)).
+By contributing, you agree your contributions are licensed under the PolyForm Noncommercial License 1.0.0 (see [`LICENSE`](LICENSE)).
 
 Sources: [Extend Claude with skills](https://code.claude.com/docs/en/skills), [Plugin loading reference](https://code.claude.com/docs/en/plugins/loading), [Marketplace reference](https://code.claude.com/docs/en/plugins/marketplace-reference), [Advanced setup](https://code.claude.com/docs/en/setup), [Environment variables](https://code.claude.com/docs/en/env-vars), [Settings](https://code.claude.com/docs/en/settings), [Output styles](https://code.claude.com/docs/en/output-styles), [Your first day in Claude Code](https://support.claude.com/en/articles/14552382-your-first-day-in-claude-code), [The MCP Registry](https://modelcontextprotocol.io/registry/about), [official plugin `marketplace.json`](https://github.com/anthropics/claude-plugins-official/blob/main/.claude-plugin/marketplace.json), [Basic writing and formatting syntax](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax), [Authentication](https://code.claude.com/docs/en/authentication), [Disabling and enabling a workflow](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/disable-and-enable-workflows), [REST API endpoints for repository traffic](https://docs.github.com/en/rest/metrics/traffic)

@@ -48,7 +48,7 @@ import {
   where,
 } from "./drive.mjs";
 
-const MINE = "/home/sam/code/my-app";
+const MINE = "/home/ali/code/my-app";
 const COPY = FACTS.root;
 // The course with DEMO_I1 as i-1. i-5 practises in the level's folder,
 // i-capstone is pinned to the copy, a-1 is in the Advanced folder, and a-5
@@ -108,7 +108,7 @@ test("the default work folder is the practice copy: every check, file and git ef
 // spec: folders.picked
 test("a saved work folder is where its level's checks run; Beginner stays in the copy whatever is saved", () => {
   // was learn-folder:90
-  const folders = { intermediate: MINE, advanced: "/home/sam/code/other" };
+  const folders = { intermediate: MINE, advanced: "/home/ali/code/other" };
   const d = atI1(folders);
   toW1(d);
   assert.equal(lastOf(d.effects, "check").dir, MINE);
@@ -125,7 +125,7 @@ test("a saved work folder is where its level's checks run; Beginner stays in the
   // Another lesson of each later level: its own level's folder.
   for (const [id, dir] of [
     ["i-5", MINE],
-    ["a-1", "/home/sam/code/other"],
+    ["a-1", "/home/ali/code/other"],
   ]) {
     const c = driver({
       course: withI1(),
@@ -495,7 +495,7 @@ test("f on another lesson's overview changes its level's folder; i-capstone, pin
 });
 
 // ---- pinned folders --------------------------------------------------------------
-const ACTIONS = "/home/sam/claude-actions-practice";
+const ACTIONS = "/home/ali/claude-actions-practice";
 // Its project/, where its checks run (ticket 277).
 const ACTIONS_WORK = `${ACTIONS}/project`;
 const overviewAt = (id, folders) => {
@@ -561,11 +561,11 @@ test("a-5's overview asks for its new copy and runs no check until it has one; t
   // Given its new copy, the capstone's slow items wait for r there, as any
   // lesson's do (render's unchecked condition: a folder and slow items).
   const cap = overviewAt("a-capstone", {
-    "a-capstone": "/home/sam/ci-review",
+    "a-capstone": "/home/ali/ci-review",
   });
-  assert.equal(folderOf(cap.state), "/home/sam/ci-review/project");
+  assert.equal(folderOf(cap.state), "/home/ali/ci-review/project");
   assert.ok(lessonOf(cap.state).slow.length > 0);
-  assert.equal(firstCheckDir(cap), "/home/sam/ci-review/project");
+  assert.equal(firstCheckDir(cap), "/home/ali/ci-review/project");
   // dropped: T-render fitsAll with the new copy
   d.open("a-1");
   assert.equal(folderOf(d.state), PROJECT);
@@ -621,7 +621,7 @@ test("a lesson file of a-5 asks for its new copy at its intro, with that answer 
 // spec: folders.change-drops
 test("switching folders: what the old folder's check found goes, a run still out for it decides nothing, and the next look is in the new one", () => {
   // was learn-folder:652
-  const OTHER = "/home/sam/code/other-app";
+  const OTHER = "/home/ali/code/other-app";
   const d = atI1({ intermediate: MINE });
   d.open("i-5");
   // i-5's first check beat that compares no file with an earlier state.
@@ -669,7 +669,7 @@ test("switching folders: a fresh step compares its file with how it is in the ne
       `- verify: check 0 fresh\n- evidence: ${EVIDENCE}\n`,
     ),
   });
-  const OTHER = "/home/sam/code/other-app";
+  const OTHER = "/home/ali/code/other-app";
   const d = atI1({ intermediate: MINE }, lessons);
   toW1(d);
   const items = [{ index: 0, text: "x", pass: true, hint: "" }];
@@ -1338,7 +1338,7 @@ test("worked: copy where the work folder is the practice copy itself, or not cho
 // spec: folders.change-drops
 test("switching folders keeps what a Worked example step in the copy compares its file with, and drops the old work folder's", () => {
   // was learn-folder:1556
-  const OTHER = "/home/sam/code/other-app";
+  const OTHER = "/home/ali/code/other-app";
   const d = atWorked({ intermediate: MINE });
   d.start();
   d.send({ type: "stamp", key: "W1.0", stamp: "copy-1", dir: PROJECT });
@@ -1443,7 +1443,7 @@ test("--dir on i-capstone sets Intermediate's folder; i-capstone itself stays in
 });
 
 test("--dir on a-5 sets Advanced's folder and leaves a-5's saved new copy alone", () => {
-  const COPY_A5 = "/home/sam/claude-actions-practice";
+  const COPY_A5 = "/home/ali/claude-actions-practice";
   const s = startWith(MINE, {
     lessons: finishedBefore("a-5"),
     folders: { "a-5": COPY_A5 },
@@ -1460,7 +1460,7 @@ test("--dir on a Beginner lesson changes nothing", () => {
 });
 
 test("--dir over a saved folder drops the old folder's stamps and keeps a Worked example's in the copy", () => {
-  const OTHER = "/home/sam/code/other-app";
+  const OTHER = "/home/ali/code/other-app";
   const lessons = worked();
   const s = startWith(
     OTHER,

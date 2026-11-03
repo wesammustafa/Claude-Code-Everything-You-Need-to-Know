@@ -1,6 +1,4 @@
 {
-  "origin": "lesson-quotes-any-key",
-  "was": "fail",
   "expect": "fail",
   "about": "A quote under any key counts: a because line the page no longer holds fails.",
   "problems": [
