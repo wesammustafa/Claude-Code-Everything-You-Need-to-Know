@@ -214,9 +214,9 @@ describe("folder.choose's path", () => {
 
   test.each([
     ["1,025 characters", `/${"p".repeat(1024)}`],
-    ["a NUL", "/home/sam/repo\0x"],
-    ["a CR", "/home/sam/repo\rx"],
-    ["an LF", "/home/sam/repo\nx"],
+    ["a NUL", "/home/ali/repo\0x"],
+    ["a CR", "/home/ali/repo\rx"],
+    ["an LF", "/home/ali/repo\nx"],
     ["a relative path", "repo"],
     ["a home-relative path", "~/repo"],
     ["an empty path", ""],
@@ -228,14 +228,14 @@ describe("folder.choose's path", () => {
 
   test("the resolved path is what the host is given", async () => {
     const kit = await actionKit({
-      checkFolder: () => Promise.resolve({ path: "/home/sam/real" }),
+      checkFolder: () => Promise.resolve({ path: "/home/ali/real" }),
     });
-    await kit.post(at(kit.host, choose("/home/sam/link")));
+    await kit.post(at(kit.host, choose("/home/ali/link")));
     expect(kit.dispatched).toEqual([
       {
         type: "folder.choose",
         key: "intermediate",
-        to: { path: "/home/sam/real" },
+        to: { path: "/home/ali/real" },
       },
     ]);
   });

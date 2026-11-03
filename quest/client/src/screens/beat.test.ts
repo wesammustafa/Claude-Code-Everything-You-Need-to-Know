@@ -391,7 +391,7 @@ describe("checkLines", () => {
 describe("ranInOf and isTearDown", () => {
   test("returns the snapshot's ranIn", () => {
     expect(ranInOf(beat({}))).toBeNull();
-    expect(ranInOf(beat({ ranIn: "/home/sam/work" }))).toBe("/home/sam/work");
+    expect(ranInOf(beat({ ranIn: "/home/ali/work" }))).toBe("/home/ali/work");
   });
 
   test("a Tear down step is told by its part", () => {
