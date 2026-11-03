@@ -123,7 +123,7 @@ test("a finished lesson whose steps changed keeps its Badge, the ticks of the st
     lessons: {
       "b-1": { ...finished(lesson("b-1")), done: [...done, "Y99"], help },
     },
-    folders: { intermediate: "/home/sam/mine" },
+    folders: { intermediate: "/home/ali/mine" },
   });
   const d = driver({ course: printed(), saved });
   const p = d.state.progress["b-1"];
@@ -146,7 +146,7 @@ test("a finished lesson whose steps changed keeps its Badge, the ticks of the st
   assert.equal(summaryOf(d, "b-1").complete, true);
   assert.equal(summaryOf(d, "b-1").badge, lesson("b-1").content.badge);
   assert.deepEqual(learner(d).workFolders, [
-    { key: "intermediate", path: "/home/sam/mine" },
+    { key: "intermediate", path: "/home/ali/mine" },
   ]);
   assert.deepEqual(learner(d).mastery, { install: help.W1 });
   // The app opens at the next lesson, as for any finished one.

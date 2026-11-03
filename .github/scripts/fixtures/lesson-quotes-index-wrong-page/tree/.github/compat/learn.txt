@@ -1,3 +1,0 @@
-i-1 docs/intermediate/01-demo.md
-
-beginner-index docs/intermediate/README.md

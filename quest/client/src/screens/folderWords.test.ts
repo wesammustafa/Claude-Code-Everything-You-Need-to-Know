@@ -7,14 +7,14 @@ import {
   workFolderLabel,
 } from "./folderWords";
 
-const COPY = "/home/sam/copy";
-const WIN_COPY = "C:\\Users\\sam\\copy";
+const COPY = "/home/ali/copy";
+const WIN_COPY = "C:\\Users\\ali\\copy";
 
 describe("folderWords", () => {
   test("absolute paths, POSIX and Windows; a relative or ~ path is refused here", () => {
     for (const path of [
-      "/home/sam/app",
-      "C:\\Users\\sam\\app",
+      "/home/ali/app",
+      "C:\\Users\\ali\\app",
       "d:/app",
       "\\\\server\\share",
     ])
@@ -41,7 +41,7 @@ describe("folderWords", () => {
       "relative",
       "tilde",
     ] as const) {
-      const text = refusalText(reason, "work", "/home/sam/app", COPY);
+      const text = refusalText(reason, "work", "/home/ali/app", COPY);
       expect(text).toMatch(/\.$/);
       expect(text).not.toMatch(/error|invalid/i);
       expect(text).not.toContain(String.fromCharCode(0x2014));
@@ -96,6 +96,6 @@ describe("folderWords", () => {
     expect(workFolderLabel(`${WIN_COPY}\\project`, WIN_COPY)).toBe(
       "this practice copy",
     );
-    expect(workFolderLabel("/home/sam/app", COPY)).toBe("/home/sam/app");
+    expect(workFolderLabel("/home/ali/app", COPY)).toBe("/home/ali/app");
   });
 });
