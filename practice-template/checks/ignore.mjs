@@ -62,7 +62,10 @@ function committedClean(repo, source) {
  * @param {string} probe
  */
 function committedRule(repo, probe) {
+  // Only a path inside the scratch repository can be asked about there: a
+  // probe that climbs out of repo.dir is asked from the git root instead.
   const parts = probe.split('/');
+  if (parts.includes('..') || parts.includes('.') || probe.startsWith('/')) return null;
   const files = parts.map((_, /** @type {number} */ i) => [...parts.slice(0, i), '.gitignore'].join('/'));
   let listed;
   try {
@@ -114,14 +117,16 @@ export function committedIgnore(repo, probe) {
 }
 
 // What to do when committedIgnore finds no committed rule, given the line
-// the Learner should add, such as `.claude/worktrees/`.
+// the Learner should add, such as `.claude/worktrees/`, and the .gitignore
+// it goes in, such as `../.gitignore` for a rule at a copy's git root.
 /**
  * @param {{ problem?: string, source?: string, line?: number, pattern?: string }} result
  * @param {string} line
+ * @param {string} [file]
  */
-export function ignoreHint(result, line) {
-  if (result.problem === 'negated') return `Line ${result.line} of \`${result.source}\`, \`${result.pattern}\`, keeps \`${line}\` from being ignored. Delete it, add the line \`${line}\` to \`.gitignore\` and commit.`;
-  if (result.problem === 'exclude') return `Only \`.git/info/exclude\` ignores \`${line}\`, and git never commits that file, so your teammates don't get the rule. Add the line \`${line}\` to \`.gitignore\` and commit it.`;
+export function ignoreHint(result, line, file = '.gitignore') {
+  if (result.problem === 'negated') return `Line ${result.line} of \`${result.source}\`, \`${result.pattern}\`, keeps \`${line}\` from being ignored. Delete it, add the line \`${line}\` to \`${file}\` and commit.`;
+  if (result.problem === 'exclude') return `Only \`.git/info/exclude\` ignores \`${line}\`, and git never commits that file, so your teammates don't get the rule. Add the line \`${line}\` to \`${file}\` and commit it.`;
   if (result.problem === 'uncommitted') return `\`${result.source}\` ignores \`${line}\`, but that rule isn't committed. Run \`git add ${result.source}\` and commit it.`;
-  return `No committed \`.gitignore\` ignores \`${line}\`. Add the line \`${line}\` to \`.gitignore\` and commit it. A rule in your global git excludes file doesn't count: it isn't in the repository.`;
+  return `No committed \`.gitignore\` ignores \`${line}\`. Add the line \`${line}\` to \`${file}\` and commit it. A rule in your global git excludes file doesn't count: it isn't in the repository.`;
 }

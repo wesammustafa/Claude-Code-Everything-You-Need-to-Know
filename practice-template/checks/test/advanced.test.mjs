@@ -3414,6 +3414,43 @@ test('the Advanced capstone reads the listed worktrees from the git root when it
   });
 });
 
+// `claude --worktree` makes worktrees at the git root, above project/ in a
+// copy. A root .gitignore with an uncommitted edit, or one that
+// .git/info/exclude shadows, sends the check to the committed files, which
+// it must ask from the root, not with `../` paths from project/.
+test('the Advanced capstone reads the root .gitignore for worktrees at the git root of a copy when the live rule isn\'t a clean committed one', () => {
+  const atRoot = (gitignore, { edit, exclude } = {}) => () => {
+    const dir = repo({ 'README.md': '# demo\n' }, { nested: true });
+    const root = dirname(dir);
+    rootWrite(dir, { '.gitignore': gitignore });
+    commit(root, 'Start');
+    for (const name of ['a', 'b']) {
+      git(root, 'worktree', 'add', '-q', '-b', `side-${name}`, `.claude/worktrees/${name}`);
+      write(join(root, '.claude', 'worktrees', name, 'project'), { [`${name}.txt`]: `${name}\n` });
+      commit(join(root, '.claude', 'worktrees', name), `Work ${name}`);
+    }
+    write(dir, { [CAPSTONE_LISTING]: `${git(dir, 'worktree', 'list', '--porcelain')}\n` });
+    if (edit) rootWrite(dir, { '.gitignore': `${gitignore}${edit}` });
+    if (exclude) write(root, { '.git/info/exclude': exclude });
+    return dir;
+  };
+  withRepo(atRoot(IGNORE), (dir) => {
+    assert.equal(capstoneHint(dir, /keeps the worktrees/), true);
+  });
+  withRepo(atRoot(IGNORE, { edit: 'node_modules/\n' }), (dir) => {
+    assert.equal(capstoneHint(dir, /keeps the worktrees/), true);
+  });
+  withRepo(atRoot(IGNORE, { exclude: '.practice/\n.claude/\n' }), (dir) => {
+    assert.equal(capstoneHint(dir, /keeps the worktrees/), true);
+  });
+  withRepo(atRoot('.practice/\n', { edit: '.claude/worktrees/\n' }), (dir) => {
+    assert.match(String(capstoneHint(dir, /keeps the worktrees/)), /`\.\.\/\.gitignore` ignores `\.claude\/worktrees\/(a|b)\/`, but that rule isn't committed/);
+  });
+  withRepo(atRoot('.practice/\n'), (dir) => {
+    assert.match(String(capstoneHint(dir, /keeps the worktrees/)), /Add the line `\.claude\/worktrees\/(a|b)\/` to `\.\.\/\.gitignore`/);
+  });
+});
+
 test('the Advanced capstone wants the worktrees ignored in a committed .gitignore, whatever a global excludes file says', () => {
   const globalIgnore = (dir) => {
     write(dir, { '.git/global-ignore': '.claude/\n' });

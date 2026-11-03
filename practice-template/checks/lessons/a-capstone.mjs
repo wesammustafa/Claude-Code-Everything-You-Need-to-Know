@@ -19,6 +19,7 @@
 import { parseClaudeArgs, scriptCalls } from '../claude-args.mjs';
 import { committedIgnore, ignoreHint } from '../ignore.mjs';
 import { headText } from '../marketplace.mjs';
+import { openRepo } from '../repo.mjs';
 import { parseWorktrees } from '../worktrees.mjs';
 import { claudeHistory, parseYaml } from '../actions.mjs';
 import { ignoresWorktrees, mergedWorktrees } from './a-1.mjs';
@@ -159,10 +160,17 @@ export const ignoredWorktrees = {
     if (!records.length) return ignoresWorktrees.check(repo);
     const main = /** @type {Worktree} */ (records[0]).path.replace(/\/+$/, '');
     const inside = [...new Set(records.slice(1).filter((r) => !r.bare && r.path.startsWith(`${main}/`)).map((r) => r.path.slice(main.length + 1)))];
-    // git prints paths from the root, which may sit above repo.dir.
-    for (const path of inside.map((p) => repo.local(p))) {
-      const found = committedIgnore(repo, `${path}/a-capstone-probe`);
-      if (found.problem) return ignoreHint(found, `${path}/`);
+    // git prints paths from the root, which may sit above repo.dir, as in a
+    // copy, where `claude --worktree` makes them: ask from the root, and name
+    // files from here in the hints. A worktree outside this folder needs its
+    // rule in the root's .gitignore, written from there.
+    const root = repo.prefix ? openRepo(repo.top) : repo;
+    for (const path of inside) {
+      const found = committedIgnore(root, `${path}/a-capstone-probe`);
+      if (!found.problem) continue;
+      const here = !repo.prefix || path.startsWith(repo.prefix);
+      const hint = found.source ? { ...found, source: repo.local(found.source) } : found;
+      return here ? ignoreHint(hint, `${repo.local(path)}/`) : ignoreHint(hint, `${path}/`, repo.local('.gitignore'));
     }
     const settings = committedIgnore(repo, '.claude/settings.json');
     if (settings.problem) return true;
