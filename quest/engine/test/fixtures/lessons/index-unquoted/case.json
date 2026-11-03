@@ -1,6 +1,4 @@
 {
-  "origin": "lesson-quotes-index-unquoted",
-  "was": "pass",
   "expect": "pass",
   "about": "The manifest lists a Level index that no warm-up quotes.",
   "problems": [],

@@ -1,6 +1,4 @@
 {
-  "origin": "lesson-quotes-index-cross-level",
-  "was": "pass",
   "expect": "pass",
   "about": "An Intermediate warm-up quotes the Beginner index: a warm-up may quote any Level index the manifest lists, as it may quote a Lesson from another Level.",
   "problems": [],
