@@ -965,6 +965,27 @@ export async function walkLesson(
       await settled(frames, now);
       continue;
     }
+    // A Check of only slow items runs on arrival (309) and can pass at once
+    // on what an earlier replay committed: its stage still runs, so the work
+    // the page gave (a commit, say) lands as the Learner's would.
+    if (
+      now?.phase === "playing" &&
+      now.step !== null &&
+      now.beat !== null &&
+      now.status === "already" &&
+      now.decidedBy === "check"
+    ) {
+      const key = beatKey(id, now.step, now.beat);
+      const stage = STAGE[key];
+      if (stage !== undefined && !staged.has(key)) {
+        staged.add(key);
+        stage(
+          workedInCopy && worked.has(now.step)
+            ? join(copy.dir, "project")
+            : dir,
+        );
+      }
+    }
     if (
       now?.phase === "playing" &&
       now.step !== null &&
