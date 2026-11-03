@@ -357,7 +357,13 @@ export type Effect =
       slow?: true;
       asked?: number;
     }
-  | { type: "file"; path: string; dir: string | null; asked?: number }
+  | {
+      type: "file";
+      path: string;
+      dir: string | null;
+      alt?: string;
+      asked?: number;
+    }
   | {
       type: "git";
       dir: string | null;
@@ -376,6 +382,7 @@ export type Effect =
       type: "stamp";
       key: string;
       dir: string | null;
+      alt?: string;
       path?: string | undefined;
       git?: "head" | "status";
       probe?: { name: string; args: string[] };

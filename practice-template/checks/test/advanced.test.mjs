@@ -18,9 +18,9 @@ import { CI, items as capstoneItems, noCommittedKey, REVIEW as REVIEW_WORKFLOW, 
 import { nameProblem } from '../marketplace.mjs';
 import { openRepo } from '../repo.mjs';
 import { findBash, notRun, runStubbed, scratchPath, scrubbed, STUB_SESSION, stubText, within } from '../stub-claude.mjs';
-import { readWorkflow } from '../workflow-script.mjs';
+import { findWorkflows, readWorkflow } from '../workflow-script.mjs';
 import { parseWorktrees } from '../worktrees.mjs';
-import { check, commit, repo, setMode, withRepo, write } from './helpers.mjs';
+import { check, commit, repo, rootWrite, setMode, withRepo, write } from './helpers.mjs';
 
 const git = (dir, ...args) => execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', ...args], { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 
@@ -675,9 +675,11 @@ const WORKFLOW_PATH = '.claude/workflows/audit-dropped-errors.js';
 const TOTAL = 'export function total(items) {\n  // TODO: round to cents before summing\n  return items.reduce((sum, i) => sum + i.price, 0);\n}\n';
 const inFolders = (files, folders) => Object.fromEntries(Object.entries(files).filter(([path]) => folders.includes(path.split('/')[0])));
 
-function workflowRepo({ script = AUDIT, path = WORKFLOW_PATH, commitScript = true, globalIgnore, migrate = ['test'], pattern = PATTERN, after } = {}) {
+// `nested` lays the repository out as a Practice copy is, with the checks in
+// project/; `atRoot` then puts each script at the git root above it.
+function workflowRepo({ script = AUDIT, path = WORKFLOW_PATH, commitScript = true, globalIgnore, migrate = ['test'], pattern = PATTERN, after, nested = false, atRoot = false } = {}) {
   return () => {
-    const dir = repo({ 'README.md': '# demo\n', ...OLD });
+    const dir = repo({ 'README.md': '# demo\n', ...OLD }, { nested });
     if (globalIgnore) {
       write(dir, { '.git/global-ignore': globalIgnore });
       git(dir, 'config', 'core.excludesFile', join(dir, '.git', 'global-ignore'));
@@ -690,7 +692,7 @@ function workflowRepo({ script = AUDIT, path = WORKFLOW_PATH, commitScript = tru
     }
     for (const [i, text] of (Array.isArray(script) ? script : [script]).entries()) {
       if (text === null) continue;
-      const at = Array.isArray(path) ? path[i] : path;
+      const at = `${atRoot ? '../' : ''}${Array.isArray(path) ? path[i] : path}`;
       write(dir, { [at]: text });
       if (commitScript) commit(dir, `Add ${at}`, [at]);
     }
@@ -717,6 +719,31 @@ test('a-3 accepts a workflow in a package\'s own .claude/workflows/, and comment
   withRepo(workflowRepo({ script: commented, path: 'packages/web/.claude/workflows/audit-dropped-errors.js' }), (dir) => {
     const { code, out } = a3(dir);
     assert.equal(code, 0, out);
+  });
+});
+
+test('a-3 passes for a workflow at the git root while checks run in project/', () => {
+  withRepo(workflowRepo({ nested: true, atRoot: true }), (dir) => {
+    const { code, out } = a3(dir);
+    assert.equal(code, 0, out);
+    assert.match(out, /2 of 2 passed/);
+  });
+  withRepo(workflowRepo({ nested: true }), (dir) => {
+    const { code, out } = a3(dir);
+    assert.equal(code, 0, out, 'project/.claude/workflows/ still counts');
+  });
+});
+
+test('a-3 says to commit a workflow only at the git root, once', () => {
+  withRepo(workflowRepo({ nested: true, atRoot: true, commitScript: false }), (dir) => {
+    const { code, out } = a3(dir);
+    assert.equal(code, 1, out);
+    assert.match(out, /`\.\.\/\.claude\/workflows\/audit-dropped-errors\.js` isn't committed\. Run `git add \.\.\/\.claude\/workflows\/audit-dropped-errors\.js` and commit it\./);
+  });
+  withRepo(workflowRepo({ nested: true, atRoot: true }), (dir) => {
+    const { scripts, uncommitted } = findWorkflows(openRepo(dir));
+    assert.deepEqual(scripts.map((x) => x.path), ['../.claude/workflows/audit-dropped-errors.js']);
+    assert.deepEqual(uncommitted, []);
   });
 });
 
@@ -2397,6 +2424,17 @@ test('a-6 accepts a hook moved into hooks/hooks.json, and fails one still in the
       assert.match(String(movedHint(dir)), /isn't valid JSON|holds no hook\. Put the entry under a top-level `hooks` key/, text);
     });
   }
+});
+
+test('a-6 fails in a Practice copy while git tracks the local settings file at the git root', () => {
+  withRepo(() => {
+    const dir = repo({ '.gitignore': PERSONAL_IGNORE }, { nested: true });
+    rootWrite(dir, { '.claude/settings.local.json': '{}\n' });
+    commit(dir, 'Start', ['.', '../.claude/settings.local.json']);
+    return dir;
+  }, (dir) => {
+    assert.match(String(personalHint(dir)), /^git tracks `\.\.\/\.claude\/settings\.local\.json`, which is yours alone\. Run `git rm --cached \.\.\/\.claude\/settings\.local\.json`/);
+  });
 });
 
 test('a-6 fails while git tracks a personal file, or only an uncommitted or uncommon rule ignores it', () => {

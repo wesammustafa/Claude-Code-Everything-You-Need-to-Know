@@ -29,7 +29,7 @@ import {
   WORK,
 } from "./scripted.mjs";
 
-const MINE = "/home/sam/mine";
+const MINE = "/home/ali/mine";
 const fine = (path) => ({
   path,
   missing: false,

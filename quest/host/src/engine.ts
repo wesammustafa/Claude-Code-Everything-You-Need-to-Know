@@ -9,6 +9,7 @@ export {
   EFFECT_TYPES,
   EVENT_TYPES,
   HELP_USED,
+  altOf,
   beatOf,
   contentOf,
   evidence,

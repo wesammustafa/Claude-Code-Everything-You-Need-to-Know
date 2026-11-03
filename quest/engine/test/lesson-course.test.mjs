@@ -287,11 +287,11 @@ const throughA4 = () => ({
 // overview's folder question; the next marker and the map pass over it.
 test("until a-5's and a-capstone's new copy folder is saved, the next lesson passes over them: the map marks a-6, and left and right land there", () => {
   // The Advanced level's own folder, or a-capstone's new copy, is not a-5's.
-  const ADVANCED = "/home/sam/advanced-work";
+  const ADVANCED = "/home/ali/advanced-work";
   for (const folders of [
     {},
     { advanced: ADVANCED },
-    { advanced: ADVANCED, "a-capstone": "/home/sam/ci-review" },
+    { advanced: ADVANCED, "a-capstone": "/home/ali/ci-review" },
   ]) {
     const at = `saved: ${Object.keys(folders).join(", ") || "no folder"}`;
     const d = driver({
@@ -331,12 +331,12 @@ test("once a-5 or a-capstone has its new copy saved, it is the next lesson where
     {
       id: "a-5",
       lessons: throughA4(),
-      folders: { "a-5": "/home/sam/claude-actions-practice" },
+      folders: { "a-5": "/home/ali/claude-actions-practice" },
     },
     {
       id: "a-capstone",
       lessons: { ...throughA4(), ...done(["a-6", "a-7"]) },
-      folders: { "a-capstone": "/home/sam/ci-review" },
+      folders: { "a-capstone": "/home/ali/ci-review" },
     },
   ];
   for (const { id, lessons, folders } of cases) {
@@ -361,7 +361,7 @@ test("once a-5 or a-capstone has its new copy saved, it is the next lesson where
 
 // was learn-course:597
 test("a-5's new copy given in the session makes it the next lesson at once, and after a restart", () => {
-  const A5COPY = "/home/sam/claude-actions-practice";
+  const A5COPY = "/home/ali/claude-actions-practice";
   const d = driver({
     course,
     saved: save({ lessons: throughA4() }),

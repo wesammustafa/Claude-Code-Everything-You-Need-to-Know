@@ -104,7 +104,7 @@ export function fakeHost({
     root: ROOT,
     course,
     saved,
-    env: { HOME: "/home/sam", ...env },
+    env: { HOME: "/home/ali", ...env },
     platform,
     adapters,
     facts,

@@ -26,7 +26,7 @@ import {
 } from "../src/store.ts";
 import { realAdapters } from "../src/real.ts";
 
-const MINE = "/home/sam/code/my-app";
+const MINE = "/home/ali/code/my-app";
 
 // spec: folders.progress-in-copy
 test("the first start makes root .practice/ (ticket 277); where a file holds its name, it stays missing and nothing saves", () => {
@@ -215,9 +215,9 @@ test("saved state: moreHelpAt keeps a step id, an old keepGuided maps to the sav
 test("saved state: the work folders are an optional key, kept per level and per pinned lesson, as absolute paths only", () => {
   const folders = {
     intermediate: MINE,
-    advanced: "/home/sam/code/other",
-    "a-5": "/home/sam/claude-actions-practice",
-    "a-capstone": "/home/sam/ci-review",
+    advanced: "/home/ali/code/other",
+    "a-5": "/home/ali/claude-actions-practice",
+    "a-capstone": "/home/ali/ci-review",
   };
   assert.deepEqual(sanitize({ folders }).folders, folders);
   // Nothing else: Beginner practises in the copy, other lessons use their level's.

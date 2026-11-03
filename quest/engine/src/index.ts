@@ -18,6 +18,7 @@ export { project, startedLesson } from "./project.ts";
 // What the host reads off the state: what to watch, what an overview asks
 // about, where the Learner is and works, and the evidence a check guards.
 export {
+  altOf,
   beatOf,
   contentOf,
   evidence,

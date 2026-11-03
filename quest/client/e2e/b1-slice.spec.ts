@@ -125,7 +125,7 @@ test.describe("a clean first launch", () => {
     await page.goto(copy.url);
     // The first screen never waits for Pip's rig.
     await expect(heading(page)).toHaveText("Learn Claude Code by using it.");
-    await expect(page.getByText("Hi Sam!")).toBeVisible();
+    await expect(page.getByText("Hi Ali!")).toBeVisible();
     await expect(page.getByText("This page", { exact: true })).toBeVisible();
     await expect(
       page.getByText("Your terminal", { exact: true }),
