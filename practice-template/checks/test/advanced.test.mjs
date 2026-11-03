@@ -2,7 +2,7 @@
 // repository with --dir.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { delimiter, dirname, join } from 'node:path';
@@ -341,8 +341,11 @@ test('a-1 says to exit any session in a locked worktree it can\'t tell is a runn
     // It can't see every session's lock, so it never says none is running.
     assert.doesNotMatch(out, /no Claude Code session/);
   });
-  // A Claude Code session's lock whose process has exited.
-  const gone = spawnSync(process.execPath, ['-e', '']).pid;
+  // A Claude Code session's lock whose process has exited. A pid taken from
+  // a process that just ended can be handed out again before the check runs
+  // (Windows reuses pids at once), so the lock names one no system issues:
+  // above Linux's and macOS's highest pid, and far above Windows' range.
+  const gone = 2147483644;
   withRepo(parallelRepo({ lock: ['test-pass'], reason: `claude session test-pass (pid ${gone} start Sun Oct 25 10:43:31 2026)` }), (dir) => {
     const { code, out } = a1(dir);
     assert.equal(code, 1, out);
