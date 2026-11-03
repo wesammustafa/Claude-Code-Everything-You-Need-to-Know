@@ -1,6 +1,6 @@
 # Bug: a malformed percent escape crashes linkcheck
 
-A teammate copied `[broken](bad%.md)` into a Markdown file. Running linkcheck on its folder throws `URIError: URI malformed`, so the remaining links are never checked.
+A teammate copied `[broken](bad%.md)` into a Markdown file. Running linkcheck on its folder crashes with a stack trace ending `URIError: URI malformed` and exits 1, so no link is reported, the later broken links included.
 
 Reproduce this outside `samples/`, then fix the checker:
 

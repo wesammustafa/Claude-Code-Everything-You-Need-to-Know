@@ -353,6 +353,56 @@ test("no Advanced git-step script runs a network tool by any path", () => {
   }
 });
 
+describe("a copy seeded through i-1", () => {
+  test("commits both skills", async () => {
+    const copy = await assembledCopy();
+    for (const id of order.slice(0, order.indexOf("i-1") + 1))
+      applyLesson({ repoRoot, copy, id });
+    const project = join(copy, "project");
+    const skills = gitIn(
+      project,
+      "ls-tree",
+      "-r",
+      "--name-only",
+      "HEAD",
+      ".claude/skills",
+    );
+    expect(skills.split("\n")).toEqual(
+      expect.arrayContaining([
+        ".claude/skills/five-whys/SKILL.md",
+        ".claude/skills/tdd/SKILL.md",
+      ]),
+    );
+    // The committed skill is the one i-1 downloads, so the copy cannot drift.
+    const example =
+      "examples/intermediate/01-first-skill/dot-claude/skills/five-whys/SKILL.md";
+    expect(
+      gitIn(project, "show", "HEAD:./.claude/skills/five-whys/SKILL.md"),
+    ).toBe(readFileSync(join(repoRoot, example), "utf8").trim());
+    expect(gitIn(project, "status", "--porcelain")).toBe("");
+    expect(
+      readFileSync(join(project, ".practice/i-1-commit.txt"), "utf8").trim(),
+    ).toBe(gitIn(project, "rev-parse", "HEAD"));
+    expect(
+      gitIn(project, "ls-tree", "-r", "--name-only", "HEAD").split("\n"),
+    ).toEqual(expect.arrayContaining(["src/slug.js", "test/slug.test.js"]));
+  }, 300_000);
+
+  test("i-3 commits five-whys at high effort", async () => {
+    const copy = await assembledCopy();
+    for (const id of order.slice(0, order.indexOf("i-3") + 1))
+      applyLesson({ repoRoot, copy, id });
+    const project = join(copy, "project");
+    const skill = gitIn(
+      project,
+      "show",
+      "HEAD:./.claude/skills/five-whys/SKILL.md",
+    );
+    expect(skill).toMatch(/^---\neffort: high\n[\s\S]*?\nname: five-whys\n/);
+    expect(gitIn(project, "status", "--porcelain")).toBe("");
+  }, 300_000);
+});
+
 describe("the Advanced solutions on an assembled copy", () => {
   const first = order.indexOf("a-1");
   const done = order.slice(0, first);
