@@ -180,6 +180,13 @@ export function PipRive({
       enableRiveAssetCDN: false,
       // The rig takes no input; the page follows the pointer (pointer.ts).
       shouldDisableRiveListeners: true,
+      // Rive fires Load once the artboard and state machine are set up, just
+      // before it draws frame 0 in the same task. Pip is ready here, once the
+      // file holds the view model bound below: frame 0's GPU work (seconds on
+      // a software GPU) is not the app's (ticket 294).
+      onLoad: () => {
+        if (file.viewModelByName(PIP_VIEW_MODEL) !== null) markPipReady();
+      },
       onLoadError: () => {
         failed.current();
       },
@@ -272,7 +279,6 @@ export function PipRive({
   useEffect(() => {
     if (rive === null || !bound) return;
     rive.startRendering();
-    markPipReady();
     let frames = 0;
     let start: number | undefined;
     const tick = (now: number) => {

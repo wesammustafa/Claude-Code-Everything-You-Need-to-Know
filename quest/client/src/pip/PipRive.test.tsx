@@ -10,6 +10,7 @@ import {
 } from "vitest";
 import {
   PIP_REACTIONS,
+  PIP_VIEW_MODEL,
   type PipModel,
   type PipReactionKind,
 } from "../../pip/contract";
@@ -58,6 +59,8 @@ const rive = vi.hoisted(() => {
       startRendering: vi.fn(),
     },
     files: [] as { options: unknown; cleanup: () => void }[],
+    /** The parameters the adapter last gave useRive. */
+    params: null as { onLoad?: () => void } | null,
   };
 });
 
@@ -78,11 +81,14 @@ vi.mock("@rive-app/react-webgl2", () => {
   return {
     RiveFile,
     RuntimeLoader: rive.loader,
-    useRive: () => ({
-      rive: rive.instance,
-      setCanvasRef: () => undefined,
-      setContainerRef: () => undefined,
-    }),
+    useRive: (params: { onLoad?: () => void }) => {
+      rive.params = params;
+      return {
+        rive: rive.instance,
+        setCanvasRef: () => undefined,
+        setContainerRef: () => undefined,
+      };
+    },
     useViewModel: () => ({}),
     useViewModelInstance: () => ({}),
     useViewModelInstanceEnum: (name: string) => ({
@@ -325,21 +331,27 @@ describe("Pip's Rive adapter", () => {
     expect(onDrawn).toHaveBeenCalledTimes(1);
   });
 
-  test("marks Pip ready once, when the bound rig starts rendering, before any frame is drawn", () => {
+  test("marks Pip ready once, when Rive loads a rig that holds the view model", () => {
     performance.clearMarks(PIP_READY_MARK);
     onTestFinished(() => {
       performance.clearMarks(PIP_READY_MARK);
     });
     const ready = () => performance.getEntriesByName(PIP_READY_MARK, "mark");
-    rive.bound = false;
-    const { rerender } = render(<PipRive {...props()} />);
+    const viewModelByName = vi.fn<(name: string) => object | null>(() => null);
+    const file = { viewModelByName } as unknown as PipRiveProps["file"];
+    render(<PipRive {...props({ file })} />);
+    // Rendering alone, before Load, marks nothing.
     expect(ready()).toHaveLength(0);
-    rive.bound = true;
-    rerender(<PipRive {...props()} />);
-    expect(rive.instance.startRendering).toHaveBeenCalled();
+    // A rig without the view model is not ready.
+    rive.params?.onLoad?.();
+    expect(viewModelByName).toHaveBeenCalledWith(PIP_VIEW_MODEL);
+    expect(ready()).toHaveLength(0);
+    viewModelByName.mockReturnValue({});
+    rive.params?.onLoad?.();
     expect(ready()).toHaveLength(1);
     // A second Pip on the page keeps the first mark.
-    render(<PipRive {...props()} />);
+    render(<PipRive {...props({ file })} />);
+    rive.params?.onLoad?.();
     expect(ready()).toHaveLength(1);
   });
 

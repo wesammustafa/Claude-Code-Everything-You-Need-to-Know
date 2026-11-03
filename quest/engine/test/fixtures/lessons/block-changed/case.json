@@ -1,6 +1,4 @@
 {
-  "origin": "lesson-quotes-block-changed",
-  "was": "fail",
   "expect": "fail",
   "about": "The page changed a line of a fenced block that the step file shows as a code block, and that a later Lesson's warm-up shows from it, though the later Lesson's own page still has the old block.",
   "problems": [
