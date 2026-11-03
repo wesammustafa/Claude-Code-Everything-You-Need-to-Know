@@ -1642,7 +1642,7 @@ test("the waiting question lasts until the step changes: a later beat and a back
 
 // ---- r27 engine fixes (findings/r27/TRIAGE.md section 3) ---------------------
 // DEMO_B2 with W1 reading a log a session writes, its command a cat of that
-// log, as i-2's W4.3 does.
+// log, as a match-on-log read beat would.
 const LOG_B2 = DEMO_B2.replace(
   '- verify: check 0\n- watching: .practice/b-2-before.txt\n- evidence: .practice/b-2-before.txt\n- run: "git status --porcelain > .practice/b-2-before.txt"',
   '- verify: match .practice/log.txt ^include\\s\n- run: "cat .practice/log.txt"',

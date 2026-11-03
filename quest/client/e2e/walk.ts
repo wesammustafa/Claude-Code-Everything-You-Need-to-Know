@@ -201,6 +201,24 @@ const put =
     mkdirSync(dirname(join(dir, path)), { recursive: true });
     writeFileSync(join(dir, path), text);
   };
+/**
+ * Writes `text` at `path` from the git root (above the copy's project/, or
+ * a Work folder of its own), where Claude Code keeps `.claude/settings.local.json` (ticket 295), and
+ * keeps it out of git as Claude Code does.
+ */
+const putRoot =
+  (path: string, text: string): Stage =>
+  (dir) => {
+    const top = spawnSync("git", ["rev-parse", "--show-toplevel"], {
+      cwd: dir,
+      env: gitEnv(),
+      encoding: "utf8",
+    }).stdout.trim();
+    const at = join(top, path);
+    mkdirSync(dirname(at), { recursive: true });
+    writeFileSync(at, text);
+    exclude(path, true)(dir);
+  };
 /** Adds `line` at the end of `path`. */
 const add =
   (path: string, line: string): Stage =>
@@ -233,9 +251,12 @@ const executable =
   (dir) => {
     chmodSync(join(dir, path), 0o755);
   };
-/** Keeps `path` out of git as Claude Code keeps its local settings file out. */
+/**
+ * Keeps `path` out of git as Claude Code keeps its local settings file out:
+ * from the folder, or with `atRoot` from the git root.
+ */
 const exclude =
-  (path: string): Stage =>
+  (path: string, atRoot = false): Stage =>
   (dir) => {
     const ask = (...args: string[]) =>
       spawnSync("git", args, {
@@ -244,7 +265,8 @@ const exclude =
         encoding: "utf8",
       }).stdout.trim();
     const file = join(dir, ask("rev-parse", "--git-path", "info/exclude"));
-    appendFileSync(file, `/${ask("rev-parse", "--show-prefix")}${path}\n`);
+    const prefix = atRoot ? "" : ask("rev-parse", "--show-prefix");
+    appendFileSync(file, `/${prefix}${path}\n`);
   };
 /** Rewrites the JSON file at `path` from Lesson `id`'s solution, changed by `edit`. */
 const solutionJson =
@@ -353,12 +375,9 @@ const API_KEY =
 const FIVE_WHYS = ".claude/skills/five-whys/SKILL.md";
 const LOADED = ".practice/i-2-loaded.txt";
 
-const SANDBOX_LOCAL = all(
-  put(
-    ".claude/settings.local.json",
-    '{\n  "sandbox": { "enabled": true }\n}\n',
-  ),
-  exclude(".claude/settings.local.json"),
+const SANDBOX_LOCAL = putRoot(
+  ".claude/settings.local.json",
+  '{\n  "sandbox": { "enabled": true }\n}\n',
 );
 export const STAGE: Record<string, Stage> = {
   // i-1: the worked example's downloaded skill, the partial tdd skill, the
@@ -488,12 +507,9 @@ export const STAGE: Record<string, Stage> = {
   ),
   "i-7:Y5.1": restore("i-7", ".practice/demo.html"),
   // i-8: the language server plugin trialled locally, and a committed change.
-  "i-8:W2.2": all(
-    put(
-      ".claude/settings.local.json",
-      '{\n  "enabledPlugins": { "typescript-lsp@claude-plugins-official": true }\n}\n',
-    ),
-    exclude(".claude/settings.local.json"),
+  "i-8:W2.2": putRoot(
+    ".claude/settings.local.json",
+    '{\n  "enabledPlugins": { "typescript-lsp@claude-plugins-official": true }\n}\n',
   ),
   "i-8:W3.2": smallCommit(),
   // a-1: a remote to push to, the two worked-example worktrees on the

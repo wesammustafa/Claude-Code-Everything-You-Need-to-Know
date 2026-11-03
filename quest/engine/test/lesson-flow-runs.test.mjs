@@ -18,6 +18,7 @@ import {
   onReading,
   pending,
   playUntil,
+  FACTS,
   PROJECT,
   recallOf,
   rungsOf,
@@ -88,6 +89,7 @@ test("r shows the checking state on every checked beat, and its check, file and 
       path: ".practice/b-2-plan.txt",
       asked: f.state.asks,
       dir: PROJECT,
+      alt: FACTS.root,
     },
   ]);
   const g = at("W7", { beat: 2 });

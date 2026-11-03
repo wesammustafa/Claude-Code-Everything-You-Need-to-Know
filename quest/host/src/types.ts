@@ -101,9 +101,10 @@ export interface Folders {
  * glob matches the newest file.
  */
 export interface Files {
-  match(dir: string, path: string): string | null;
+  /** With `alt`, the git root above `dir` is read too (ticket 295). */
+  match(dir: string, path: string, alt?: string | null): string | null;
   bytes(dir: string, path: string): Buffer | null;
-  stamp(dir: string, path: string): string | null;
+  stamp(dir: string, path: string, alt?: string | null): string | null;
   exists(abs: string): boolean;
   /** True only for a folder: a file at `abs` is not one. */
   isFolder(abs: string): boolean;

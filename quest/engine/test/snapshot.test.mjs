@@ -32,6 +32,7 @@ import {
   withCode,
 } from "./drive.mjs";
 import { project, startedLesson } from "../src/index.ts";
+import { fingerprint } from "../src/content.ts";
 
 const lesson = (id) => course.find((l) => l.id === id);
 // A driver on a saved place, the lesson opened.
@@ -608,9 +609,10 @@ test("playing: at Challenge before a first try, why the hints wait: run the chec
   );
   r.run();
   assert.equal(view(r).hints.unavailable, null, "r is a try");
+  // A save made under i-2's steps as they are now, so its place holds.
   const p = at(
     "i-2",
-    { step: "Y5", beat: 0 },
+    { step: "Y5", beat: 0, fingerprint: fingerprint(lesson("i-2").content) },
     { course: withHint("i-2", "Y5", 0) },
   );
   assert.equal(view(p).step.tier, "challenge");

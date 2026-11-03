@@ -23,7 +23,7 @@ const PATTERN = '.practice/a-3-pattern.txt';
 const and = (/** @type {unknown[]} */ list) => (list.length > 1 ? `${list.slice(0, -1).join(', ')} and ${list.at(-1)}` : list[0]);
 const code = (/** @type {unknown} */ text) => `\`${text}\``;
 const shell = (/** @type {string} */ path) => (/\s/.test(path) ? `"${path}"` : path);
-const SAVE = 'When a workflow run finishes, run `/workflows`, select the run, press `s`, keep the project location, `.claude/workflows/`, and press `Enter`. Then commit the `.js` file it saves.';
+const SAVE = 'When a workflow run finishes, run `/workflows`, select the run, press `s`, keep the project location and press `Enter`. It saves to the closest `.claude/workflows/` that already exists between your working folder and the repository root, or to the repository root if none does: in a Practice copy, the folder above `project/`. Then commit the `.js` file it saves.';
 
 // Where a misplaced script should go: a .js file directly in the
 // .claude/workflows/ folder it sits under.

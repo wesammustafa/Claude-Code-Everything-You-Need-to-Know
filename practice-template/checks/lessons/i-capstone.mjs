@@ -146,7 +146,9 @@ const hook = {
 const sandbox = {
   text: 'the committed `.claude/settings.json` turns the sandbox on, and `.claude/settings.local.json` stays out of git',
   check(repo) {
-    if (repo.git('ls-files', '--', '.claude/settings.local.json')) return '.claude/settings.local.json is committed, but it holds your own settings. Run `git rm --cached .claude/settings.local.json`, commit, and add it to `.gitignore`.';
+    // Claude Code may keep the local file at the git root (ticket 295).
+    const local = repo.trackedAny('.claude/settings.local.json');
+    if (local) return `${local} is committed, but it holds your own settings. Run \`git rm --cached ${local}\`, commit, and add it to \`.gitignore\`.`;
     return committedSettings(repo)?.sandbox?.enabled === true ? true : 'The committed .claude/settings.json doesn\'t turn the sandbox on. Add `"sandbox": {"enabled": true}` to it and commit: `/sandbox` saves to your local file, which teammates don\'t get.';
   },
 };

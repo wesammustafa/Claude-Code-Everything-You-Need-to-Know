@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { realpathSync, utimesSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { check, commit, repo, setMode, withRepo, write } from './helpers.mjs';
 import { buggyApp, fixedApp } from './fixtures/intermediate-app.mjs';
 
@@ -697,6 +697,20 @@ function pluginRepo({ enabled = { [PLUGIN]: true }, list = (dir) => [{ id: PLUGI
     return dir;
   };
 }
+
+test('i-8 passes in a Practice copy when the saved list names the git root above project/', () => {
+  withRepo(() => {
+    const dir = repo({ '.claude/settings.json': JSON.stringify({ enabledPlugins: { [PLUGIN]: true } }, null, 2) }, { nested: true });
+    commit(dir, 'Enable claude-code-setup for the project');
+    const top = realpathSync(dirname(dir));
+    const list = [{ id: PLUGIN, version: '1.0.0', scope: 'project', enabled: true, installPath: '/tmp/x', projectPath: top, projectEnabled: true }, TRIAL(top)];
+    write(dir, { '.practice/i-8-plugins.json': JSON.stringify(list, null, 2) });
+    return dir;
+  }, (dir) => {
+    const { code, out } = check(['i-8', '--dir', dir]);
+    assert.equal(code, 0, out);
+  });
+});
 
 test('i-8 passes for an Anthropic plugin enabled and installed at project scope', () => {
   withRepo(pluginRepo(), (dir) => {

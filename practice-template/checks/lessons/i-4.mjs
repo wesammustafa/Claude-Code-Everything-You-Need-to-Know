@@ -1,6 +1,7 @@
 // @ts-check
 /** @import { Repo } from '../repo.mjs' */
 /** @import { Item } from './index.mjs' */
+import { localPath } from '../repo.mjs';
 // Permissions, settings scopes and the sandbox (Intermediate, lesson 4). The
 // Learner commits team permission rules in the shared .claude/settings.json,
 // with an ask rule that keeps a checkpoint before a command such as a push,
@@ -10,6 +11,17 @@
 export const title = 'Permissions, settings scopes and the sandbox';
 
 const SHARED = '.claude/settings.json';
+
+// The local file at the git root as a path from this folder, when this
+// folder sits below the root; null at the root or outside git.
+/** @param {Repo} repo */
+function rootLocal(repo) {
+  try {
+    return repo.prefix ? localPath(LOCAL, repo.prefix) : null;
+  } catch {
+    return null;
+  }
+}
 const LOCAL = '.claude/settings.local.json';
 
 /**
@@ -74,10 +86,16 @@ export const items = [
   {
     text: 'the sandbox is on, and `.claude/settings.local.json` stays out of git',
     // `/sandbox` saves to the uncommitted local file, which never reaches CI.
+    // Claude Code keeps that file at the git root, which in a Practice copy
+    // is the folder above project/; one in project/ counts too (ticket 295).
     local: true,
     check(repo) {
-      if (repo.git('ls-files', '--', LOCAL)) return `${LOCAL} is committed, but it holds your own settings. Run \`git rm --cached ${LOCAL}\`, commit, and add it to \`.gitignore\`.`;
-      for (const path of [LOCAL, SHARED]) {
+      const tracked = repo.trackedAny(LOCAL);
+      if (tracked) return `${tracked} is committed, but it holds your own settings. Run \`git rm --cached ${tracked}\`, commit, and add it to \`.gitignore\`.`;
+      // The root's local file wins key by key over one in project/, so a key
+      // either lacks falls through to the next file.
+      const atRoot = rootLocal(repo);
+      for (const path of [...(atRoot ? [atRoot] : []), LOCAL, SHARED]) {
         const text = repo.read(path);
         if (text === null) continue;
         const { value, error } = parse(text);
@@ -86,7 +104,7 @@ export const items = [
         if (value?.sandbox?.enabled === false) break;
         if (value?.sandbox?.enabled === true) return true;
       }
-      return 'The sandbox is off. Run `/sandbox` in a session and choose the auto-allow mode, which saves `"sandbox": {"enabled": true}` to .claude/settings.local.json.';
+      return 'The sandbox is off. Run `/sandbox` in a session and choose the auto-allow mode, which saves `"sandbox": {"enabled": true}` to .claude/settings.local.json at the repository root: in a Practice copy, the folder above project/. Either place counts.';
     },
   },
   {
