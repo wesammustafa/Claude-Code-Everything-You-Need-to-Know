@@ -6,7 +6,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { rewriteProjectPackage, upgrade } from '../upgrade.mjs';
+import { rewritePatchPaths, rewriteProjectPackage, upgrade } from '../upgrade.mjs';
 
 const OLD_PACKAGE = `{
   "name": "claude-code-practice",
@@ -131,6 +131,53 @@ test('the upgrade moves tracked, modified, untracked and ignored files into proj
     assert.ok(staged.some((l) => /^R\d+\tsrc\/a\.js\tproject\/src\/a\.js$/.test(l)), staged.join('\n'));
     assert.ok(staged.includes('R100\ttest/a.test.js\tproject/test/a.test.js'), staged.join('\n'));
     assert.match(lines.join('\n'), /git status, then commit/);
+  } finally {
+    cleanup(tpl, copy);
+  }
+});
+
+// The b-3 patch as copies made before Claude Code Quest have it: its paths
+// start at the Starter project's top, which was then the copy's root.
+const OLD_PATCH = `Change a
+
+diff --git a/src/a.js b/src/a.js
+--- a/src/a.js
++++ b/src/a.js
+@@ -1 +1 @@
+-a
++b
+diff --git a/test/b.test.js b/test/b.test.js
+new file mode 100644
+--- /dev/null
++++ b/test/b.test.js
+@@ -0,0 +1 @@
++test b
+`;
+
+test('rewritePatchPaths starts each path at the copy root, once, and keeps /dev/null and the line endings', () => {
+  const rewritten = rewritePatchPaths(OLD_PATCH);
+  assert.match(rewritten, /^diff --git a\/project\/src\/a\.js b\/project\/src\/a\.js$/m);
+  assert.match(rewritten, /^--- a\/project\/src\/a\.js$/m);
+  assert.match(rewritten, /^\+\+\+ b\/project\/test\/b\.test\.js$/m);
+  assert.match(rewritten, /^--- \/dev\/null$/m);
+  assert.equal(rewritten.split('\n').length, OLD_PATCH.split('\n').length);
+  assert.equal(rewritePatchPaths(rewritten), rewritten);
+  assert.equal(rewritePatchPaths(OLD_PATCH.replace(/\n/g, '\r\n')), rewritten.replace(/\n/g, '\r\n'));
+});
+
+test("the b-3 patch's paths start at the copy root after the upgrade, so git apply works from project/", () => {
+  const [tpl, copy] = [template(), old()];
+  try {
+    write(copy, { 'practice/b-3/protocol-relative.patch': OLD_PATCH });
+    git(copy, 'add', '-A');
+    git(copy, 'commit', '-q', '-m', 'patch');
+    checkout(copy, tpl);
+    assert.equal(upgrade(copy).code, 0);
+    assert.equal(fromTemplate(copy, 'project/practice/b-3/protocol-relative.patch'), rewritePatchPaths(OLD_PATCH));
+    assert.ok(git(copy, 'diff', '--cached', '--name-only').split('\n').includes('project/practice/b-3/protocol-relative.patch'));
+    git(join(copy, 'project'), 'apply', 'practice/b-3/protocol-relative.patch');
+    assert.equal(fromTemplate(copy, 'project/src/a.js'), 'b\n');
+    assert.equal(fromTemplate(copy, 'project/test/b.test.js'), 'test b\n');
   } finally {
     cleanup(tpl, copy);
   }
