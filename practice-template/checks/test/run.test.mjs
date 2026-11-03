@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { chmodSync, cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, cpSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { delimiter, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -141,7 +141,9 @@ test('a folder given without --dir is refused, not silently ignored', () => {
 // relative --dir typed at the root reaches run.mjs from project/. npm says
 // where it was typed in INIT_CWD.
 test('a relative --dir given to npm run check is from the folder it was typed in, and no --dir is the folder the check runs in', () => {
-  const top = mkdtempSync(join(tmpdir(), 'practice-'));
+  // The real path: on macOS the temporary folder is a symlink (/var to
+  // /private/var), and the check names a folder by the path it resolves.
+  const top = realpathSync.native(mkdtempSync(join(tmpdir(), 'practice-')));
   try {
     const project = join(top, 'project');
     const mine = join(top, 'mine');
