@@ -19,6 +19,8 @@ const SAVE = '`claude plugin list --json > .practice/i-8-plugins.json`';
 // path exists on this machine, null when it doesn't (a list saved elsewhere).
 // In a Practice copy the checks run in project/, below the git root, where
 // Claude Code keeps the local settings file (ticket 295), so either counts.
+// The native realpath expands a Windows 8.3 short name (RUNNER~1), which git
+// never prints in --show-toplevel.
 /**
  * @param {string} projectPath
  * @param {Repo} repo
@@ -26,13 +28,13 @@ const SAVE = '`claude plugin list --json > .practice/i-8-plugins.json`';
 function here(projectPath, repo) {
   let path;
   try {
-    path = realpathSync(projectPath);
+    path = realpathSync.native(projectPath);
   } catch {
     return null;
   }
-  if (path === realpathSync(repo.dir)) return true;
+  if (path === realpathSync.native(repo.dir)) return true;
   try {
-    return path === realpathSync(repo.top);
+    return path === realpathSync.native(repo.top);
   } catch {
     return false;
   }
