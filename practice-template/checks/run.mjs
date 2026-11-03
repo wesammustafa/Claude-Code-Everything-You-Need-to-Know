@@ -29,7 +29,7 @@ let parsed;
 try {
   parsed = parseArgs({
     allowPositionals: true,
-    options: { dir: { type: 'string', default: '.' }, summary: { type: 'boolean' }, assert: { type: 'string' } },
+    options: { dir: { type: 'string' }, summary: { type: 'boolean' }, assert: { type: 'string' } },
   });
 } catch (error) {
   usage(/** @type {Error} */ (error).message);
@@ -42,7 +42,12 @@ if (!id) usage('name a lesson to check');
 if (extra !== undefined) usage(`unexpected argument "${extra}". Put --dir before the folder to check. If you did, your shell dropped the --: run node checks/run.mjs ${id} --dir <folder> instead.`);
 if (id !== 'all' && !lessons[id]) usage(`no check for "${id}"`);
 if (values.assert && !['pass', 'fail'].includes(values.assert)) usage('--assert takes pass or fail');
-const dir = resolve(values.dir);
+// Without --dir, the folder the check runs in: project/, where the copy's
+// root script changes to first. A --dir given to `npm run check` is from the
+// folder it was typed in, which npm passes as INIT_CWD, so a relative path
+// typed at the copy's root means the same as anywhere else.
+const typedIn = process.env.npm_lifecycle_event === 'check' ? process.env.INIT_CWD : undefined;
+const dir = values.dir === undefined ? resolve('.') : resolve(typedIn ?? '.', values.dir);
 if (!existsSync(dir)) usage(`no such folder: ${dir}`);
 
 const repo = openRepo(dir);

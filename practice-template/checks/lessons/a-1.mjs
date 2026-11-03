@@ -9,6 +9,7 @@
 // listing.
 import { execFileSync } from 'node:child_process';
 import { committedIgnore, ignoreHint } from '../ignore.mjs';
+import { openRepo } from '../repo.mjs';
 import { claudeWorktrees, CLAUDE_WORKTREES, liveWorktrees, parseWorktrees } from '../worktrees.mjs';
 /** @import { Worktree } from '../worktrees.mjs' */
 /** @import { Repo } from '../repo.mjs' */
@@ -170,15 +171,28 @@ function review(repo, snapshot, anywhere = false) {
   return { worktrees, pair, hint: `${names.length > 1 ? 'The changes on' : 'The change on'} ${names.map((n) => `\`${n}\``).join(' and ')} ${names.length > 1 ? "aren't" : "isn't"} in your current branch. From your main checkout, bring ${names.length > 1 ? 'each one' : 'it'} in the way your team does: ${names.map((n) => `\`git merge ${n}\``).join(', then ')}, or a rebase or a squash merge.` };
 }
 
+// `claude --worktree` makes .claude/worktrees/ at the git root, which in a
+// copy sits above project/, where the checks run: the rules are asked of
+// the root, and the files they name are given from this folder. The shared
+// settings may sit in either place.
 /** @type {Item} */
 export const ignoresWorktrees = {
   text: 'a committed `.gitignore` ignores `.claude/worktrees/` and not the rest of `.claude/`',
   check(repo) {
-    const worktrees = committedIgnore(repo, '.claude/worktrees/a-1-probe/file');
-    if (worktrees.problem) return ignoreHint(worktrees, '.claude/worktrees/');
-    const settings = committedIgnore(repo, '.claude/settings.json');
-    if (settings.problem || settings.source !== worktrees.source) return true;
-    return `Line ${settings.line} of \`${settings.source}\`, \`${settings.pattern}\`, also ignores \`.claude/settings.json\`, so it would hide the settings you share with your team. Ignore only \`.claude/worktrees/\`, and commit.`;
+    const prefix = repo.prefix;
+    const root = prefix ? openRepo(repo.top) : repo;
+    const worktrees = committedIgnore(root, '.claude/worktrees/a-1-probe/file');
+    if (worktrees.problem) {
+      const hint = ignoreHint(worktrees.source ? { ...worktrees, source: repo.local(worktrees.source) } : worktrees, '.claude/worktrees/');
+      const there = prefix && (worktrees.problem === 'none' || worktrees.problem === 'exclude') ? ` Claude Code makes that folder at the repository root, the folder above \`${prefix}\`, so that \`.gitignore\` is \`${repo.local('.gitignore')}\`.` : '';
+      return `${hint}${there}`;
+    }
+    for (const path of new Set(['.claude/settings.json', `${prefix}.claude/settings.json`])) {
+      const settings = committedIgnore(root, path);
+      if (settings.problem || settings.source !== worktrees.source) continue;
+      return `Line ${settings.line} of \`${repo.local(settings.source)}\`, \`${settings.pattern}\`, also ignores \`${repo.local(path)}\`, so it would hide the settings you share with your team. Ignore only \`.claude/worktrees/\`, and commit.`;
+    }
+    return true;
   },
 };
 
