@@ -66,7 +66,7 @@ async function failThenPass(page: Page, copy: PracticeCopy, note: string) {
   const notYet = page.locator("[data-state=not-yet]");
   await expect(notYet).toBeVisible({ timeout: 30_000 });
   await expect(page.locator("main")).toContainText(
-    /is missing|still says|has no/,
+    /is missing|still says|has no|hasn't changed yet/,
   );
 
   // Check again is pressed before the note changes, and its action held until

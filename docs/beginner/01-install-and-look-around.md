@@ -87,6 +87,8 @@ Find and correct the wrong claim in a teammate's onboarding notes before the tea
    check each claim in @practice/b-1/onboarding.md against the code. For each one, say whether the code agrees, and cite the file and line.
    ```
 
+   Claude may already have pointed at a wrong claim when it explained the project: confirm it against the code yourself before you change the note.
+
 2. For each claim Claude says the code contradicts, open the file and line it cites and read them yourself. Decide which claim is wrong from the code, not from the notes or from Claude's answer. If Claude also names cases a claim leaves out, that's fine: correct only a claim the code contradicts.
 3. Correct that claim in your editor, in one sentence that says what the code does, and leave the other claims as they are. If Claude already edited the note, read its change with [git diff](https://git-scm.com/docs/git-diff) and keep it only if it matches the code.
 4. End the session with `/exit`, then run `git status` ([git status](https://git-scm.com/docs/git-status)): it should list only `practice/b-1/onboarding.md`. Commit it, so lesson 2 starts from a clean tree ([git commit](https://git-scm.com/docs/git-commit)):
@@ -105,7 +107,7 @@ You are done when all of these are true:
 
 Run `npm run check -- b-1` in your practice copy. The check runs `claude --version` itself, in the terminal you run it from. An npm error such as `Could not read package.json` or `Missing script: "check"` means you ran it outside your practice copy: `cd` into the copy and run it again.
 
-If the first item fails, run `claude --version` in that terminal: when it prints an error, fix it as Worked example step 2 describes, then open a new terminal and run the check again. If the second item fails, read the check's message: it quotes the claim that is still wrong, or says what the corrected claim lacks. Open the file and line Claude cited for that claim, and write what the code does.
+If the first item fails, run `claude --version` in that terminal: when it prints an error, fix it as Worked example step 2 describes, then open a new terminal and run the check again. If the second item fails, read the check's message: it says the note hasn't changed yet, quotes the claim that is still wrong, or says what the corrected claim lacks. Open the file and line Claude cited for the claim the code contradicts, and write what the code does.
 
 ## Watch out
 

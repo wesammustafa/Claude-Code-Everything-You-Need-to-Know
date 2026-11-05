@@ -642,7 +642,7 @@ describe("Lesson workspace", () => {
     expect(
       document.querySelectorAll("[data-pip-target='lines'] li").length,
     ).toBeGreaterThan(0);
-    expect(screen.getByText(/The note still says/)).toBeInTheDocument();
+    expect(screen.getByText(/hasn.t changed yet/)).toBeInTheDocument();
     expect(unquoted(snapshotOf(playing))).toEqual([]);
   });
 

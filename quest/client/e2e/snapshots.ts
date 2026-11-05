@@ -366,7 +366,7 @@ export const playing: PlayingLesson = {
     ],
     evidence: null,
     found: null,
-    fail: 'The note still says "linkcheck always exits with code 0, even when it finds broken links, so it can\'t fail a CI job on its own". Ask Claude which file decides how linkcheck exits, open that line yourself, and write what the code does.',
+    fail: "`practice/b-1/onboarding.md` hasn't changed yet. Find the claim the code contradicts, as Your turn step 2 describes, and correct that line in your editor.",
     broken: null,
     same: false,
     slowWait: false,

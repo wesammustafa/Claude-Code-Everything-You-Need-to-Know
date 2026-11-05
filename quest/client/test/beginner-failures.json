@@ -44,6 +44,12 @@
   {
     "lesson": "b-1",
     "item": "the claim in `practice/b-1/onboarding.md` that the code contradicts is corrected",
+    "name": "note untouched",
+    "message": "`practice/b-1/onboarding.md` hasn't changed yet. Find the claim the code contradicts, as Your turn step 2 describes, and correct that line in your editor."
+  },
+  {
+    "lesson": "b-1",
+    "item": "the claim in `practice/b-1/onboarding.md` that the code contradicts is corrected",
     "name": "claim is still wrong",
     "message": "The note still says \"linkcheck exits 0 when it finds broken links\". Ask Claude which file decides how linkcheck exits, open that line yourself, and write what the code does."
   },
