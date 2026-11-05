@@ -9,10 +9,11 @@
 // reaches its `claude` call under the stand-in, `scriptCalls` reads the
 // call's arguments from the script's text instead.
 
-// The options `claude --help` lists at v2.1.285, and the documented ones it
-// leaves out, written as --help writes them: `<value>`, `[optional value]`
-// or `<list...>`.
-const SPEC = [
+// The options `claude --help` lists, and the documented ones it leaves out,
+// written as --help writes them: `<value>`, `[optional value]` or
+// `<list...>`. The fresh-copy proof (`quest/release/src/proof.mjs`) fails if
+// --help lists one missing here.
+export const SPEC = [
   '--add-dir <directories...>',
   '--advisor <model>',
   '--agent <agent>',

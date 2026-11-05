@@ -45,6 +45,8 @@ export function checksTests(
   options?: { command?: string[] },
 ): StepResult;
 export function freshFails(copy: string): StepResult;
+export function helpOptions(text: string): string[] | null;
+export function helpProblems(claude: string, cwd: string): string[];
 export function replayPasses(options: {
   repoRoot: string;
   copy: string;

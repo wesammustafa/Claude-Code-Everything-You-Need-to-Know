@@ -1,8 +1,9 @@
 // The fresh-copy proof's steps, each broken on purpose: a planted step file,
 // a Check that passes on a fresh copy, a byte or a mode that differs, a
-// failing solution or the wrong Claude Code, an app that won't serve offline
-// on loopback, and the runner reporting every step whatever fails. No real
-// replay and no Chromium: the full proof runs as `npm run proof`.
+// failing solution, the wrong Claude Code or a `--help` option the Checks
+// don't know, an app that won't serve offline on loopback, and the runner
+// reporting every step whatever fails. No real replay and no Chromium: the
+// full proof runs as `npm run proof`.
 import { chmodSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, afterEach, describe, expect, test } from "vitest";
@@ -10,6 +11,7 @@ import {
   baselineVersion,
   checksTests,
   freshFails,
+  helpOptions,
   replayPasses,
   runProof,
   sameBytes,
@@ -54,12 +56,52 @@ async function assembled(): Promise<string> {
   return outDir;
 }
 
-function claudeShim(version: string): string {
+/** `claude --help` at the baseline, cut down: every option here is in SPEC. */
+function help(options: string[] = []): string {
+  return [
+    "Usage: claude [options] [command] [prompt]",
+    "",
+    "Arguments:",
+    "  prompt                                Your prompt",
+    "",
+    "Options:",
+    "  --add-dir <directories...>            Additional directories to allow tool",
+    "                                        access to",
+    "  --allowedTools, --allowed-tools <tools...>",
+    '      Comma or space-separated list of tool names to allow (e.g. "Bash(git *)',
+    '      Edit")',
+    "  -c, --continue                        Continue the most recent conversation in",
+    "                                        the current directory",
+    "  -d, --debug [filter]                  Enable debug mode with optional category",
+    "  -h, --help                            Display help for command",
+    "  -p, --print                           Print response and exit (useful for",
+    "  -r, --resume [value]                  Resume a conversation by session ID or",
+    ...options,
+    "  -v, --version                         Output the version number",
+    "",
+    "Commands:",
+    "  agents [options]                      Manage background agents",
+    "",
+  ].join("\n");
+}
+
+/** A `claude` that prints `version`, and `helpText` for --help (exit 1 when null). */
+function claudeShim(version: string, helpText: string | null = help()): string {
   const file = join(tempDir("quest-proof-claude-"), "claude");
-  writeFileSync(file, `#!/bin/sh\necho "${version} (Claude Code)"\n`);
+  const onHelp =
+    helpText === null
+      ? "echo 'boom' >&2; exit 1"
+      : `cat <<'HELP'\n${helpText}\nHELP\nexit 0`;
+  writeFileSync(
+    file,
+    `#!/bin/sh\nif [ "$1" = "--help" ]; then\n${onHelp}\nfi\necho "${version} (Claude Code)"\n`,
+  );
   chmodSync(file, 0o755);
   return file;
 }
+
+const unknown = (option: string) =>
+  `claude --help lists ${option}, which practice-template/checks/claude-args.mjs's SPEC does not know`;
 
 describe("baselineVersion", () => {
   test("reads the baseline from the real CHANGELOG", () => {
@@ -165,6 +207,32 @@ describe("step 1: starterTests and checksTests", () => {
   });
 });
 
+describe("helpOptions", () => {
+  test("reads each option up to its description, a wrapped one too", () => {
+    expect(helpOptions(help())).toEqual([
+      "--add-dir <directories...>",
+      "--allowedTools, --allowed-tools <tools...>",
+      "-c, --continue",
+      "-d, --debug [filter]",
+      "-h, --help",
+      "-p, --print",
+      "-r, --resume [value]",
+      "-v, --version",
+    ]);
+  });
+
+  test("an option alone on its line, CRLF line ends, and no Options: section", () => {
+    const wrapped = help([
+      "  --a-very-long-new-option <value-name-here>",
+      "      What it does",
+    ]);
+    expect(helpOptions(wrapped.replaceAll("\n", "\r\n"))).toContain(
+      "--a-very-long-new-option <value-name-here>",
+    );
+    expect(helpOptions("Usage: claude [options]\n")).toBeNull();
+  });
+});
+
 describe("step 3: replayPasses", () => {
   async function prepared(): Promise<string> {
     const copy = await assembled();
@@ -212,6 +280,115 @@ describe("step 3: replayPasses", () => {
     expect(result.problems[0]).toMatch(
       /^b-1: the reference solution failed: planted/,
     );
+  });
+
+  test("a --help that lists a subset of SPEC lets the replay run", async () => {
+    const result = replayPasses({
+      repoRoot,
+      copy: await prepared(),
+      solutionsDir: failing(),
+      claude: claudeShim(BASELINE),
+    });
+    expect(result.note).toBeUndefined();
+    expect(result.problems).toHaveLength(1);
+    expect(result.problems[0]).toMatch(/^b-1: /);
+  });
+
+  test.each([
+    ["an option SPEC lacks", "  --new-flag <x>                        New"],
+    [
+      "a known flag with another value form",
+      "  --debug <filter>                      Debug",
+    ],
+    [
+      "an option alone on its line",
+      "  --a-very-long-new-option <value-name-here>\n      What it does",
+    ],
+  ])("%s fails it before any solution runs, naming it", async (_, line) => {
+    const option = (line.trim().split(/ {2,}|\n/)[0] ?? "").trim();
+    const result = replayPasses({
+      repoRoot,
+      copy: await prepared(),
+      solutionsDir: failing(),
+      claude: claudeShim(BASELINE, help([line])),
+    });
+    expect(result).toEqual({
+      ok: false,
+      problems: [unknown(option)],
+      note: undefined,
+    });
+  });
+
+  test("an Options: section with no option it can read fails it", async () => {
+    const reshaped = [
+      "Usage: claude [options]",
+      "",
+      "Options:",
+      "    -d, --debug [filter]    Enable debug mode",
+      "    -h, --help              Display help for command",
+      "",
+    ].join("\n");
+    expect(helpOptions(reshaped)).toEqual([]);
+    const result = replayPasses({
+      repoRoot,
+      copy: await prepared(),
+      solutionsDir: failing(),
+      claude: claudeShim(BASELINE, reshaped),
+    });
+    expect(result).toEqual({
+      ok: false,
+      problems: ["claude --help listed no options under Options:"],
+      note: undefined,
+    });
+  });
+
+  test("a failing --help fails it", async () => {
+    const result = replayPasses({
+      repoRoot,
+      copy: await prepared(),
+      solutionsDir: failing(),
+      claude: claudeShim(BASELINE, null),
+    });
+    expect(result).toEqual({
+      ok: false,
+      problems: ["claude --help exited 1"],
+      note: undefined,
+    });
+  });
+
+  test("anyClaude turns each --help problem into a note", async () => {
+    const copy = await prepared();
+    const listed = replayPasses({
+      repoRoot,
+      copy,
+      solutionsDir: failing(),
+      claude: claudeShim(
+        "1.0.0",
+        help([
+          "  --new-flag <x>                        New",
+          "  --debug <filter>                      Debug",
+        ]),
+      ),
+      anyClaude: true,
+    });
+    expect(listed.note).toBe(
+      [
+        `Claude Code is 1.0.0, not the baseline ${BASELINE}`,
+        unknown("--new-flag <x>"),
+        unknown("--debug <filter>"),
+      ].join("; "),
+    );
+    expect(listed.problems).toHaveLength(1);
+    expect(listed.problems[0]).toMatch(/^b-1: /);
+    const failed = replayPasses({
+      repoRoot,
+      copy,
+      solutionsDir: failing(),
+      claude: claudeShim(BASELINE, null),
+      anyClaude: true,
+    });
+    expect(failed.note).toBe("claude --help exited 1");
+    expect(failed.problems[0]).toMatch(/^b-1: /);
   });
 
   test("anyClaude turns a mismatch into a note", async () => {
