@@ -617,8 +617,9 @@ test('b-4 explains why a command change can be restored for a file edited earlie
 
 // A repository whose committed CLAUDE.md holds a rule, followed by a commit a
 // new session made, as in lesson b-5.
-function memoryRepo({ claudeMd = '# Project\n\n- Every new JavaScript file in `src/` starts with the line `// Part of linkcheck.`\n- CLI errors go to stderr and start with `linkcheck:`.\n', commitClaudeMd = true, header = '// Part of linkcheck.', commitChange = true } = {}) {
-  const dir = repo({ 'CLAUDE.md': claudeMd, '.gitignore': 'CLAUDE.local.md\n', 'package.json': '{"scripts":{"test":"node --test"}}' });
+const memoryMd = '# Project\n\n- Every new JavaScript file in `src/` starts with the line `// Part of linkcheck.`\n- CLI errors go to stderr and start with `linkcheck:`.\n';
+function memoryRepo({ claudeMd = memoryMd, commitClaudeMd = true, header = '// Part of linkcheck.', commitChange = true, packageJson = '{"scripts":{"test":"node --test"}}' } = {}) {
+  const dir = repo({ 'CLAUDE.md': claudeMd, '.gitignore': 'CLAUDE.local.md\n', 'package.json': packageJson });
   writeFileSync(join(dir, '.git', 'info', 'exclude'), '.practice/\n');
   const git = (...args) => execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', ...args], { cwd: dir, encoding: 'utf8' }).trim();
   git('add', '.gitignore', 'package.json');
@@ -690,6 +691,67 @@ test('b-5 says when the new file is there but not committed yet', () => {
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+// The line /init wrote into project/CLAUDE.md in a live run (ticket 342):
+// `check` is a script in the Starter project's package.json, so only a rule
+// for course lines can catch it.
+const initCourseLine = "- `npm run check`: runs the course's lesson checks from `../checks/run.mjs`, which lives outside this repo";
+
+test('b-5 fails a committed CLAUDE.md line that only the course uses, quotes it and points back to step 2', () => {
+  const dir = memoryRepo({ claudeMd: `${memoryMd}${initCourseLine}\n`, packageJson: readFileSync(join(root, 'package.json'), 'utf8') });
+  try {
+    const { code, out } = check(['b-5', '--dir', dir]);
+    assert.equal(code, 1, out);
+    assert.ok(out.includes(initCourseLine), out);
+    assert.match(out, /step 2 of the worked example/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('b-5 passes a committed CLAUDE.md whose only command is npm test', () => {
+  const dir = memoryRepo({ claudeMd: `${memoryMd}- Run the tests with \`npm test\`.\n`, packageJson: readFileSync(join(root, 'package.json'), 'utf8') });
+  try {
+    const { code, out } = check(['b-5', '--dir', dir]);
+    assert.equal(code, 0, out);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('b-5 counts each kind of line the lesson calls a course line, and no linkcheck line', async () => {
+  const { items } = await import('../lessons/b-5.mjs');
+  const courseItem = items.find((it) => /course/.test(it.text));
+  assert.ok(courseItem, 'b-5 has no item for course lines');
+  const verdict = (line) => {
+    const dir = memoryRepo({ claudeMd: `${memoryMd}${line}\n`, packageJson: readFileSync(join(root, 'package.json'), 'utf8') });
+    try {
+      return courseItem.check(openRepo(dir));
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  };
+  const course = [
+    '- Lesson checks live in `../checks/`.',
+    '- Run `npm run check -- b-5` after each lesson.',
+    '- `npm run learn` walks through the lessons.',
+    '- `npm run test:checks` tests the checks.',
+    '- The lessons are in `learn/lessons/`.',
+    '- The capstone brief is `../capstone/beginner-bug.md`.',
+    '- CI is in `.github/workflows/`.',
+    '- The dev container is in `.devcontainer/`.',
+  ];
+  for (const line of course) assert.match(String(verdict(line)), /describes the course/, line);
+  const linkcheck = [
+    '- Run the tests with `npm test`.',
+    '- Check a folder: `npm run linkcheck -- samples`.',
+    '- Each link is checked in `src/check-links.js`.',
+    '- The config file is `linkcheck.json`.',
+    '- Docs: https://code.claude.com/docs/en/learn/x',
+    '- See https://github.com/acme/.github/blob/main/README.md',
+  ];
+  for (const line of linkcheck) assert.equal(verdict(line), true, line);
 });
 
 // The reference fix for capstone/beginner-bug.md: each file with its text

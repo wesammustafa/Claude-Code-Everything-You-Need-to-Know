@@ -100,11 +100,12 @@ You are done when all of these are true:
 - [ ] A commit made after that rule adds JavaScript files to `src/`, and each of them starts with the rule's line: `git log --stat -3` ([git log](https://git-scm.com/docs/git-log)) lists them.
 - [ ] The committed CLAUDE.md holds the notes' rule for CLI errors, and every `npm run` script it names is in `package.json`.
 - [ ] A committed `.gitignore` keeps `CLAUDE.local.md` out, git tracks no `CLAUDE.local.md`, and the committed CLAUDE.md holds neither personal note: `git check-ignore CLAUDE.local.md` ([git check-ignore](https://git-scm.com/docs/git-check-ignore)) prints its name.
+- [ ] The committed CLAUDE.md has no line about the course's folders or scripts: `git show HEAD:CLAUDE.md` shows none.
 - [ ] Self-check (not tested): the session that wrote `src/stats.js` started after you committed the rule, and its `/context all` listed `CLAUDE.md` under **Memory files**. Your `CLAUDE.local.md` holds the sample-docs note: git ignores that file, so the check can't see it.
 
 Run `npm run check -- b-5` in your practice copy.
 
-If CLAUDE.md isn't committed, run `git add CLAUDE.md` and commit it. If a new file doesn't start with the rule, start a new session in the folder that holds `CLAUDE.md`, check `/context all` lists it, and ask for a different new file in `src/`, such as `src/summary.js` with a test, and to commit it. If the check names an `npm run` script, that script isn't in `package.json`: fix or delete the line it quotes, and commit CLAUDE.md. If the `.gitignore` item fails, add the line `CLAUDE.local.md` to `.gitignore` and commit it, or, if `CLAUDE.local.md` was committed, run `git rm --cached CLAUDE.local.md` ([git rm](https://git-scm.com/docs/git-rm)) and commit.
+If CLAUDE.md isn't committed, run `git add CLAUDE.md` and commit it. If a new file doesn't start with the rule, start a new session in the folder that holds `CLAUDE.md`, check `/context all` lists it, and ask for a different new file in `src/`, such as `src/summary.js` with a test, and to commit it. If the check says `package.json` has no such script, fix or delete the line that names it, and commit CLAUDE.md. If the check quotes a line that describes the course rather than linkcheck, cut it as step 2 says and commit CLAUDE.md. If the `.gitignore` item fails, add the line `CLAUDE.local.md` to `.gitignore` and commit it, or, if `CLAUDE.local.md` was committed, run `git rm --cached CLAUDE.local.md` ([git rm](https://git-scm.com/docs/git-rm)) and commit.
 
 ## Go further
 
