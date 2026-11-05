@@ -9,7 +9,7 @@
 <ol>
 <li>
 <p>Download an example:</p>
-<pre><code class="language-bash">curl -fsSL https://raw.githubusercontent.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/v0000.00/examples/intermediate/05-hooks/dot-claude/hooks/protect-files.sh -o protect.sh
+<pre><code class="language-bash">curl -fsSL https://raw.githubusercontent.com/wesammustafa/Claude-Code-Quest/v0000.00/examples/intermediate/05-hooks/dot-claude/hooks/protect-files.sh -o protect.sh
 echo "&lt;script&gt;alert(1)&lt;/script&gt;"
 </code></pre>
 </li>
@@ -27,10 +27,10 @@ echo "&lt;script&gt;alert(1)&lt;/script&gt;"
 <picture class="diagram" data-light="sample.d1.light.svg" data-dark="sample.d1.dark.svg"><source media="(prefers-color-scheme: dark)" srcset="sample.d1.dark.svg" /><img src="sample.d1.light.svg" alt="Where hook events fire in a turn" /></picture>
 <h2 id="links">Links</h2>
 <ul>
-<li>A live page: <a href="https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/v0000.00/docs/intermediate/05-hooks.md#worked-example" data-page="docs/intermediate/05-hooks.md" data-fragment="worked-example">Hooks</a>.</li>
-<li>A Level README: <a href="https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/v0000.00/docs/intermediate/README.md" data-page="docs/intermediate/README.md">Intermediate</a>.</li>
-<li>An example file: <a href="https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/v0000.00/examples/intermediate/05-hooks/dot-claude/hooks/protect-files.sh">protect-files.sh</a>.</li>
-<li>A folder: <a href="https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/tree/v0000.00/examples/intermediate/05-hooks">the hooks example</a>.</li>
+<li>A live page: <a href="https://github.com/wesammustafa/Claude-Code-Quest/blob/v0000.00/docs/intermediate/05-hooks.md#worked-example" data-page="docs/intermediate/05-hooks.md" data-fragment="worked-example">Hooks</a>.</li>
+<li>A Level README: <a href="https://github.com/wesammustafa/Claude-Code-Quest/blob/v0000.00/docs/intermediate/README.md" data-page="docs/intermediate/README.md">Intermediate</a>.</li>
+<li>An example file: <a href="https://github.com/wesammustafa/Claude-Code-Quest/blob/v0000.00/examples/intermediate/05-hooks/dot-claude/hooks/protect-files.sh">protect-files.sh</a>.</li>
+<li>A folder: <a href="https://github.com/wesammustafa/Claude-Code-Quest/tree/v0000.00/examples/intermediate/05-hooks">the hooks example</a>.</li>
 <li>Another site: <a href="https://code.claude.com/docs/en/hooks-guide">hooks guide</a>.</li>
 <li><a>A hostile link</a>.</li>
 </ul>

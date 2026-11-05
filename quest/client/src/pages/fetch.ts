@@ -4,7 +4,7 @@
 
 /** The Guide's repository, where every link outside the bundled pages goes. */
 export const GUIDE_REPO =
-  "https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know";
+  "https://github.com/wesammustafa/Claude-Code-Quest";
 
 /** One rendered page, as quest/release/src/pages.d.mts types PageEntry. */
 export interface PageEntry {

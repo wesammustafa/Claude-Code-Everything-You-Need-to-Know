@@ -6,10 +6,10 @@ Thanks for your interest in improving this guide. This is a learning resource â€
 
 | You want to | Do this |
 |---|---|
-| Report a stale or wrong fact | Open a [stale-content issue](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=stale-content.yml) with a link to a source that shows the current fact. |
-| Get stuck on a lesson | Use the lesson's "Stuck on this lesson?" link, which opens a [lesson-feedback issue](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml) with the lesson filled in. |
-| Report a broken link, script or example | Open a [bug report](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=bug.yml). |
-| Suggest a third-party tool, MCP server, skill, plugin, course or article | Use the [Suggest a resource form](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=suggest-resource.yml). Unsolicited pull requests that add listings are closed; see the [Listing policy](#listing-policy). |
+| Report a stale or wrong fact | Open a [stale-content issue](https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=stale-content.yml) with a link to a source that shows the current fact. |
+| Get stuck on a lesson | Use the lesson's "Stuck on this lesson?" link, which opens a [lesson-feedback issue](https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=lesson-feedback.yml) with the lesson filled in. |
+| Report a broken link, script or example | Open a [bug report](https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=bug.yml). |
+| Suggest a third-party tool, MCP server, skill, plugin, course or article | Use the [Suggest a resource form](https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=suggest-resource.yml). Unsolicited pull requests that add listings are closed; see the [Listing policy](#listing-policy). |
 | Improve an explanation or fix a fact | Open a pull request. Follow [Sources and citations](#sources-and-citations), [Pull requests](#pull-requests) and the [Doc style guide](#doc-style-guide). |
 | Expand a thin section | Open a pull request. SDLC walkthroughs, new workflow recipes, and copy-ready examples for a lesson (see [Adding a skill](#adding-a-skill)) are all high-value. |
 
@@ -185,7 +185,7 @@ The guide does not security-audit listings.
 
 ### Suggesting a resource
 
-- Listings are added at a content review, not through contributors' pull requests. A listing added at a review links that review's pull request. To suggest one, use the [Suggest a resource form](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=suggest-resource.yml); its required fields ask for the evidence the bar needs.
+- Listings are added at a content review, not through contributors' pull requests. A listing added at a review links that review's pull request. To suggest one, use the [Suggest a resource form](https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=suggest-resource.yml); its required fields ask for the evidence the bar needs.
 - An unsolicited pull request that adds a listing is closed with a reply that points to the form.
 - Suggestions that clear the bar wait for the next content review. Nothing merges ad hoc.
 - Suggesting your own project is allowed. Disclose your affiliation; the same bar applies.

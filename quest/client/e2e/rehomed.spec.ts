@@ -229,7 +229,7 @@ test("a Check goes on through a trip to the journey, and its result is on the ca
 });
 
 const HOOKS_URL =
-  "https://raw.githubusercontent.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/main/examples/intermediate/05-hooks/dot-claude/hooks/$f.sh";
+  "https://raw.githubusercontent.com/wesammustafa/Claude-Code-Quest/main/examples/intermediate/05-hooks/dot-claude/hooks/$f.sh";
 
 for (const width of [720, 1440])
   test(`i-5's code block: one number per line, and the long curl line wraps whole under its own number, at ${String(width)} px (rows 386, 387)`, async ({

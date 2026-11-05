@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Read the [listing policy](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/main/CONTRIBUTING.md#listing-policy) first. Each field below asks for evidence the listing bar checks.
+        Read the [listing policy](https://github.com/wesammustafa/Claude-Code-Quest/blob/main/CONTRIBUTING.md#listing-policy) first. Each field below asks for evidence the listing bar checks.
 
         - This form is the only way to suggest a listing. Unsolicited pull requests that add one are closed.
         - Suggestions that clear the bar are added at the next content review, not one by one.
@@ -77,5 +77,5 @@ body:
     attributes:
       label: Listing policy
       options:
-        - label: "I have read the [listing policy](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/main/CONTRIBUTING.md#listing-policy)."
+        - label: "I have read the [listing policy](https://github.com/wesammustafa/Claude-Code-Quest/blob/main/CONTRIBUTING.md#listing-policy)."
           required: true

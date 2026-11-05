@@ -5,7 +5,7 @@
 import { posix } from "node:path";
 
 export const REPO_URL =
-  "https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know";
+  "https://github.com/wesammustafa/Claude-Code-Quest";
 
 // A target's repo path, as the Guide's images check resolves one: "/" means
 // the repo root, anything else is relative to the page's folder. Null for a

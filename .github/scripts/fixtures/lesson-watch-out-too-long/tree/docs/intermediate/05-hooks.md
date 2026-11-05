@@ -144,4 +144,4 @@ Run `npm run check -- i-5 --dir <your repo>` from your template copy (or `npm ru
 
 <sub>Sources: [Automate actions with hooks](https://code.claude.com/docs/en/hooks-guide) · [Hooks reference: workspace trust](https://code.claude.com/docs/en/hooks#workspace-trust) · [Configure permissions](https://code.claude.com/docs/en/permissions)</sub>
 
-<sub>← [Permissions, settings scopes and the sandbox](#) · [Intermediate index](#) · [Delegate to a custom subagent](#) → · Topic: [Hooks](../topics/hooks.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=i-5)</sub>
+<sub>← [Permissions, settings scopes and the sandbox](#) · [Intermediate index](#) · [Delegate to a custom subagent](#) → · Topic: [Hooks](../topics/hooks.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=lesson-feedback.yml&lesson=i-5)</sub>

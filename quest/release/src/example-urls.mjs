@@ -1,7 +1,7 @@
 // The example-fetch rewrite: the raw URL prefix at main becomes the same
 // prefix at the release ref, and the example paths a page fetches through it.
 export const RAW_PREFIX =
-  "https://raw.githubusercontent.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/";
+  "https://raw.githubusercontent.com/wesammustafa/Claude-Code-Quest/";
 
 export function rewriteExampleUrls(text, ref) {
   return text.replaceAll(`${RAW_PREFIX}main/`, `${RAW_PREFIX}${ref}/`);

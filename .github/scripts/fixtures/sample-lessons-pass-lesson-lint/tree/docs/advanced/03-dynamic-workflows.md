@@ -66,4 +66,4 @@ Run `npm run check -- a-3 --dir <your repo>` from your template copy (or `npm ru
 
 <sub>Sources: [Orchestrate subagents at scale with dynamic workflows](https://code.claude.com/docs/en/workflows)</sub>
 
-<sub>← [Choose an orchestration pattern](#) · [Advanced index](#) · [Script Claude Code with `claude -p`](#) → · Topic: [Subagents and parallel work](../topics/subagents-and-parallel-work.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=a-3)</sub>
+<sub>← [Choose an orchestration pattern](#) · [Advanced index](#) · [Script Claude Code with `claude -p`](#) → · Topic: [Subagents and parallel work](../topics/subagents-and-parallel-work.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=lesson-feedback.yml&lesson=a-3)</sub>

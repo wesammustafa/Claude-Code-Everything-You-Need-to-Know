@@ -77,4 +77,4 @@ If the bar stays empty, run the script with the JSON from step 2: a script that 
 
 <sub>Sources: [Customize your status line](https://code.claude.com/docs/en/statusline)</sub>
 
-<sub>Back to the [Intermediate index](../README.md) · Topic: [Models, effort and cost](../../topics/models-effort-and-cost.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=i-status-line)</sub>
+<sub>Back to the [Intermediate index](../README.md) · Topic: [Models, effort and cost](../../topics/models-effort-and-cost.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=lesson-feedback.yml&lesson=i-status-line)</sub>

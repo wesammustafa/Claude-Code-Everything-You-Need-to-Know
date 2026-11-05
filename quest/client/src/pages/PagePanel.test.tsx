@@ -210,7 +210,7 @@ test("a page that did not load offers Retry and GitHub", async () => {
   expect(await screen.findByText("This page did not load.")).toBeVisible();
   expect(screen.getByRole("link", { name: "Open on GitHub" })).toHaveAttribute(
     "href",
-    "https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/v2026.11/docs/beginner/01-a.md",
+    "https://github.com/wesammustafa/Claude-Code-Quest/blob/v2026.11/docs/beginner/01-a.md",
   );
   failing.clear();
   await user.click(screen.getByRole("button", { name: "Retry" }));
@@ -224,7 +224,7 @@ test("a lesson page ends with the feedback link for the Lesson it belongs to, no
     screen.getByRole("link", { name: "Stuck on this lesson? Tell us" }),
   ).toHaveAttribute(
     "href",
-    "https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=b-1",
+    "https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=lesson-feedback.yml&lesson=b-1",
   );
   await user.click(screen.getByRole("link", { name: "Commands" }));
   await heading("Commands by level");
@@ -240,7 +240,7 @@ test("a Level index page's feedback link names the active Lesson", async () => {
     screen.getByRole("link", { name: "Stuck on this lesson? Tell us" }),
   ).toHaveAttribute(
     "href",
-    "https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=b-2",
+    "https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=lesson-feedback.yml&lesson=b-2",
   );
 });
 

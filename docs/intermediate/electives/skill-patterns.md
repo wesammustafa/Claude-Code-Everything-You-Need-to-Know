@@ -84,4 +84,4 @@ If `/changes-review` stops with `Shell command failed` or `Shell command permiss
 
 <sub>Sources: [Extend Claude with skills](https://code.claude.com/docs/en/skills) · [anthropics/skills](https://github.com/anthropics/skills)</sub>
 
-<sub>Back to the [Intermediate index](../README.md) · Topic: [Skills](../../topics/skills.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=i-skill-patterns)</sub>
+<sub>Back to the [Intermediate index](../README.md) · Topic: [Skills](../../topics/skills.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=lesson-feedback.yml&lesson=i-skill-patterns)</sub>

@@ -603,7 +603,7 @@ export const PATH_MAX = 1024;
 // repository file (resolveLinks). Only the raw example-fetch URLs move to the
 // ref at release (quest/release/src/example-urls.mjs).
 export const GUIDE =
-  "https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know";
+  "https://github.com/wesammustafa/Claude-Code-Quest";
 export const COMMANDS_URL = `${GUIDE}/blob/main/docs/reference/commands.md`;
 export const indexUrl = (level: LevelId) =>
   `${GUIDE}/blob/main/docs/${level}/README.md`;
