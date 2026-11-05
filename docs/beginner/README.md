@@ -8,7 +8,7 @@ One session, one change, done well. You start Claude Code safely and check what 
 
 - [ ] Work in a terminal: change folders, run commands and read their output.
 - [ ] Use git: clone a repository, commit, and read `git status` and `git diff`.
-- [ ] Have a Claude subscription (Pro, Max, Team or Enterprise; the free plan doesn't include Claude Code), a Claude Console account, or access through a supported cloud provider ([Quickstart](https://code.claude.com/docs/en/quickstart), [Advanced setup](https://code.claude.com/docs/en/setup)). Lesson 1 shows you how to sign in.
+- [ ] Have a Claude subscription (Pro, Max, Ultra, Team or Enterprise; the free plan doesn't include Claude Code), a Claude Console account, or access through a supported cloud provider ([Quickstart](https://code.claude.com/docs/en/quickstart), [Advanced setup](https://code.claude.com/docs/en/setup)). Lesson 1 shows you how to sign in.
 
 New to the terminal? The official [Terminal guide for new users](https://code.claude.com/docs/en/terminal-guide) walks you through opening one and installing Claude Code.
 
