@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Link } from "react-router";
 import type { CompleteLesson, LevelId } from "@quest/contract";
 import { NEW_BADGE } from "../components/Badge";
@@ -74,6 +74,11 @@ const HANDOVER = "You did every task without the exact command.";
 const INVITATION =
   "Questions about anything in this level? Ask Claude Code, then compare the answer with the lesson pages.";
 const NOTCH_HARDER = "A notch harder: it starts with less help.";
+// What each skill's Mastery says (ticket 348): the help on its latest step,
+// as its tier showed it or as the Learner opened more (a hint, the exact
+// command or a bottom rung). Shown only when a skill has one beside it.
+const PRACTISED_HELP =
+  "Beside each: the help on its latest step, counting any hint or exact command you opened.";
 
 /** Lesson complete: Pip, the Badge, the check result, the skills practised and the next Lesson. */
 export function LessonComplete() {
@@ -135,10 +140,20 @@ export function LessonComplete() {
           <h2 id="practised" className="text-sm text-muted">
             You practised
           </h2>
+          {lesson.practised.some((p) => p.mastery) && (
+            <p className="text-sm text-muted">{PRACTISED_HELP}</p>
+          )}
           <ul className="grid gap-1.5">
-            {lesson.practised.map(({ skill, mastery }) => (
+            {lesson.practised.map(({ skill, steps, mastery }) => (
               <li key={skill} className="flex flex-wrap items-center gap-3">
-                <span className="min-w-20 font-semibold">{skill}</span>
+                <span className="min-w-20 font-semibold">
+                  {steps.map((title, i) => (
+                    <Fragment key={title}>
+                      {i > 0 && " · "}
+                      <InlineText text={title} />
+                    </Fragment>
+                  ))}
+                </span>
                 {mastery && <Tier mastery={mastery.used} />}
               </li>
             ))}

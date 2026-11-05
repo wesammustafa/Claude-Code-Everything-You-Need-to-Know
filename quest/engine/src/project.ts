@@ -798,20 +798,24 @@ function completeOf(s: EngineState, head: LessonHead): CompleteLesson {
   const p = progressOf(s);
   const steps = stepsOf(s);
   const tiers = tiersOf(s);
-  const skills = [
-    ...new Set(
-      steps
-        .filter((x) => x.part !== "Warm-up" && p.done.includes(x.id))
-        .map((x) => x.skill),
-    ),
-  ];
+  const finished = steps.filter(
+    (x) => x.part !== "Warm-up" && p.done.includes(x.id),
+  );
+  const skills = [...new Set(finished.map((x) => x.skill))];
   const next = nextLessonOf(s);
   const mastery = masteryOf(s);
   return {
     ...head,
     phase: "complete",
+    // A skill is named by its steps' titles, the course's own words: its id
+    // is the app's (ticket 348).
     practised: skills.map((skill) => ({
       skill,
+      steps: [
+        ...new Set(
+          finished.filter((x) => x.skill === skill).map((x) => x.title),
+        ),
+      ],
       mastery: mastery[skill] ?? null,
     })),
     badge: c?.badge ?? null,

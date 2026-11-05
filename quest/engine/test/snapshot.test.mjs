@@ -1015,6 +1015,16 @@ test("complete: b-1's Badge and first time, its check summary, the help used, an
   );
   assert.ok(v.staircase.length > 0);
   assert.ok(v.practised.length > 0);
+  // Each skill practised is named by its finished steps' titles, in play
+  // order (ticket 348).
+  const own = lesson("b-1").content.steps;
+  assert.deepEqual(
+    v.practised.map((x) => x.steps),
+    v.practised.map((x) =>
+      own.filter((step) => step.skill === x.skill).map((step) => step.title),
+    ),
+  );
+  assert.ok(v.practised.every((x) => x.steps.length > 0));
   // Each skill practised has the help its latest step used (ticket 213).
   assert.ok(
     v.practised.every((x) =>
