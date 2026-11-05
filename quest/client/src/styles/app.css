@@ -81,10 +81,13 @@
 
 /* A rendered Guide page in the page panel (src/pages/PagePanel.tsx): the
    release build's sanitized HTML, so the elements are styled here rather
-   than by utilities. */
+   than by utilities. Each grid's one column may shrink below its content,
+   so a wide code block or table scrolls inside itself and the prose wraps
+   to the panel. */
 @layer components {
   .page-prose {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: calc(var(--spacing) * 4);
     line-height: var(--text-base--line-height);
 
@@ -107,6 +110,7 @@
     }
     & :where(ul, ol) {
       display: grid;
+      grid-template-columns: minmax(0, 1fr);
       gap: calc(var(--spacing) * 1.5);
       padding-left: calc(var(--spacing) * 5.5);
     }
@@ -169,6 +173,7 @@
     & .markdown-alert {
       --alert: var(--color-teal);
       display: grid;
+      grid-template-columns: minmax(0, 1fr);
       gap: calc(var(--spacing) * 2);
       border-left: calc(var(--underline) * 3) solid var(--alert);
       border-radius: var(--radius-sm);

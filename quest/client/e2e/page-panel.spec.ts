@@ -1,9 +1,11 @@
 // The page panel (244): a rendered Guide page fetched when opened, in both
 // themes, with its links each going to the right place; Pip resting beside
 // it; the Electives on the Level cards and the skills card's hand-over.
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { Page } from "@playwright/test";
 import { connected, expect, test } from "./live.ts";
-import { pageIndex, servePages } from "./pages.ts";
+import { PAGES_DIR, pageIndex, servePages } from "./pages.ts";
 import {
   cardEntries,
   fullCourse,
@@ -173,6 +175,41 @@ test.describe("a page with a diagram and callouts, and heading links", () => {
       new RegExp(`^${GUIDE}/blob/${pageIndex.ref}/`),
     );
   });
+});
+
+// A code block wider than the panel scrolls inside itself, at the top level
+// and inside a list item, and the panel itself never scrolls sideways (347).
+test.describe("a long code block scrolls inside itself", () => {
+  const PERMISSIONS = "docs/beginner/02-permission-modes-and-plan-mode.md";
+  const file = "/pages/beginner/02-permission-modes-and-plan-mode.html";
+  const long = `${"a-very-long-command --with-a-flag ".repeat(12)}end`;
+  const html =
+    readFileSync(join(PAGES_DIR, file.slice("/pages/".length)), "utf8") +
+    `<pre><code>${long}</code></pre>\n<ol><li><p>A step:</p><pre><code>${long}</code></pre></li></ol>\n`;
+
+  for (const width of [375, 1280, 1920]) {
+    test(`at ${String(width)} px`, async ({ page, context }) => {
+      await servePages(context, { [file]: html });
+      await page.setViewportSize({ width, height: 900 });
+      await openAt(page, "/#/lesson/b-2", overviewAt("b-2"));
+      await readButton(page).click();
+      const dialog = page.getByRole("dialog", { name: titleOf(PERMISSIONS) });
+      const pres = dialog
+        .locator(".page-prose pre")
+        .filter({ hasText: "a-very-long-command" });
+      await expect(pres).toHaveCount(2);
+      for (const pre of await pres.all())
+        expect(
+          await pre.evaluate((el) => el.scrollWidth > el.clientWidth),
+        ).toBe(true);
+      const body = dialog.locator("[data-panel-body]");
+      const sizes = await body.evaluate((el) => ({
+        scroll: el.scrollWidth,
+        client: el.clientWidth,
+      }));
+      expect(sizes.scroll).toBeLessThanOrEqual(sizes.client);
+    });
+  }
 });
 
 // Pip's rest is the director's (director.test.ts) on the pagePanel input,
