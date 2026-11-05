@@ -846,7 +846,7 @@ export const overviews = [
       "links with a title, in double or single quotes, are checked",
       "protocol-relative links, such as `//cdn.example.com/app.js`, are skipped, and every other link is checked as before",
       "your tests catch the planted flaw: with the patch's `isExternal` put back, they fail",
-      "your last commit changes a test file and at least one other file",
+      "your last commit holds your fix in `src/` and the patch's test, `test/external.test.js`",
       "the tests pass",
       "nothing is left uncommitted",
     ],

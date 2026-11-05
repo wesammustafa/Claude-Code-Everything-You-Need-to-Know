@@ -99,14 +99,14 @@ You are done when all of these are true:
 - [ ] Links with a title, in double or single quotes, are checked.
 - [ ] Protocol-relative links, such as `//cdn.example.com/app.js`, are skipped, and every other link is checked as before.
 - [ ] Your tests catch the planted flaw: with the patch's `isExternal` put back, they fail.
-- [ ] Your last commit changes a test file and at least one other file: `git show --stat HEAD` ([git show](https://git-scm.com/docs/git-show)).
+- [ ] Your last commit holds your fix in `src/` and the patch's test, `test/external.test.js`: `git show --stat HEAD` ([git show](https://git-scm.com/docs/git-show)).
 - [ ] The tests pass: `npm test` reports `fail 0`.
 - [ ] Nothing is left uncommitted: `git status --porcelain` prints nothing.
 - [ ] Self-check (not tested): you found the patch's flaw by reading it, and you read each diff, the tests included, before it was committed.
 
 In the second terminal, run `npm run check -- b-3` in your practice copy.
 
-If titled links are still skipped, or reported with the title in the target, finish the Worked example: ask Claude to leave the title out of the target, with a test for each kind of quotes. If the check says a link is still skipped, or reports `//cdn.example.com/app.js` as broken, compare the patch's description with what its new line skips, and make sure you ran the `git apply` in Your turn step 2. If your tests still pass with the patch's version, none of them covers what the patch broke: ask Claude for one that fails on it. If your last commit has no test file, or only tests, ask Claude to amend it (`git commit --amend` ([git commit](https://git-scm.com/docs/git-commit))), or to combine it with the commit before, as long as you haven't pushed them. If the tests fail, read the first failure and ask Claude to fix the code, not the test. If `git status --porcelain` lists files, commit them.
+If titled links are still skipped, or reported with the title in the target, finish the Worked example: ask Claude to leave the title out of the target, with a test for each kind of quotes. If the check says a link is still skipped, or reports `//cdn.example.com/app.js` as broken, compare the patch's description with what its new line skips, and make sure you ran the `git apply` in Your turn step 2. If your tests still pass with the patch's version, none of them covers what the patch broke: ask Claude for one that fails on it. If your last commit is still the Worked example's, ask Claude to commit the fix, its test and the patch's test together (Your turn step 5). If it leaves out your fix or the patch's test, ask Claude to amend it (`git commit --amend` ([git commit](https://git-scm.com/docs/git-commit))), or to combine it with the commit before, as long as you haven't pushed them. If the tests fail, read the first failure and ask Claude to fix the code, not the test. If `git status --porcelain` lists files, commit them.
 
 ## Go further
 
