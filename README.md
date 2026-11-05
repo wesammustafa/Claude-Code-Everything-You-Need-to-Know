@@ -23,7 +23,7 @@
 Claude Code Quest opens in your browser, beside your terminal. Read a step, try it in Claude Code, and the app checks your work. When it passes, Pip cheers.
 
 <p align="center">
-  <!-- Captured on 2026-11-02 from the Claude Code Quest app on its practice stream, against the guide baseline Claude Code v2.1.308 (stable). -->
+  <!-- Captured on 2026-11-02 from the Claude Code Quest app on its practice stream, against the guide baseline Claude Code v2.1.309 (stable). -->
   <img src="assets/readme/pip-step-done.gif" width="640" alt="In Claude Code Quest, the Learner corrects the claim in step 9 of Beginner lesson 1: the step's check passes, its progress dash turns green, Pip, a small blocky robot with two antennas, throws his arms up with sparks around him, and his speech bubble says That step is done." />
   <br />
   <sub><b>Do a step, and when it passes, Pip cheers with you.</b></sub>
@@ -84,7 +84,7 @@ Three levels take you from your first session to a setup your team shares. Start
 <img src="assets/readme/pip-explaining.png" align="left" width="88" height="88" alt="Pip points a little stick at the Intermediate level, explaining." />
 
 ### Intermediate
-**Start here if** you can go from request to commit.<br clear="left" />
+**Start here if** you can do what Beginner teaches.<br clear="left" />
 
 **You'll learn to** shape Claude Code to your own project with skills, memory, permissions, hooks, subagents, MCP servers and plugins.\
 **You'll finish by** getting a repository ready for a new teammate.\
@@ -95,7 +95,7 @@ Three levels take you from your first session to a setup your team shares. Start
 <img src="assets/readme/pip-success.png" align="left" width="88" height="88" alt="Pip throws both arms up in a burst of sparks." />
 
 ### Advanced
-**Start here if** you write skills, hooks and subagents.<br clear="left" />
+**Start here if** you can do what Intermediate teaches.<br clear="left" />
 
 **You'll learn to** run sessions in parallel, run Claude Code unattended in scripts and CI, share a setup with your team, and keep autonomous runs within limits you set.\
 **You'll finish by** adding CI review your team can share.\
@@ -104,7 +104,7 @@ Three levels take you from your first session to a setup your team shares. Start
 **[Start Advanced](docs/advanced/README.md)**
 
 <p align="center">
-  <!-- Captured on 2026-11-02 from the Claude Code Quest app on its practice stream, against the guide baseline Claude Code v2.1.308 (stable); trimmed and re-encoded on 2026-11-05. -->
+  <!-- Captured on 2026-11-02 from the Claude Code Quest app on its practice stream, against the guide baseline Claude Code v2.1.309 (stable); trimmed and re-encoded on 2026-11-05. -->
   <img src="assets/readme/pip-level-done.gif" width="320" alt="On Beginner level complete, Pip throws his arms up in a burst of sparks above the level's six badges and the Start the Intermediate level button." />
   <br />
   <sub><b>Finish a level, and Pip throws a party.</b></sub>
@@ -154,7 +154,7 @@ Three levels take you from your first session to a setup your team shares. Start
 <div align="center">
 
 <!-- Rendered on 2026-11-05 from Pip's rig (quest/client/pip/pip.riv) in Claude Code Quest's web runtime: his Sleep mode. -->
-<img src="assets/readme/pip-asleep.gif" width="200" alt="Pip lies down for a nap, and a small pixel z drifts up above his head." />
+<img src="assets/readme/pip-asleep.gif" width="200" alt="Pip dozes, slumped low, his eyes falling shut now and then while a small pixel z and then a big Z drift up above his head." />
 
 <sub>Leave Pip be for a few minutes and he dozes off. He's up the moment you're back.</sub>
 
