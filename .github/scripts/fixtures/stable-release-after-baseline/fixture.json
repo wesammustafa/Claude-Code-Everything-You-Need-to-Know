@@ -2,6 +2,12 @@
   "rule": "drift",
   "expect": "fail",
   "mode": "scheduled",
-  "env": { "CHECKS_STABLE_VERSION": "2.1.290" },
-  "about": "npm's stable dist-tag has moved past the frozen baseline, so the weekly drift check reports it."
+  "env": { "CHECKS_STABLE_VERSION": "2.1.290", "CHECKS_LATEST_VERSION": "2.1.295" },
+  "about": "npm's stable dist-tag has moved past the frozen baseline, so the weekly drift check reports both tags, the CHANGELOG range up to latest, the version-note outcome and the proof step.",
+  "output": [
+    "stable is now v2\\.1\\.290 and latest v2\\.1\\.295; the baseline is v2\\.1\\.285",
+    "from v2\\.1\\.285 to v2\\.1\\.295\\. A stable change",
+    "CONTRIBUTING\\.md#version-notes",
+    "With Claude Code v2\\.1\\.295 installed, `npm run proof -- --any-claude` notes"
+  ]
 }
