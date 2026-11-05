@@ -46,7 +46,7 @@ A matcher picks the tools a hook watches: `Edit|Write` runs it for those two too
    chmod +x .claude/hooks/*.sh
    ```
 
-   `protect-files.sh` is the hooks guide's script for blocking edits to `.env`, `package-lock.json` and `.git/`. Lesson 4's `Read(./.env)` rule already blocks Edit and Write on `.env` ([Read and Edit](https://code.claude.com/docs/en/permissions#read-and-edit)); the hook adds paths no rule names. `format-after-edit.sh` removes trailing spaces from a source file after Claude edits it.
+   `protect-files.sh` is the hooks guide's script for blocking edits to `.env`, `package-lock.json` and `.git/`. Lesson 4's `Read(./.env)` rule already blocks Edit and Write on `.env` ([Read and Edit](https://code.claude.com/docs/en/permissions#read-and-edit)); the hook adds paths no rule names. `format-after-edit.sh` removes trailing spaces from a source file after Claude edits it. This guide's copy adds one guard to it: when `jq` fails or is missing, the script exits 1 instead of reading an empty path, which would let every edit through.
 2. Register them in `.claude/settings.json`, beside the `permissions` block from lesson 4:
 
    ```json
@@ -60,14 +60,14 @@ A matcher picks the tools a hook watches: `Edit|Write` runs it for those two too
    }
    ```
 
-   With `"args": []`, Claude Code runs the script directly, without a shell, so the path needs no quotes ([Exec form and shell form](https://code.claude.com/docs/en/hooks#exec-form-and-shell-form)). `"onFailure": "block"` makes the protection fail closed: if the script can't start, crashes or times out, the edit is blocked instead of let through.
+   With `"args": []`, Claude Code runs the script directly, without a shell, so the path needs no quotes ([Exec form and shell form](https://code.claude.com/docs/en/hooks#exec-form-and-shell-form)). `"onFailure": "block"` makes the protection fail closed: if the script can't start, exits with a code other than 0 or 2, as the guard's exit 1 does, or times out, the edit is blocked instead of let through.
 3. Test the hook without Claude, by piping in the JSON an Edit call would send. Edit and Write always send an absolute path ([PreToolUse input](https://code.claude.com/docs/en/hooks#pretooluse-input)), so build it from `$PWD`:
 
    ```bash
    echo "{\"tool_input\":{\"file_path\":\"$PWD/package-lock.json\"}}" | .claude/hooks/protect-files.sh; echo "exit $?"
    ```
 
-   It prints a `Blocked:` line and `exit 2`.
+   It prints a `Blocked:` line and `exit 2`. If it prints `jq: command not found` and `exit 1`, install `jq` and run it again ([Hook error in output](https://code.claude.com/docs/en/hooks-guide#hook-error-in-output)).
 4. Start `claude` and run `/hooks`: your hooks appear under `PreToolUse` and `PostToolUse` ([Debug your configuration](https://code.claude.com/docs/en/debug-your-config#check-hooks)). Then ask for an edit the hook protects. In the practice template, `package-lock.json` exists; in your repository, name a protected file that it has:
 
    ```text
@@ -75,6 +75,14 @@ A matcher picks the tools a hook watches: `Edit|Write` runs it for those two too
    ```
 
    The Edit is blocked: Claude Code passes your script's `Blocked:` message to Claude as feedback ([Exit code output](https://code.claude.com/docs/en/hooks#exit-code-output)). Ask for the Edit tool by name here: Claude can also edit a file through a shell command, which an `Edit|Write` hook doesn't see.
+
+   If `/hooks` doesn't list your hooks, or the Edit isn't stopped by your `Blocked:` line, find where it stops:
+
+   - `/hooks` doesn't list them: Claude Code didn't load them. Check that they sit under `"hooks"` in your repository's `.claude/settings.json`, and restart `claude` if a change doesn't show ([`/hooks` shows no hooks configured](https://code.claude.com/docs/en/hooks-guide#%2Fhooks-shows-no-hooks-configured)).
+   - The Edit goes through: check that the matcher is exactly `Edit|Write`, since matchers are case-sensitive ([Hook not firing](https://code.claude.com/docs/en/hooks-guide#hook-not-firing)) and a misspelled one fails silently ([Check hooks](https://code.claude.com/docs/en/debug-your-config#check-hooks)), and that you accepted the folder's trust dialog: an interactive session holds back hooks until you do ([Workspace trust](https://code.claude.com/docs/en/hooks#workspace-trust)).
+   - The Edit is blocked with another message, such as one that says the hook `failed`: the script couldn't start or exited with a code other than 0 or 2. Run step 3's test again and fix what it shows: run `chmod +x` on a script that isn't executable, and install `jq` if it prints `jq: command not found`.
+
+   To see what each hook did, press `Ctrl+O` for the transcript view, or start `claude --debug-file /tmp/claude.log` for every hook's exit code and output ([Check what a hook did](https://code.claude.com/docs/en/hooks-guide#check-what-a-hook-did)).
 5. Break the hook on purpose, to see it fail closed. In a terminal, rename the script, `mv .claude/hooks/protect-files.sh .claude/hooks/protect-files.off`, and repeat the step 4 request. Claude Code can't start the hook, so it blocks the edit, and the error says the hook `failed; blocking because onFailure is "block"` ([Block the action when a hook fails](https://code.claude.com/docs/en/hooks#block-the-action-when-a-hook-fails)). Put the script back: `mv .claude/hooks/protect-files.off .claude/hooks/protect-files.sh`.
 
 ## Your turn

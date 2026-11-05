@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Smoke test for the lesson 5 hooks, without Claude: it pipes the JSON a hook
 # receives into each script and checks the exit code, the output and the file
-# on disk. It also parses settings.snippet.json and checks that each command it
-# registers is one of these scripts. It shows no real notification: the
+# on disk, and that protect-files.sh exits 1 when jq is missing or the input
+# isn't JSON. It also parses settings.snippet.json and checks that each command
+# it registers is one of these scripts. It shows no real notification: the
 # notifier is a stand-in on a private PATH.
 # Run: bash test.sh (needs bash, jq and python3). Writes only to a temporary
 # folder, which it deletes.
@@ -33,6 +34,20 @@ expect_exit "$project/package-lock.json" 2
 expect_exit "$project/.git/config" 2
 expect_exit "$project/src/app.js" 0
 expect_exit 'C:\repo\.env' 2
+
+# protect-files.sh fails closed: exit 1 and its own stderr line when jq is
+# missing (a private PATH that holds only cat) or the input isn't JSON.
+nojq=$tmp/nojq
+mkdir -p "$nojq"
+ln -s "$(command -v cat)" "$nojq/cat"
+got=0
+event "$project/package-lock.json" | PATH=$nojq "$(command -v bash)" "$hooks/protect-files.sh" 2> "$tmp/stderr" || got=$?
+[ "$got" = 1 ] || fail "protect-files.sh: without jq it exited $got, expected 1"
+grep -q '^protect-files.sh: ' "$tmp/stderr" || fail "protect-files.sh: no protect-files.sh: line without jq"
+got=0
+echo 'not json' | "$hooks/protect-files.sh" 2> "$tmp/stderr" || got=$?
+[ "$got" = 1 ] || fail "protect-files.sh: input that isn't JSON exited $got, expected 1"
+grep -q '^protect-files.sh: ' "$tmp/stderr" || fail "protect-files.sh: no protect-files.sh: line for input that isn't JSON"
 
 # format-after-edit.sh: tidies files in the project, leaves the rest alone.
 run_format() { event "$1" | CLAUDE_PROJECT_DIR=$project "$hooks/format-after-edit.sh" || fail "format-after-edit.sh exited non-zero for $1"; }
