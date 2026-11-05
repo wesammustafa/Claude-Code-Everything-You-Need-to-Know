@@ -145,7 +145,7 @@ test('nested: b-2 reads its snapshots from project/', () => {
 test('nested: b-3 reads the last commit and the tree from project/', () => {
   withRepo(() => repo({ 'package.json': pkg, 'src/a.js': 'export const a = 1;\n' }, { nested: true }), (dir) => {
     commit(dir, 'Start');
-    write(dir, { 'src/a.js': 'export const a = 2;\n', 'test/a.test.js': 'import "../src/a.js";\n' });
+    write(dir, { 'src/a.js': 'export const a = 2;\n', 'test/external.test.js': 'import "../src/a.js";\n' });
     commit(dir, 'Fix');
     assert.deepEqual(outcomes('b-3', dir, [3, 5]), [true, true]);
     write(dir, { 'src/a.js': 'export const a = 3;\n' });
