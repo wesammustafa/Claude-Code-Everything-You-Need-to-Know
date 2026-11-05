@@ -11,7 +11,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { frontmatter } from '../frontmatter.mjs';
+import { flag, frontmatter } from '../frontmatter.mjs';
 import { committedMode, editWriteScripts, missingJq, runCommitted } from '../hooks.mjs';
 import { items as memory } from './i-2.mjs';
 import { items as scopes } from './i-4.mjs';
@@ -64,9 +64,9 @@ const skill = {
     const ok = committedFiles(repo, '.claude/skills', '/SKILL.md').some((path) => {
       const file = committedFile(repo, path);
       const f = file?.fields;
-      return f && LINKCHECK.test(file.body) && words(f.description) >= 8 && String(f['disable-model-invocation']) !== 'true' && String(f['user-invocable']) !== 'false';
+      return f && LINKCHECK.test(file.body) && words(f.description) >= 8 && flag(f['disable-model-invocation']) !== true && flag(f['user-invocable']) !== false;
     });
-    return ok ? true : 'Commit a skill in `.claude/skills/<name>/SKILL.md` whose body runs the link checker (`npm run linkcheck -- <folder>`), with a description of what it does and when to use it, and no `disable-model-invocation: true` (lesson 1).';
+    return ok ? true : 'Commit a skill in `.claude/skills/<name>/SKILL.md` whose body runs the link checker (`npm run linkcheck -- <folder>`), with a description of what it does and when to use it, and no `disable-model-invocation` or `user-invocable` line that stops it loading on its own or running by name (lesson 1).';
   },
 };
 

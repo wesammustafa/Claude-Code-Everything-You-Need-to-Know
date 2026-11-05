@@ -4,7 +4,7 @@
 // commits it, and saves the commit they made after reviewing a /tdd run's
 // diff. Whether Claude loaded the skill on its own, and kept it out of a
 // question, shows only in a session, so the lesson self-checks it.
-import { frontmatter } from '../frontmatter.mjs';
+import { flag, frontmatter } from '../frontmatter.mjs';
 import { isTestFile } from '../paths.mjs';
 /** @import { Repo } from '../repo.mjs' */
 /** @import { Item } from './index.mjs' */
@@ -49,9 +49,16 @@ export const items = [
       const fm = frontmatter(text);
       if (!fm) return `${SKILL} must start with frontmatter between two --- lines.`;
       const { fields } = fm;
-      if (String(fields['disable-model-invocation']) === 'true') return 'Delete the `disable-model-invocation: true` line and commit again: it stops Claude from loading the skill on its own.';
-      if (String(fields['user-invocable']) === 'false') return 'Delete the `user-invocable: false` line and commit again: it stops `/tdd` from running the skill.';
-      if (typeof fields.name === 'string' && fields.name && fields.name !== 'tdd') return `The frontmatter name is "${fields.name}", so the skill runs as /${fields.name}, not /tdd. Set \`name: tdd\` or delete the line.`;
+      // The folder name invokes a project skill whatever its frontmatter
+      // `name` says, so `/tdd` runs it under any name.
+      //
+      // Each message echoes the parsed value, without the quotes or comment
+      // the line may have. The learn copy's narrows match `: true` and
+      // `: false`, the spellings the lesson's skill uses.
+      const manual = fields['disable-model-invocation'];
+      const hidden = fields['user-invocable'];
+      if (flag(manual) === true) return `Delete the \`disable-model-invocation: ${manual}\` line and commit again: it stops Claude from loading the skill on its own.`;
+      if (flag(hidden) === false) return `Delete the \`user-invocable: ${hidden}\` line and commit again: it stops \`/tdd\` from running the skill.`;
       const description = typeof fields.description === 'string' ? fields.description.trim() : '';
       const words = description.split(/\s+/).filter((w) => w && w !== 'TODO').length;
       if (words < 8) return 'Write a description of a sentence or two: what it does and when Claude should use it.';
