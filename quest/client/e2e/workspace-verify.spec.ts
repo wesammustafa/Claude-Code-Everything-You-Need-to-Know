@@ -87,7 +87,7 @@ const ROWS: Row[] = [
         "src/config.js\ntest/config.test.js\n",
       );
     },
-    says: /b-2-plan\.txt/,
+    says: /b-2-plan\.txt is not there yet/,
     looks: "watch",
   },
   {

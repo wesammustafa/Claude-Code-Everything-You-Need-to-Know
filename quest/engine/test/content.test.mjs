@@ -2861,3 +2861,45 @@ test("the Beginner capstone's /init hint names every course line b-5 does (325)"
     [],
   );
 });
+
+// b-2 Y4 at Hinted names the file each beat saves, so a learner needs Show
+// the exact command only for the command itself, and its hint is a whole
+// sentence, not a lead-in cut off at a colon (346, live run finding F2).
+test("b-2 Y4 names the files it saves on the card, and no hint ends in a colon (346)", () => {
+  const y4 = contents
+    .find((c) => c?.lesson === "b-2")
+    .steps.find((s) => s.id === "Y4");
+  const goals = y4.beats.map((b) =>
+    b.lines
+      .filter((l) => l.key === "goal")
+      .map((l) => l.text)
+      .join(" "),
+  );
+  assert.match(goals[0], /`git status --porcelain`/);
+  assert.match(goals[0], /`\.practice\/b-2-before\.txt`/);
+  assert.match(goals[1], /`\.practice\/b-2-plan\.txt`/);
+  assert.deepEqual(
+    y4.beats.flatMap((b) => b.hints).filter((h) => h.trim().endsWith(":")),
+    [],
+  );
+});
+
+// An edit prompt can offer a choice that allows edits for the rest of the
+// session, and that choice is the one a learner meets first in Manual mode:
+// b-2 W7's read-each-request beat warns about it as the page does (346, F3).
+test("b-2 W7 warns about the session-wide edit choice where it warns about auto mode (346)", () => {
+  const w7 = contents
+    .find((c) => c?.lesson === "b-2")
+    .steps.find((s) => s.id === "W7");
+  const beat = w7.beats.find((b) =>
+    b.lines.some((l) => l.text.startsWith("Read each request")),
+  );
+  assert.ok(beat, "W7's read-each-request beat");
+  const notes = beat.lines.filter((l) => l.key === "note").map((l) => l.text);
+  assert.ok(notes.some((t) => t.includes("**Yes, and switch to auto mode**")));
+  assert.ok(
+    notes.some((t) =>
+      t.includes("any choice that allows edits for the rest of the session"),
+    ),
+  );
+});
