@@ -1,0 +1,11 @@
+{
+  "rule": "drift",
+  "expect": "fail",
+  "mode": "scheduled",
+  "env": { "CHECKS_STABLE_VERSION": "2.1.290", "CHECKS_LATEST_VERSION": "2.1.288" },
+  "about": "A latest dist-tag older than stable counts as stable, so the range and the proof step stop at stable.",
+  "output": [
+    "stable is now v2\\.1\\.290 and latest v2\\.1\\.290; the baseline is v2\\.1\\.285",
+    "With Claude Code v2\\.1\\.290 installed"
+  ]
+}

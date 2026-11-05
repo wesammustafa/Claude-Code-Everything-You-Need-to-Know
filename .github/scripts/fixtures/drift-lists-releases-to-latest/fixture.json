@@ -1,0 +1,14 @@
+{
+  "rule": "drift",
+  "expect": "fail",
+  "mode": "scheduled",
+  "env": {
+    "CHECKS_STABLE_VERSION": "2.1.290",
+    "CHECKS_LATEST_VERSION": "2.1.293",
+    "CHECKS_CLAUDE_CHANGELOG": "claude-code-changelog.md"
+  },
+  "about": "The drift check reads a Claude Code CHANGELOG from the tree and lists the versions after the baseline up to latest, newest first, marking those at or below stable.",
+  "output": [
+    "from v2\\.1\\.285 to v2\\.1\\.293: 2\\.1\\.293, 2\\.1\\.291, 2\\.1\\.290 \\(stable\\), 2\\.1\\.287 \\(stable\\)\\. A stable change"
+  ]
+}

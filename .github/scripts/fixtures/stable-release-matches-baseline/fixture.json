@@ -3,5 +3,6 @@
   "expect": "pass",
   "mode": "scheduled",
   "env": { "CHECKS_STABLE_VERSION": "2.1.285" },
-  "about": "npm's stable dist-tag still equals the frozen baseline."
+  "about": "npm's stable dist-tag still equals the frozen baseline; with no latest override, latest counts as stable.",
+  "output": ["PASS drift: stable is v2\\.1\\.285 and latest v2\\.1\\.285; the baseline is v2\\.1\\.285"]
 }

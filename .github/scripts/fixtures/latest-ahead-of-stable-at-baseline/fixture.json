@@ -1,0 +1,8 @@
+{
+  "rule": "drift",
+  "expect": "pass",
+  "mode": "scheduled",
+  "env": { "CHECKS_STABLE_VERSION": "2.1.285", "CHECKS_LATEST_VERSION": "2.1.292" },
+  "about": "stable still equals the frozen baseline while latest is newer: the trigger stays stable, and the summary names latest.",
+  "output": ["PASS drift: stable is v2\\.1\\.285 and latest v2\\.1\\.292; the baseline is v2\\.1\\.285"]
+}
