@@ -1,8 +1,8 @@
 {
   "rule": "images",
   "expect": "fail",
-  "about": "A Pip GIF over its budget (PIP_GIF_BUDGET, 1400 KB).",
+  "about": "A Pip GIF over its budget (PIP_GIF_BUDGET, 800 KB).",
   "output": [
-    "assets/readme/pip-big\\.gif: 1402 KB; a Pip GIF may be up to 1400 KB"
+    "assets/readme/pip-big\\.gif: 802 KB; a Pip GIF may be up to 800 KB"
   ]
 }
