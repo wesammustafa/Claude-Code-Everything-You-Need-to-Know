@@ -16,4 +16,4 @@ Each topic page lists its lessons in level order, its Electives, its reference p
 
 ---
 
-<sub>Up: [Claude Code: Everything You Need to Know](../../README.md)</sub>
+<sub>Up: [Claude Code Quest](../../README.md)</sub>
