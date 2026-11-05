@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { lessons } from "../../../practice-template/checks/lessons/index.mjs";
 import { PROBES, probeError } from "../src/probes.ts";
+import { guideIndex } from "../../release/src/guide-index.mjs";
 import {
   compileCourse,
   fingerprint,
@@ -26,7 +27,11 @@ const pages = Object.fromEntries(
     ...manifestValue.levels.map((level) => level.index),
   ].map((page) => [page, readFileSync(`${root}${page}`, "utf8")]),
 );
-const checks = { lessons, probes: { PROBES, probeError } };
+const checks = {
+  lessons,
+  probes: { PROBES, probeError },
+  guide: guideIndex(root),
+};
 // The Lessons whose Steps changed since the legacy commit, so a Terminal app
 // save of them starts again at the overview: i-2's W4 is self-verified (304),
 // i-3's partial skill block is one beat (306), i-6 waits for the report

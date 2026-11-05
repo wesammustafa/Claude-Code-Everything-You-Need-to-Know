@@ -143,7 +143,9 @@ let compiledCourse: CompiledCourse | undefined;
 
 // The course for a practice root: the template's own is the compiled
 // course; any other reads each lesson's step file from its learn/lessons/,
-// with no fingerprints, or none where it has no file.
+// with no fingerprints, or none where it has no file. Only tests read a step
+// file on its own, and its links stay as written: compileCourse resolves
+// them (resolveLinks), and the app reads the compiled course.
 export function loadCourse(
   root: string,
   path: readonly PathEntry[] = PATH,

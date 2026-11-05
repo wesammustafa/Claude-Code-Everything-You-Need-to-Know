@@ -7,6 +7,7 @@ import type { DecidedBy, LevelId } from "@quest/contract";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { frontmatter, type FrontValue } from "./frontmatter.ts";
+import { foldersOf, mapLinks, resolveLink, type GuideIndex } from "./links.ts";
 import type { Probe } from "./probes.ts";
 import { inline } from "./text.ts";
 
@@ -597,6 +598,10 @@ export const folderKeys = (manifest: Manifest) => [
     .map((lesson) => lesson.id),
 ];
 export const PATH_MAX = 1024;
+// Links to the repository on GitHub point at main, not the release ref: a
+// Lesson's page url, the index and commands links, and a step-text link to a
+// repository file (resolveLinks). Only the raw example-fetch URLs move to the
+// ref at release (quest/release/src/example-urls.mjs).
 export const GUIDE =
   "https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know";
 export const COMMANDS_URL = `${GUIDE}/blob/main/docs/reference/commands.md`;
@@ -1641,6 +1646,104 @@ export function parseLegacyFingerprints(value: unknown): LegacyFingerprints {
   throw new Error(`${file}:1: ${issue.path.join(".")}: ${issue.message}`);
 }
 
+// ---- a compiled Lesson's links ---------------------------------------------------
+// The words the app shows go through mapLinks; a command, a code block, a
+// typed answer and a verify line are never links, so they stay as written.
+// `to` also gets the step-file line of the nearest step or beat holding the
+// text, so an error can name the link's own line.
+const NOT_WORDS = new Set(["verify", "accept", "requires", "terminals"]);
+function mapWords(
+  value: unknown,
+  to: (text: string, line: number) => string,
+  line = 1,
+): unknown {
+  if (typeof value === "string") return to(value, line);
+  if (Array.isArray(value)) return value.map((v) => mapWords(v, to, line));
+  if (typeof value !== "object" || value === null) return value;
+  const fields = value as Record<string, unknown>;
+  if (fields.key === "run" || fields.key === "code") return value;
+  const own = typeof fields.line === "number" ? fields.line : line;
+  return Object.fromEntries(
+    Object.entries(fields).map(([key, v]) => [
+      key,
+      NOT_WORDS.has(key)
+        ? v
+        : key === "bottom" && Array.isArray(v)
+          ? v.map((b: Bottom) =>
+              b.leadIn === undefined ? b : { ...b, leadIn: to(b.leadIn, own) },
+            )
+          : mapWords(v, to, own),
+    ]),
+  );
+}
+
+// The first line at or after `from` where the app reads `href` as a link
+// (so not inside a code span), else the first such line in the file.
+function linkLine(lines: readonly string[], href: string, from: number) {
+  const holds = (l: string) => {
+    let found = false;
+    mapLinks(l, (h) => {
+      found ||= h === href;
+      return h;
+    });
+    return found;
+  };
+  const after = lines.findIndex((l, i) => i >= from - 1 && holds(l));
+  return (after < 0 ? lines.findIndex(holds) : after) + 1 || 1;
+}
+
+/**
+ * The Lesson with every link in its words resolved against the page it
+ * quotes (resolveLink): the Lesson's page, or for a warm-up the page it is
+ * `from`, a Level index or an earlier Lesson's page. Throws at the link's
+ * line in `file` when a link reaches no page, heading or file.
+ */
+export function resolveLinks(
+  content: LessonContent,
+  {
+    file,
+    text,
+    page,
+    manifest,
+    guide,
+  }: {
+    file: string;
+    text: string;
+    page: string;
+    manifest: Manifest;
+    guide: GuideIndex;
+  },
+): LessonContent {
+  const folders = foldersOf(guide.files);
+  const lines = text.split(/\r?\n/);
+  const words = (value: unknown, from: string) =>
+    mapWords(value, (t, line) =>
+      mapLinks(t, (href, label) => {
+        try {
+          return resolveLink(from, href, guide, GUIDE, folders);
+        } catch (error) {
+          throw new Error(
+            `${file}:${String(linkLine(lines, href, line))}: [${label}](${href}): ${(error as Error).message}`,
+          );
+        }
+      }),
+    );
+  const pageOf = (step: Step) => {
+    if (!step.from) return page;
+    const level = indexLevel(manifest, step.from);
+    const index = manifest.levels.find((l) => l.id === level)?.index;
+    const lesson = manifest.lessons.find((l) => l.id === step.from)?.page;
+    return must(
+      index ?? lesson,
+      `${file}:${String(step.line)}: from ${step.from}: no page`,
+    );
+  };
+  return {
+    ...(words({ ...content, warmup: [] }, page) as LessonContent),
+    warmup: content.warmup.map((step) => words(step, pageOf(step)) as Step),
+  };
+}
+
 export function compileCourse(
   value: unknown,
   stepFiles: Readonly<Record<string, string | undefined>>,
@@ -1649,10 +1752,13 @@ export function compileCourse(
     lessons: checks,
     probes,
     legacy: legacyValue,
+    guide,
   }: {
     lessons: Readonly<Record<string, CheckModule | undefined>>;
     probes: NonNullable<ParseContext["probes"]>;
     legacy?: unknown;
+    /** What a link in a Lesson's words may reach (resolveLinks). */
+    guide: GuideIndex;
   },
 ): CompiledCourse {
   const manifest = parseManifest(value);
@@ -1679,12 +1785,15 @@ export function compileCourse(
         throw new Error(`${entry.steps}:1: no step-file text supplied`);
       if (typeof page !== "string")
         throw new Error(`${entry.page}:1: no page text supplied`);
-      const content = parseLesson(text, entry.steps, {
-        manifest,
-        checks,
-        probes,
-        rejectFolder: true,
-      });
+      const content = resolveLinks(
+        parseLesson(text, entry.steps, {
+          manifest,
+          checks,
+          probes,
+          rejectFolder: true,
+        }),
+        { file: entry.steps, text, page: entry.page, manifest, guide },
+      );
       const metadata = pageMetadata(page, entry.page);
       if (content.lesson !== entry.id)
         throw new Error(

@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { compileCourse, generateCheckIndex } from "../../engine/src/content.ts";
 import { lessons } from "../../../practice-template/checks/lessons/index.mjs";
 import { PROBES, probeError } from "../../host/src/probes.ts";
+import { guideIndex } from "./guide-index.mjs";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const manifest = JSON.parse(
@@ -28,6 +29,7 @@ const course = compileCourse(manifest, stepFiles, pages, {
   lessons,
   probes: { PROBES, probeError },
   legacy,
+  guide: guideIndex(root),
 });
 const output = join(root, "quest/engine/dist/course.json");
 mkdirSync(dirname(output), { recursive: true });

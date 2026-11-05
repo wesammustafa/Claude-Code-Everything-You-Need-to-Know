@@ -569,7 +569,6 @@ function beatView(s: EngineState): BeatView {
   const tier = tierOf(s);
   const answered = Boolean(st.answer);
   const f = st.feedback;
-  const from = fromFolderOf(s, currentStep(s));
   return {
     index: s.pos.beat,
     kind: beat.kind,
@@ -608,9 +607,7 @@ function beatView(s: EngineState): BeatView {
               ...(shown
                 ? {
                     kind: o.kind,
-                    ...(o.because
-                      ? { because: fromPage(from, o.because) }
-                      : {}),
+                    ...(o.because ? { because: o.because } : {}),
                   }
                 : {}),
             };
@@ -618,12 +615,9 @@ function beatView(s: EngineState): BeatView {
     answer: {
       picked: st.answer?.index ?? null,
       feedback: f?.kind ?? null,
-      because: fromPage(from, f?.because ?? f?.hint ?? null),
+      because: f?.because ?? f?.hint ?? null,
       point: f?.point ?? null,
-      reveal: fromPage(
-        from,
-        beat.ask && isDone(st) ? (beat.reveal ?? null) : null,
-      ),
+      reveal: beat.ask && isDone(st) ? (beat.reveal ?? null) : null,
       recall: recallOf(s, beat),
     },
     status: st.status === "opening" ? "checking" : st.status,
@@ -742,78 +736,9 @@ function waitQuestionOf(s: EngineState): PlayingLesson["waitQuestion"] {
       picked === null
         ? null
         : picked.kind !== "right" && picked.because
-          ? fromPage(fromFolderOf(s, box.step), picked.because)
-          : fromPage(fromFolderOf(s, box.step), beat.reveal ?? null),
+          ? picked.because
+          : (beat.reveal ?? null),
   };
-}
-
-// ---- a warm-up's words from another page --------------------------------------
-// A warm-up quotes the page it comes from: a Level index
-// (docs/<level>/README.md) or an earlier Lesson's page. A relative link in
-// those words is that page's, so it is resolved against the page's folder
-// to a repository path, as the page panel opens them.
-function fromFolderOf(s: EngineState, step: Step): string | null {
-  if (step.part !== "Warm-up" || !step.from) return null;
-  const index = /^(.+)-index$/.exec(step.from);
-  if (index) return `docs/${index[1] ?? ""}/`;
-  const entry = s.course.find((l) => l.id === step.from);
-  if (!entry) return null;
-  if (entry.page?.startsWith("docs/"))
-    return entry.page.slice(0, entry.page.lastIndexOf("/") + 1);
-  return `docs/${entry.level}/`;
-}
-
-function resolveFrom(folder: string, href: string): string {
-  if (/^[a-z][a-z0-9+.-]*:/i.test(href) || /^[/#]/.test(href)) return href;
-  const parts = folder.split("/").filter(Boolean);
-  for (const part of href.split("/")) {
-    if (part === "..") parts.pop();
-    else if (part !== ".") parts.push(part);
-  }
-  return parts.join("/");
-}
-
-/** A warm-up's words with their relative links resolved against its page. */
-// Each `[label](href)` is found as /\[([^\]]+)\]\(([^)\s]+)\)/g would find
-// it, in one pass: that regex backtracks quadratically on a run of "[".
-// Every "[" up to a "]" shares that "]", and every href start up to the
-// next ")" or space shares that stop, so each is looked up once.
-export function fromPage(folder: string | null, text: string): string;
-export function fromPage(
-  folder: string | null,
-  text: string | null,
-): string | null;
-export function fromPage(
-  folder: string | null,
-  text: string | null,
-): string | null {
-  if (folder === null || text === null) return text;
-  let out = "";
-  let done = 0;
-  let close = -1;
-  let stop = -1; // the first ")" or space at or after the last href start
-  for (let open = text.indexOf("["); open >= 0;) {
-    if (close <= open) {
-      close = text.indexOf("]", open + 1);
-      if (close < 0) break;
-    }
-    const start = close + 2;
-    if (close > open + 1 && text[close + 1] === "(") {
-      if (stop < start) {
-        stop = start;
-        while (stop < text.length && !/[)\s]/.test(text[stop] ?? "")) stop++;
-      }
-      if (stop > start && text[stop] === ")") {
-        const href = text.slice(start, stop);
-        out += `${text.slice(done, open)}[${text.slice(open + 1, close)}](${resolveFrom(folder, href)})`;
-        done = stop + 1;
-        open = text.indexOf("[", done);
-        continue;
-      }
-    }
-    open = text.indexOf("[", open + 1);
-  }
-  return out + text.slice(done);
 }
 
 // ---- a Step-down and the lesson's end ----------------------------------------
