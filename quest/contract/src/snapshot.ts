@@ -268,7 +268,7 @@ export interface StepView {
   } | null;
   /** The tier of a step harder on its own, said on its card; else null. */
   note: HelpTier | null;
-  /** The Learner finished a step on this skill before (every skill, in a capstone). */
+  /** The Learner practised this skill at an earlier step the app saw them do (every skill, in a capstone). */
   doneBefore: boolean;
   /** An ease landed here: one tier more help than planned. */
   extraHelp: boolean;
@@ -425,8 +425,11 @@ export interface StepDownLesson extends LessonHead {
 /** Lesson complete. */
 export interface CompleteLesson extends LessonHead {
   phase: "complete";
-  /** The skills the Lesson practised, each with its Mastery or null. */
-  practised: { skill: string; mastery: Mastery | null }[];
+  /**
+   * The skills the Lesson practised, each with the titles of its finished
+   * steps on it, in play order, and its Mastery or null.
+   */
+  practised: { skill: string; steps: string[]; mastery: Mastery | null }[];
   badge: string | null;
   /** This completion is the Lesson's first. */
   firstTime: boolean;

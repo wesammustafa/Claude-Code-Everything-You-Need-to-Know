@@ -238,8 +238,8 @@ describe("statusOf", () => {
             status: "done",
             answer: { ...base.answer, picked: 0 },
           },
-          "passed",
-          "That step is done.",
+          "idle",
+          "Here's what happens.",
         ],
       ] as const
     ).map(
@@ -505,6 +505,46 @@ describe("answerMarks and revealable (247)", () => {
         },
       ),
       [{ id: "1", state: "chosen" }],
+    ],
+    // b-1 W3 (ticket 348): the guess stays the Learner's, and the answer
+    // it is compared with says Right, as an ask beat's does.
+    [
+      "a predict guessed with a right answer elsewhere",
+      ask(
+        { picked: 0 },
+        {
+          kind: "predict",
+          status: "done",
+          options: [
+            { text: "a", kind: "option", because: "Why not." },
+            { text: "b", kind: "right" },
+          ],
+        },
+      ),
+      [
+        { id: "1", state: "right" },
+        { id: "0", state: "chosen" },
+      ],
+    ],
+    [
+      "a predict guessed right",
+      ask(
+        { picked: 1 },
+        {
+          kind: "predict",
+          status: "done",
+          options: [
+            { text: "a", kind: "option" },
+            { text: "b", kind: "right" },
+          ],
+        },
+      ),
+      [{ id: "1", state: "right" }],
+    ],
+    [
+      "a predict before its guess",
+      ask({}, { kind: "predict", options: [{ text: "a" }, { text: "b" }] }),
+      [],
     ],
     [
       "stuck",

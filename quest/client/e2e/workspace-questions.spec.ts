@@ -66,6 +66,8 @@ test("a guess is sent by its button, drawn with no judgement, then Next step", a
   await card(page).getByRole("button", { name: "That's my guess" }).click();
   await expect.poll(() => sent).toEqual([{ type: "answer.pick", option: 1 }]);
   await show(page, predictDone);
+  // A guess made: what happens comes next, not "That step is done" (348).
+  await expect(bubble(page)).toHaveText("Here's what happens.");
   await expect(card(page).locator("[data-state=chosen]")).toHaveText(
     /Nothing at all/,
   );

@@ -8,6 +8,11 @@ import { STEP, pip } from "./pip-page.ts";
 import { watch } from "./watch.ts";
 
 const REST = "0.40 0.00";
+/** How long Progress waits before Pip glances at the next goal (Progress.tsx). */
+const GLANCE_AFTER_MS = 600;
+/** How long the glance holds Pip's gaze (the director's LOOK_HOLD_MS). */
+const LOOK_HOLD_MS = 1500;
+const CLOCK_START = new Date("2026-01-01T00:00:00Z").getTime();
 const FORWARD = "0.00 0.00";
 const OFFER = "A hint is here if you want it.";
 
@@ -482,15 +487,34 @@ for (const width of [720, 1440]) {
   }) => {
     const seen = watch(page);
     await page.setViewportSize({ width, height: 900 });
+    // The glance waits for the screen to settle in and holds for a set time,
+    // both on the page's clock: paused, it runs only as the test runs it, so
+    // a busy machine's long tasks never stretch the hold past a wait the test
+    // times (335).
+    await page.clock.install({ time: CLOCK_START });
+    await page.clock.pauseAt(CLOCK_START + 1_000);
     await page.goto("/#/progress");
     await expect(pip(page)).toHaveAttribute("data-pip", "beside");
-    // The glance: down toward the next goal, then back to rest.
-    await expect.poll(() => gaze(page)).not.toEqual([0.4, 0]);
+    await expect(pip(page)).toHaveAttribute("data-pip-gaze", REST);
+    // The glance: down toward the next goal, held, then back to rest.
+    await page.clock.runFor(GLANCE_AFTER_MS);
+    await expect(pip(page)).not.toHaveAttribute("data-pip-gaze", REST);
     const [, y] = await gaze(page);
     expect(y).toBeGreaterThan(0.3);
-    await expect(pip(page)).toHaveAttribute("data-pip-gaze", REST, {
-      timeout: 3_000,
-    });
+    await page.clock.runFor(LOOK_HOLD_MS - 100);
+    await expect(pip(page)).not.toHaveAttribute("data-pip-gaze", REST);
+    await page.clock.runFor(100);
+    await expect(pip(page)).toHaveAttribute("data-pip-gaze", REST);
+    // The rig draws on animation frames, which the paused clock runs too.
+    await expect
+      .poll(
+        async () => {
+          await page.clock.runFor(100);
+          return pip(page).getAttribute("data-pip-rendering");
+        },
+        { timeout: 20_000 },
+      )
+      .toBe("rig");
     const skills = page.locator("section[aria-labelledby=progress-skills]");
     const pipBox = await pip(page).boundingBox();
     const skillsBox = await skills.boundingBox();
@@ -500,9 +524,6 @@ for (const width of [720, 1440]) {
       page,
       page.locator("main h1, main h2, main p, main li, main section, main a"),
     );
-    await expect(pip(page)).toHaveAttribute("data-pip-rendering", "rig", {
-      timeout: 20_000,
-    });
     await expect(pip(page)).not.toHaveAttribute("data-pip-reaction");
     expect(seen.problems).toEqual([]);
   });

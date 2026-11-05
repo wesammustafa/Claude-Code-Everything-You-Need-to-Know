@@ -404,13 +404,18 @@ function Play({
   );
 }
 
-/** The step's note on help: a harder step, or a skill done before (row 49). */
+/**
+ * The step's note on help: a harder step, or a skill practised at an
+ * earlier step (row 49, ticket 348).
+ */
 function cardNote(step: StepView, capstone: boolean): string | null {
   const parts: string[] = [];
   if (step.note !== null && capstone) parts.push("No commands this time.");
   if (step.doneBefore)
     parts.push(
-      capstone ? "You've done each part before." : "You've done this before.",
+      capstone
+        ? "Same skills as earlier lessons."
+        : "Same skill as an earlier step.",
     );
   return parts.length > 0 ? parts.join(" ") : null;
 }

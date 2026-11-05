@@ -82,19 +82,27 @@ const LOOKS: Record<
   },
 };
 
+const stateOf = (line: CheckLine): CheckLineState =>
+  line.state ?? (line.ok ? "pass" : "notYet");
+
 /**
  * The Check's lines: met ones quiet, the rest amber, never red, and a line
  * still being checked in teal; any line may show what the Check saw. They
  * arrive one after another, --stagger apart. Pip watches them as they arrive.
  * A line keeps its place (and does not arrive again) as its state and words
  * change; to stagger a new Check run's lines in again, the caller gives
- * CheckLines a new `key` for each run.
+ * CheckLines a new `key` for each run. A run of lines in one state is read
+ * under one word, "Passes:" once for the passing lines that follow it
+ * (ticket 348).
  */
 export function CheckLines({ lines }: CheckLinesProps) {
   return (
     <ul data-pip-target="lines" className="grid gap-2.5">
       {lines.map((line, i) => {
-        const look = LOOKS[line.state ?? (line.ok ? "pass" : "notYet")];
+        const state = stateOf(line);
+        const look = LOOKS[state];
+        const prev = lines[i - 1];
+        const heads = prev === undefined || stateOf(prev) !== state;
         return (
           <li
             // A line keeps its place as its state and words change.
@@ -107,7 +115,7 @@ export function CheckLines({ lines }: CheckLinesProps) {
               <Icon name={look.icon} size="sm" />
             </span>
             <div className="min-w-0 flex-1">
-              <span className="sr-only">{look.said}</span>
+              {heads && <span className="sr-only">{look.said}</span>}
               <span className={look.text}>{line.text}</span>
               {line.evidence !== undefined && (
                 <div className={cx(EVIDENCE, look.evidence)}>
