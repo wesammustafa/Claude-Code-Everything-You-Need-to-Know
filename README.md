@@ -154,7 +154,7 @@ Three levels take you from your first session to a setup your team shares. Start
 <div align="center">
 
 <!-- Rendered on 2026-11-05 from Pip's rig (quest/client/pip/pip.riv) in Claude Code Quest's web runtime: his Sleep mode. -->
-<img src="assets/readme/pip-asleep.gif" width="200" alt="Pip dozes, slumped low, his eyes falling shut now and then while a small pixel z and then a big Z drift up above his head." />
+<img src="assets/readme/pip-asleep.gif" width="200" alt="Pip dozes, slumped low, his eyelids drooping halfway now and then while a small pixel z and then a big Z drift up above his head." />
 
 <sub>Leave Pip be for a few minutes and he dozes off. He's up the moment you're back.</sub>
 
