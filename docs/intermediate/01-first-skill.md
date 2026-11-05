@@ -16,7 +16,7 @@ By the end of this lesson you can turn a workflow you keep repeating into a proj
 
 ## The idea
 
-Write a [skill](https://code.claude.com/docs/en/skills) when you paste the same playbook into chat for the third time ([Build your setup over time](https://code.claude.com/docs/en/features-overview#build-your-setup-over-time)). A skill is a folder holding a `SKILL.md` file: YAML frontmatter that says what the skill is for, then the instructions Claude follows. A project skill lives in `.claude/skills/<name>/SKILL.md`. Commit it, and everyone who works in the repository gets it.
+Write a [skill](https://code.claude.com/docs/en/skills) when you paste the same playbook into chat for the third time ([Build your setup over time](https://code.claude.com/docs/en/features-overview#build-your-setup-over-time)). A skill is a folder holding a `SKILL.md` file: YAML frontmatter that says what the skill is for, then the instructions Claude follows. A project skill lives in `.claude/skills/<name>/SKILL.md`. Commit it, and everyone who works in the repository gets it. A personal skill lives in `~/.claude/skills/<name>/SKILL.md` and loads in all your projects on this machine. When both hold a skill of the same name, the personal one wins: with `deploy` in both, `/deploy` runs the personal one ([Resolve skills that share a name](https://code.claude.com/docs/en/skills#resolve-skills-that-share-a-name)).
 
 Claude decides whether to load a skill from its description, plus any `when_to_use` text, in the skill listing, not from the skill body ([Frontmatter reference](https://code.claude.com/docs/en/skills#frontmatter-reference)). Invoking the skill loads the full instructions:
 
@@ -123,6 +123,7 @@ If the skill isn't committed, run `git check-ignore -v .claude/skills/tdd/SKILL.
 ## Watch out
 
 - A skill can pre-approve tools with `allowed-tools`, even in a `claude -p` run in a folder you've never trusted ([Pre-approve tools for a skill](https://code.claude.com/docs/en/skills#pre-approve-tools-for-a-skill)). Read the skills in a repository before you run Claude Code there.
+- If `~/.claude/skills/` already holds a `five-whys` or `tdd` folder, `/five-whys` or `/tdd` runs your personal skill instead of the one in this repository. The check reads only the committed file, so it can't tell. Move that folder out of `~/.claude/skills/` before you start `claude`, and back after the lesson.
 - If `.claude/skills/` didn't exist at session startup, run `/reload-skills`, and repeat it after each later change there ([Edit a skill during a session](https://code.claude.com/docs/en/skills#live-change-detection)). After editing an invoked skill, invoke it again to load the changed instructions ([Skill content lifecycle](https://code.claude.com/docs/en/skills#skill-content-lifecycle)).
 
 ## Go further

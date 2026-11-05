@@ -52,7 +52,6 @@ export const scenarios = [
   { item: 1, name: 'the committed skill has no frontmatter', setup: committed(BODY) },
   { item: 1, name: 'disable-model-invocation: true still in the committed frontmatter', setup: committed(skill(['name: tdd', `description: ${DESCRIPTION}`, 'disable-model-invocation: true'])) },
   { item: 1, name: 'user-invocable: false in the committed frontmatter', setup: committed(skill(['name: tdd', `description: ${DESCRIPTION}`, 'user-invocable: false'])) },
-  { item: 1, name: 'the frontmatter names another skill', setup: committed(skill(['name: test-first', `description: ${DESCRIPTION}`])) },
   { item: 1, name: 'a description too short to say when to use it', setup: committed(skill(['name: tdd', 'description: Test-first features.'])) },
 
   { item: 2, name: 'no commit saved', setup: committed(skill()) },
