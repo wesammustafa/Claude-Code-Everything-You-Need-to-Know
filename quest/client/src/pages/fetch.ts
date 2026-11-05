@@ -3,8 +3,7 @@
 // Nothing here runs until a page or the Electives list is first opened.
 
 /** The Guide's repository, where every link outside the bundled pages goes. */
-export const GUIDE_REPO =
-  "https://github.com/wesammustafa/Claude-Code-Quest";
+export const GUIDE_REPO = "https://github.com/wesammustafa/Claude-Code-Quest";
 
 /** One rendered page, as quest/release/src/pages.d.mts types PageEntry. */
 export interface PageEntry {
