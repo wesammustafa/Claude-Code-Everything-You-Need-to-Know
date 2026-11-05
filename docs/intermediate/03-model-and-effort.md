@@ -41,7 +41,7 @@ A skill's [`model:` and `effort:` frontmatter](https://code.claude.com/docs/en/s
    ultrathink: read the code and tests for one error path in this repository. Identify a case the tests might miss. Cite the files you used. Do not edit files or run network requests.
    ```
 
-   `ultrathink` requests deeper reasoning for this turn without changing the session effort setting ([Use ultrathink](https://code.claude.com/docs/en/model-config#use-ultrathink-for-one-off-deep-reasoning)). Open a cited file and check whether the suspected gap is real. A plausible answer alone is not evidence.
+   `ultrathink` requests deeper reasoning for this turn without changing the session effort setting ([Use ultrathink](https://code.claude.com/docs/en/model-config#use-ultrathink-for-one-off-deep-reasoning)). Typed in the terminal prompt, the word can also raise that turn to `xhigh` effort, and it shows in rainbow colors when it can. Requires Claude Code v2.1.311 or later. Open a cited file and check whether the suspected gap is real. A plausible answer alone is not evidence.
 4. Give the diagnostic skill its own effort. Add this line inside the frontmatter of `.claude/skills/five-whys/SKILL.md`:
 
    ```yaml

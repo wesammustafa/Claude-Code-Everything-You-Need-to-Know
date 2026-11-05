@@ -114,7 +114,7 @@ If `.practice/b-2-before.txt` lists files, the tree wasn't clean when Your turn 
 ## Go further
 
 - While a plan is on screen, press `Ctrl+G` to open it in your default text editor and edit it before Claude proceeds ([Review and approve a plan](https://code.claude.com/docs/en/permission-modes#review-and-approve-a-plan)).
-- When auto mode blocks an action, `/permissions` lists it under the **Recently blocked** tab ([When auto mode falls back](https://code.claude.com/docs/en/permission-modes#when-auto-mode-falls-back)), called **Recently denied** before v2.1.314 ([CHANGELOG](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md#21314)). There you can press `r` to approve the action and let Claude retry it ([Review denials](https://code.claude.com/docs/en/auto-mode-config#review-denials)).
+- When auto mode blocks an action, `/permissions` lists it under the **Recently blocked** tab ([When auto mode falls back](https://code.claude.com/docs/en/permission-modes#when-auto-mode-falls-back)). From v2.1.314, the tab has that name; before that, it was called **Recently denied** ([CHANGELOG](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md#21314)). On that tab you can press `r` to approve the action and let Claude retry it ([Review denials](https://code.claude.com/docs/en/auto-mode-config#review-denials)).
 - [Analyze before you edit with plan mode](https://code.claude.com/docs/en/permission-modes#analyze-before-you-edit-with-plan-mode): what plan mode lets Claude run while it plans.
 
 ---

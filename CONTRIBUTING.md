@@ -98,6 +98,15 @@ It certifies that on that date every volatile claim on the page was checked agai
 
 The `stamps` rule in the [checks](#checks) fails on a stamped page whose Stamp is missing or malformed. Once README carries a trust strip, it also fails if the strip's version differs from the latest edition entry in [CHANGELOG.md](CHANGELOG.md).
 
+### Version notes
+
+A version note is a sentence on the page, at the line that teaches the feature, that says from which Claude Code version the taught behavior holds. Write it as "From vX.Y.Z, <new behavior>; before that, <old behavior>", or with the docs' own "Requires Claude Code vX.Y.Z or later" wording.
+
+- A note is required when a release after the baseline, in `stable` or `latest`, renames, removes or changes the default or visible output of something a step, Check message or Go further line asks the learner to type, press or see, and the baseline is not moving for it.
+- Fixes and additions a lesson does not touch need none.
+- When a step teaches the line, the step file quotes the note, so the app shows it.
+- The docs win on current behavior, the CHANGELOG on the version.
+
 ### Editions and corrections
 
 Each release has an entry in [CHANGELOG.md](CHANGELOG.md), newest first:
@@ -109,7 +118,7 @@ Pushing a `v*` tag runs the edition gate. On an edition tag, every stamped page'
 
 Not every merge is a release. After a pull request merges, decide which of these it is:
 
-- **Edition** (`vYYYY.MM`): a new level or a major rework. Verify every stamped page at the then-current `stable` and re-stamp it, as the Baseline item under [Pull requests](#pull-requests) says. Then turn the Unreleased entry into the edition's entry, tag the merge commit, and publish a GitHub Release with the entry as its notes.
+- **Edition** (`vYYYY.MM`): a new level or a major rework. Verify every stamped page at the then-current `stable` and re-stamp it, as the Baseline item under [Pull requests](#pull-requests) says, and fold [version notes](#version-notes) whose version the new baseline includes into plain text. Then turn the Unreleased entry into the edition's entry, tag the merge commit, and publish a GitHub Release with the entry as its notes.
 - **Correction** (`vYYYY.MM.N`, numbered from 1 within an edition): a merged change that alters what a learner does or reads as fact, such as a wrong command, a stale claim, or a broken lesson, example or check. Batch these: one correction covers every such change merged since the previous tag, at most once a week. Its entry lists the changes. Give every stamped page changed since the previous tag a new Stamp, then tag the merge commit and publish a Release as for an edition.
 - **No tag**: typos, wording that changes no fact or step, CI, the guide's own check scripts, tooling and repository housekeeping. These ship on `main` without a release.
 
@@ -189,7 +198,7 @@ AI-assisted contributions are allowed, and you do not need to disclose them. You
 
 Each pull request carries one change. Fill in every section of the [pull request template](.github/PULL_REQUEST_TEMPLATE.md) that applies.
 
-- **Baseline.** Changes are verified against one `stable` Claude Code version, named in the Unreleased entry of [CHANGELOG.md](CHANGELOG.md) and frozen while an edition is built. A later `stable` release is pulled in early only when it removes, renames or changes the default of something a lesson teaches, as its own pull request. Before an edition ships, a final pass verifies every stamped page at the then-current `stable` and re-stamps it.
+- **Baseline.** Changes are verified against one `stable` Claude Code version, named in the Unreleased entry of [CHANGELOG.md](CHANGELOG.md) and frozen while an edition is built. A later `stable` release is pulled in early only when it removes, renames or changes the default of something a lesson teaches, as its own pull request. Any other change a later release makes to what a lesson teaches keeps the baseline and gets a [version note](#version-notes). Before an edition ships, a final pass verifies every stamped page at the then-current `stable` and re-stamps it.
 - **Claim table.** Every volatile claim added or changed links its Tier 1 source. The description holds a claim table (claim, source, result), filled by a second, independent pass that tried to refute each claim against Tier 1: a separate agent for agent-made pull requests, the reviewer for human ones.
 - **Tested field.** A pull request that touches `examples/` or `.claude/` states `Tested in Claude Code vX.Y.Z on <OS>`, or "smoke test only" if the change was not run in a session.
 - **Dry-run.** Lesson pull requests, and example pull requests whose example a core lesson or capstone uses, record a dry-run of each exercise and check at the baseline, in a clean configuration:
