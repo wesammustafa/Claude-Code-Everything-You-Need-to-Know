@@ -1,8 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 156 60" width="156" height="60" role="img" aria-label="Try it now">
-  <!-- README's Try it now button, in Claude Code Quest's primary button style: the label in Inter SemiBold (SIL OFL 1.1),
-       outlined so it renders the same everywhere, with the app's arrow icon. The face is the app's pressed accent
-       (#e46d48) and the ledge the light theme's Pip shade (#b44e34), so the label keeps 4.5:1 and the button keeps 3:1
-       against both GitHub themes. Made by scratch scripts from the label "Try it now"; redraw it the same way to change it. -->
+  <!-- README's Try it now button, in Claude Code Quest's primary button style. This file is its source; to redraw it:
+       1. Label: "Try it now" in Inter SemiBold (wght 600, SIL OFL 1.1) at 18 px with the browser's kerning, converted
+          to outlines so it renders the same everywhere, in #1e1e1e. It starts 26 px from the left edge, and its baseline
+          sits where the cap height is centred on the 56 px face.
+       2. Arrow: the app's arrow icon (quest/client/src/components/Icon.tsx) at 20 px, stroke 2.1 in its 24-unit box,
+          in #1e1e1e. Its drawn strokes start 8 px after the label's advance width and end 26 px before the right edge.
+       3. Face: 56 px tall, rx 16, in the app's pressed accent (#e46d48), over a 4 px ledge in the light theme's Pip
+          shade (#b44e34). The label keeps 4.5:1 and the button keeps 3:1 against both GitHub themes. -->
   <title>Try it now</title>
   <rect y="4" width="156" height="56" rx="16" fill="#b44e34"/>
   <rect width="156" height="56" rx="16" fill="#e46d48"/>

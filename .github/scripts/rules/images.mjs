@@ -20,7 +20,7 @@ const KEBAB = /^[a-z0-9]+(?:-[a-z0-9]+)*(?:\.[a-z0-9]+)*$/;
 // README's Pip GIFs, captured from the app or rendered from Pip's rig.
 const PIP_GIF = /^assets\/readme\/pip-[^/]+\.gif$/;
 // The largest measured Pip GIF plus about 15%, set with CONTRIBUTING's image rules.
-const PIP_GIF_BUDGET = 820 * KB;
+const PIP_GIF_BUDGET = 800 * KB;
 const isPipGif = (asset) => PIP_GIF.test(asset);
 const THEMED = /^(assets\/(?:lessons|readme)\/.+)-(light|dark)\.(png|jpe?g|webp)$/;
 const BUDGET = [

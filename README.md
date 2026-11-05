@@ -26,7 +26,7 @@ Claude Code Quest opens in your browser, beside your terminal. Read a step, try 
   <!-- Captured on 2026-11-02 from the Claude Code Quest app on its practice stream, against the guide baseline Claude Code v2.1.308 (stable). -->
   <img src="assets/readme/pip-step-done.gif" width="640" alt="In Claude Code Quest, the Learner corrects the claim in step 9 of Beginner lesson 1: the step's check passes, its progress dash turns green, Pip, a small blocky robot with two antennas, throws his arms up with sparks around him, and his speech bubble says That step is done." />
   <br />
-  <sub><b>Pass a step, and Pip cheers with you.</b></sub>
+  <sub><b>Do a step, and when it passes, Pip cheers with you.</b></sub>
 </p>
 
 Miss one, and he encourages you to try again. The help fades as you get the hang of each skill, from every command, to hints, to only the goal, until you do it on your own.
@@ -67,7 +67,7 @@ The template's `progress.yml` workflow and `.gitattributes` replace yours. Your 
 <a id="-choose-your-path"></a>
 ## Pick your level
 
-Three levels take you from your first session to a setup your team shares. Start where you are and climb: every lesson earns a Badge, and each level ends with a capstone that puts it all together. Not sure where you fit? Each level page opens with a "You're ready for this level if you can" list.
+Three levels take you from your first session to a setup your team shares. Start where you are and climb: every core lesson earns a Badge, and each level ends with a capstone that puts it all together. Not sure where you fit? Each level page opens with a "You're ready for this level if you can" list.
 
 <!-- Pip's three portraits were rendered on 2026-11-05 from his rig (quest/client/pip/pip.riv) in Claude Code Quest's web runtime: Curious, Explaining and Success. -->
 <img src="assets/readme/pip-curious.png" align="left" width="88" height="88" alt="Pip tilts his head under a pixel question mark, curious." />
@@ -77,35 +77,35 @@ Three levels take you from your first session to a setup your team shares. Start
 
 **You'll learn to** start Claude Code safely, plan before it changes things, take one change from request to commit, and give your project a memory.\
 **You'll finish by** fixing a reported bug, from plan to commit.\
-**Badges:** Explorer · Planner · Builder · Navigator · Keeper · Beginner\
-<sub>5 lessons · a capstone · 3 Electives · about 2½ hours</sub>\
+**Badges:** Explorer&nbsp;· Planner&nbsp;· Builder&nbsp;· Navigator&nbsp;· Keeper&nbsp;· Beginner\
+<sub>5 lessons&nbsp;· a capstone&nbsp;· 3 Electives&nbsp;· about 2½ hours</sub>\
 **[Start Beginner](docs/beginner/README.md)**
 
 <img src="assets/readme/pip-explaining.png" align="left" width="88" height="88" alt="Pip points a little stick at the Intermediate level, explaining." />
 
 ### Intermediate
-**Start here if** you can already take a change from request to commit.<br clear="left" />
+**Start here if** you can go from request to commit.<br clear="left" />
 
 **You'll learn to** shape Claude Code to your own project with skills, memory, permissions, hooks, subagents, MCP servers and plugins.\
 **You'll finish by** getting a repository ready for a new teammate.\
-**Badges:** Crafter · Organizer · Tuner · Guardian · Enforcer · Delegator · Connector · Curator · Intermediate\
-<sub>8 lessons · a capstone · 4 Electives · about 4 hours</sub>\
+**Badges:** Crafter&nbsp;· Organizer&nbsp;· Tuner&nbsp;· Guardian&nbsp;· Enforcer&nbsp;· Delegator&nbsp;· Connector&nbsp;· Curator&nbsp;· Intermediate\
+<sub>8 lessons&nbsp;· a capstone&nbsp;· 4 Electives&nbsp;· about 4 hours</sub>\
 **[Start Intermediate](docs/intermediate/README.md)**
 
 <img src="assets/readme/pip-success.png" align="left" width="88" height="88" alt="Pip throws both arms up in a burst of sparks." />
 
 ### Advanced
-**Start here if** you already write skills, hooks and subagents.<br clear="left" />
+**Start here if** you write skills, hooks and subagents.<br clear="left" />
 
 **You'll learn to** run sessions in parallel, run Claude Code unattended in scripts and CI, share a setup with your team, and keep autonomous runs within limits you set.\
 **You'll finish by** adding CI review your team can share.\
-**Badges:** Brancher · Strategist · Orchestrator · Scripter · Automator · Steward · Warden · Advanced\
-<sub>7 lessons · a capstone · 5 Electives · about 4 hours, plus run time</sub>\
+**Badges:** Brancher&nbsp;· Strategist&nbsp;· Orchestrator&nbsp;· Scripter&nbsp;· Automator&nbsp;· Steward&nbsp;· Warden&nbsp;· Advanced\
+<sub>7 lessons&nbsp;· a capstone&nbsp;· 5 Electives&nbsp;· about 4 hours, plus run time</sub>\
 **[Start Advanced](docs/advanced/README.md)**
 
 <p align="center">
   <!-- Captured on 2026-11-02 from the Claude Code Quest app on its practice stream, against the guide baseline Claude Code v2.1.308 (stable); trimmed and re-encoded on 2026-11-05. -->
-  <img src="assets/readme/pip-level-done.gif" width="320" alt="On Beginner level complete, Pip throws his arms up in a burst of sparks above the level's six badges and the Start the Intermediate level button; then the moment replays from the capstone's complete screen." />
+  <img src="assets/readme/pip-level-done.gif" width="320" alt="On Beginner level complete, Pip throws his arms up in a burst of sparks above the level's six badges and the Start the Intermediate level button." />
   <br />
   <sub><b>Finish a level, and Pip throws a party.</b></sub>
 </p>
