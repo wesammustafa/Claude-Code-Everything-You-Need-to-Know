@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { openRepo } from '../repo.mjs';
 import { inPlan, planPaths } from '../paths.mjs';
 import { items as b3Items, testsPass } from '../lessons/b-3.mjs';
-import { write } from './helpers.mjs';
+import { commit, repo as makeRepo, write } from './helpers.mjs';
 
 const runner = join(dirname(fileURLToPath(import.meta.url)), '..', 'run.mjs');
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'project');
@@ -111,6 +111,51 @@ test('b-1 still fails when the note gives broken links a successful exit code', 
     assert.equal(code, 1, out);
     assert.match(out, /The note still says/);
   } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// Laid out as a copy is: the template's note in the first commit, under
+// project/ (ticket 340).
+function copyWithNote() {
+  const dir = makeRepo({ 'practice/b-1/onboarding.md': readFileSync(join(root, 'practice/b-1/onboarding.md'), 'utf8') }, { nested: true });
+  commit(dirname(dir), 'Start from the practice template');
+  return dir;
+}
+
+test('b-1 names no claim while the note is as the copy started', () => {
+  const dir = copyWithNote();
+  try {
+    const { code, out } = check(['b-1', '--dir', dir], versionEnv(dir));
+    assert.equal(code, 1, out);
+    assert.match(out, /hasn't changed yet/);
+    assert.doesNotMatch(out, /The note still says/);
+    assert.doesNotMatch(out, /\bexit|\bCI\b|linkcheck/);
+  } finally { rmSync(dirname(dir), { recursive: true, force: true }); }
+});
+
+test('b-1 quotes the wrong claim once the note was edited, committed or not', () => {
+  const dir = copyWithNote();
+  try {
+    const note = join(dir, 'practice/b-1/onboarding.md');
+    writeFileSync(note, readFileSync(note, 'utf8').replace('Run the tests', 'Run the unit tests'));
+    let { code, out } = check(['b-1', '--dir', dir], versionEnv(dir));
+    assert.equal(code, 1, out);
+    assert.match(out, /The note still says "linkcheck always exits with code 0/);
+    commit(dirname(dir), 'Reword the notes');
+    ({ code, out } = check(['b-1', '--dir', dir], versionEnv(dir)));
+    assert.equal(code, 1, out);
+    assert.match(out, /The note still says "linkcheck always exits with code 0/);
+  } finally { rmSync(dirname(dir), { recursive: true, force: true }); }
+});
+
+test('b-1 passes a corrected note that the first commit already holds', () => {
+  const text = readFileSync(join(root, 'practice/b-1/onboarding.md'), 'utf8')
+    .replace("linkcheck always exits with code 0, even when it finds broken links, so it can't fail a CI job on its own.", 'linkcheck exits with code 1 when it finds a broken link, so it fails a CI job.');
+  const dir = makeRepo({ 'practice/b-1/onboarding.md': text }, { nested: true });
+  commit(dirname(dir), 'Start from a corrected note');
+  try {
+    const { code, out } = check(['b-1', '--dir', dir], versionEnv(dir));
+    assert.equal(code, 0, out);
+  } finally { rmSync(dirname(dir), { recursive: true, force: true }); }
 });
 
 test('the progress summary never fails and marks saved-state items as checked locally', () => {
