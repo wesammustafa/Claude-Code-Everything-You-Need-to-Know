@@ -657,18 +657,24 @@ function recallOf(s: EngineState, beat: Beat) {
 // The check items of the beat's last result, as their text and whether each
 // passed: the run that passed a whole check, else the latest. A slow item a
 // run left out is not shown as failing: it is pending, waiting for Check
-// again (ticket 314).
+// again (ticket 314). Only Check again runs a slow item, so it shows the
+// latest run that ran it this beat visit: passed, or Not yet while the beat
+// says Not yet; else it is pending too (ticket 344).
 function verificationOf(s: EngineState, beat: Beat) {
   const v = beat.verify;
   if (v.kind !== "check") return [];
-  const items = beatState(s).passed ?? s.checks[s.lesson]?.items ?? [];
+  const st = beatState(s);
+  const items = st.passed ?? s.checks[s.lesson]?.items ?? [];
+  const slow = lessonIn(s).slow ?? [];
   return items
     .filter((it) => v.all || v.items.includes(it.index))
-    .map((it) =>
-      it.slow
-        ? { text: it.text, pass: false, pending: true as const }
-        : { text: it.text, pass: it.pass },
-    );
+    .map((it) => {
+      if (!slow.includes(it.index)) return { text: it.text, pass: it.pass };
+      const ran = it.slow ? st.slowRan?.find((r) => r.index === it.index) : it;
+      return ran?.pass || (ran && hintStatus(st) === "fail")
+        ? { text: it.text, pass: ran.pass }
+        : { text: it.text, pass: false, pending: true as const };
+    });
 }
 
 // Why a Check could not run, from the host's message: it ran out of time,

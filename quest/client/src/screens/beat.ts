@@ -83,9 +83,10 @@ const BROKEN: Record<NonNullable<BeatView["broken"]>, string> = {
 
 /**
  * The status bubble's words, in the app's words: what it saw, never a
- * judgement. The first variant that holds wins.
+ * judgement. The first variant that holds wins. `checkStep` is the Lesson's
+ * Check step, which the Learner may also run in a terminal.
  */
-export function statusOf(beat: BeatView): StatusWords {
+export function statusOf(beat: BeatView, checkStep = false): StatusWords {
   const say = (tone: SaysTone, key: string, words: string): StatusWords => ({
     tone,
     words,
@@ -149,27 +150,49 @@ export function statusOf(beat: BeatView): StatusWords {
     }
   }
   if (beat.status === "waiting") {
-    if (decidedByOf(beat) === "session")
-      return say("watching", "waiting", "Waiting for the session to end.");
+    // Only Check again runs a slow line, so a beat whose lines all wait
+    // for it says so, rather than that a change will be seen (ticket 344).
+    const lines = beat.verification;
+    if (
+      decidedByOf(beat) === "check" &&
+      lines.some((line) => line.pending) &&
+      lines.every((line) => line.pending || line.pass)
+    )
+      return lines.some((line) => line.pass)
+        ? say(
+            "watching",
+            "slowWait",
+            "Everything else passes. Check again runs the slow part.",
+          )
+        : say("watching", "slowOnly", "Check again runs these lines.");
     // The folder actually watched: the step's Work folder, known before
-    // any first look; the Practice copy otherwise.
-    if (beat.watches !== null)
+    // any first look; the Practice copy otherwise. A beat that waits for
+    // its button watches the same folder.
+    const watched =
+      beat.watches !== null
+        ? say(
+            "watching",
+            "waiting-work",
+            `Watching your work folder: ${beat.watches}.`,
+          )
+        : say("watching", "waiting", "Watching your Practice copy.");
+    // A run in a terminal reaches the card only through Check again.
+    if (checkStep && decidedByOf(beat) === "check")
       return say(
         "watching",
-        "waiting-work",
-        `Watching your work folder: ${beat.watches}.`,
+        `${watched.key}-check`,
+        `${watched.words} After the check runs in your terminal, choose Check again.`,
       );
-    return say("watching", "waiting", "Watching your Practice copy.");
+    return watched;
   }
   if (beat.status === "already")
     return say("passed", "already", "Already done, so this step counts.");
   if (beat.status === "done")
     return say("passed", "done", "That step is done.");
-  return say(
-    "notYet",
-    "fail",
-    "Not yet. The lines below say what the check saw.",
-  );
+  // The lines are named only where the card shows some (ticket 344).
+  return checkLines(beat).length > 0
+    ? say("notYet", "fail", "Not yet. The lines below say what the check saw.")
+    : say("notYet", "fail-bare", "Not yet.");
 }
 
 /** A line of the Check as the card shows it, before it is drawn. */
@@ -190,8 +213,10 @@ export const WATCH_FALLBACK = "What the step asks for";
 /**
  * The card's Check lines. A checked beat shows its Check items: the Not yet
  * words under the first item not met, the evidence under the passed group. A
- * watched beat shows one line, its "Done when" words. The Learner's beats, a
- * session and a question show none.
+ * watched beat shows one line, its "Done when" words, and so does a beat
+ * its button decides on a Not yet. While a checked beat waits, an item not
+ * met is watched, not Not yet: the Learner has not acted yet (ticket 344).
+ * The Learner's beats and a question show none.
  */
 export function checkLines(beat: BeatView): BeatCheckLine[] {
   const decided = decidedByOf(beat);
@@ -209,7 +234,9 @@ export function checkLines(beat: BeatView): BeatCheckLine[] {
             ? "pass"
             : broken
               ? "broken"
-              : "notYet";
+              : beat.status === "waiting"
+                ? "waiting"
+                : "notYet";
       const out: BeatCheckLine = { text: line.text, state };
       if (state === "notYet" && !failShown && beat.fail !== null) {
         out.fail = beat.fail;
@@ -222,7 +249,10 @@ export function checkLines(beat: BeatView): BeatCheckLine[] {
     if (last && beat.evidence !== null) last.evidence = beat.evidence;
     return lines;
   }
-  if (decided !== "watch") return [];
+  // A beat that waits for its button shows its line only on a Not yet: a
+  // git-clean Not yet lists the paths it saw, as a watched one does.
+  if (decided === "session" && beat.status !== "fail") return [];
+  if (decided !== "watch" && decided !== "session") return [];
   const text =
     beat.lines.find((line) => line.doneWhen === true)?.text ?? WATCH_FALLBACK;
   if (done) {

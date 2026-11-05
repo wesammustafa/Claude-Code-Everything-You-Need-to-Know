@@ -32,6 +32,7 @@ import {
   where,
 } from "./drive.mjs";
 import { at, b1Done, empty, midway, missing, passed } from "./flow-places.mjs";
+import { project } from "../src/index.ts";
 
 // Truthful waits: r shows the run it asked for, and only that run's result ends it.
 const ofType = (effects, type) => effects.filter((e) => e.type === type);
@@ -94,7 +95,9 @@ test("r shows the checking state on every checked beat, and its check, file and 
   ]);
   const g = at("W7", { beat: 2 });
   g.send({ type: "git", paths: ["notes.md"] });
-  assert.equal(g.state.beat.status, "fail");
+  assert.equal(g.state.beat.status, "waiting", "where it starts (344)");
+  g.send({ type: "git", paths: ["notes.md", "src/a.js"] });
+  assert.equal(g.state.beat.status, "fail", "another list is a change");
   const gitOut = g.run().effects;
   assert.equal(g.state.beat.status, "opening", "a git beat");
   assert.deepEqual(ofType(gitOut, "git"), [
@@ -1004,6 +1007,7 @@ test("git-clean with paths: done once git status lists nothing under them, whate
     dir: PROJECT,
     files: true,
   });
+  d.send({ type: "activity" });
   d.send(gitLists(["README.md", "secrets/key.txt", "package-lock.json"]));
   assert.equal(d.state.beat.status, "fail");
   assert.deepEqual(d.state.beat.fail.paths, [
@@ -1025,7 +1029,36 @@ test("git-clean with paths: done once git status lists nothing under them, whate
   assert.deepEqual(beatOf(whole.state).verify, { kind: "git-clean" });
   assert.deepEqual(pending(whole, "git"), { type: "git", dir: PROJECT });
   whole.send({ type: "git", paths: ["README.md"] });
+  assert.equal(whole.state.beat.status, "waiting", "before the learner acts");
+  whole.send({ type: "activity" });
+  whole.send({ type: "git", paths: ["README.md"] });
   assert.equal(whole.state.beat.status, "fail");
+});
+
+// spec: verify.value.git-clean
+test("git-clean: a tree not clean on arrival waits until the learner acts, then says Not yet with its paths (344)", () => {
+  const listed = (paths) => ({ type: "git", paths });
+  // Check again is acting.
+  const r = onReading("git-clean");
+  r.send(listed(["README.md"]));
+  assert.equal(r.state.beat.status, "waiting");
+  assert.equal(project(r.state).lesson.beat.fail, null);
+  r.run();
+  r.send({ ...listed(["README.md"]), asked: r.state.beat.asked });
+  assert.equal(r.state.beat.status, "fail");
+  assert.deepEqual(r.state.beat.fail.paths, ["README.md"]);
+  // A change the watcher saw is acting too; polls alone are not.
+  const w = onReading("git-clean");
+  for (let i = 0; i < 3; i++) w.send(listed(["README.md"]));
+  assert.equal(w.state.beat.status, "waiting");
+  w.send({ type: "activity" });
+  w.send(listed(["README.md"]));
+  assert.equal(w.state.beat.status, "fail");
+  // A clean tree passes without any act.
+  const c = onReading("git-clean");
+  c.send(listed(["README.md"]));
+  c.send(listed([]));
+  assert.equal(c.state.beat.status, "done");
 });
 
 // spec: verify.value.git-clean-paths

@@ -548,12 +548,13 @@ test("an all-slow check beat runs its check on entry (ticket 309)", () => {
   assert.equal(view.checking, "HEAD:.claude/hooks/test-gate.sh");
   d.send({ type: "check", lesson: "i-5", items: [gateItem(false)] });
   // A do beat's arrival result is its baseline, so a failing item waits for
-  // the learner, now with its row in place of the slow-wait line.
+  // the learner, now with its row in place of the slow-wait line. Only Check
+  // again runs it, so the row says so, not Not yet (ticket 344).
   const failed = project(d.state).lesson.beat;
   assert.equal(failed.status, "waiting");
   assert.equal(failed.slowWait, false);
   assert.deepEqual(failed.verification, [
-    { text: gateItem(false).text, pass: false },
+    { text: gateItem(false).text, pass: false, pending: true },
   ]);
   // A later poll runs without the slow item; the arrival answer stays.
   d.send({
@@ -568,6 +569,117 @@ test("an all-slow check beat runs its check on entry (ticket 309)", () => {
   const ok = onGate();
   ok.send({ type: "check", lesson: "i-5", items: [gateItem(true)] });
   assert.equal(ok.state.beat.status, "already", "it passes on arrival");
+});
+test("an all-slow beat stays Checking when a poll answers before its arrival run, so its first answer waits (ticket 344)", () => {
+  const d = onGate();
+  assert.equal(d.state.beat.status, "opening");
+  d.send({
+    type: "check",
+    lesson: "i-5",
+    items: [{ ...gateItem(false), slow: true, hint: "" }],
+  });
+  assert.equal(d.state.beat.status, "opening");
+  assert.equal(Boolean(d.state.beat.slowWait), false);
+  // The arrival run's FAIL is where the beat starts: no Not yet.
+  d.send({ type: "check", lesson: "i-5", items: [gateItem(false)] });
+  assert.equal(d.state.beat.status, "waiting");
+  const ok = onGate();
+  ok.send({
+    type: "check",
+    lesson: "i-5",
+    items: [{ ...gateItem(true), slow: true, pass: false, hint: "" }],
+  });
+  ok.send({ type: "check", lesson: "i-5", items: [gateItem(true)] });
+  assert.equal(ok.state.beat.status, "already");
+});
+test("a slow item keeps what Check again saw when a poll leaves it out (ticket 344)", () => {
+  const d = onGate();
+  d.send({ type: "check", lesson: "i-5", items: [gateItem(false)] });
+  const placeholder = { ...gateItem(false), slow: true, hint: "" };
+  // Check again runs it and says Not yet: the row says so too.
+  d.run();
+  d.send({
+    type: "check",
+    lesson: "i-5",
+    items: [gateItem(false)],
+    asked: d.state.beat.asked,
+  });
+  assert.equal(d.state.beat.status, "fail");
+  const row = { text: gateItem(false).text, pass: false };
+  assert.deepEqual(project(d.state).lesson.beat.verification, [row]);
+  // A poll without the slow item: the row stays what Check again saw, not
+  // "Runs on Check again".
+  d.send({ type: "check", lesson: "i-5", items: [placeholder] });
+  assert.deepEqual(project(d.state).lesson.beat.verification, [row]);
+  // Check again passes it.
+  d.run();
+  d.send({
+    type: "check",
+    lesson: "i-5",
+    items: [gateItem(true)],
+    asked: d.state.beat.asked,
+  });
+  assert.equal(d.state.beat.status, "done");
+  assert.deepEqual(project(d.state).lesson.beat.verification, [
+    { text: gateItem(true).text, pass: true },
+  ]);
+});
+test("b-2's Record the plan moment waits on arrival, through its polls, until the learner acts (ticket 344)", () => {
+  const d = midway("b-2", "Y4");
+  assert.deepEqual(beatOf(d.state).verify, {
+    kind: "check",
+    items: [0],
+    fresh: true,
+    since: null,
+  });
+  const path = ".practice/b-2-before.txt";
+  const save =
+    "While the plan is on screen, run `git status --porcelain > .practice/b-2-before.txt` in another terminal.";
+  const before = (pass, extra = {}) => ({
+    type: "check",
+    lesson: "b-2",
+    items: [{ index: 0, text: "before", pass, hint: pass ? "" : save }],
+    read: null,
+    path,
+    found: null,
+    stamp: "",
+    ...extra,
+  });
+  // The arrival run and the polls a live run sends while the file is
+  // missing: the beat watches, and its row is no Not yet.
+  d.send(before(false));
+  d.send({ type: "stamp", key: "Y4.0", stamp: "" });
+  for (let i = 0; i < 3; i++) d.send(before(false));
+  d.tick(60_000);
+  d.send(before(false));
+  assert.equal(d.state.beat.status, "waiting");
+  assert.equal(project(d.state).lesson.beat.fail, null);
+  // The row is the arrival's; the card draws it watched while it waits.
+  assert.deepEqual(project(d.state).lesson.beat.verification, [
+    { text: "before", pass: false },
+  ]);
+  // The learner saves the file: it passes.
+  d.send({ type: "activity" });
+  d.send(before(true, { stamp: "S", changed: true }));
+  assert.equal(d.state.beat.status, "done");
+  // Its second beat, a fresh file, waits on arrival too.
+  d.cont();
+  const plan = ".practice/b-2-plan.txt";
+  d.send({ type: "file", path: plan, read: null, stamp: "" });
+  d.send({ type: "stamp", key: "Y4.1", stamp: "" });
+  for (let i = 0; i < 3; i++)
+    d.send({ type: "file", path: plan, read: null, stamp: "" });
+  assert.equal(d.state.beat.status, "waiting");
+  // Check again is acting: now it says Not yet.
+  d.run();
+  d.send({
+    type: "file",
+    path: plan,
+    read: null,
+    stamp: "",
+    asked: d.state.beat.asked,
+  });
+  assert.equal(d.state.beat.status, "fail");
 });
 test("a mixed check beat leaves its slow items for r on entry (ticket 309)", () => {
   const d = midway("i-5", "Y4");
