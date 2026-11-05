@@ -24,16 +24,18 @@ badge: Beginner
 - hint: "If you skipped lesson 5: start `claude` in your copy's `project/` folder and run `/init`."
 - hint: "In the new `CLAUDE.md`, delete every line only the course uses: anything about `checks/`, `learn/`, `capstone/`, `.github/` or `.devcontainer/`, any `npm run check`, `npm run learn` or `npm run test:checks` line, and any rule to keep your work off `main` (that rule is for the template repository, not your copy)."
 - hint: "Make sure the file names `npm test`, then end that session with `/exit`, so the task starts in a new one."
-- bottom: "Commit any change to `CLAUDE.md` on its own before you start (`git add CLAUDE.md`, then `git commit -m "Add CLAUDE.md"`)"
+- bottom: "git add CLAUDE.md"
+- bottom: "git commit -m "Add CLAUDE.md""
 - beat: do
 - verify: git-clean
 - goal: "Your copy of the practice template, with no uncommitted changes"
+- note: "Commit any change to `CLAUDE.md` on its own before you start (`git add CLAUDE.md`, then `git commit -m "Add CLAUDE.md"`): the fix commit may change only the files the plan names."
 - hint: "If `git status --porcelain` ([git status](https://git-scm.com/docs/git-status)) lists files, commit them."
 - beat: do
 - verify: self
 - goal: "Reproduce the bug before you fix it."
-- do: "make a new folder outside your practice copy and save `{ "files": ["docs"] }` in it as `linkcheck.json`."
-- hint: "Then run `npm run linkcheck -- <that folder>` in your copy's `project/` folder: until the bug is fixed, it prints `All relative links resolve.`"
+- do: "make a new folder outside your practice copy and save `{ "files": ["docs"] }` in it as `linkcheck.json`. Then run `npm run linkcheck -- <that folder>` in your copy's `project/` folder"
+- hint: "until the bug is fixed, it prints `All relative links resolve.`"
 - win-note: "**Windows:** save the file with `'{ "files": ["docs"] }' | Set-Content <that folder>\linkcheck.json`, not `>`."
 
 ### T2 | The task step 2 of 8 | Start in plan mode
@@ -59,6 +61,7 @@ badge: Beginner
 - goal: "Have Claude read the bug report and plan the fix."
 - note: "From `project/`, the report is outside Claude's working directory: by default, Claude has access to files in the directory where you launched it"
 - note: "So Claude Code may ask before it reads the report: allow that read."
+- note: "Or the read may need no prompt: Claude can read the report with a shell command such as `cat` instead, and Claude Code runs a built-in set of read-only commands, `cat` among them, without a permission prompt, unless `permissions.blockReadsOutsideWorkingDirectories` is on"
 - note: "Don't choose **No, and block reads outside the working directories from now on**: it sets `permissions.blockReadsOutsideWorkingDirectories` to `true` in your user settings, which makes the file tools refuse such reads in this and every later session"
 - do: "Ask for a plan that adds the test first and runs it before changing the code, so you see it fail"
 - hint: "Don't name the files to change: let Claude find them."
@@ -97,8 +100,8 @@ badge: Beginner
 - beat: do
 - verify: self
 - goal: "Approve with **Yes, and use auto mode**, as in [lesson 2](02-permission-modes-and-plan-mode.md#worked-example)"
+- note: "Watch the new test fail, then pass after the fix. If Claude stops after the failing run to ask whether to go on, say yes."
 - note: "If Claude Code offers to install a plugin in a dialog titled **LSP plugin recommendation**, choose **No, not now**: the capstone doesn't need it"
-- hint: "Watch the new test fail, then pass after the fix."
 - hint: "press `Ctrl+O`, as in [lesson 3](03-first-change.md#worked-example), and `Ctrl+O` again to go back"
 
 ### T7 | The task step 7 of 8 | Review the whole result

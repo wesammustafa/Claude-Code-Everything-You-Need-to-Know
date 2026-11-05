@@ -525,6 +525,29 @@ test("playing: a do beat's lines with its commands for this platform and the pra
   );
 });
 
+test("playing: a watched beat with no Done when line names what it looks for as its Check line (ticket 350)", () => {
+  const doneWhen = (id, step, beat) =>
+    view(at(id, { step, beat }, { course: liveCourse }))
+      .beat.lines.filter((l) => l.doneWhen)
+      .map((l) => [l.kind, l.text]);
+  // The live capstone's git-clean beat in T1, and its file beat in T5.
+  assert.deepEqual(doneWhen("b-capstone", "T1", 1), [
+    ["say", "nothing is left uncommitted"],
+  ]);
+  assert.deepEqual(doneWhen("b-capstone", "T5", 1), [
+    ["say", ".practice/capstone-plan.txt is saved"],
+  ]);
+  // A git-clean beat that names its paths gets none: i-4 W2 asks for
+  // `rm .env`, not a commit of it.
+  assert.deepEqual(doneWhen("i-4", "W2", 5), []);
+  // A beat with its own Done when line keeps only that one.
+  assert.deepEqual(doneWhen("a-1", "Y4", 0), [
+    ["say", "Done when the listing is saved."],
+  ]);
+  // A beat its button decides shows its lines on the card: none is added.
+  assert.deepEqual(doneWhen("b-2", "W6", 0), []);
+});
+
 test("playing: a recall question shows the guess it recalls, the one earlier answer on screen", () => {
   const d = at("b-1", {
     step: "Y2",
