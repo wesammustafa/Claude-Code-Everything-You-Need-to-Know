@@ -36,9 +36,10 @@ const checks = {
 // save of them starts again at the overview: i-2's W4 is self-verified (304),
 // i-3's partial skill block is one beat (306), i-6 waits for the report
 // before asking about it (311), i-capstone has a commit-setup beat before
-// delegation (313), and a-6's W3 accepts the marketplace path from the git
-// root of a Practice copy.
-const CHANGED_SINCE_LEGACY = ["i-2", "i-3", "i-6", "i-capstone", "a-6"];
+// delegation (313), a-6's W3 accepts the marketplace path from the git
+// root of a Practice copy, and i-5's Y4 runs the committed protect-files
+// script (334).
+const CHANGED_SINCE_LEGACY = ["i-2", "i-3", "i-5", "i-6", "i-capstone", "a-6"];
 
 describe("course manifest", () => {
   test("validates and compiles all 23 Lessons from their pages and step files", () => {

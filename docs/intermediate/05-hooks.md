@@ -127,11 +127,12 @@ You are done when all of these are true:
 - [ ] Both hook scripts are committed and executable: `git ls-files -s .claude/hooks` shows `100755` for `protect-files.sh` and `test-gate.sh`.
 - [ ] The committed `.claude/settings.json` runs `protect-files.sh` as a `PreToolUse` hook for `Edit|Write` with `"onFailure": "block"`, and `test-gate.sh` as a `Stop` hook: `git show HEAD:.claude/settings.json | jq .hooks` shows both.
 - [ ] The committed gate gives step 3's results: exit 2 with a reason while the tests fail, and exit 0 once they pass or when `stop_hook_active` is `true`.
+- [ ] The committed `protect-files.sh` gives exit 2 for `package-lock.json`, as Worked example step 3 shows, and exit 0 for a file it doesn't protect.
 - [ ] Self-check (not tested): in a session, the gate sent Claude back to work while a test failed.
 
 Run `npm run check -- i-5 --dir <your repo>` from your practice copy, or `npm run check -- i-5` in the copy itself.
 
-If a script item fails on the file mode, run `chmod +x` on the script, then `git add` it and commit again. If the settings item fails, compare your `hooks` block with Worked example step 2 and Your turn step 2, and commit it. If the gate item fails, run step 3's three cases on the committed script, read which one gives the wrong exit code, and check that the tests' output goes to stdout.
+If a script item fails on the file mode, run `chmod +x` on the script, then `git add` it and commit again. If the settings item fails, compare your `hooks` block with Worked example step 2 and Your turn step 2, and commit it. If the gate item fails, run step 3's three cases on the committed script, read which one gives the wrong exit code, and check that the tests' output goes to stdout. If the protection item fails, run Worked example step 3's test on the committed script, and again with a file it doesn't protect in place of `package-lock.json`, and read each exit code.
 
 ## Watch out
 

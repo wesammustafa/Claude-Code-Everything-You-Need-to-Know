@@ -1,8 +1,8 @@
 // Every FAIL message of Intermediate lesson 5's check, each from a work
 // folder that produces it: `files` to write, or `setup(dir, { write, commit })`.
 // Each scenario holds one problem, so its message matches one narrow question.
-// The gates read their input without jq, so a machine without jq still gets
-// each scenario's own message.
+// The gates and the protect-files scripts read their input without jq, so a
+// machine without jq still gets each scenario's own message.
 import { chmodSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -10,7 +10,8 @@ const HOOK = '.claude/hooks/protect-files.sh';
 const GATE = '.claude/hooks/test-gate.sh';
 const SETTINGS = '.claude/settings.json';
 
-const PROTECT = '#!/bin/bash\ncat > /dev/null\nexit 0\n';
+// Blocks the hooks guide's patterns, and lets any other file through.
+const PROTECT = '#!/bin/bash\nINPUT=$(cat)\ncase "$INPUT" in *package-lock.json*|*.env*|*.git/*) echo "Blocked: a protected file" >&2; exit 2 ;; esac\nexit 0\n';
 const command = (script, extra = {}) => ({ type: 'command', command: `\${CLAUDE_PROJECT_DIR}/${script}`, args: [], ...extra });
 const settings = ({ matcher = 'Edit|Write', onFailure = 'block', stop = true, event = 'PreToolUse', script = HOOK } = {}) => `${JSON.stringify({
   permissions: { allow: ['Bash(npm test)'] },
@@ -49,10 +50,17 @@ const TO_STDERR = FINISHED.replace('npm test 2>&1', 'npm test >&2');
 const STDOUT_ONLY = FINISHED.replace('if ! npm test 2>&1; then', 'OUT=$(npm test 2>/dev/null)\nif [ $? -ne 0 ] && [ -n "$OUT" ]; then');
 const NO_GUARD = FINISHED.replace('case "$INPUT" in *\'"stop_hook_active":true\'*) exit 0 ;; esac\n', '');
 
+// Protect-files scripts that each break one exit code, or never finish.
+const PROTECT_NO_OP = '#!/bin/bash\ncat > /dev/null\nexit 0\n';
+const PROTECT_EXIT_1 = '#!/bin/bash\ncat > /dev/null\nexit 1\n';
+const PROTECT_ALL = '#!/bin/bash\ncat > /dev/null\necho "Blocked: every file" >&2\nexit 2\n';
+const PROTECT_FLOOD_OTHERS = ['#!/bin/bash', 'INPUT=$(cat)', 'case "$INPUT" in *package-lock.json*) exit 2 ;; esac', 'head -c 2000000 /dev/zero', 'exit 0', ''].join('\n');
+const PROTECT_NO_JQ = ['#!/bin/bash', 'INPUT=$(cat)', 'echo "$INPUT" | PATH=/nonexistent jq -r \'.tool_input.file_path\'', 'exit 1', ''].join('\n');
+
 // Commits both scripts, executable, with `text` as the settings, as Your turn
 // step 4 does, so only the item a scenario is about can fail.
-const committed = (gate = FINISHED, text = settings()) => (dir, { write, commit }) => {
-  write(dir, { [HOOK]: PROTECT, [GATE]: gate, [SETTINGS]: text });
+const committed = (gate = FINISHED, text = settings(), protect = PROTECT) => (dir, { write, commit }) => {
+  write(dir, { [HOOK]: protect, [GATE]: gate, [SETTINGS]: text });
   chmodSync(join(dir, HOOK), 0o755);
   chmodSync(join(dir, GATE), 0o755);
   commit(dir, 'Protect files and gate the end of a turn on the tests', [HOOK, GATE, SETTINGS]);
@@ -106,4 +114,12 @@ export const scenarios = [
   { item: 3, name: 'a missing comma before the hooks block', setup: committed(FINISHED, settings().replace('},\n  "hooks"', '}\n  "hooks"')) },
   { item: 3, name: 'the gate never registered under Stop', setup: committed(FINISHED, settings({ stop: false })) },
   { item: 3, name: 'a list matcher that keeps the Stop hook from loading', setup: committed(FINISHED, settings({ matcher: ['Edit', 'Write'] })) },
+
+  { item: 4, name: 'the protect-files script saved but not committed', files: { [HOOK]: PROTECT, [GATE]: FINISHED, [SETTINGS]: settings() } },
+  { item: 4, name: 'a protect-files script whose output is too large to read', setup: committed(FINISHED, settings(), FLOOD) },
+  { item: 4, name: 'a protect-files script whose output is too large to read for a file it lets through', setup: committed(FINISHED, settings(), PROTECT_FLOOD_OTHERS) },
+  { item: 4, name: 'jq not installed for the protect-files script', setup: committed(FINISHED, settings(), PROTECT_NO_JQ) },
+  { item: 4, name: 'a protect-files script that blocks nothing', setup: committed(FINISHED, settings(), PROTECT_NO_OP) },
+  { item: 4, name: 'a protect-files script that exits 1 for every path', setup: committed(FINISHED, settings(), PROTECT_EXIT_1) },
+  { item: 4, name: 'a protect-files script that blocks every path', setup: committed(FINISHED, settings(), PROTECT_ALL) },
 ];

@@ -8,13 +8,15 @@
 // test command. On Stop, an exit 2 with nothing on stdout and stderr that says
 // a file is missing is a non-blocking error (hooks reference, "Exit code
 // output"), so the check also fails the tests with a missing-file error and
-// wants the gate to keep that off its stderr, or print to stdout. Seeing the
-// gate send Claude back in a session is self-checked.
+// wants the gate to keep that off its stderr, or print to stdout. It also runs
+// the committed protect-files script with an Edit of package-lock.json, which
+// it must block with exit 2, and of src/app.js, which it must let through with
+// exit 0. Seeing the gate send Claude back in a session is self-checked.
 import { spawnSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
-import { committedMode, editWriteScripts, hookWords, listMatcher, matchesEditWrite, missingJq } from '../hooks.mjs';
+import { committedMode, editWriteScripts, hookWords, listMatcher, matchesEditWrite, missingJq, runCommitted } from '../hooks.mjs';
 /** @import { Repo } from '../repo.mjs' */
 /** @import { Item } from './index.mjs' */
 
@@ -187,6 +189,24 @@ export const items = [
       // A Stop hook takes no matcher: read its groups as matching every tool.
       const stop = Array.isArray(value?.hooks?.Stop) ? value.hooks.Stop.map((/** @type {any} */ g) => ({ ...g, matcher: '' })) : [];
       return editWriteScripts({ hooks: { PreToolUse: stop } }).includes(GATE) ? true : `${SETTINGS} doesn't run test-gate.sh as a \`Stop\` hook. Add it under \`hooks.Stop\`, as the lesson shows.`;
+    },
+  },
+  {
+    text: 'the committed `protect-files.sh` exits 2 for an Edit of `package-lock.json` and 0 for a file it doesn\'t protect',
+    check(repo) {
+      // A protected file, which it must block, then one it must let through.
+      for (const [path, want] of /** @type {const} */ ([['package-lock.json', 2], ['src/app.js', 0]])) {
+        const run = runCommitted(repo, HOOK, path);
+        if (run === null) return `Commit ${HOOK}: the check runs the committed script, the one your teammates get.`;
+        if (run.error || run.status === null) return `protect-files.sh couldn't run: ${run.error?.message ?? `it was stopped by ${run.signal}`}. Run Worked example step 3's test on it: it should finish at once, with a line or two of output.`;
+        if (missingJq(run)) return 'protect-files.sh needs `jq`, which isn\'t installed. Install it and run the check again.';
+        if (run.status !== want) {
+          return want === 2
+            ? `For package-lock.json, the committed protect-files.sh exits ${run.status} instead of 2. Run Worked example step 3's test on it.`
+            : `For src/app.js, which it doesn't protect, the committed protect-files.sh exits ${run.status} instead of 0. If your repository's path contains .env or .git/, the patterns match the path itself.`;
+        }
+      }
+      return true;
     },
   },
 ];

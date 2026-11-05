@@ -112,8 +112,9 @@ test('SLOW holds exactly the items that start a process, through a helper in che
   // its methods would not show here.
   assert.ok(!starters.has('openRepo'), 'openRepo starts a process other than git');
   const found = Object.fromEntries(EVERY.map((id) => [id, lessons[id].items.flatMap((it, i) => (starts(it.check.toString()) ? [i] : []))]).filter(([, is]) => is.length));
-  // runCommitted runs i-5's hook, runStubbed a-4's script, and testsPass is b-3's npm test.
-  assert.deepEqual([found['i-5'], found['a-4'], found['b-3']], [[2], [1, 2, 3], [0, 1, 2, 4]]);
+  // i-5 runs its gate and, through runCommitted, its protect-files hook;
+  // runStubbed runs a-4's script, and testsPass is b-3's npm test.
+  assert.deepEqual([found['i-5'], found['a-4'], found['b-3']], [[2, 4], [1, 2, 3], [0, 1, 2, 4]]);
   assert.deepEqual(found, SLOW);
 });
 

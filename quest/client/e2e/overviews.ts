@@ -1822,6 +1822,7 @@ export const overviews = [
       'the committed `.claude/settings.json` runs protect-files.sh as a `PreToolUse` hook for Edit and Write, with `"onFailure": "block"`',
       "the committed test gate exits 2 with a reason while the tests fail, and 0 once they pass or after one retry",
       "the committed `.claude/settings.json` runs test-gate.sh as a `Stop` hook",
+      "the committed `protect-files.sh` exits 2 for an Edit of `package-lock.json` and 0 for a file it doesn't protect",
     ],
     needs: [
       {

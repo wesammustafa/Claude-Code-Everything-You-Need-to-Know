@@ -4,6 +4,7 @@
 // place, these open its lesson; where it asserted a view, these assert the
 // engine's phase.
 import assert from "node:assert/strict";
+import { fingerprint } from "../src/content.ts";
 import {
   b1Item,
   course,
@@ -58,15 +59,18 @@ export const open = (id, step, extra = {}, lessons = course) => {
   return d;
 };
 
-// A Beginner lesson opened at a saved step, with every lesson before it done.
+// A lesson opened at a saved step, with every lesson before it done. The
+// place is saved under the lesson's current steps, so a lesson changed since
+// the legacy commit keeps it.
 export const midway = (
   id,
   step,
   { eased = [], missed = [], beat = 0, ...extra } = {},
 ) => {
+  const print = fingerprint(course.find((l) => l.id === id).content);
   const lessons = {
     ...finishedBefore(id),
-    [id]: { step, beat, warm: [], ...extra },
+    [id]: { step, beat, warm: [], fingerprint: print, ...extra },
   };
   const d = driver({ course, saved: save({ eased, missed, lessons }) });
   d.open();
