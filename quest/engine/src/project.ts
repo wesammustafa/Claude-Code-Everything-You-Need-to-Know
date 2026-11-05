@@ -163,6 +163,7 @@ function summary(s: EngineState, l: CourseEntry): LessonSummary {
     number: lessonNumber(s, l.id),
     title: l.title ?? l.content?.title ?? l.id,
     minutes: l.minutes ?? "",
+    stamp: l.content?.stamp ?? "",
     page: l.page ?? "",
     capstone: l.id.endsWith("capstone"),
     complete: progressOf(s, l.id).complete,

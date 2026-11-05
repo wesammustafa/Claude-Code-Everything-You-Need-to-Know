@@ -15,6 +15,7 @@ import {
   course,
   courseWith,
   driver,
+  liveCourse,
   finished,
   finishedBefore,
   beatOf,
@@ -418,6 +419,8 @@ test("overview: a lesson with no lesson file is never opened, and its overview, 
     [null, { planned: [], less: null }, [], [], [], null, null, []],
   );
   assert.equal(project(d.state).course.next, null);
+  // Nor a Stamp in its summary.
+  assert.equal(project(d.state).course.levels[0].lessons[1].stamp, "");
 });
 
 // ---- playing --------------------------------------------------------------------
@@ -1116,6 +1119,21 @@ test("the course's lessons: each one's state, Badge and folder need, and the Tea
   assert.equal(cap.capstone, true);
   assert.equal(all.find((l) => l.id === "b-1").badge, "Explorer");
   assert.equal(s.course.next, "a-5");
+});
+
+test("the course's lessons: each one's Stamp, its compiled step file's word for word, b-1's naming a stable version and a date", () => {
+  const s = project(driver({ course: liveCourse }).state);
+  const all = s.course.levels.flatMap((l) => l.lessons);
+  assert.equal(all.length, liveCourse.length);
+  for (const summary of all) {
+    const compiled = liveCourse.find((l) => l.id === summary.id);
+    assert.ok(compiled?.content?.stamp, `${summary.id} has a Stamp`);
+    assert.equal(summary.stamp, compiled.content.stamp, summary.id);
+  }
+  assert.match(
+    all.find((l) => l.id === "b-1").stamp,
+    /^Verified against Claude Code v\d+\.\d+\.\d+ \(stable\) on \d{4}-\d{2}-\d{2}$/,
+  );
 });
 
 test("playing: an opening run's count, while the beat opens", () => {
