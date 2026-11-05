@@ -97,6 +97,7 @@ badge: Beginner
 - beat: do
 - verify: self
 - goal: "Approve with **Yes, and use auto mode**, as in [lesson 2](02-permission-modes-and-plan-mode.md#worked-example)"
+- note: "If Claude Code offers to install a plugin in a dialog titled **LSP plugin recommendation**, choose **No, not now**: the capstone doesn't need it"
 - hint: "Watch the new test fail, then pass after the fix."
 - hint: "press `Ctrl+O`, as in [lesson 3](03-first-change.md#worked-example), and `Ctrl+O` again to go back"
 
