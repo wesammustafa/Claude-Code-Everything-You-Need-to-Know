@@ -1,9 +1,12 @@
 // The page panel (244): a rendered Guide page fetched when opened, in both
 // themes, with its links each going to the right place; Pip resting beside
 // it; the Electives on the Level cards and the skills card's hand-over.
-import type { Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import AxeBuilder from "@axe-core/playwright";
+import { join } from "node:path";
+import type { Locator, Page } from "@playwright/test";
 import { connected, expect, test } from "./live.ts";
-import { pageIndex, servePages } from "./pages.ts";
+import { PAGES_DIR, pageIndex, servePages } from "./pages.ts";
 import {
   cardEntries,
   fullCourse,
@@ -172,6 +175,91 @@ test.describe("a page with a diagram and callouts, and heading links", () => {
       "href",
       new RegExp(`^${GUIDE}/blob/${pageIndex.ref}/`),
     );
+  });
+});
+
+// A code block wider than the panel scrolls inside itself, at the top level
+// and inside a list item, and the panel itself never scrolls sideways (347).
+// Each such block is a named tab stop, so the keyboard can scroll it; one
+// that fits is not, and a resize moves a block from one to the other.
+test.describe("a long code block scrolls inside itself", () => {
+  const PERMISSIONS = "docs/beginner/02-permission-modes-and-plan-mode.md";
+  const file = "/pages/beginner/02-permission-modes-and-plan-mode.html";
+  const long = `${"a-very-long-command --with-a-flag ".repeat(12)}end`;
+  const medium = "a-medium-command --with --three --flags --set";
+  const html =
+    readFileSync(join(PAGES_DIR, file.slice("/pages/".length)), "utf8") +
+    `<pre><code>${long}</code></pre>\n<ol><li><p>A step:</p><pre><code>${long}</code></pre></li></ol>\n<pre><code>${medium}</code></pre>\n`;
+  const scroller = (dialog: Locator, text: string) =>
+    dialog.locator(".page-prose pre").filter({ hasText: text });
+
+  for (const width of [375, 1280, 1920]) {
+    test(`at ${String(width)} px`, async ({ page, context }) => {
+      await servePages(context, { [file]: html });
+      await page.setViewportSize({ width, height: 900 });
+      await openAt(page, "/#/lesson/b-2", overviewAt("b-2"));
+      await readButton(page).click();
+      const dialog = page.getByRole("dialog", { name: titleOf(PERMISSIONS) });
+      const pres = scroller(dialog, "a-very-long-command");
+      await expect(pres).toHaveCount(2);
+      for (const pre of await pres.all()) {
+        expect(
+          await pre.evaluate((el) => el.scrollWidth > el.clientWidth),
+        ).toBe(true);
+        await expect(pre).toHaveAttribute("tabindex", "0");
+        await expect(pre).toHaveRole("group");
+        await expect(pre).toHaveAccessibleName("Code block");
+      }
+      const body = dialog.locator("[data-panel-body]");
+      const sizes = await body.evaluate((el) => ({
+        scroll: el.scrollWidth,
+        client: el.clientWidth,
+      }));
+      expect(sizes.scroll).toBeLessThanOrEqual(sizes.client);
+      // Named groups, not landmarks: none repeats, and each one scrolls.
+      const { violations } = await new AxeBuilder({ page })
+        .include("[role=dialog]")
+        .withRules(["landmark-unique", "scrollable-region-focusable"])
+        .analyze();
+      expect(violations.map((v) => v.id)).toEqual([]);
+    });
+  }
+
+  test("a resize makes a block a tab stop when it overflows, and not once it fits and focus leaves", async ({
+    page,
+    context,
+  }) => {
+    await servePages(context, { [file]: html });
+    await page.setViewportSize({ width: 1920, height: 900 });
+    await openAt(page, "/#/lesson/b-2", overviewAt("b-2"));
+    await readButton(page).click();
+    const dialog = page.getByRole("dialog", { name: titleOf(PERMISSIONS) });
+    const pre = scroller(dialog, medium);
+    await expect(pre).toBeVisible();
+    await expect(pre).not.toHaveAttribute("tabindex");
+    await expect(pre).not.toHaveAttribute("role");
+    await page.setViewportSize({ width: 375, height: 900 });
+    await expect(pre).toHaveAttribute("tabindex", "0");
+    await expect(pre).toHaveAccessibleName("Code block");
+    await pre.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect
+      .poll(() => pre.evaluate((el) => el.scrollLeft))
+      .toBeGreaterThan(0);
+    // Focused as it comes to fit, it keeps its stop until focus moves on.
+    await page.setViewportSize({ width: 1920, height: 900 });
+    await expect
+      .poll(() => pre.evaluate((el) => el.scrollWidth > el.clientWidth))
+      .toBe(false);
+    await expect(pre).toBeFocused();
+    await page.keyboard.press("Shift+Tab");
+    expect(
+      await page.evaluate(
+        () => document.activeElement?.closest("[role=dialog]") != null,
+      ),
+    ).toBe(true);
+    await expect(pre).not.toHaveAttribute("tabindex");
+    await expect(pre).not.toHaveAttribute("aria-label");
   });
 });
 

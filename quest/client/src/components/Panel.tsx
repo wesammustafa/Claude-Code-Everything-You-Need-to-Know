@@ -225,7 +225,7 @@ export function Panel({
             tabIndex={scrolls ? 0 : undefined}
             role={scrolls ? "region" : undefined}
             aria-labelledby={scrolls ? titleId : undefined}
-            className="grid flex-1 content-start gap-5.5 overflow-auto px-5.5 pt-5 pb-10 focus-visible:-outline-offset-2"
+            className="grid flex-1 grid-cols-[minmax(0,1fr)] content-start gap-5.5 overflow-auto px-5.5 pt-5 pb-10 focus-visible:-outline-offset-2"
           >
             {children}
           </div>
