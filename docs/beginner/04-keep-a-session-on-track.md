@@ -41,13 +41,11 @@ The job: tidy up `brokenLinks` in `src/check-links.js`. You'll try one approach,
 3. Try an approach:
 
    ```text
-   Make brokenLinks asynchronous, reading files with fs/promises, and update its callers.
+   Make brokenLinks asynchronous, reading files with fs/promises, and update its callers. Make the edits with your file editing tool, not a shell command.
    ```
 
    In the second terminal, `git status --short` ([git status](https://git-scm.com/docs/git-status)) lists the files Claude changed, `src/check-links.js`, `src/cli.js` and usually `test/links.test.js`, and `git diff` ([git diff](https://git-scm.com/docs/git-diff)) shows the change. Say you decide against it: for a short command-line run, reading files asynchronously buys nothing, and every caller now has to wait for the function.
-4. Put the files and the conversation back, rather than asking Claude to undo it. Anthropic's [session management guide](https://claude.com/resources/articles/using-claude-code-session-management-and-1m-context) calls rewinding often the better correction: the attempt leaves the context, and you re-prompt with what you learned. Type `/rewind`, or press `Esc` twice with an empty prompt, pick the prompt from step 3 and choose **Restore code and conversation**. The files go back, the attempt leaves the conversation, and your step 3 prompt returns to the input box ([Checkpointing](https://code.claude.com/docs/en/checkpointing#rewind-and-summarize)). In the second terminal, `git status --short` prints nothing. If it lists files, Claude changed them in a way rewind doesn't track, usually with a command: run `git restore src test` ([git restore](https://git-scm.com/docs/git-restore)).
-
-   If the menu offers only **Restore conversation**, the summarize options and **Never mind**, Claude changed the files in a way rewind doesn't track, usually with a command: choose **Restore conversation**, then run `git restore src test` in the second terminal.
+4. Put the files and the conversation back, rather than asking Claude to undo it. Anthropic's [session management guide](https://claude.com/resources/articles/using-claude-code-session-management-and-1m-context) calls rewinding often the better correction: the attempt leaves the context, and you re-prompt with what you learned. Type `/rewind`, or press `Esc` twice with an empty prompt, pick the prompt from step 3 and choose **Restore code and conversation**. The files go back, the attempt leaves the conversation, and your step 3 prompt returns to the input box ([Checkpointing](https://code.claude.com/docs/en/checkpointing#rewind-and-summarize)). If the menu has no option to restore code, Claude changed the files in a way rewind doesn't track, usually with a command: choose **Restore conversation**, and your step 3 prompt still returns to the input box ([Checkpointing](https://code.claude.com/docs/en/checkpointing#bash-command-changes-not-tracked)). In that case, put the files back with `git restore src test` in the second terminal ([git restore](https://git-scm.com/docs/git-restore)). Either way, in the second terminal, `git status --short` prints nothing. If it still lists files, a command changed a file rewind doesn't track: run `git restore src test`.
 5. Edit the prompt in the input box into the approach you want, and send it:
 
    ```text
@@ -87,7 +85,7 @@ Try a teammate's rename script, then undo all of it: another tool imports `findL
    ```
 
    Claude Code replaces the conversation so far with a summary that focuses on what you asked to keep ([Commands](https://code.claude.com/docs/en/commands)).
-2. Ask:
+2. Ask Claude to run the teammate's script, `practice/b-4/rename-export.mjs`, then to update its callers with its file editing tool, not a shell command:
 
    ```text
    Run node practice/b-4/rename-export.mjs, which renames findLinks in src/links.js. Then update its callers with your file editing tool, not a shell command.

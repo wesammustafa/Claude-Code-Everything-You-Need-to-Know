@@ -5,6 +5,7 @@
 // folders.
 import { test } from "vitest";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { isDeepStrictEqual } from "node:util";
 import {
   FACTS,
@@ -21,10 +22,12 @@ import {
   beatOf,
   folderKey,
   gitResult,
+  parseLesson,
   pending,
   playUntil,
   probed,
   reduce,
+  rungsOf,
   running,
   save,
   stepOf,
@@ -826,6 +829,82 @@ test("playing: i-1's Y2 card closes its do list with a line that another edit fo
   );
   assert.equal(lines.at(-1).text, "One more edit follows the question.");
   assert.ok(lines.at(-2).text.endsWith("keeping the Red step's style;"));
+});
+
+// Ticket 343: when Claude edits through a command, /rewind offers no code
+// restore, so the live b-4 card says what to choose then without a hint, at
+// every tier; the first hint holds the git command, and Y2's goal names the
+// script and the file editing tool its after-rewind check depends on.
+test("playing: live b-4 shows the rewind fallback and git restore on the card, W3's and Y2's file tool, and Y2's script", () => {
+  const live = readFileSync(
+    new URL("../../../course/steps/b-4.md", import.meta.url),
+    "utf8",
+  );
+  const W4 = "### W4 | Worked example step 4 of 7 | Rewind and re-prompt\n";
+  assert.ok(
+    live.includes(`${W4}- tier: guided`),
+    "W4 opens at the guided tier",
+  );
+  const tiered = (tier) =>
+    liveCourse.map((l) =>
+      l.id === "b-4"
+        ? {
+            ...l,
+            content: parseLesson(
+              live.replace(`${W4}- tier: guided`, `${W4}- tier: ${tier}`),
+              "course/steps/b-4.md",
+            ),
+          }
+        : l,
+    );
+  const on = (lessons, step, beat) => {
+    const d = driver({
+      course: lessons,
+      saved: save({
+        lessons: {
+          ...finishedBefore("b-4", lessons),
+          "b-4": { step, beat, warm: [] },
+        },
+      }),
+    });
+    d.open("b-4");
+    assert.equal(stepOf(d.state).id, step);
+    return d;
+  };
+  const FALLBACK =
+    "If the menu has no option to restore code, Claude changed the files in a way rewind doesn't track, usually with a command: choose **Restore conversation**, and your step 3 prompt still returns to the input box";
+  for (const tier of ["guided", "hinted", "challenge"]) {
+    const rewind = on(tiered(tier), "W4", 1);
+    assert.equal(stepOf(rewind.state).tier, tier);
+    const lines = view(rewind).beat.lines;
+    assert.ok(
+      lines.some((l) => l.kind === "note" && l.text === FALLBACK),
+      `${tier}: ${lines.map((l) => l.text).join("\n")}`,
+    );
+    assert.equal(view(rewind).hints.shown.length, 0, `${tier}: no hint open`);
+    assert.match(rungsOf(rewind.state)[0].text, /`git restore src test`/);
+    const clean = on(tiered(tier), "W4", 2);
+    assert.equal(beatOf(clean.state).verify.kind, "git-clean");
+    const cleanLines = view(clean).beat.lines;
+    assert.ok(
+      cleanLines.some(
+        (l) => l.kind === "note" && /run `git restore src test`/.test(l.text),
+      ),
+      `${tier}: ${cleanLines.map((l) => l.text).join("\n")}`,
+    );
+    assert.equal(view(clean).hints.shown.length, 0, `${tier}: no hint open`);
+  }
+  // W3's card itself asks for the file editing tool, so rewind can track the
+  // edits (343 dry-run: the request sat only behind the exact command).
+  const w3 = view(on(liveCourse, "W3", 0)).beat.lines;
+  assert.ok(
+    w3.some((l) => l.text.includes("file editing tool, not a shell command")),
+    w3.map((l) => l.text).join("\n"),
+  );
+  const y2 = view(on(liveCourse, "Y2", 0)).beat.lines;
+  const goal = y2.find((l) => l.kind === "goal")?.text ?? "";
+  assert.ok(goal.includes("`practice/b-4/rename-export.mjs`"), goal);
+  assert.ok(goal.includes("file editing tool, not a shell command"), goal);
 });
 
 test("a beat's Windows note shows on native Windows only", () => {
