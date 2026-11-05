@@ -458,6 +458,7 @@ export const complete: CompleteLesson = {
   practised: [
     {
       skill: "install",
+      steps: ["Run the installer", "Check the install"],
       mastery: {
         used: "commands",
         at: 1793380000000,
@@ -465,6 +466,7 @@ export const complete: CompleteLesson = {
     },
     {
       skill: "start",
+      steps: ["Start, sign in and trust"],
       mastery: {
         used: "commands",
         at: 1793380000000,
@@ -472,6 +474,7 @@ export const complete: CompleteLesson = {
     },
     {
       skill: "status",
+      steps: ["Compare the session"],
       mastery: {
         used: "commands",
         at: 1793380000000,
@@ -479,6 +482,13 @@ export const complete: CompleteLesson = {
     },
     {
       skill: "ask",
+      steps: [
+        "Ask, stop and ask again",
+        "Check the source",
+        "Check the onboarding notes",
+        "Read the cited lines",
+        "Correct one claim",
+      ],
       mastery: {
         used: "own",
         at: 1793380000000,
@@ -486,6 +496,7 @@ export const complete: CompleteLesson = {
     },
     {
       skill: "exit",
+      steps: ["Finish from a clean tree"],
       mastery: {
         used: "hints",
         at: 1793380000000,
@@ -493,6 +504,7 @@ export const complete: CompleteLesson = {
     },
     {
       skill: "check",
+      steps: ["Check"],
       mastery: {
         used: "own",
         at: 1793380000000,

@@ -86,18 +86,38 @@ describe("Lesson complete (249)", () => {
           screen.getByRole("img", { name: "Explorer" }),
         ).toBeInTheDocument();
         expect(screen.getByText("2 of 2 lines pass")).toBeInTheDocument();
-        const practised = within(
-          screen.getByRole("region", { name: "You practised" }),
-        ).getAllByRole("listitem");
+        const region = screen.getByRole("region", { name: "You practised" });
+        // Each skill by its steps' titles, never its id, and its Mastery
+        // said for what it is: the help on the latest step (ticket 348).
+        expect(region).toHaveTextContent(
+          "Beside each: the help on its latest step, counting any hint or exact command you opened.",
+        );
+        const practised = within(region).getAllByRole("listitem");
         expect(practised.map((li) => li.textContent)).toEqual(
           complete.practised.map(
-            ({ skill, mastery }) =>
-              `${skill}${mastery ? MASTERY[mastery.used] : ""}`,
+            ({ steps, mastery }) =>
+              `${steps.join(" · ")}${mastery ? MASTERY[mastery.used] : ""}`,
           ),
+        );
+        expect(practised[0]).toHaveTextContent(
+          "Run the installer · Check the installEvery command shown",
         );
       }
     },
   );
+
+  test("with no help saved beside any skill, no line says what is beside each (348)", () => {
+    const bare = {
+      ...complete,
+      practised: complete.practised.map((p) => ({ ...p, mastery: null })),
+    };
+    renderConnected("/lesson/b-1/complete", snapshotOf(bare));
+    const region = screen.getByRole("region", { name: "You practised" });
+    expect(region).not.toHaveTextContent("Beside each");
+    expect(within(region).getAllByRole("listitem")).toHaveLength(
+      complete.practised.length,
+    );
+  });
 
   test("links the reference solution at the release ref", async () => {
     renderConnected("/lesson/b-1/complete", snapshotOf(complete));

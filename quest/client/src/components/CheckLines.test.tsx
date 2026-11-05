@@ -30,6 +30,27 @@ test("reads each line with its result, and shows evidence under a line in any st
   ).toBeInTheDocument();
 });
 
+test("passing lines in a row read under one Passes:, and a change of state names its own (348)", () => {
+  render(
+    <CheckLines
+      lines={[
+        { text: "the version prints", ok: true },
+        { text: "the claim is corrected", ok: true },
+        { text: "nothing is left uncommitted", ok: false },
+        { text: "the tests pass", ok: true },
+        { text: "the build runs", ok: true },
+      ]}
+    />,
+  );
+  expect(screen.getAllByRole("listitem").map((li) => li.textContent)).toEqual([
+    "Passes: the version prints",
+    "the claim is corrected",
+    "Not yet: nothing is left uncommitted",
+    "Passes: the tests pass",
+    "the build runs",
+  ]);
+});
+
 test("a line's own state wins over ok: still being checked, in teal", () => {
   const { container, rerender } = render(
     <CheckLines

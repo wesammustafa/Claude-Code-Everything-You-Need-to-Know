@@ -86,6 +86,8 @@ const APP_WORDS: readonly RegExp[] = [
   /^Lesson \d+ complete$/,
   /^\d+ of \d+ lines pass$/,
   /^You practised$/,
+  /^Beside each: the help on its latest step, counting any hint or exact command you opened\.$/,
+  /^ · $/,
   /^A notch harder: it starts with less help\.$/,
   /^You did every task without the exact command\.$/,
   /^Questions about anything in this level\? Ask Claude Code, then compare the answer with the lesson pages\.$/,
@@ -135,10 +137,10 @@ const APP_WORDS: readonly RegExp[] = [
   /^(The commands are in the hints\.|More help on this step\.|You ran this|Copy the code|explained line: )$/,
   /^The Check passed\. These steps put things back as they were\.$/,
   /^Run it in your practice copy too: you will see the same result\.$/,
-  /^(No commands this time\.|You've done each part before\.|You've done this before\.)( You've done each part before\.)?$/,
+  /^(No commands this time\.|Same skills as earlier lessons\.|Same skill as an earlier step\.)( Same skills as earlier lessons\.)?$/,
   // Questions, warm-ups and hints (247).
   /^(Check my answer|That's my guess|Show the answer|Show the exact command|Not now)$/,
-  /^(Make your guess\.|Pick an answer\.|Type your answer\.|Not yet\. Try another answer\.|That's right\.|Here is the answer\.)$/,
+  /^(Make your guess\.|Pick an answer\.|Type your answer\.|Not yet\. Try another answer\.|That's right\.|Here is the answer\.|Here's what happens\.)$/,
   /^(Right|The answer)$/,
   /^(While you wait|Your result is in\.)$/,
   /^(A quick look back at |A quick look back at an earlier lesson\.|A quick look back at the (Beginner|Intermediate|Advanced) level\.)$/,
@@ -1142,6 +1144,50 @@ describe("Lesson workspace, every step (246)", () => {
       expect(unquoted(snapshotOf(lesson))).toEqual([]);
     },
   );
+
+  test("a skill practised at an earlier step says so in plain words, a capstone's for every lesson before it (348)", () => {
+    const step = learnerBeat.step;
+    if (!step) throw new Error("learnerBeat has a step");
+    const again = { ...learnerBeat, step: { ...step, doneBefore: true } };
+    renderConnected("/lesson/b-1/step", snapshotOf(again));
+    expect(screen.getByText("Same skill as an earlier step.")).toBeVisible();
+    expect(screen.queryByText(/done this before/)).toBeNull();
+    expect(unquoted(snapshotOf(again))).toEqual([]);
+    cleanup();
+    renderConnected(
+      "/lesson/b-1/step",
+      snapshotOf({ ...again, capstone: true }),
+    );
+    expect(screen.getByText("Same skills as earlier lessons.")).toBeVisible();
+  });
+
+  test("a guess made says what happens, not that the step is done, and marks the right answer (348)", () => {
+    const beat = predictBeat.beat;
+    if (!beat) throw new Error("predictBeat has a beat");
+    const guessed: PlayingLesson = {
+      ...predictBeat,
+      beat: {
+        ...beat,
+        status: "done",
+        last: false,
+        options: [
+          { text: "Nothing at all", kind: "option", because: "It prints." },
+          { text: "A version number", kind: "right" },
+        ],
+        answer: { ...beat.answer, picked: 0 },
+      },
+    };
+    renderConnected("/lesson/b-1/step", snapshotOf(guessed));
+    expect(bubbleText()).toContain("Here's what happens.");
+    expect(bubbleText()).not.toContain("That step is done.");
+    const right = document.querySelector("[data-state=right]");
+    expect(right).toHaveTextContent(/A version number/);
+    expect(right).toHaveTextContent(/Right/);
+    expect(document.querySelector("[data-state=chosen]")).toHaveTextContent(
+      /Nothing at all/,
+    );
+    expect(unquoted(snapshotOf(guessed))).toEqual([]);
+  });
 
   test("a watched beat offers Check again before its first look, and sends check.run once", async () => {
     const user = userEvent.setup();
