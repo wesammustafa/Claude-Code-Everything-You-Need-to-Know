@@ -73,6 +73,22 @@ test('b-1 does not let a saved version hide a missing executable', () => {
     const { code, out } = check(['b-1', '--dir', dir], { PATH: '' });
     assert.equal(code, 1, out);
     assert.match(out, /couldn't find `claude`/);
+    for (const told of [/npm run learn/, /new terminal window/, /outside any editor/, /Worked example step 2/]) assert.match(out, told);
+    assert.doesNotMatch(out, /\b(Ctrl|Cmd|Shift|Alt|Option)\+/);
+    assert.doesNotMatch(out, /\u2014/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('b-1 reads PATH at each run: the same copy fails without claude, then passes once claude is on PATH', () => {
+  const dir = repo({ 'practice/b-1/onboarding.md': correctedNote });
+  try {
+    const before = check(['b-1', '--dir', dir], { PATH: '' });
+    assert.equal(before.code, 1, before.out);
+    assert.match(before.out, /couldn't find `claude`/);
+    const after = check(['b-1', '--dir', dir], versionEnv(dir));
+    assert.equal(after.code, 0, after.out);
+    assert.match(after.out, /PASS .*claude --version/);
+    assert.doesNotMatch(after.out, /couldn't find `claude`/);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
@@ -83,6 +99,7 @@ test('b-1 rejects empty, malformed and unsuccessful version output', () => {
       const { code, out } = check(['b-1', '--dir', dir], versionEnv(dir, output, exit));
       assert.equal(code, 1, out);
       assert.match(out, /not a line such as/);
+      assert.doesNotMatch(out, /npm run learn/);
     }
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
