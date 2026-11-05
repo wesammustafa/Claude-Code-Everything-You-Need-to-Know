@@ -418,11 +418,13 @@ test('b-2 says the after snapshot lists no changed file yet, and what to do firs
   }
 });
 
+const PATCH_TEST_TEXT = "import { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { isExternal } from '../src/links.js';\ntest('a single slash is a project link', () => assert.equal(isExternal('/docs/setup.md'), false));\n";
+
 // A real template CLI with a solved link parser, committed together with a
 // regression test that rejects the patch's single-slash flaw.
 function committedRepo({ testScript = 'node --test "test/**/*.test.js"', templateFiles = {}, files = {
   'src/links.js': solvedLinks,
-  'test/external.test.js': "import { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { isExternal } from '../src/links.js';\ntest('a single slash is a project link', () => assert.equal(isExternal('/docs/setup.md'), false));\n",
+  'test/external.test.js': PATCH_TEST_TEXT,
 } } = {}) {
   const dir = templateRepo(templateFiles);
   const git = (...args) => execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', ...args], { cwd: dir, encoding: 'utf8' }).trim();
@@ -470,6 +472,10 @@ test('b-3 does not count the Worked example commit as the Your turn commit', () 
     assert.match(result, /Your turn, step 5/);
     commit(dir, 'Skip protocol-relative links, but keep checking root-relative ones');
     assert.equal(b3Items[3].check(openRepo(dir)), true);
+    // A later Lesson's commit, such as b-4's to src/, keeps it passing.
+    write(dir, { 'src/links.js': `${solvedLinks}// later lesson\n`, 'README.md': 'later\n' });
+    commit(dir, 'A later lesson');
+    assert.equal(b3Items[3].check(openRepo(dir)), true);
   } finally {
     rmSync(dirname(dir), { recursive: true, force: true });
   }
@@ -494,7 +500,7 @@ test('b-3 does not call a Your turn commit that leaves out the patch\'s test the
       const result = b3Items[3].check(openRepo(dir));
       assert.equal(typeof result, 'string', `intent-to-add ${intentToAdd}`);
       assert.doesNotMatch(result, /Worked example/);
-      assert.match(result, /^Your last commit \(src\/links\.js, test\/links\.test\.js\) doesn't hold the patch's test, `test\/external\.test\.js`, yet\./);
+      assert.match(result, /^No commit adds the patch's test, `test\/external\.test\.js`, yet; your last commit changes src\/links\.js, test\/links\.test\.js\./);
     } finally {
       rmSync(dirname(dir), { recursive: true, force: true });
     }
@@ -506,22 +512,70 @@ test('b-3 fails when the last commit leaves out the patch\'s test, and says to c
   try {
     const { code, out } = check(['b-3', '--dir', dir]);
     assert.equal(code, 1, out);
-    assert.match(out, /Your last commit \(src\/links\.js\) doesn't hold the patch's test, `test\/external\.test\.js`, yet\./);
+    assert.match(out, /No commit adds the patch's test, `test\/external\.test\.js`, yet; your last commit changes src\/links\.js\./);
     assert.match(out, /Your turn, step 5/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });
 
-test('b-3 fails when the patch\'s test is in the commit before the last, and says to combine them', () => {
-  const dir = committedRepo();
+// The replay's state: a later Lesson commits on top of the Your turn commit.
+test('b-3 still passes after a later commit that leaves the patch\'s test alone', () => {
+  for (const later of [{ 'src/links.js': `${solvedLinks}// tidy\n` }, { 'README.md': 'notes\n' }]) {
+    const dir = committedRepo();
+    try {
+      write(dir, later);
+      commit(dir, 'A later lesson');
+      const { code, out } = check(['b-3', '--dir', dir]);
+      assert.equal(code, 0, out);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
+});
+
+test('b-3 fails when the patch\'s test is in an earlier commit than the fix, and says to combine them', () => {
+  const dir = committedRepo({ files: { 'test/external.test.js': PATCH_TEST_TEXT } });
   try {
-    write(dir, { 'src/links.js': `${solvedLinks}// tidy\n` });
-    commit(dir, 'Tidy the parser');
+    write(dir, { 'src/links.js': solvedLinks });
+    commit(dir, 'Fix protocol-relative links');
     const { code, out } = check(['b-3', '--dir', dir]);
     assert.equal(code, 1, out);
-    assert.match(out, /doesn't change the patch's test, `test\/external\.test\.js`\./);
+    assert.match(out, /The patch's test is in an earlier commit than your fix: the commit that adds `test\/external\.test\.js` leaves out `src\/` \(test\/external\.test\.js\)\./);
     assert.match(out, /combine the two commits into one/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// Ticket 341: the fix commit comes first, then the patch's test alone, then
+// a later Lesson's change to src/. The test did not come before the fix.
+test('b-3 does not say the patch\'s test came before the fix when a later commit changes src/', () => {
+  const dir = committedRepo({ files: { 'src/links.js': solvedLinks } });
+  try {
+    write(dir, { 'test/external.test.js': PATCH_TEST_TEXT });
+    commit(dir, 'Test the patch');
+    write(dir, { 'src/links.js': `${solvedLinks}// later lesson\n` });
+    commit(dir, 'A later lesson');
+    const result = b3Items[3].check(openRepo(dir));
+    assert.equal(typeof result, 'string');
+    assert.doesNotMatch(result, /earlier commit than your fix/);
+    assert.match(result, /^The commit that adds the patch's test changes nothing in `src\/` \(test\/external\.test\.js\)/);
+    assert.match(result, /If the fix is in the commit before it/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// A later Lesson may edit the patch's test on its own: the commit that adds
+// it is still the Your turn commit.
+test('b-3 still passes after a later commit that changes only the patch\'s test', () => {
+  const dir = committedRepo();
+  try {
+    write(dir, { 'test/external.test.js': `${PATCH_TEST_TEXT}// tidy\n` });
+    commit(dir, 'Tidy the patch test');
+    const { code, out } = check(['b-3', '--dir', dir]);
+    assert.equal(code, 0, out);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -539,10 +593,12 @@ test('b-3 fails when the commit changes nothing in src/, and says to combine it 
   }
 });
 
-test('b-3 checks the changes a merge introduces relative to its first parent', () => {
+// The Fix commit adds the patch's test, and the merge is the next commit;
+// the docs-only case reads the merge's own changes against its first parent.
+test('b-3 finds a commit merged from a branch, and reads a merge\'s changes against its first parent', () => {
   for (const [files, expected] of [
     [{ 'src/fix.js': '// fix\n', 'test/external.test.js': '// test\n' }, true],
-    [{ 'docs.md': 'notes\n' }, /doesn't hold the patch's test/],
+    [{ 'docs.md': 'notes\n' }, /No commit adds the patch's test/],
     [{ 'test/external.test.js': '// test\n' }, /nothing in `src\/`/],
   ]) {
     const dir = repo({ 'README.md': 'initial\n' });

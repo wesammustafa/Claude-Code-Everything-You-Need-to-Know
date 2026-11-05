@@ -99,14 +99,14 @@ You are done when all of these are true:
 - [ ] Links with a title, in double or single quotes, are checked.
 - [ ] Protocol-relative links, such as `//cdn.example.com/app.js`, are skipped, and every other link is checked as before.
 - [ ] Your tests catch the planted flaw: with the patch's `isExternal` put back, they fail.
-- [ ] Your last commit holds your fix in `src/` and the patch's test, `test/external.test.js`: `git show --stat HEAD` ([git show](https://git-scm.com/docs/git-show)).
+- [ ] The commit that adds the patch's test, `test/external.test.js`, also holds your fix in `src/`: `git log --reverse --stat --full-diff -- test/external.test.js` lists that commit first, with every file it changes ([git log](https://git-scm.com/docs/git-log)).
 - [ ] The tests pass: `npm test` reports `fail 0`.
 - [ ] Nothing is left uncommitted: `git status --porcelain` prints nothing.
 - [ ] Self-check (not tested): you found the patch's flaw by reading it, and you read each diff, the tests included, before it was committed.
 
 In the second terminal, run `npm run check -- b-3` in your practice copy.
 
-If titled links are still skipped, or reported with the title in the target, finish the Worked example: ask Claude to leave the title out of the target, with a test for each kind of quotes. If the check says a link is still skipped, or reports `//cdn.example.com/app.js` as broken, compare the patch's description with what its new line skips, and make sure you ran the `git apply` in Your turn step 2. If your tests still pass with the patch's version, none of them covers what the patch broke: ask Claude for one that fails on it. If your last commit is still the Worked example's, ask Claude to commit the fix, its test and the patch's test together (Your turn step 5). If it leaves out your fix or the patch's test, ask Claude to amend it (`git commit --amend` ([git commit](https://git-scm.com/docs/git-commit))), or to combine it with the commit before, as long as you haven't pushed them. If the tests fail, read the first failure and ask Claude to fix the code, not the test. If `git status --porcelain` lists files, commit them.
+If titled links are still skipped, or reported with the title in the target, finish the Worked example: ask Claude to leave the title out of the target, with a test for each kind of quotes. If the check says a link is still skipped, or reports `//cdn.example.com/app.js` as broken, compare the patch's description with what its new line skips, and make sure you ran the `git apply` in Your turn step 2. If your tests still pass with the patch's version, none of them covers what the patch broke: ask Claude for one that fails on it. If your last commit is still the Worked example's, or no commit adds the patch's test yet, ask Claude to commit the fix, its test and the patch's test together (Your turn step 5). If the commit that adds the patch's test leaves out your fix, ask Claude to amend it if it is your last commit (`git commit --amend` ([git commit](https://git-scm.com/docs/git-commit))), or to combine it with the commit that holds the fix, as long as you haven't pushed them. If the tests fail, read the first failure and ask Claude to fix the code, not the test. If `git status --porcelain` lists files, commit them.
 
 ## Go further
 
@@ -116,6 +116,6 @@ If titled links are still skipped, or reported with the title in the target, fin
 
 ---
 
-<sub>Sources: [Best practices](https://code.claude.com/docs/en/best-practices) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Interactive mode](https://code.claude.com/docs/en/interactive-mode) · [Commands](https://code.claude.com/docs/en/commands) · [git add](https://git-scm.com/docs/git-add) · [git apply](https://git-scm.com/docs/git-apply) · [git diff](https://git-scm.com/docs/git-diff) · [git status](https://git-scm.com/docs/git-status) · [git show](https://git-scm.com/docs/git-show) · [git commit](https://git-scm.com/docs/git-commit)</sub>
+<sub>Sources: [Best practices](https://code.claude.com/docs/en/best-practices) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Interactive mode](https://code.claude.com/docs/en/interactive-mode) · [Commands](https://code.claude.com/docs/en/commands) · [git add](https://git-scm.com/docs/git-add) · [git apply](https://git-scm.com/docs/git-apply) · [git diff](https://git-scm.com/docs/git-diff) · [git status](https://git-scm.com/docs/git-status) · [git log](https://git-scm.com/docs/git-log) · [git commit](https://git-scm.com/docs/git-commit)</sub>
 
 <sub>← [Permission modes and plan mode](02-permission-modes-and-plan-mode.md) · [Beginner index](README.md) · [Keep a session on track](04-keep-a-session-on-track.md) → · Topic: [Permissions and safety](../topics/permissions-and-safety.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=lesson-feedback.yml&lesson=b-3)</sub>
