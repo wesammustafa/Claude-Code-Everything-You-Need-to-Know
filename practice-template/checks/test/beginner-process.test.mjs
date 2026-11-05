@@ -184,7 +184,7 @@ test('nested: b-5 reads CLAUDE.md, the ignore rule and the history from project/
     commit(dir, 'Memory', ['CLAUDE.md', '.gitignore']);
     write(dir, { 'src/stats.js': '// SPDX-License-Identifier: MIT\nexport const n = 1;\n' });
     commit(dir, 'Stats', ['src/stats.js']);
-    assert.deepEqual(outcomes('b-5', dir, [0, 1, 2, 3]), [true, true, true, true]);
+    assert.deepEqual(outcomes('b-5', dir, [0, 1, 2, 3, 4]), [true, true, true, true, true]);
   });
 });
 
