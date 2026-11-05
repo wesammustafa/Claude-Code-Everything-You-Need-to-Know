@@ -4,7 +4,8 @@
 //   1 the Starter project's tests, and the Checks' own tests in this repo;
 //   2 every Check fails on the fresh copy, run from project/;
 //   3 every Check passes after the full replay, with Claude Code at the
-//     CHANGELOG baseline (the proof never installs it);
+//     CHANGELOG baseline (the proof never installs it), whose `--help` lists
+//     only options the Checks' claude-args.mjs knows;
 //   4 `npm run learn` starts on the second copy with no node_modules and no
 //     network, serves on 127.0.0.1, and Chromium loads a Lesson;
 //   5 the tree holds no step file, Terminal app or live config, laid out right;
@@ -29,6 +30,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
+import { SPEC } from "../../../practice-template/checks/claude-args.mjs";
 import { applyLesson, lessonOrder, prepareCopy } from "./replay.mjs";
 import {
   assembleTemplate,
@@ -172,9 +174,53 @@ export function freshFails(copy) {
 const VERSION = /\b(\d+\.\d+\.\d+)\b/;
 
 /**
+ * Each option in `claude --help`'s Options: section as --help writes it, as
+ * in `-d, --debug [filter]`: a line that starts with two spaces and `-`, up
+ * to the first run of two or more spaces. An option too long for its column
+ * stands alone on its line, with the description on the next. Null when
+ * there is no Options: section.
+ */
+export function helpOptions(text) {
+  const lines = text.split(/\r?\n/);
+  const start = lines.findIndex((l) => l.trimEnd() === "Options:");
+  if (start < 0) return null;
+  const options = [];
+  for (const line of lines.slice(start + 1)) {
+    if (line.trim() && !/^\s/.test(line)) break;
+    const m = /^ {2}(-.*?)(?: {2,}|$)/.exec(line.trimEnd());
+    if (m) options.push(m[1]);
+  }
+  return options;
+}
+
+/**
+ * What `claude --help` lists that the Checks' SPEC does not know, one line
+ * each. Only that direction: `--help` leaves some documented flags out.
+ */
+export function helpProblems(claude, cwd) {
+  const { status, error, output } = run([claude, "--help"], cwd);
+  if (status !== 0)
+    return [
+      `claude --help ${error ? `failed: ${error.message}` : `exited ${String(status)}`}`,
+    ];
+  const options = helpOptions(output);
+  if (!options) return ["claude --help printed no Options: section"];
+  if (!options.length)
+    return ["claude --help listed no options under Options:"];
+  const known = new Set(SPEC);
+  return options
+    .filter((o) => !known.has(o))
+    .map(
+      (o) =>
+        `claude --help lists ${o}, which practice-template/checks/claude-args.mjs's SPEC does not know`,
+    );
+}
+
+/**
  * Step 3: the tools the replay and the Checks need, Claude Code at the
- * baseline, then every Lesson's solution on the one prepared copy and every
- * Check passing. `anyClaude` turns a version mismatch into a note.
+ * baseline with no `--help` option the Checks don't know, then every Lesson's
+ * solution on the one prepared copy and every Check passing. `anyClaude`
+ * turns a version mismatch and the `--help` problems into a note.
  */
 export function replayPasses({
   repoRoot,
@@ -193,16 +239,21 @@ export function replayPasses({
   const found = run([claude, "--version"], copy);
   const version =
     found.status === 0 ? VERSION.exec(found.output)?.[1] : undefined;
-  let note;
+  const notes = [];
   if (!version)
     problems.push(
       `Claude Code is not on PATH: install @anthropic-ai/claude-code@${baseline}`,
     );
-  else if (version !== baseline) {
-    const mismatch = `Claude Code is ${version}, not the baseline ${baseline}`;
-    if (anyClaude) note = mismatch;
-    else problems.push(mismatch);
+  else {
+    const mismatches = [
+      ...(version === baseline
+        ? []
+        : [`Claude Code is ${version}, not the baseline ${baseline}`]),
+      ...helpProblems(claude, copy),
+    ];
+    (anyClaude ? notes : problems).push(...mismatches);
   }
+  const note = notes.length ? notes.join("; ") : undefined;
   if (problems.length) return { ok: false, problems, note };
   try {
     for (const id of lessonOrder(repoRoot))
