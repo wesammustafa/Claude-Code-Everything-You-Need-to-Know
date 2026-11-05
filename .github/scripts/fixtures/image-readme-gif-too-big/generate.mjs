@@ -4,5 +4,5 @@ import { join } from 'node:path';
 // A GIF just over the budget.
 export default function generate(root) {
   mkdirSync(join(root, 'assets', 'readme'), { recursive: true });
-  writeFileSync(join(root, 'assets', 'readme', 'pip-big.gif'), Buffer.concat([Buffer.from("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", "base64"), Buffer.alloc(1401 * 1024)]));
+  writeFileSync(join(root, 'assets', 'readme', 'pip-big.gif'), Buffer.concat([Buffer.from("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", "base64"), Buffer.alloc(821 * 1024)]));
 }

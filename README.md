@@ -1,29 +1,35 @@
 <a id="claude-code-everything-you-need-to-know-"></a>
 <div align="center">
 
-<img src="assets/brand/pip.svg" width="96" height="96" alt="Pip, the Claude Code Quest mascot: a small blocky robot with two antennas" />
+<!-- Rendered on 2026-11-05 from Pip's rig (quest/client/pip/pip.riv) in Claude Code Quest's web runtime: his Greeting, then a look down at the button below. -->
+<img src="assets/readme/pip-hello.gif" width="640" alt="Pip, Claude Code Quest's mascot, a small blocky orange robot with two antennas, waves hello under floating pixel crosses, then looks down at the Try it now button below him." />
+
+<sub><b>CLAUDE CODE QUEST</b></sub>
 
 # Claude Code: Everything You Need to Know
 
-**Learn to use Claude Code well, one small step at a time, with Pip cheering you on.**
+**Learn Claude Code by doing it, one small step at a time, with Pip cheering you on.**
 
-Claude Code Quest is a learning app that opens in your browser beside Claude Code.<br />
-It shows you one step, you try it in your own practice copy, and it checks your work and cheers when you get it right.
+<a id="start-in-3-steps"></a>
+<a href="#try-it-now"><img src="assets/readme/try-it-now.svg" width="156" height="60" alt="Try it now" /></a>
 
-### [Start in 3 steps](#try-it-now)
-
-<sub>[The three levels](#pick-your-level) &nbsp;·&nbsp; [Meet Pip](#meet-pip) &nbsp;·&nbsp; [Everything in the guide](#everything-in-the-guide)</sub>
-
-[![Verified against Claude Code v2.1.308 (stable)](https://img.shields.io/badge/verified-v2.1.308_stable-2e6e57)](CHANGELOG.md#v202612---2026-11-01) [![Edition release date](https://img.shields.io/github/release-date/wesammustafa/Claude-Code-Everything-You-Need-to-Know?label=edition&color=2e6e57)](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/releases/latest) [![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/license-PolyForm_Noncommercial_1.0.0-5b6470)](LICENSE) [![Mentioned in Awesome Claude Code](https://awesome.re/mentioned-badge.svg)](https://github.com/hesreallyhim/awesome-claude-code)
-
-<br />
-
-<!-- Captured on 2026-11-02 from the Claude Code Quest app on its practice stream, against the guide baseline Claude Code v2.1.308 (stable). -->
-<img src="assets/readme/pip-step-done.gif" width="760" alt="In Claude Code Quest, the Learner corrects the claim in step 9 of Beginner lesson 1: the step's check passes, its progress dash turns green, Pip, a small blocky robot with two antennas, throws his arms up with sparks around him, and his speech bubble says That step is done." />
-<br />
-<sub><b>Pass a step, and Pip cheers with you.</b></sub>
+<sub><a href="#meet-pip">How it works</a> &nbsp;·&nbsp; <a href="#pick-your-level">The three levels</a> &nbsp;·&nbsp; <a href="#everything-in-the-guide">Every page</a></sub>
 
 </div>
+
+<a id="help-that-fades-as-you-learn"></a>
+## Meet Pip
+
+Claude Code Quest opens in your browser, beside your terminal. Read a step, try it in Claude Code, and the app checks your work. When it passes, Pip cheers.
+
+<p align="center">
+  <!-- Captured on 2026-11-02 from the Claude Code Quest app on its practice stream, against the guide baseline Claude Code v2.1.308 (stable). -->
+  <img src="assets/readme/pip-step-done.gif" width="640" alt="In Claude Code Quest, the Learner corrects the claim in step 9 of Beginner lesson 1: the step's check passes, its progress dash turns green, Pip, a small blocky robot with two antennas, throws his arms up with sparks around him, and his speech bubble says That step is done." />
+  <br />
+  <sub><b>Pass a step, and Pip cheers with you.</b></sub>
+</p>
+
+Miss one, and he encourages you to try again. The help fades as you get the hang of each skill, from every command, to hints, to only the goal, until you do it on your own.
 
 <a id="install"></a>
 ## Try it now
@@ -61,39 +67,47 @@ The template's `progress.yml` workflow and `.gitattributes` replace yours. Your 
 <a id="-choose-your-path"></a>
 ## Pick your level
 
-Three levels take you from your first session to a setup your team shares. Start where you are and climb: each level ends with a capstone that puts it all together, and each level page opens with a "You're ready for this level if you can" list.
+Three levels take you from your first session to a setup your team shares. Start where you are and climb: every lesson earns a Badge, and each level ends with a capstone that puts it all together. Not sure where you fit? Each level page opens with a "You're ready for this level if you can" list.
+
+<!-- Pip's three portraits were rendered on 2026-11-05 from his rig (quest/client/pip/pip.riv) in Claude Code Quest's web runtime: Curious, Explaining and Success. -->
+<img src="assets/readme/pip-curious.png" align="left" width="88" height="88" alt="Pip tilts his head under a pixel question mark, curious." />
 
 ### Beginner
+**Start here if** you're new to Claude Code.<br clear="left" />
+
 **You'll learn to** start Claude Code safely, plan before it changes things, take one change from request to commit, and give your project a memory.\
 **You'll finish by** fixing a reported bug, from plan to commit.\
+**Badges:** Explorer · Planner · Builder · Navigator · Keeper · Beginner\
 <sub>5 lessons · a capstone · 3 Electives · about 2½ hours</sub>\
 **[Start Beginner](docs/beginner/README.md)**
 
+<img src="assets/readme/pip-explaining.png" align="left" width="88" height="88" alt="Pip points a little stick at the Intermediate level, explaining." />
+
 ### Intermediate
+**Start here if** you can already take a change from request to commit.<br clear="left" />
+
 **You'll learn to** shape Claude Code to your own project with skills, memory, permissions, hooks, subagents, MCP servers and plugins.\
 **You'll finish by** getting a repository ready for a new teammate.\
+**Badges:** Crafter · Organizer · Tuner · Guardian · Enforcer · Delegator · Connector · Curator · Intermediate\
 <sub>8 lessons · a capstone · 4 Electives · about 4 hours</sub>\
 **[Start Intermediate](docs/intermediate/README.md)**
 
+<img src="assets/readme/pip-success.png" align="left" width="88" height="88" alt="Pip throws both arms up in a burst of sparks." />
+
 ### Advanced
+**Start here if** you already write skills, hooks and subagents.<br clear="left" />
+
 **You'll learn to** run sessions in parallel, run Claude Code unattended in scripts and CI, share a setup with your team, and keep autonomous runs within limits you set.\
 **You'll finish by** adding CI review your team can share.\
+**Badges:** Brancher · Strategist · Orchestrator · Scripter · Automator · Steward · Warden · Advanced\
 <sub>7 lessons · a capstone · 5 Electives · about 4 hours, plus run time</sub>\
 **[Start Advanced](docs/advanced/README.md)**
 
-<a id="help-that-fades-as-you-learn"></a>
-## Meet Pip
-
-Pip works beside you. He cheers your wins, and the help gets lighter as you get the hang of each skill, until you do it on your own.
-
 <p align="center">
-  <!-- Captured on 2026-11-02 from the Claude Code Quest app on its practice stream, against the guide baseline Claude Code v2.1.308 (stable). -->
-  <img src="assets/readme/pip-level-done.gif" width="280" alt="From the Beginner capstone's complete screen to Beginner level complete: Pip throws his arms up in a burst of sparks above the level's six badges and the Start the Intermediate level button." />
-  &nbsp;
-  <!-- Captured on 2026-11-02 from the Claude Code Quest app on its practice stream, against the guide baseline Claude Code v2.1.308 (stable). -->
-  <img src="assets/readme/pip-looks-around.gif" width="404" alt="On Claude Code Quest's welcome screen, Pip turns his head and eyes to follow the pointer in a circle around him, then settles to rest." />
+  <!-- Captured on 2026-11-02 from the Claude Code Quest app on its practice stream, against the guide baseline Claude Code v2.1.308 (stable); trimmed and re-encoded on 2026-11-05. -->
+  <img src="assets/readme/pip-level-done.gif" width="320" alt="On Beginner level complete, Pip throws his arms up in a burst of sparks above the level's six badges and the Start the Intermediate level button; then the moment replays from the capstone's complete screen." />
   <br />
-  <sub><b>Finish a level, and Pip celebrates. On the welcome screen, he follows your pointer.</b></sub>
+  <sub><b>Finish a level, and Pip throws a party.</b></sub>
 </p>
 
 <a id="-whats-inside"></a><a id="-reading-tips"></a>
@@ -123,6 +137,8 @@ Pip works beside you. He cheers your wins, and the help gets lighter as you get 
 </details>
 
 <a id="how-the-guide-stays-current"></a>
+[![Verified against Claude Code v2.1.308 (stable)](https://img.shields.io/badge/verified-v2.1.308_stable-2e6e57)](CHANGELOG.md#v202612---2026-11-01) [![Edition release date](https://img.shields.io/github/release-date/wesammustafa/Claude-Code-Everything-You-Need-to-Know?label=edition&color=2e6e57)](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/releases/latest) [![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/license-PolyForm_Noncommercial_1.0.0-5b6470)](LICENSE) [![Mentioned in Awesome Claude Code](https://awesome.re/mentioned-badge.svg)](https://github.com/hesreallyhim/awesome-claude-code)
+
 <details>
 <summary>How the guide stays current</summary>
 
@@ -136,6 +152,11 @@ Pip works beside you. He cheers your wins, and the help gets lighter as you get 
 ---
 
 <div align="center">
+
+<!-- Rendered on 2026-11-05 from Pip's rig (quest/client/pip/pip.riv) in Claude Code Quest's web runtime: his Sleep mode. -->
+<img src="assets/readme/pip-asleep.gif" width="200" alt="Pip lies down for a nap, and a small pixel z drifts up above his head." />
+
+<sub>Leave Pip be for a few minutes and he dozes off. He's up the moment you're back.</sub>
 
 Found something stale? [Report it with a source](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=stale-content.yml). Stuck on a lesson? Use the link at the bottom of that lesson.
 
