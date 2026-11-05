@@ -22,7 +22,7 @@ badge: Beginner
 - goal: "A committed `CLAUDE.md` in your copy that names the test command, `npm test`"
 - note: "A teammate filed the bug report in `capstone/beginner-bug.md` at the root of your practice copy, outside `project/` (`../capstone/beginner-bug.md` from `project/`): the tool says every link resolves and exits with code 0. Read it first: its "What should happen" section is what done means."
 - hint: "If you skipped lesson 5: start `claude` in your copy's `project/` folder and run `/init`."
-- hint: "In the new `CLAUDE.md`, delete what it says about `npm run check`, including any rule to keep your work off `main`: that rule is for the template repository, not your copy."
+- hint: "In the new `CLAUDE.md`, delete every line only the course uses: anything about `checks/`, `learn/`, `capstone/`, `.github/` or `.devcontainer/`, any `npm run check`, `npm run learn` or `npm run test:checks` line, and any rule to keep your work off `main` (that rule is for the template repository, not your copy)."
 - hint: "Make sure the file names `npm test`, then end that session with `/exit`, so the task starts in a new one."
 - bottom: "Commit any change to `CLAUDE.md` on its own before you start (`git add CLAUDE.md`, then `git commit -m "Add CLAUDE.md"`)"
 - beat: do
@@ -57,6 +57,9 @@ badge: Beginner
 - beat: do
 - verify: self
 - goal: "Have Claude read the bug report and plan the fix."
+- note: "From `project/`, the report is outside Claude's working directory: by default, Claude has access to files in the directory where you launched it"
+- note: "So Claude Code may ask before it reads the report: allow that read."
+- note: "Don't choose **No, and block reads outside the working directories from now on**: it sets `permissions.blockReadsOutsideWorkingDirectories` to `true` in your user settings, which makes the file tools refuse such reads in this and every later session"
 - do: "Ask for a plan that adds the test first and runs it before changing the code, so you see it fail"
 - hint: "Don't name the files to change: let Claude find them."
 
