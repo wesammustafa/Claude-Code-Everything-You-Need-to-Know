@@ -21,6 +21,8 @@ export const scenarios = [
   { item: 3, name: 'personal removal not committed', setup(dir, api) { memory(MEMORY, { 'CLAUDE.local.md': 'private' })(dir, api); importGit(dir, 'rm', '--cached', 'CLAUDE.local.md'); } },
   { item: 3, name: 'ignore missing', setup: memory() },
   { item: 3, name: 'personal note in team instructions', setup: memory(`${MEMORY}\nMy path is linkcheck-docs.`, { '.gitignore': 'CLAUDE.local.md\n' }) },
+  { item: 4, name: 'no committed memory', files: {} },
+  { item: 4, name: 'course line', setup: memory(`${MEMORY}- \`npm run check\`: runs the course's lesson checks from \`../checks/run.mjs\`, which lives outside this repo\n`) },
 ];
 import { execFileSync } from 'node:child_process';
 const importGit = (dir, ...args) => execFileSync('git', args, { cwd: dir, stdio: 'pipe' });

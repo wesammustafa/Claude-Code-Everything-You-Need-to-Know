@@ -457,6 +457,18 @@
   },
   {
     "lesson": "b-5",
+    "item": "the committed CLAUDE.md has no line about the course's folders or scripts",
+    "name": "no committed memory",
+    "message": "There is no committed CLAUDE.md."
+  },
+  {
+    "lesson": "b-5",
+    "item": "the committed CLAUDE.md has no line about the course's folders or scripts",
+    "name": "course line",
+    "message": "The committed CLAUDE.md still has a line that describes the course rather than linkcheck: \"- `npm run check`: runs the course's lesson checks from `../checks/run.mjs`, which lives outside this repo\". Cut every line only the course uses, as in step 2 of the worked example, then commit CLAUDE.md."
+  },
+  {
+    "lesson": "b-5",
     "item": "a committed `.gitignore` keeps `CLAUDE.local.md` out, git tracks no `CLAUDE.local.md`, and the committed CLAUDE.md holds neither personal note",
     "name": "negated personal ignore",
     "message": "Line 2 of `.gitignore`, `!CLAUDE.local.md`, keeps `CLAUDE.local.md` from being ignored. Delete it, add the line `CLAUDE.local.md` to `.gitignore` and commit."

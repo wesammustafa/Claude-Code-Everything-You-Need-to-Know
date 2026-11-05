@@ -6,6 +6,7 @@
 // line `missing: null` as before the host answers) and i1Asking's `check`.
 // Ticket 326 resolved its relative links as the compile step now does.
 // Ticket 328 added each summary's `stamp`, its page's Stamp.
+// Ticket 342 added b-5's fifth `check` item.
 // Regenerate when the course changes.
 import type { CourseView, OverviewLesson } from "@quest/contract";
 
@@ -1127,6 +1128,7 @@ export const overviews = [
       "a commit made after that rule adds JavaScript files to `src/`, and each of them starts with the rule's line",
       "the committed CLAUDE.md holds the notes' rule for CLI errors, and every `npm run` script it names is in `package.json`",
       "a committed `.gitignore` keeps `CLAUDE.local.md` out, git tracks no `CLAUDE.local.md`, and the committed CLAUDE.md holds neither personal note",
+      "the committed CLAUDE.md has no line about the course's folders or scripts",
     ],
     needs: [],
   },

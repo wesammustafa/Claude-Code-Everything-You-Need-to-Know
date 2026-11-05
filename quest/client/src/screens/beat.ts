@@ -134,6 +134,10 @@ export function statusOf(beat: BeatView): StatusWords {
       return say("passed", "answer-right", "That's right.");
     if (feedback === "revealed")
       return say("idle", "answer-revealed", "Here is the answer.");
+    // A guess is made: the beat goes on to what happens, which the step's
+    // later beats may still ask for (ticket 348).
+    if (beat.kind === "predict" && isDone(beat))
+      return say("idle", "predict-guessed", "Here's what happens.");
     if (!isDone(beat)) {
       if (feedback === "wrong")
         return say("notYet", "answer-wrong", "Not yet. Try another answer.");
@@ -253,8 +257,10 @@ export type AnswerMark = "right" | "notYet" | "chosen" | "shown";
  * The marks on a question's answers, from the snapshot: every wrong answer
  * tried (a decoy too) says Not yet, and the one picked is drawn by its
  * feedback: right, the answer shown, or a guess with no right answer
- * (a predict, or a choice that shows later beats). A "stuck" pick names no
- * option in the snapshot, so it marks none; its words still show.
+ * (a predict, or a choice that shows later beats). A guessed predict with a
+ * right answer marks it Right, the guess too when it is that one (ticket
+ * 348). A "stuck" pick names no option in the snapshot, so it marks none;
+ * its words still show.
  */
 export function answerMarks(
   beat: BeatView,
@@ -266,15 +272,23 @@ export function answerMarks(
       : [],
   );
   if (picked === null) return marks;
+  const rightAt =
+    beat.kind === "predict" && isDone(beat)
+      ? beat.options.findIndex((option) => option.kind === "right")
+      : -1;
   const state: AnswerMark =
-    feedback === "right"
+    feedback === "right" || picked === rightAt
       ? "right"
       : feedback === "revealed"
         ? "shown"
         : feedback === "wrong"
           ? "notYet"
           : "chosen";
-  return [...marks, { id: String(picked), state }];
+  const right =
+    rightAt >= 0 && rightAt !== picked
+      ? [{ id: String(rightAt), state: "right" as const }]
+      : [];
+  return [...marks, ...right, { id: String(picked), state }];
 }
 
 /**

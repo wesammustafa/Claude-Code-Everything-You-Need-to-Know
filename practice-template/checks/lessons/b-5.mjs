@@ -23,6 +23,15 @@ const PERSONAL = ['linkcheck-docs', 'summary at the end'];
 const isSource = (/** @type {string} */ f) => /^src\/.+\.[cm]?js$/i.test(f) && !isTestFile(f);
 // `npm run <script>`, with any options before the script's name skipped.
 const NPM_RUN = /npm run(?:-script)?(?:\s+--?[\w-]+(?:=\S+)?)*\s+([A-Za-z0-9:._][A-Za-z0-9:._-]*)/g;
+// The course lines W2 has the Learner cut: a line about the course's folders
+// (`checks/`, `learn/`, `capstone/`, `.github/`, `.devcontainer/`) or one
+// naming a course script. `check` is a script in project/package.json, so the
+// item for real scripts can't catch it. A folder counts at the start of a
+// path or after `../`, so a URL such as `.../docs/en/learn/x` doesn't.
+const COURSE_FOLDER = /(?:(?<![\w./-])|(?<=\.\.\/))(?:checks|learn|capstone|\.github|\.devcontainer)\//;
+const COURSE_SCRIPTS = new Set(['check', 'learn', 'test:checks']);
+const isCourseLine = (/** @type {string} */ text) => COURSE_FOLDER.test(text)
+  || [...text.matchAll(NPM_RUN)].some((m) => COURSE_SCRIPTS.has(/** @type {string} */ (m[1])));
 
 // The committed project CLAUDE.md: its path and text at HEAD.
 /** @param {Repo} repo */
@@ -158,6 +167,16 @@ export const items = [
       if (ignore.problem) return ignoreHint(ignore, LOCAL);
       const personal = PERSONAL.filter((note) => memory.text.toLowerCase().includes(note));
       return personal.length ? `The committed ${memory.path} still holds a note that is only yours (${personal.map((n) => `"${n}"`).join(', ')}). Move it to \`${LOCAL}\` or your user file, take it out of ${memory.path} and commit.` : true;
+    },
+  },
+  {
+    text: 'the committed CLAUDE.md has no line about the course\'s folders or scripts',
+    check(repo) {
+      const memory = committedMemory(repo);
+      if (!memory) return 'There is no committed CLAUDE.md.';
+      const line = memory.text.split(/\r?\n/).map((text) => text.trim()).find(isCourseLine);
+      if (!line) return true;
+      return `The committed ${memory.path} still has a line that describes the course rather than linkcheck: "${line}". Cut every line only the course uses, as in step 2 of the worked example, then commit ${memory.path}.`;
     },
   },
 ];

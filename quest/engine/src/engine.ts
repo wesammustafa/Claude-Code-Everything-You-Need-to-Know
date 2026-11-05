@@ -509,11 +509,10 @@ export const isLastBeat = (s: EngineState) =>
 
 // What this learner did with each skill: `steps` holds "k skill" for each
 // lesson k where they finished one of its own steps on it (warm-ups aside),
-// `finished` those skills, and `recalled` the skills of the warm-ups they
-// answered right the first time, in any lesson.
+// and `recalled` the skills of the warm-ups they answered right the first
+// time, in any lesson.
 function history(s: EngineState) {
   const steps = new Set<string>();
-  const finished = new Set<string>();
   const recalled = new Set<string>();
   s.course.forEach((l, k) => {
     if (!l.content) return;
@@ -521,14 +520,13 @@ function history(s: EngineState) {
     for (const step of l.content.steps) {
       if (!p.done.includes(step.id)) continue;
       steps.add(`${String(k)} ${step.skill}`);
-      finished.add(step.skill);
     }
     for (const id of p.recalled) {
       const w = l.content.warmup.find((x) => x.id === id);
       if (w) for (const b of w.beats) recalled.add(b.skill ?? w.skill);
     }
   });
-  return { steps, finished, recalled };
+  return { steps, recalled };
 }
 // Your card (the c panel): every lesson's card entries, in course order,
 // whose skill the learner finished one of that lesson's own steps on, read
@@ -551,18 +549,49 @@ export const nextLessonOf = (s: EngineState) => {
   const id = contentOf(s)?.next;
   return (id && lessonOf(s, id)) || null;
 };
-// Whether the learner did what the step on screen asks again: finished a
-// step on its skill, in any lesson. A capstone step draws on every lesson
-// before it, so there it takes a finished step on every skill they teach.
+// A beat the app decides from what it sees in the Practice copy or a
+// session: not the Learner's own word (I've done it) nor an answer.
+const seenBeat = (beat: Beat) =>
+  ["check", "watch", "session"].includes(decidedBy(beat));
+// Whether a step has a seen beat among those that show for this learner.
+const seenStep = (p: LessonProgress, step: Step) =>
+  step.beats.some((b) => beatShown(p, b) && seenBeat(b));
+// The skills the learner practised at a step before the one on screen, in
+// course order: a finished lesson step (warm-ups aside) where the app saw
+// the work on one of its shown beats (ticket 348). A step finished only by
+// I've done it, or by an answer, shows the app nothing done.
+function practisedBefore(s: EngineState) {
+  const idx = s.course.findIndex((l) => l.id === s.lesson);
+  const here = currentStep(s);
+  const skills = new Set<string>();
+  s.course.slice(0, idx + 1).forEach((l, k) => {
+    if (!l.content) return;
+    const p = progressOf(s, l.id);
+    const steps = l.content.steps;
+    const until = k === idx ? steps.indexOf(here) : steps.length;
+    for (const step of steps.slice(0, Math.max(until, 0)))
+      if (p.done.includes(step.id) && seenStep(p, step)) skills.add(step.skill);
+  });
+  return skills;
+}
+// Whether the step on screen's skill is one the learner practised at an
+// earlier step (practisedBefore). A capstone step draws on every lesson
+// before it, so there it takes every skill those lessons practise on a
+// step the app sees for this learner (the beats their picks show), optional
+// steps aside.
 export function doneBefore(s: EngineState) {
-  const { finished } = history(s);
-  if (!s.lesson.endsWith("capstone")) return finished.has(currentStep(s).skill);
+  const practised = practisedBefore(s);
+  if (!s.lesson.endsWith("capstone"))
+    return practised.has(currentStep(s).skill);
   const idx = s.course.findIndex((l) => l.id === s.lesson);
   return s.course
     .slice(0, idx)
     .every((l) =>
       (l.content?.steps ?? []).every(
-        (x) => x.optional || finished.has(x.skill),
+        (x) =>
+          x.optional ||
+          !seenStep(progressOf(s, l.id), x) ||
+          practised.has(x.skill),
       ),
     );
 }
