@@ -3,7 +3,7 @@
     "lesson": "b-1",
     "item": "`claude --version` prints a Claude Code version",
     "name": "not on PATH",
-    "message": "The check couldn't find `claude` on the PATH of the shell it ran in. Open a new terminal. If it still fails, use lesson 1, Worked example step 2 to fix PATH, then retry."
+    "message": "The check couldn't find `claude` on the PATH of the shell it ran in. Run `claude --version` in a new terminal window, outside any editor. If it prints a version there, the check ran with an older PATH: close the terminal where Claude Code Quest runs, start `npm run learn` again from the new window at the root of your copy (your progress is saved), and check again. If it fails there too, use lesson 1, Worked example step 2 to fix PATH, then retry."
   },
   {
     "lesson": "b-1",

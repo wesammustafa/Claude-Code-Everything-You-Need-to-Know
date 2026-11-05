@@ -4,7 +4,7 @@ Three teaching hooks for the Intermediate lesson "Enforce a rule with a hook", a
 
 | Script | Event and matcher | What it does |
 |---|---|---|
-| `dot-claude/hooks/protect-files.sh` | `PreToolUse`, `Edit\|Write` | Blocks edits to `.env`, `package-lock.json` and `.git/`, with exit code 2. The [hooks guide](https://code.claude.com/docs/en/hooks-guide#block-edits-to-protected-files)'s script, unchanged |
+| `dot-claude/hooks/protect-files.sh` | `PreToolUse`, `Edit\|Write` | Blocks edits to `.env`, `package-lock.json` and `.git/`, with exit code 2. The [hooks guide](https://code.claude.com/docs/en/hooks-guide#block-edits-to-protected-files)'s script, plus a guard: it exits 1 when `jq` fails or is missing, so `"onFailure": "block"` blocks the edit |
 | `dot-claude/hooks/format-after-edit.sh` | `PostToolUse`, `Edit\|Write` | Removes trailing spaces and tabs and leaves one final newline in the source file Claude just changed. Only common source-code extensions, such as `.js`, `.py` and `.sh`: Markdown, patches and data files stay as they are |
 | `dot-claude/hooks/desktop-notify.sh` | `Notification`, every type | Shows a desktop notification for every Claude Code notification, such as a permission prompt that has waited |
 
@@ -31,7 +31,7 @@ Then merge `settings.snippet.json` into your project's `.claude/settings.json`. 
 ```
 
 `settings.snippet.json`:
-- **What:** registers `protect-files.sh` and `format-after-edit.sh` in [exec form](https://code.claude.com/docs/en/hooks#exec-form-and-shell-form), so the `${CLAUDE_PROJECT_DIR}` path needs no quoting, with `"onFailure": "block"` on `protect-files.sh`, so a protection script that can't start, crashes or times out blocks the edit instead of letting it through ([Block the action when a hook fails](https://code.claude.com/docs/en/hooks#block-the-action-when-a-hook-fails)). It also adds a `Read(.env)` deny rule, which also stops Claude's Edit and Write tools from changing a `.env` file ([Configure permissions](https://code.claude.com/docs/en/permissions#read-and-edit)).
+- **What:** registers `protect-files.sh` and `format-after-edit.sh` in [exec form](https://code.claude.com/docs/en/hooks#exec-form-and-shell-form), so the `${CLAUDE_PROJECT_DIR}` path needs no quoting, with `"onFailure": "block"` on `protect-files.sh`, so a protection script that can't start, exits with a code other than 0 or 2, or times out blocks the edit instead of letting it through ([Block the action when a hook fails](https://code.claude.com/docs/en/hooks#block-the-action-when-a-hook-fails)). It also adds a `Read(.env)` deny rule, which also stops Claude's Edit and Write tools from changing a `.env` file ([Configure permissions](https://code.claude.com/docs/en/permissions#read-and-edit)).
 - **When:** Claude Code reads it when a session starts in the project, and reloads it when the file changes ([Settings](https://code.claude.com/docs/en/settings#when-edits-take-effect)).
 - **Side effects:** none of its own; the scripts' headers list theirs.
 - **Platforms:** macOS, Linux and WSL2. The scripts need bash and jq, and `format-after-edit.sh` also needs python3.
@@ -41,7 +41,8 @@ Hooks in a repository's `.claude/settings.json` run with your user's rights: in 
 
 Smoke test, without Claude: `bash test.sh`.
 
-The scripts: Tested in Claude Code v2.1.309 (stable) on Linux, 2026-11-03\
+`protect-files.sh`: Tested in Claude Code v2.1.309 (stable) on macOS, 2026-11-05\
+`format-after-edit.sh` and `desktop-notify.sh`: Tested in Claude Code v2.1.309 (stable) on Linux, 2026-11-03\
 `settings.snippet.json`: Tested in Claude Code v2.1.309 (stable) on Linux, 2026-11-03
 
 Sources: [Automate actions with hooks](https://code.claude.com/docs/en/hooks-guide), [Hooks reference](https://code.claude.com/docs/en/hooks), [Configure permissions](https://code.claude.com/docs/en/permissions), [Settings](https://code.claude.com/docs/en/settings)

@@ -8,8 +8,8 @@ By the end of this lesson you can keep a session on track: stop or rewind a chan
 
 ## You need
 
-- Your copy of the practice template with no uncommitted changes, Node.js LTS (a Codespace on your copy has it) and a `.practice/` folder in it: if earlier lessons didn't make one, run `mkdir .practice`.
-- A second terminal in the same folder, for git.
+- Your copy of the practice template with no uncommitted changes, Node.js LTS (a Codespace on your copy has it) and a `.practice/` folder in your copy's `project/` folder: if earlier lessons didn't make one, run `mkdir .practice` there.
+- A second terminal in your copy's `project/` folder, for git.
 - Usage: light.
 
 ## The idea
@@ -30,7 +30,7 @@ For the whole conversation ([Commands](https://code.claude.com/docs/en/commands)
 
 The job: tidy up `brokenLinks` in `src/check-links.js`. You'll try one approach, back out of it, and land the one you want.
 
-1. Start `claude` in your practice copy.
+1. Start `claude` in your copy's `project/` folder.
 2. Explore:
 
    ```text

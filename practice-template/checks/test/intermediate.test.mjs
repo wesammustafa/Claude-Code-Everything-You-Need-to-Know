@@ -7,6 +7,8 @@ import { dirname, join } from 'node:path';
 import { check, commit, repo, rootWrite, setMode, withRepo, write } from './helpers.mjs';
 import { buggyApp, fixedApp } from './fixtures/intermediate-app.mjs';
 import { editWriteScripts, matchesEditWrite } from '../hooks.mjs';
+import { lessons } from '../lessons/index.mjs';
+import { openRepo } from '../repo.mjs';
 
 // The tdd skill as lesson i-1's Your turn leaves it once finished.
 const FINISHED_TDD = `---
@@ -84,12 +86,38 @@ test('i-1 reads a description written as a folded block over several lines', () 
   });
 });
 
-test('i-1 fails when the frontmatter name means /tdd would not run the skill', () => {
+// The skill's folder name invokes it whatever its frontmatter name says.
+test('i-1 passes a skill renamed in its frontmatter, since its folder still runs it as /tdd', () => {
   withRepo(skillRepo({ skill: FINISHED_TDD.replace('name: tdd', 'name: test-first') }), (dir) => {
     const { code, out } = check(['i-1', '--dir', dir]);
-    assert.equal(code, 1, out);
-    assert.match(out, /\/test-first/);
+    assert.equal(code, 0, out);
   });
+});
+
+// Claude Code reads yes/no, on/off and 1/0, in any letter case, as booleans.
+// Each field line goes in a skill committed in turn to one repository, and
+// the item that reads those fields runs on it directly.
+const TRUE_SPELLINGS = ['true', 'True', 'TRUE', 'yes', 'Yes', 'on', 'ON', '1'];
+const FALSE_SPELLINGS = ['false', 'False', 'no', 'NO', 'off', 'Off', '0'];
+function invocationFields(path, skill, item, cases) {
+  withRepo(() => repo(), (dir) => {
+    for (const [line, expected] of cases) {
+      write(dir, { [path]: skill(line) });
+      commit(dir, line, [path]);
+      const result = item.check(openRepo(dir));
+      if (expected === true) assert.equal(result, true, line);
+      else assert.ok(typeof result === 'string' && result.includes(expected), `${line}: ${result}`);
+    }
+  });
+}
+
+test('i-1 fails on disable-model-invocation as any true spelling, or user-invocable as any false one, and echoes the value', () => {
+  invocationFields('.claude/skills/tdd/SKILL.md', (line) => FINISHED_TDD.replace('name: tdd\n', `name: tdd\n${line}\n`), lessons['i-1'].items[1], [
+    ...TRUE_SPELLINGS.map((value) => [`disable-model-invocation: ${value}`, `Delete the \`disable-model-invocation: ${value}\` line`]),
+    ...FALSE_SPELLINGS.map((value) => [`user-invocable: ${value}`, `Delete the \`user-invocable: ${value}\` line`]),
+    ...FALSE_SPELLINGS.map((value) => [`disable-model-invocation: ${value}`, true]),
+    ...TRUE_SPELLINGS.map((value) => [`user-invocable: ${value}`, true]),
+  ]);
 });
 
 test('i-1 fails when the saved commit changes only tests, or only code', () => {
@@ -987,6 +1015,18 @@ test('the Intermediate capstone fails for a hook that blocks too much, or not sa
       assert.match(out, /samples\//);
     });
   }
+});
+
+test('the Intermediate capstone reads the skill\'s invocation fields as Claude Code\'s booleans', () => {
+  const skill = (line) => `---\nname: check-links\ndescription: Runs the link checker on a folder and explains each broken link it finds. Use when someone asks to check links or find broken links.\n${line}\n---\n\nRun npm run linkcheck on $ARGUMENTS and explain each broken link.\n`;
+  const item = lessons['i-capstone'].items.find((it) => it.text.startsWith('a committed project skill'));
+  const fails = 'no `disable-model-invocation` or `user-invocable` line that stops it loading on its own or running by name (lesson 1)';
+  invocationFields('.claude/skills/check-links/SKILL.md', skill, item, [
+    ...TRUE_SPELLINGS.map((value) => [`disable-model-invocation: ${value}`, fails]),
+    ...FALSE_SPELLINGS.map((value) => [`user-invocable: ${value}`, fails]),
+    ...FALSE_SPELLINGS.map((value) => [`disable-model-invocation: ${value}`, true]),
+    ...TRUE_SPELLINGS.map((value) => [`user-invocable: ${value}`, true]),
+  ]);
 });
 
 test('the Intermediate capstone does not count lesson leftovers as the brief\'s skill and reviewer', () => {

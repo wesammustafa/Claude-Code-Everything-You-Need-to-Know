@@ -114,6 +114,19 @@ describe("the generated files", () => {
     expect(() => templateReadme("x\n<!-- y -->\n", REF)).toThrow(/placeholder/);
   });
 
+  test("the README says to restart Claude Code Quest from a new terminal window after a PATH change", () => {
+    const readme = templateReadme(
+      readFileSync(
+        join(repoRoot, "practice-template/README.source.md"),
+        "utf8",
+      ),
+      REF,
+    );
+    expect(readme).toContain("npm run learn` again from a new terminal window");
+    expect(readme).toContain("lesson 1 installs it");
+    expect(readme).not.toMatch(/\b(Ctrl|Cmd|Shift|Alt|Option)\+/);
+  });
+
   test("learn/README.md links its source at the ref", () => {
     const text = learnReadme(REF);
     expect(text).toContain(`${RELEASE}quest`);

@@ -2794,3 +2794,51 @@ test("no capstone hint holds a command that saves a file for the check", () => {
     ),
   );
 });
+
+// In a Practice copy, Claude, git and the Checks work in project/ (297, 325):
+// every Beginner beat that starts a session says so, not "your practice copy",
+// whose root holds the app's saved progress.
+test("Beginner Lessons start Claude in the copy's project/ folder (325)", () => {
+  const wrong = [];
+  let seen = 0;
+  for (const c of contents) {
+    if (!c?.lesson.startsWith("b-")) continue;
+    for (const s of c.steps)
+      s.beats.forEach((b, n) => {
+        const texts = [...b.lines.map((l) => l.text), ...b.hints];
+        for (const t of texts) {
+          if (!/start (`claude`|a (new )?session)/i.test(t)) continue;
+          // A restart after `/exit` stays where the session already was.
+          if (/`\/exit`|so the task starts/.test(t)) continue;
+          seen += 1;
+          if (!t.includes("`project/` folder"))
+            wrong.push(`${c.lesson} ${s.id}.${n}: ${t}`);
+        }
+      });
+  }
+  assert.ok(seen >= 6, `only ${seen} session starts found`);
+  assert.deepEqual(wrong, []);
+});
+
+// b-5 W2 names every course line /init may write (299); the capstone's
+// /init hint, for a learner who skipped lesson 5, names the same ones (325).
+test("the Beginner capstone's /init hint names every course line b-5 does (325)", () => {
+  const all = (id) =>
+    contents
+      .find((c) => c?.lesson === id)
+      .steps.flatMap((s) =>
+        s.beats.flatMap((b) => [...b.lines.map((l) => l.text), ...b.hints]),
+      );
+  const list = all("b-5").find((t) => t.startsWith("Course lines include"));
+  assert.ok(list, "b-5's course-lines note");
+  const names = list.match(/`[^`]+`/g);
+  assert.ok(names.length >= 8, `b-5 names ${names.length}`);
+  const hint = all("b-capstone").find((t) =>
+    t.includes("In the new `CLAUDE.md`"),
+  );
+  assert.ok(hint, "the capstone's /init hint");
+  assert.deepEqual(
+    names.filter((n) => !hint.includes(n)),
+    [],
+  );
+});

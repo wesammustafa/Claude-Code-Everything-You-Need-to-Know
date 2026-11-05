@@ -24,6 +24,18 @@ function scalar(value) {
   return unquote(v);
 }
 
+// A boolean field as Claude Code reads a skill's frontmatter: `true`, `yes`,
+// `on` and `1` are true, and `false`, `no`, `off` and `0` are false, in any
+// letter case. Any other value, or a missing field, is undefined.
+/** @param {string | string[] | undefined} value */
+export function flag(value) {
+  if (typeof value !== 'string') return undefined;
+  const v = value.toLowerCase();
+  if (['true', 'yes', 'on', '1'].includes(v)) return true;
+  if (['false', 'no', 'off', '0'].includes(v)) return false;
+  return undefined;
+}
+
 /**
  * @param {string | null | undefined} text
  * @returns {{ fields: Record<string, string | string[]>, body: string } | null}
