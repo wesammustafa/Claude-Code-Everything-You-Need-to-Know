@@ -29,6 +29,7 @@ import {
   keyOf,
 } from "./drive.mjs";
 import { project } from "../src/index.ts";
+import { fingerprint } from "../src/content.ts";
 
 // A lesson's overview, opened by the Learner.
 const onOverview = (id, saved = {}) => {
@@ -37,6 +38,9 @@ const onOverview = (id, saved = {}) => {
   assert.deepEqual([d.state.phase, d.state.lesson], ["overview", id]);
   return d;
 };
+// A place saved under a lesson's current steps, so a lesson changed since the
+// legacy commit, such as i-5 (334), keeps it.
+const printOf = (id) => fingerprint(course.find((l) => l.id === id).content);
 // A lesson's check items, as text.
 const itemsOf = (id) => liveCourse.find((l) => l.id === id).items;
 // A result for every item of a lesson: `pass(i)` says which pass, and the
@@ -142,7 +146,7 @@ test("SLOW holds every item that starts a process, so a poll or a file event nev
     "b-3": [0, 1, 2, 4],
     "b-4": [3],
     "b-capstone": [2, 3, 4],
-    "i-5": [2],
+    "i-5": [2, 4],
     "i-7": [2],
     "i-capstone": [1, 9, 11],
     "a-4": [1, 2, 3],
@@ -412,7 +416,7 @@ test("a passed Check step counts the run that passed it: a later poll that leave
       saved: save({
         lessons: {
           ...finishedBefore(id),
-          [id]: { step: "C", beat: 0, warm: [] },
+          [id]: { step: "C", beat: 0, warm: [], fingerprint: printOf(id) },
         },
       }),
     });
@@ -461,7 +465,7 @@ test("the completion summary lists every Check item, slow ones from the run that
       saved: save({
         lessons: {
           ...finishedBefore(id),
-          [id]: { step: "C", beat: 0, warm: [] },
+          [id]: { step: "C", beat: 0, warm: [], fingerprint: printOf(id) },
         },
       }),
     });

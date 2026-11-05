@@ -113,7 +113,7 @@
       "steps": "course/steps/i-5.md",
       "check": "i-5",
       "folder": "work",
-      "slow": [2]
+      "slow": [2, 4]
     },
     {
       "id": "i-6",

@@ -14,8 +14,9 @@ const data = JSON.parse(read("course/legacy-fingerprints.json")) as {
   commit: string;
   lessons: Record<string, string>;
 };
-// i-2's W4 is self-verified since the legacy commit (304).
-const CHANGED_SINCE_LEGACY = ["i-2"];
+// i-2's W4 is self-verified since the legacy commit (304), and i-5's Y4
+// runs the committed protect-files script (334).
+const CHANGED_SINCE_LEGACY = ["i-2", "i-5"];
 
 describe("legacy fingerprints", () => {
   test("the template's Lesson files yield the committed data", () => {

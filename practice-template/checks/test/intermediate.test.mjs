@@ -2,7 +2,7 @@
 // repository with --dir.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { realpathSync, utimesSync } from 'node:fs';
+import { readFileSync, realpathSync, utimesSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { check, commit, repo, rootWrite, setMode, withRepo, write } from './helpers.mjs';
 import { buggyApp, fixedApp } from './fixtures/intermediate-app.mjs';
@@ -429,10 +429,11 @@ test('i-4 fails when the personal file is committed, and when the sandbox is off
   });
 });
 
-// A repository after lesson i-5: the hooks guide's protect-files script
-// registered for Edit and Write with "onFailure": "block", and the test gate,
-// a Stop hook, both committed and executable.
-const PROTECT = '#!/bin/bash\ncat > /dev/null\nexit 0\n';
+// A repository after lesson i-5: the hooks guide's protect-files script, the
+// example the lesson downloads, registered for Edit and Write with
+// "onFailure": "block", and the test gate, a Stop hook, both committed and
+// executable.
+const PROTECT = readFileSync(new URL('../../../examples/intermediate/05-hooks/dot-claude/hooks/protect-files.sh', import.meta.url), 'utf8');
 const GATE = `#!/bin/bash
 INPUT=$(cat)
 cd "$CLAUDE_PROJECT_DIR"
@@ -452,9 +453,9 @@ const REGISTERED = { hooks: {
   PreToolUse: [{ matcher: 'Edit|Write', hooks: [HOOK_ENTRY('protect-files.sh', { onFailure: 'block' })] }],
   Stop: [{ hooks: [HOOK_ENTRY('test-gate.sh')] }],
 } };
-function hookRepo({ gate = GATE, mode = 0o755, settings = REGISTERED } = {}) {
+function hookRepo({ gate = GATE, mode = 0o755, settings = REGISTERED, protect = PROTECT } = {}) {
   return () => {
-    const dir = repo({ '.claude/hooks/protect-files.sh': PROTECT, '.claude/hooks/test-gate.sh': gate, '.claude/settings.json': JSON.stringify(settings, null, 2) });
+    const dir = repo({ '.claude/hooks/protect-files.sh': protect, '.claude/hooks/test-gate.sh': gate, '.claude/settings.json': JSON.stringify(settings, null, 2) });
     setMode(dir, '.claude/hooks/protect-files.sh', 0o755);
     setMode(dir, '.claude/hooks/test-gate.sh', mode);
     commit(dir, 'Protect files and gate the end of a turn on the tests');
@@ -466,6 +467,32 @@ test('i-5 passes for both hooks committed, executable and registered, with a gat
   withRepo(hookRepo(), (dir) => {
     const { code, out } = check(['i-5', '--dir', dir]);
     assert.equal(code, 0, out);
+  });
+});
+
+test('i-5 fails when protect-files.sh lets package-lock.json through', () => {
+  withRepo(hookRepo({ protect: '#!/bin/bash\ncat > /dev/null\nexit 0\n' }), (dir) => {
+    const { code, out } = check(['i-5', '--dir', dir]);
+    assert.equal(code, 1, out);
+    assert.match(out, /For package-lock\.json/);
+  });
+});
+
+test('i-5 fails when protect-files.sh blocks every file', () => {
+  withRepo(hookRepo({ protect: '#!/bin/bash\ncat > /dev/null\nexit 2\n' }), (dir) => {
+    const { code, out } = check(['i-5', '--dir', dir]);
+    assert.equal(code, 1, out);
+    assert.match(out, /For src\/app\.js, which it doesn't protect, the committed protect-files\.sh exits 2 instead of 0/);
+  });
+});
+
+test('i-5 fails without a null exit code when protect-files.sh floods for a file it lets through', () => {
+  const protect = '#!/bin/bash\nINPUT=$(cat)\ncase "$INPUT" in *package-lock.json*) exit 2 ;; esac\nhead -c 2000000 /dev/zero\nexit 0\n';
+  withRepo(hookRepo({ protect }), (dir) => {
+    const { code, out } = check(['i-5', '--dir', dir]);
+    assert.equal(code, 1, out);
+    assert.match(out, /protect-files\.sh couldn't run: .*Run Worked example step 3's test on it/);
+    assert.doesNotMatch(out, /null/);
   });
 });
 
