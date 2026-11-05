@@ -1,0 +1,14 @@
+{
+  "rule": "edition-gate",
+  "mode": "release",
+  "tag": "v2026.11",
+  "tags": {
+    "v2026.11": "head"
+  },
+  "today": "2026-11-05",
+  "expect": "pass",
+  "about": "On an edition tag an example that no session has run at the edition's version says so with the Not yet tested form, which names no version.",
+  "output": [
+    "0 example test lines carry v2\\.1\\.309"
+  ]
+}

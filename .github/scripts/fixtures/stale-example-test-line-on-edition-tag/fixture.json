@@ -1,0 +1,14 @@
+{
+  "rule": "edition-gate",
+  "mode": "release",
+  "tag": "v2026.11",
+  "tags": {
+    "v2026.11": "head"
+  },
+  "today": "2026-11-05",
+  "expect": "fail",
+  "about": "On an edition tag every stamped page carries the edition's version, but an example's README still says it was tested in an older version.",
+  "output": [
+    "examples/intermediate/01-first-skill/README\\.md:5: tested in v2\\.1\\.285, but edition v2026\\.11 is verified against v2\\.1\\.309"
+  ]
+}

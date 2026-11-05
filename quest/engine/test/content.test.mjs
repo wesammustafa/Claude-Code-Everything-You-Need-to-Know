@@ -129,6 +129,25 @@ test("front matter keeps the Lesson, its Stamp and its authoring fields, with co
   }
 });
 
+// The legacy lesson copy in the template, learn/lessons/<id>.md, carries the
+// step file's Stamp, so a re-stamp cannot leave one copy behind.
+test("stamp: each lesson's learn/lessons copy carries its step file's stamp", () => {
+  const stampOf = (path) => {
+    const text = readFileSync(join(root, path), "utf8");
+    const front = text.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1] ?? "";
+    return front.match(/^stamp: (.*)$/m)?.[1] ?? null;
+  };
+  for (const f of files) {
+    const step = stampOf(`course/steps/${f}`);
+    assert.ok(step, `course/steps/${f}: no stamp`);
+    assert.equal(
+      stampOf(`practice-template/learn/lessons/${f}`),
+      step,
+      `practice-template/learn/lessons/${f}: stamp differs from course/steps/${f}`,
+    );
+  }
+});
+
 test("intro: every lesson says why it matters, and its payoff is one of its can lines", () => {
   for (const [id, l] of Object.entries(parsed)) {
     assert.ok(l.intro.why, `${id}: no why line`);

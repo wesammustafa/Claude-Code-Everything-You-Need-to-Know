@@ -1,0 +1,14 @@
+{
+  "rule": "edition-gate",
+  "mode": "release",
+  "tag": "v2026.11",
+  "tags": {
+    "v2026.11": "head"
+  },
+  "today": "2026-11-05",
+  "expect": "pass",
+  "about": "On an edition tag the example's test lines name the edition's version; the smoke test's versionless grep for a test line is not one.",
+  "output": [
+    "2 example test lines carry v2\\.1\\.309"
+  ]
+}

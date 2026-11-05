@@ -3,6 +3,12 @@
 // `Verified against Claude Code vX.Y.Z (stable) on YYYY-MM-DD`
 export const STAMP = /Verified against Claude Code v(\d+)\.(\d+)\.(\d+) \(stable\) on (\d{4}-\d{2}-\d{2})/;
 
+// An example's test line, `Tested in Claude Code vX.Y.Z (stable) on <OS>, YYYY-MM-DD`
+// (CONTRIBUTING.md#adding-a-skill). Its other form, "Not yet tested in a
+// session at this edition's version", names no version, so it never matches.
+// The second group is empty when " (stable)" is missing, a malformed line.
+export const TEST_LINE = /Tested in Claude Code v(\d+\.\d+\.\d+)( \(stable\))?/;
+
 // Pages from before the rework that are not yet split. They carry a
 // "From the previous edition, not yet re-verified" note instead of a Stamp.
 export const PRE_REWORK = [];
