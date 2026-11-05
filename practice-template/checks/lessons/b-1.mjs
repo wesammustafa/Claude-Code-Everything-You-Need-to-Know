@@ -12,6 +12,9 @@ export const VERSION_LIMIT = 30_000;
 
 const VERSION = /^\d+\.\d+\.\d+ \(Claude Code\)/m;
 const FIX_PATH = 'Open a new terminal. If it still fails, use lesson 1, Worked example step 2 to fix PATH, then retry.';
+// The check runs with the PATH of the terminal that started it, so a new
+// window can find `claude` while a check started before the install can't.
+const NOT_FOUND = "The check couldn't find `claude` on the PATH of the shell it ran in. Run `claude --version` in a new terminal window, outside any editor. If it prints a version there, the check ran with an older PATH: close the terminal where Claude Code Quest runs, start `npm run learn` again from the new window at the root of your copy (your progress is saved), and check again. If it fails there too, use lesson 1, Worked example step 2 to fix PATH, then retry.";
 
 /** @type {Item} */
 export const claudeVersion = {
@@ -20,7 +23,7 @@ export const claudeVersion = {
   local: true,
   check(repo) {
     const run = runCommand('claude', ['--version'], { cwd: repo.dir, encoding: 'utf8', timeout: VERSION_LIMIT });
-    if (/** @type {NodeJS.ErrnoException | undefined} */ (run.error)?.code === 'ENOENT' || (!run.error && run.status !== 0 && shellNotFound(run))) return `The check couldn't find \`claude\` on the PATH of the shell it ran in. ${FIX_PATH}`;
+    if (/** @type {NodeJS.ErrnoException | undefined} */ (run.error)?.code === 'ENOENT' || (!run.error && run.status !== 0 && shellNotFound(run))) return NOT_FOUND;
     if (/** @type {NodeJS.ErrnoException | undefined} */ (run.error)?.code === 'ETIMEDOUT') return `\`claude --version\` didn't finish within ${VERSION_LIMIT / 1000} seconds. Run it on its own and see what it waits for.`;
     if (run.error) return `The check couldn't run \`claude --version\`: ${run.error.message}`;
     const out = `${run.stdout ?? ''}`;
