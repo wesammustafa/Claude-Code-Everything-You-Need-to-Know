@@ -309,6 +309,9 @@ describe("Lesson overview", () => {
       screen.getByRole("heading", { level: 1, name: overview.title }),
     ).toBeInTheDocument();
     expect(screen.getByText("about 20 minutes")).toBeInTheDocument();
+    expect(document.querySelector("[data-overview-stamp]")).toHaveTextContent(
+      /^Verified against Claude Code v2\.1\.309 \(stable\) on 2026-11-02$/,
+    );
     for (const can of overview.intro?.can ?? [])
       expect(screen.getAllByText(can).length).toBeGreaterThan(0);
     expect(
@@ -327,6 +330,21 @@ describe("Lesson overview", () => {
       { type: "lesson.start", help: "less" },
       { type: "lesson.start", help: "planned" },
     ]);
+  });
+
+  test("a Lesson with no Stamp shows its time estimate alone", () => {
+    const noStamp = {
+      ...course,
+      levels: course.levels.map((level) => ({
+        ...level,
+        lessons: level.lessons.map((lesson) => ({ ...lesson, stamp: "" })),
+      })),
+    };
+    renderConnected("/lesson/b-1", snapshotOf(overview, { course: noStamp }));
+    expect(screen.getByText("about 20 minutes")).toBeInTheDocument();
+    expect(document.querySelector("[data-overview-stamp]")).toBeNull();
+    expect(screen.queryByText(/Verified against/)).not.toBeInTheDocument();
+    expect(screen.queryByText("·")).not.toBeInTheDocument();
   });
 
   test("no Start while the folder question waits, and Resume for a saved place", () => {

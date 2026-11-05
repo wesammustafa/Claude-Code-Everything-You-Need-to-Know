@@ -35,6 +35,20 @@ function partsOf(
   return parts;
 }
 
+/**
+ * The page's Stamp, word for word, its last word (the date) kept on one line
+ * so a narrow screen never breaks it at a hyphen.
+ */
+function Stamp({ text }: { text: string }) {
+  const at = text.lastIndexOf(" ") + 1;
+  return (
+    <span data-overview-stamp="">
+      {text.slice(0, at)}
+      <span className="whitespace-nowrap">{text.slice(at)}</span>
+    </span>
+  );
+}
+
 /** A note's words: the page's own where it has them, the app's otherwise. */
 function noteText(note: OverviewNote): string | null {
   switch (note.kind) {
@@ -140,8 +154,19 @@ export function LessonOverview() {
           <InlineText text={lesson.title} />
         </PageTitle>
         {summary && (
-          <p className="flex flex-wrap items-center gap-3 text-sm text-muted">
-            <span>{summary.minutes}</span>
+          <p className="flex items-center gap-3 text-sm text-muted">
+            {/* The time estimate and the page's Stamp, quoted word for word
+                and joined as the page's own line joins them; the pair wraps
+                beside the Badge on a narrow screen. */}
+            <span className="min-w-0">
+              <span>{summary.minutes}</span>
+              {summary.stamp ? (
+                <>
+                  <span aria-hidden="true"> · </span>
+                  <Stamp text={summary.stamp} />
+                </>
+              ) : null}
+            </span>
             <LessonBadge
               lesson={lesson.id}
               name={summary.badge}

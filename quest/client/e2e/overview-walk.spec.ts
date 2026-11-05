@@ -1,7 +1,8 @@
 // The Lesson overview walk (ticket 245): every one of the 23 overviews,
 // frozen from the compiled course in overviews.ts, renders with no missing
-// field; the folder question's slot holds the start back; and starting over
-// asks first, where declining keeps the place.
+// field and with its page's Stamp word for word (328); the folder
+// question's slot holds the start back; and starting over asks first, where
+// declining keeps the place.
 import type { Page } from "@playwright/test";
 import type { QuestAction } from "@quest/contract";
 import { connected, expect, test } from "./live.ts";
@@ -42,6 +43,9 @@ for (const lesson of overviews)
     await expect(
       main.getByText(summary?.minutes ?? "", { exact: true }),
     ).toBeVisible();
+    await expect(main.locator("[data-overview-stamp]")).toHaveText(
+      summary?.stamp ?? "",
+    );
     await expect(
       main.getByRole("img", { name: `${summary?.badge ?? ""}, not yet` }),
     ).toBeVisible();

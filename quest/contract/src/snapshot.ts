@@ -59,6 +59,8 @@ export interface LessonSummary {
   title: string;
   /** How long it takes, in the page's words. */
   minutes: string;
+  /** The Guide page's Stamp, word for word: course text, never app copy. */
+  stamp: string;
   /** The Guide page it teaches from, as a repository path. */
   page: string;
   /** The Level's capstone. */
