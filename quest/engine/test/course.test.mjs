@@ -33,7 +33,8 @@ const checks = {
   guide: guideIndex(root),
 };
 // The Lessons whose Steps changed since the legacy commit, so a Terminal app
-// save of them starts again at the overview: b-5's CLAUDE.md commit also
+// save of them starts again at the overview: b-4's W5 asks for the commit
+// on a beat of its own, in Claude Code (349), b-5's CLAUDE.md commit also
 // checks for course lines (342), i-2's W4 is self-verified (304),
 // i-3's partial skill block is one beat (306), i-6 waits for the report
 // before asking about it (311), i-capstone has a commit-setup beat before
@@ -41,6 +42,7 @@ const checks = {
 // root of a Practice copy, and i-5's Y4 runs the committed protect-files
 // script (334).
 const CHANGED_SINCE_LEGACY = [
+  "b-4",
   "b-5",
   "i-2",
   "i-3",

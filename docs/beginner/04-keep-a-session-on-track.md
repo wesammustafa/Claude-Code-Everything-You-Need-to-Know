@@ -52,7 +52,7 @@ The job: tidy up `brokenLinks` in `src/check-links.js`. You'll try one approach,
    Don't make brokenLinks asynchronous: for a short command-line run it buys nothing. Keep it synchronous, and move the code that checks one file's links into its own function in src/check-links.js. Run the tests.
    ```
 
-   Read the diff in the second terminal, and run `npm run linkcheck -- samples` there: it still prints `guide.md:5: broken link to missing.md`, the sample's one broken link. Then:
+   Read the diff in the second terminal, and run `npm run linkcheck -- samples` there. It still prints `guide.md:5: broken link to missing.md`, the sample's one broken link. Then, back in Claude Code:
 
    ```text
    commit this with a message that says what changed
@@ -92,10 +92,10 @@ Try a teammate's rename script, then undo all of it: another tool imports `findL
    ```
 
 3. In the second terminal, save what git sees: `git status --porcelain > .practice/b-4-before-rewind.txt`. It lists `src/links.js`, which the script changed, and the callers Claude updated, `src/check-links.js` and usually `test/links.test.js`. In a Practice copy each path starts with `project/`: porcelain prints paths from the root of the repository, the folder above `project/`.
-4. You're staying on this task, and Claude should remember what it tried, so this time use **Restore code**. Before you rewind, decide which of those files it will put back. Then rewind the step 2 prompt with **Restore code**, and save what git sees: `git status --porcelain > .practice/b-4-after-rewind.txt`.
+4. You're staying on this task, and Claude should remember what it tried, so this time use **Restore code**. Before you rewind, decide which of those files it will put back. Then rewind the prompt that ran the script with **Restore code**, and save what git sees: `git status --porcelain > .practice/b-4-after-rewind.txt`.
 
-   If the menu offers only **Restore conversation**, the summarize options and **Never mind**, Claude updated the callers in a way rewind doesn't track, usually with commands: choose **Never mind**, press `Esc`, run `git restore src test`, and repeat from step 2.
-5. Read that file, and run `npm run linkcheck -- samples`. Get `src/` back to your last commit so the link check runs again, and run it to see.
+   If the menu offers only **Restore conversation**, the summarize options and **Never mind**, Claude updated the callers in a way rewind doesn't track, usually with commands: choose **Never mind**, press `Esc`, run `git restore src test`, and start again from the prompt that ran the script.
+5. Read `.practice/b-4-after-rewind.txt`, and run `npm run linkcheck -- samples`. Get `src/` back to your last commit so the link check runs again, and run it to see.
 
 ## Check
 

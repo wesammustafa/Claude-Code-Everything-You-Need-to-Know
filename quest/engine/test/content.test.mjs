@@ -2959,3 +2959,107 @@ test("Beginner steps prepare for Claude Code's own dialogs (345)", () => {
     );
   }
 });
+
+// The live Beginner run's step text (349): a plan file's paths are written
+// relative to `project/`, which b-2 and the capstone say alike; b-5 names
+// the `.gitignore` in `project/`; b-4's lines keep their lead-in, name the
+// app's step rather than the page's number and name the file to read; b-5
+// W4 says `/exit` once and b-1 W5 names `Esc`; an expect line reads after
+// the app's "You should see"; and no wrong answer's reason is a fragment or
+// another wrong answer's reason.
+test("Beginner step text reads whole on the card (349)", () => {
+  const beatTexts = (b) => [
+    ...b.lines.map((l) => l.text),
+    ...b.hints,
+    ...(b.why ?? []),
+  ];
+  const lesson = (id) => contents.find((c) => c?.lesson === id);
+  const texts = (id, step) =>
+    lesson(id)
+      .steps.find((s) => s.id === step)
+      .beats.flatMap(beatTexts);
+  for (const [id, step] of [
+    ["b-2", "Y4"],
+    ["b-capstone", "T5"],
+  ]) {
+    const all = texts(id, step);
+    assert.ok(
+      all.some((t) =>
+        /^Write (each|one) path .*relative to `project\/`/.test(t),
+      ),
+      `${id} ${step}: ${all.join("\n")}`,
+    );
+    assert.ok(
+      all.some((t) =>
+        /`project\/src\/[a-z]+\.js`: the check accepts either form\.$/.test(t),
+      ),
+      `${id} ${step} names git's form from the root`,
+    );
+    assert.ok(!all.some((t) => t.includes("relative to the repository root")));
+  }
+  assert.ok(
+    texts("b-5", "Y3").some((t) => t.includes("to `project/.gitignore`")),
+  );
+  assert.ok(
+    texts("b-4", "W3").some((t) => t.startsWith("Say you decide against it: ")),
+  );
+  const y4 = texts("b-4", "Y4");
+  assert.ok(!y4.some((t) => /step \d/.test(t)), y4.join("\n"));
+  assert.ok(
+    y4.includes(
+      "Then rewind the prompt that ran the script with **Restore code**",
+    ),
+  );
+  assert.ok(
+    texts("b-4", "Y5").some((t) =>
+      t.startsWith("Read `.practice/b-4-after-rewind.txt`"),
+    ),
+  );
+  const exit = lesson("b-5")
+    .steps.find((s) => s.id === "W4")
+    .beats.map((b) => beatTexts(b).join("\n"));
+  assert.equal(exit.filter((t) => t.includes("`/exit`")).length, 1);
+  assert.ok(
+    texts("b-1", "W5").includes(
+      "Press `Esc` whenever Claude heads the wrong way, then say what you want instead.",
+    ),
+  );
+  const off = [];
+  for (const c of contents) {
+    if (!c?.lesson.startsWith("b-")) continue;
+    for (const s of c.steps)
+      s.beats.forEach((b, n) => {
+        for (const l of b.lines)
+          if (
+            l.key === "expect" &&
+            /^(Your wording|The first line should)/.test(l.text)
+          )
+            off.push(`${c.lesson} ${s.id}.${n}: expect "${l.text}"`);
+        if (b.kind !== "ask") return;
+        const reasons = b.options
+          .filter((o) => o.kind === "wrong")
+          .map((o) => o.because ?? "");
+        for (const r of reasons)
+          if (!/^[A-Z`*"]/.test(r) || /[,:;]$/.test(r.trim()))
+            off.push(`${c.lesson} ${s.id}.${n}: because "${r}"`);
+        if (new Set(reasons).size < reasons.length)
+          off.push(
+            `${c.lesson} ${s.id}.${n}: two wrong answers share a because`,
+          );
+      });
+  }
+  assert.deepEqual(
+    off.filter((o) => SCOPE_349.some((p) => o.startsWith(p))),
+    [],
+  );
+});
+// The steps 349 fixed; the other Beginner question reasons are left as they are.
+const SCOPE_349 = [
+  "b-1 W4",
+  "b-1 W5",
+  "b-2 W2",
+  "b-3 W1",
+  "b-3 W5",
+  "b-5 W2",
+  "b-5 W6",
+];

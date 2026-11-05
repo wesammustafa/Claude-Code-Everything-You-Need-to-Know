@@ -24,7 +24,7 @@ A [permission mode](https://code.claude.com/docs/en/permission-modes) decides wh
 - **Manual**, `⏸ manual mode on`: Claude asks before edits and most commands. For sensitive work, or whenever approving each step is the point.
 - **Accept edits**, `⏵⏵ accept edits on`: file edits and common file commands, such as `mkdir`, `mv` and `rm`, run without asking inside your working directory ([Auto-approve file edits](https://code.claude.com/docs/en/permission-modes#auto-approve-file-edits-with-acceptedits-mode)). For code you'll review afterwards.
 
-Plan when you're unsure of the approach, the change touches several files, or you don't know the code. If you could describe the diff in one sentence, such as a typo fix, skip the plan ([Best practices](https://code.claude.com/docs/en/best-practices#explore-first-then-plan-then-code)). When you do plan, approve only a plan you would merge.
+Plan when you're unsure of the approach, the change touches several files, or you don't know the code. If you could describe the diff in one sentence, such as a typo fix, skip the plan ([Best practices](https://code.claude.com/docs/en/best-practices#explore-first-then-plan-then-code)). A new key in `linkcheck.json` needs a plan too: the parser and its tests change with it, in code you haven't read yet. When you do plan, approve only a plan you would merge.
 
 ## Worked example
 
@@ -78,7 +78,7 @@ Work a teammate's ticket so that nothing ships you'd reject in review. The ticke
 
    Check that the status bar reads `⏸ plan mode on`, and answer any question Claude asks.
 3. Read the plan as its reviewer. For each change, ask whether you would merge it as part of this ticket. If the plan includes a request you wouldn't merge, use the plan menu to send it back, in your own words, with your reason. If the plan already leaves one out, read Claude's reason and decide whether you agree. Revise until the plan is one you would approve.
-4. While the final plan is on screen, save the output of `git status --porcelain` to `.practice/b-2-before.txt`, in the other terminal, creating the `.practice` folder first if it isn't there. Then save the files the plan says it will change to `.practice/b-2-plan.txt`: write each path the way `git status` shows it, relative to the repository root, with forward slashes, one per line. For a plan that changed `src/links.js` and `test/links.test.js`, the plan file lists those two paths, and the commands are:
+4. While the final plan is on screen, save the output of `git status --porcelain` to `.practice/b-2-before.txt`, in the other terminal, creating the `.practice` folder first if it isn't there. Then save the files the plan says it will change to `.practice/b-2-plan.txt`. Write each path relative to `project/`, with forward slashes, one per line. In a Practice copy, `git status --porcelain` prints each path from the root of the repository, the folder above `project/`, such as `project/src/links.js`: the check accepts either form. For a plan that changed `src/links.js` and `test/links.test.js`, the plan file lists those two paths, and the commands are:
 
    ```bash
    mkdir -p .practice

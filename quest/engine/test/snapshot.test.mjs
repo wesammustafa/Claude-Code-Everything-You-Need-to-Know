@@ -880,13 +880,16 @@ test("playing: live b-4 shows the rewind fallback and git restore on the card, W
           }
         : l,
     );
+  // A save made under b-4's steps as they are now, so its place holds:
+  // b-4 changed since the legacy commit (349).
   const on = (lessons, step, beat) => {
+    const content = lessons.find((l) => l.id === "b-4").content;
     const d = driver({
       course: lessons,
       saved: save({
         lessons: {
           ...finishedBefore("b-4", lessons),
-          "b-4": { step, beat, warm: [] },
+          "b-4": { step, beat, warm: [], fingerprint: fingerprint(content) },
         },
       }),
     });

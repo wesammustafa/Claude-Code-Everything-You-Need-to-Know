@@ -73,7 +73,9 @@ test('b-1 does not let a saved version hide a missing executable', () => {
     const { code, out } = check(['b-1', '--dir', dir], { PATH: '' });
     assert.equal(code, 1, out);
     assert.match(out, /couldn't find `claude`/);
-    for (const told of [/npm run learn/, /new terminal window/, /outside any editor/, /Worked example step 2/]) assert.match(out, told);
+    for (const told of [/npm run learn/, /new terminal window/, /outside any editor/, /fix PATH as Troubleshoot installation describes \(lesson 1's Guide page links it under Check the install\)/]) assert.match(out, told);
+    // It names the Guide page's link, not the step itself, which the learner may be on (349).
+    assert.doesNotMatch(out, /Worked example step 2/);
     assert.doesNotMatch(out, /\b(Ctrl|Cmd|Shift|Alt|Option)\+/);
     assert.doesNotMatch(out, /\u2014/);
   } finally { rmSync(dir, { recursive: true, force: true }); }
