@@ -56,6 +56,8 @@ const PAGES: Record<string, string> = {
 <p><a href="${BLOB}/docs/beginner/README.md">The README</a></p>
 <p><a href="${BLOB}/docs/topics/x.md" data-page="docs/topics/x.md">Not rendered</a></p>
 <picture class="diagram" data-light="/pages/d.light.svg" data-dark="/pages/d.dark.svg"><source media="(prefers-color-scheme: dark)" srcset="/pages/d.dark.svg" /><img src="/pages/d.light.svg" alt="A diagram" /></picture>
+<pre><code>a-long-command --that-runs-past-the-panel</code></pre>
+<pre><code>short</code></pre>
 <h2 id="check">Check</h2>
 <ul><li>[ ] shown as the release rendered it</li></ul>`,
   "/pages/intermediate/README.html": `<h1 id="intermediate">Intermediate</h1><p>The Level.</p>`,
@@ -202,6 +204,137 @@ test("the diagram follows data-theme", async () => {
     "srcset",
     "/pages/d.dark.svg",
   );
+});
+
+// jsdom lays nothing out, so each code block's widths and the
+// ResizeObserver are stand-ins: the long block starts wider than the page.
+test("a code block wider than the page is a named tab stop, until a resize lets it fit", async () => {
+  const wide = new Set<string>(["a-long-command --that-runs-past-the-panel"]);
+  const widths = (el: HTMLElement) =>
+    el.tagName === "PRE" && wide.has(el.textContent) ? 900 : 400;
+  vi.spyOn(HTMLElement.prototype, "scrollWidth", "get").mockImplementation(
+    function (this: HTMLElement) {
+      return widths(this);
+    },
+  );
+  vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(400);
+  type Changed = (entries: { target: Element }[]) => void;
+  // Every observer (the Panel's own too), each with what it watches.
+  const observers: { changed: Changed; watched: Element[] }[] = [];
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      private own: { changed: Changed; watched: Element[] };
+      constructor(changed: Changed) {
+        this.own = { changed, watched: [] };
+        observers.push(this.own);
+      }
+      observe(el: Element) {
+        this.own.watched.push(el);
+      }
+      disconnect() {
+        this.own.watched = [];
+      }
+    },
+  );
+  const observed = () => observers.flatMap((o) => o.watched);
+  try {
+    await openPage();
+    await heading("Install and look around");
+    const long = screen.getByRole("group", { name: "Code block" });
+    expect(long).toHaveTextContent("a-long-command");
+    expect(long.tagName).toBe("PRE");
+    expect(long).toHaveAttribute("tabindex", "0");
+    const short = screen.getByText("short").closest("pre");
+    expect(short).not.toHaveAttribute("tabindex");
+    expect(short).not.toHaveAttribute("role");
+    expect(observed()).toContain(long);
+
+    wide.clear();
+    act(() => {
+      for (const { changed, watched } of observers)
+        changed(watched.map((target) => ({ target })));
+    });
+    expect(screen.queryByRole("group", { name: "Code block" })).toBeNull();
+    expect(long).not.toHaveAttribute("tabindex");
+    expect(long).not.toHaveAttribute("aria-label");
+  } finally {
+    vi.restoreAllMocks();
+  }
+});
+
+// The code font loads lazily and widens a block without resizing its box,
+// so a font that finishes loading marks every block again.
+test("a font that finishes loading marks a block that now runs past the page", async () => {
+  const wide = new Set<string>();
+  vi.spyOn(HTMLElement.prototype, "scrollWidth", "get").mockImplementation(
+    function (this: HTMLElement) {
+      return this.tagName === "PRE" && wide.has(this.textContent) ? 900 : 400;
+    },
+  );
+  vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(400);
+  const fonts = Object.assign(new EventTarget(), {
+    ready: Promise.resolve(),
+  });
+  Object.defineProperty(document, "fonts", {
+    configurable: true,
+    value: fonts,
+  });
+  try {
+    await openPage();
+    await heading("Install and look around");
+    expect(screen.queryByRole("group", { name: "Code block" })).toBeNull();
+    wide.add("short");
+    act(() => {
+      fonts.dispatchEvent(new Event("loadingdone"));
+    });
+    const short = screen.getByRole("group", { name: "Code block" });
+    expect(short).toHaveTextContent("short");
+    expect(short).toHaveAttribute("tabindex", "0");
+  } finally {
+    Reflect.deleteProperty(document, "fonts");
+    vi.restoreAllMocks();
+  }
+});
+
+// A focused block that stops running past the page keeps its stop until
+// focus leaves it, so focus never drops out of the panel.
+test("a focused code block that comes to fit keeps its tab stop until focus leaves", async () => {
+  const wide = new Set<string>(["short"]);
+  vi.spyOn(HTMLElement.prototype, "scrollWidth", "get").mockImplementation(
+    function (this: HTMLElement) {
+      return this.tagName === "PRE" && wide.has(this.textContent) ? 900 : 400;
+    },
+  );
+  vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(400);
+  const fonts = Object.assign(new EventTarget(), {
+    ready: Promise.resolve(),
+  });
+  Object.defineProperty(document, "fonts", {
+    configurable: true,
+    value: fonts,
+  });
+  try {
+    const user = await openPage();
+    await heading("Install and look around");
+    const short = screen.getByRole("group", { name: "Code block" });
+    act(() => {
+      short.focus();
+    });
+    wide.clear();
+    act(() => {
+      fonts.dispatchEvent(new Event("loadingdone"));
+    });
+    expect(short).toHaveFocus();
+    expect(short).toHaveAttribute("tabindex", "0");
+    await user.tab();
+    expect(short).not.toHaveFocus();
+    expect(short).not.toHaveAttribute("tabindex");
+    expect(short).not.toHaveAttribute("role");
+  } finally {
+    Reflect.deleteProperty(document, "fonts");
+    vi.restoreAllMocks();
+  }
 });
 
 test("a page that did not load offers Retry and GitHub", async () => {
