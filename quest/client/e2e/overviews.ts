@@ -4,6 +4,7 @@
 // each Level's Work folder saved so `start` is set, and added `check` from
 // CourseEntry.items. Ticket 283 added `check` and `needs` (by hand, each need
 // line `missing: null` as before the host answers) and i1Asking's `check`.
+// Ticket 326 resolved its relative links as the compile step now does.
 // Regenerate when the course changes.
 import type { CourseView, OverviewLesson } from "@quest/contract";
 
@@ -1782,7 +1783,7 @@ export const overviews = [
     notes: [
       {
         kind: "need-repo",
-        text: "The repository from [lesson 4](04-permissions-and-sandbox.md), with its `.claude/settings.json` and a test command, and your copy of the practice template with Node.js LTS: the check runs from the copy.",
+        text: "The repository from [lesson 4](docs/intermediate/04-permissions-and-sandbox.md), with its `.claude/settings.json` and a test command, and your copy of the practice template with Node.js LTS: the check runs from the copy.",
       },
     ],
     folderQuestion: null,
@@ -2503,7 +2504,7 @@ export const overviews = [
     notes: [
       {
         kind: "need-repo",
-        text: "Your repository from [lesson 1](01-parallel-sessions.md), with at least three top-level folders that hold files",
+        text: "Your repository from [lesson 1](docs/advanced/01-parallel-sessions.md), with at least three top-level folders that hold files",
       },
     ],
     folderQuestion: null,
@@ -2520,7 +2521,7 @@ export const overviews = [
     needs: [
       {
         quote:
-          "`jq`: the delegation log from [Intermediate lesson 6](../intermediate/06-subagents.md) uses it",
+          "`jq`: the delegation log from [Intermediate lesson 6](docs/intermediate/06-subagents.md) uses it",
         missing: null,
       },
     ],
@@ -3157,7 +3158,7 @@ export const overviews = [
     notes: [
       {
         kind: "need-repo",
-        text: "The repository you scripted in [lesson 4](04-headless.md) and shared in [lesson 6](06-share-your-setup.md), with a test command",
+        text: "The repository you scripted in [lesson 4](docs/advanced/04-headless.md) and shared in [lesson 6](docs/advanced/06-share-your-setup.md), with a test command",
       },
     ],
     folderQuestion: null,

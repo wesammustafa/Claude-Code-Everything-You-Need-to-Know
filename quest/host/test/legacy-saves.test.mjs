@@ -20,6 +20,7 @@ import { PROBES, probeError } from "../src/probes.ts";
 import { courseFrom } from "../../engine/src/course.ts";
 import { compileCourse, fingerprint } from "../../engine/src/content.ts";
 import { lessons } from "../../../practice-template/checks/lessons/index.mjs";
+import { guideIndex } from "../../release/src/guide-index.mjs";
 import { fakeHost } from "./scripted.mjs";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
@@ -63,7 +64,12 @@ function compiled(legacy) {
         ...manifest.lessons.map((l) => l.page),
         ...manifest.levels.map((l) => l.index),
       ]),
-      { lessons, probes: { PROBES, probeError }, legacy },
+      {
+        lessons,
+        probes: { PROBES, probeError },
+        legacy,
+        guide: guideIndex(root),
+      },
     ),
   );
 }
