@@ -12,10 +12,10 @@ const SETTINGS = '.claude/settings.json';
 
 const PROTECT = '#!/bin/bash\ncat > /dev/null\nexit 0\n';
 const command = (script, extra = {}) => ({ type: 'command', command: `\${CLAUDE_PROJECT_DIR}/${script}`, args: [], ...extra });
-const settings = ({ matcher = 'Edit|Write', onFailure = 'block', stop = true } = {}) => `${JSON.stringify({
+const settings = ({ matcher = 'Edit|Write', onFailure = 'block', stop = true, event = 'PreToolUse', script = HOOK } = {}) => `${JSON.stringify({
   permissions: { allow: ['Bash(npm test)'] },
   hooks: {
-    PreToolUse: [{ matcher, hooks: [command(HOOK, onFailure ? { onFailure } : {})] }],
+    [event]: [{ matcher, hooks: [command(script, onFailure ? { onFailure } : {})] }],
     ...(stop ? { Stop: [{ hooks: [command(GATE)] }] } : {}),
   },
 }, null, 2)}\n`;
@@ -85,6 +85,10 @@ export const scenarios = [
   { item: 1, name: 'the settings saved but never committed', setup: scriptsOnly(settings()) },
   { item: 1, name: 'a missing comma before the hooks block', setup: committed(FINISHED, settings().replace('},\n  "hooks"', '}\n  "hooks"')) },
   { item: 1, name: 'the guard registered for Bash only', setup: committed(FINISHED, settings({ matcher: 'Bash' })) },
+  { item: 1, name: 'the guard\'s matcher written as a list', setup: committed(FINISHED, settings({ matcher: ['Edit', 'Write'] })) },
+  { item: 1, name: 'the guard under a misspelled event key', setup: committed(FINISHED, settings({ event: 'PretoolUse' })) },
+  { item: 1, name: 'the guard naming a mistyped script path', setup: committed(FINISHED, settings({ script: '.claude/hook/protect-files.sh' })) },
+  { item: 1, name: 'no hook naming the protect-files script', setup: committed(FINISHED, settings({ script: '.claude/hooks/format-after-edit.sh' })) },
   { item: 1, name: 'the guard registered without onFailure', setup: committed(FINISHED, settings({ onFailure: null })) },
 
   { item: 2, name: 'the gate saved but not committed', files: { [GATE]: FINISHED } },
@@ -101,4 +105,5 @@ export const scenarios = [
   { item: 3, name: 'the settings saved but never committed', setup: scriptsOnly(settings()) },
   { item: 3, name: 'a missing comma before the hooks block', setup: committed(FINISHED, settings().replace('},\n  "hooks"', '}\n  "hooks"')) },
   { item: 3, name: 'the gate never registered under Stop', setup: committed(FINISHED, settings({ stop: false })) },
+  { item: 3, name: 'a list matcher that keeps the Stop hook from loading', setup: committed(FINISHED, settings({ matcher: ['Edit', 'Write'] })) },
 ];

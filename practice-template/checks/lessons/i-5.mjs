@@ -14,7 +14,7 @@ import { spawnSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
-import { committedMode, editWriteScripts, missingJq } from '../hooks.mjs';
+import { committedMode, editWriteScripts, hookWords, listMatcher, matchesEditWrite, missingJq } from '../hooks.mjs';
 /** @import { Repo } from '../repo.mjs' */
 /** @import { Item } from './index.mjs' */
 
@@ -99,6 +99,37 @@ function runGateScript(repo, { testsPass, retried, missingFile = false }) {
   }
 }
 
+// What the check saw of a list matcher, and how to write it as one string:
+// the list's own names joined with `|`, for whichever event it is under.
+/** @param {{ event: string, matcher: unknown[] }} list */
+function listMatcherSaid({ event, matcher }) {
+  const names = matcher.filter((n) => typeof n === 'string' && n.trim()).map((n) => /** @type {string} */ (n).trim());
+  const fix = names.length ? `Write it as one string: \`"matcher": ${JSON.stringify(names.join('|'))}\`.` : 'Write it as one string, joining the tool names with `|`.';
+  return `a \`matcher\` under \`${event}\` is a list. ${fix}`;
+}
+
+// Why the settings don't run protect-files.sh before Edit and Write, naming
+// the part that is wrong: a list matcher, the script's path, the event key
+// or the matcher.
+/** @param {any} settings */
+function whyNotProtected(settings) {
+  const not = `${SETTINGS} doesn't run protect-files.sh`;
+  const list = listMatcher(settings);
+  if (list) return `${not}: ${listMatcherSaid(list)}`;
+  const events = settings?.hooks && typeof settings.hooks === 'object' ? Object.entries(settings.hooks) : [];
+  const groups = events.flatMap(([event, gs]) => (Array.isArray(gs) ? gs : []).map((/** @type {any} */ g) => ({ event, group: g, words: hookWords(g) })));
+  const named = groups.filter((g) => g.words.includes(HOOK));
+  if (!named.length) {
+    const elsewhere = groups.flatMap((g) => g.words).find((w) => /(^|\/)protect-files\.sh$/.test(w));
+    if (elsewhere) return `${not}: the hook names \`${elsewhere}\`, and the script is at \`${HOOK}\`. Use \`"\${CLAUDE_PROJECT_DIR}/${HOOK}"\`.`;
+    return `${not}: no hook command names \`${HOOK}\`. Add the \`PreToolUse\` hook from the lesson under \`"hooks"\`.`;
+  }
+  const pre = named.filter((g) => g.event === 'PreToolUse');
+  if (!pre.length) return `${not} as a \`PreToolUse\` hook: it is under \`${named.map((g) => g.event).join('`, `')}\`. Move it under \`"PreToolUse"\`, spelled as the lesson shows.`;
+  const matcher = pre.find((g) => !matchesEditWrite(g.group?.matcher))?.group?.matcher;
+  return `${not} for both Edit and Write: the \`matcher\` ${JSON.stringify(matcher)} doesn't match both tool names. Use \`"matcher": "Edit|Write"\`.`;
+}
+
 /** @type {Item[]} */
 export const items = [
   {
@@ -118,7 +149,7 @@ export const items = [
       const { missing, error, value } = committedSettings(repo);
       if (missing) return `There is no committed ${SETTINGS}. Add the hooks block from the lesson and commit it.`;
       if (error) return `The committed ${SETTINGS} is not valid JSON: ${error}`;
-      if (!editWriteScripts(value).includes(HOOK)) return `${SETTINGS} doesn't run protect-files.sh as a PreToolUse hook for Edit and Write. Use \`"matcher": "Edit|Write"\`.`;
+      if (!editWriteScripts(value).includes(HOOK)) return whyNotProtected(value);
       // The same scripts, counting only the hook entries that fail closed.
       const groups = value.hooks.PreToolUse.map((/** @type {any} */ g) => ({ ...g, hooks: (g?.hooks ?? []).filter((/** @type {any} */ h) => h?.onFailure === 'block') }));
       return editWriteScripts({ hooks: { PreToolUse: groups } }).includes(HOOK) ? true : 'Add `"onFailure": "block"` to the protect-files.sh hook, so a hook that can\'t start or crashes blocks the edit instead of letting it through.';
@@ -151,6 +182,8 @@ export const items = [
       const { missing, error, value } = committedSettings(repo);
       if (missing) return `There is no committed ${SETTINGS}. Add the Stop hook from the lesson and commit it.`;
       if (error) return `The committed ${SETTINGS} is not valid JSON: ${error}`;
+      const list = listMatcher(value);
+      if (list) return `${SETTINGS} doesn't run test-gate.sh: ${listMatcherSaid(list)}`;
       // A Stop hook takes no matcher: read its groups as matching every tool.
       const stop = Array.isArray(value?.hooks?.Stop) ? value.hooks.Stop.map((/** @type {any} */ g) => ({ ...g, matcher: '' })) : [];
       return editWriteScripts({ hooks: { PreToolUse: stop } }).includes(GATE) ? true : `${SETTINGS} doesn't run test-gate.sh as a \`Stop\` hook. Add it under \`hooks.Stop\`, as the lesson shows.`;

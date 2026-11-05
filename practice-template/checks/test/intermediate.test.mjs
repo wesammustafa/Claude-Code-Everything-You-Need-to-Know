@@ -6,6 +6,7 @@ import { realpathSync, utimesSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { check, commit, repo, rootWrite, setMode, withRepo, write } from './helpers.mjs';
 import { buggyApp, fixedApp } from './fixtures/intermediate-app.mjs';
+import { editWriteScripts, matchesEditWrite } from '../hooks.mjs';
 
 // The tdd skill as lesson i-1's Your turn leaves it once finished.
 const FINISHED_TDD = `---
@@ -449,15 +450,77 @@ test('i-5 fails when the protection hook can fail open, with no onFailure', () =
   });
 });
 
+// Matchers as the hooks reference's "Matcher patterns" reads them: an exact
+// list on `|` or `,` for letters, digits, `_`, `-` and spaces, an unanchored
+// regex otherwise; an array is an invalid entry (debug-your-config, "Check
+// hooks").
+test('a matcher counts for Edit and Write only when Claude Code would match both', () => {
+  for (const matcher of [undefined, '', '*', 'Edit|Write', 'Write|Edit', 'Edit, Write', 'Edit | Write', 'Edit,Write,Bash', '^(Edit|Write)$', '.*', 'Edit|Write|Notebook.*']) {
+    assert.equal(matchesEditWrite(matcher), true, JSON.stringify(matcher));
+  }
+  for (const matcher of [['Edit', 'Write'], ['Edit|Write'], 'Edit Write', 'Edit-Write', 'Edit/Write', 'edit|write', 'Edit', 'Edit.*', 'Bash', '(Edit', null, 42]) {
+    assert.equal(matchesEditWrite(matcher), false, JSON.stringify(matcher));
+  }
+});
+
+test('a list matcher under PreToolUse leaves no Edit and Write scripts, even beside a valid group', () => {
+  const valid = REGISTERED.hooks.PreToolUse[0];
+  assert.deepEqual(editWriteScripts(REGISTERED), ['.claude/hooks/protect-files.sh']);
+  assert.deepEqual(editWriteScripts({ hooks: { PreToolUse: [valid, { ...valid, matcher: ['Edit', 'Write'] }] } }), []);
+  assert.deepEqual(editWriteScripts({ hooks: { PreToolUse: [valid], PermissionRequest: [{ matcher: ['Bash'], hooks: [] }] } }), []);
+});
+
 test('i-5 fails when the protection hook is not registered for Edit and Write before tools run', () => {
-  for (const pre of [undefined, [{ ...REGISTERED.hooks.PreToolUse[0], matcher: 'Bash' }]]) {
-    const settings = { hooks: { Stop: REGISTERED.hooks.Stop, ...(pre ? { PreToolUse: pre } : { PostToolUse: REGISTERED.hooks.PreToolUse }) } };
+  const pre = (group) => ({ hooks: { Stop: REGISTERED.hooks.Stop, PreToolUse: [{ ...REGISTERED.hooks.PreToolUse[0], ...group }] } });
+  for (const [settings, hint] of [
+    [{ hooks: { Stop: REGISTERED.hooks.Stop, PostToolUse: REGISTERED.hooks.PreToolUse } }, /as a `PreToolUse` hook: it is under `PostToolUse`/],
+    [{ hooks: { Stop: REGISTERED.hooks.Stop, preToolUse: REGISTERED.hooks.PreToolUse } }, /as a `PreToolUse` hook: it is under `preToolUse`/],
+    [pre({ matcher: 'Bash' }), /the `matcher` "Bash" doesn't match both tool names/],
+    [pre({ matcher: 'Edit Write' }), /the `matcher` "Edit Write" doesn't match/],
+    [pre({ matcher: 'Edit-Write' }), /the `matcher` "Edit-Write" doesn't match/],
+    [pre({ matcher: 'Edit/Write' }), /the `matcher` "Edit\/Write" doesn't match/],
+    [pre({ matcher: 'edit|write' }), /the `matcher` "edit\|write" doesn't match/],
+    [pre({ matcher: ['Edit', 'Write'] }), /a `matcher` under `PreToolUse` is a list/],
+    [pre({ hooks: [HOOK_ENTRY('protect-files.sh', { onFailure: 'block' })].map((h) => ({ ...h, command: '${CLAUDE_PROJECT_DIR}/.claude/hook/protect-files.sh' })) }), /names `\.claude\/hook\/protect-files\.sh`, and the script is at `\.claude\/hooks\/protect-files\.sh`/],
+    [{ hooks: { Stop: REGISTERED.hooks.Stop } }, /no hook command names `\.claude\/hooks\/protect-files\.sh`/],
+  ]) {
     withRepo(hookRepo({ settings }), (dir) => {
       const { code, out } = check(['i-5', '--dir', dir]);
       assert.equal(code, 1, out);
-      assert.match(out, /PreToolUse/);
+      assert.match(out, /doesn't run protect-files\.sh/);
+      assert.match(out, hint);
     });
   }
+});
+
+test('i-5 passes the protection hook for every matcher form that matches Edit and Write', () => {
+  for (const matcher of ['Edit, Write', '^(Edit|Write)$', undefined]) {
+    const group = { ...REGISTERED.hooks.PreToolUse[0], matcher };
+    withRepo(hookRepo({ settings: { hooks: { ...REGISTERED.hooks, PreToolUse: [group] } } }), (dir) => {
+      const { code, out } = check(['i-5', '--dir', dir]);
+      assert.equal(code, 0, `${JSON.stringify(matcher)}: ${out}`);
+    });
+  }
+});
+
+test('i-5 fails the Stop item when a list matcher keeps the file\'s hooks from loading', () => {
+  const settings = { hooks: { ...REGISTERED.hooks, PreToolUse: [{ ...REGISTERED.hooks.PreToolUse[0], matcher: ['Edit', 'Write'] }] } };
+  withRepo(hookRepo({ settings }), (dir) => {
+    const { code, out } = check(['i-5', '--dir', dir]);
+    assert.equal(code, 1, out);
+    assert.match(out, /doesn't run test-gate\.sh: a `matcher` under `PreToolUse` is a list\. Write it as one string: `"matcher": "Edit\|Write"`/);
+  });
+});
+
+test('i-5 names a PermissionRequest list matcher and joins its own names, not Edit and Write', () => {
+  const settings = { hooks: { ...REGISTERED.hooks, PermissionRequest: [{ matcher: ['Bash', 'Read'], hooks: [HOOK_ENTRY('protect-files.sh')] }] } };
+  withRepo(hookRepo({ settings }), (dir) => {
+    const { code, out } = check(['i-5', '--dir', dir]);
+    assert.equal(code, 1, out);
+    assert.match(out, /doesn't run protect-files\.sh: a `matcher` under `PermissionRequest` is a list\. Write it as one string: `"matcher": "Bash\|Read"`/);
+    assert.match(out, /doesn't run test-gate\.sh: a `matcher` under `PermissionRequest` is a list/);
+    assert.doesNotMatch(out, /Edit\|Write/);
+  });
 });
 
 test('i-5 fails when the gate is not registered as a Stop hook', () => {
