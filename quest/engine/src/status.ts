@@ -116,6 +116,17 @@ export function cleanLine(verify: Verify, listed: readonly string[]) {
     : C.dirty(listed.length, ...some(listed));
 }
 
+// What a watched beat with no "Done when" line looks for, as its Check
+// line (ticket 350): a whole-tree git-clean beat's clean tree, a file beat's
+// file. Null for the other kinds, and for a git-clean beat that names paths:
+// its step asks for no change there (`rm .env`, nothing in samples/ changed),
+// so "left uncommitted" would invite a commit the step doesn't want.
+export function watchLine(verify: Verify): string | null {
+  if (verify.kind === "git-clean") return verify.paths ? null : C.leftClean;
+  if (verify.kind === "file") return C.saved(verify.path);
+  return null;
+}
+
 // Whether what git status lists passes a beat that needs something to
 // happen (git-changed, git-only, git-staged), with the evidence a pass shows
 // or the not-yet line a miss gets. `paths` lists each untracked file, and

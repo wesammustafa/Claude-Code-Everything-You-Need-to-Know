@@ -70,6 +70,11 @@ export const C = {
   // What a git-clean beat still finds (ticket 212): the one file it names,
   // or what changed under its folder or in the whole tree.
   uncommitted: (path: string) => `${path} has uncommitted changes.`,
+  // The Check line of a watched beat that names no "Done when" line (ticket
+  // 350): what a whole-tree git-clean beat looks for, and the file a file
+  // beat looks for.
+  leftClean: "nothing is left uncommitted",
+  saved: (path: string) => `${path} is saved`,
   changedUnder: (n: number, under: string, shown: string, more: number) =>
     `${String(n)} file${n === 1 ? "" : "s"} changed under ${under}: ${shown}${more ? ` and ${String(more)} more` : ""}`,
   dirty: (n: number, shown: string, more: number) =>

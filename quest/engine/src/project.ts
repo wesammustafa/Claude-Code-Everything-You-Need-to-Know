@@ -46,7 +46,7 @@ import {
   type LessonContent,
   type Step,
 } from "./content.ts";
-import { cleanLine } from "./status.ts";
+import { cleanLine, watchLine } from "./status.ts";
 import {
   asksFolder,
   asksHere,
@@ -567,6 +567,15 @@ function beatView(s: EngineState): BeatView {
           : {}),
       });
   }
+  // A watched beat whose step file names no "Done when" line gets the
+  // engine's line for what it looks for, so its Check line names the item
+  // (ticket 350). The card shows a watched beat's "Done when" line only as
+  // its Check line.
+  const watchSays =
+    decidedBy(beat) === "watch" && !lines.some((l) => l.doneWhen)
+      ? watchLine(beat.verify)
+      : null;
+  if (watchSays) lines.push({ kind: "say", text: watchSays, doneWhen: true });
   const tier = tierOf(s);
   const answered = Boolean(st.answer);
   const f = st.feedback;
