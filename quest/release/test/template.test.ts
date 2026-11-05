@@ -43,7 +43,7 @@ afterAll(removeTemp);
 const manifest = JSON.parse(
   readFileSync(join(repoRoot, "course/manifest.json"), "utf8"),
 ) as Manifest;
-const RELEASE = `https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/tree/${REF}/`;
+const RELEASE = `https://github.com/wesammustafa/Claude-Code-Quest/tree/${REF}/`;
 const pagesIndex = lessonPages(REF);
 
 /** Every file under `dir` as a sorted path to base64 map. */

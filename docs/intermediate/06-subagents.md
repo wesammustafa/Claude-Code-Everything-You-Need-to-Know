@@ -36,7 +36,7 @@ Delegate a task whose output you don't need in full, or that should run with res
 
    ```bash
    mkdir -p .claude/agents
-   curl -fsSL https://raw.githubusercontent.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/main/examples/intermediate/06-subagents/dot-claude/agents/code-reviewer.md -o .claude/agents/code-reviewer.md
+   curl -fsSL https://raw.githubusercontent.com/wesammustafa/Claude-Code-Quest/main/examples/intermediate/06-subagents/dot-claude/agents/code-reviewer.md -o .claude/agents/code-reviewer.md
    ```
 
    Its frontmatter limits it to three tools, so it can read and search files but can't edit them or run commands:
@@ -119,4 +119,4 @@ If the first item fails, check the frontmatter: Claude Code skips an agent file 
 
 <sub>Sources: [Create custom subagents](https://code.claude.com/docs/en/sub-agents) · [Review locally with /code-review](https://code.claude.com/docs/en/code-review-local) · [Best practices](https://code.claude.com/docs/en/best-practices) · [Interactive mode](https://code.claude.com/docs/en/interactive-mode) · [Hooks reference](https://code.claude.com/docs/en/hooks) · [Configure permissions](https://code.claude.com/docs/en/permissions) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Commands](https://code.claude.com/docs/en/commands) · [CLI reference](https://code.claude.com/docs/en/cli-reference) · [Git status](https://git-scm.com/docs/git-status)</sub>
 
-<sub>← [Enforce a rule with a hook](05-hooks.md) · [Intermediate index](README.md) · [Connect a tool with MCP](07-mcp.md) → · Topic: [Subagents and parallel work](../topics/subagents-and-parallel-work.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=i-6)</sub>
+<sub>← [Enforce a rule with a hook](05-hooks.md) · [Intermediate index](README.md) · [Connect a tool with MCP](07-mcp.md) → · Topic: [Subagents and parallel work](../topics/subagents-and-parallel-work.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=lesson-feedback.yml&lesson=i-6)</sub>

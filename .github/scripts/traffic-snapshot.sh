@@ -14,7 +14,7 @@
 # "below the 10th", not as zero. Needs gh and jq.
 set -euo pipefail
 
-repo=${1:-wesammustafa/Claude-Code-Everything-You-Need-to-Know}
+repo=${1:-wesammustafa/Claude-Code-Quest}
 today=$(jq -nr 'now | strftime("%Y-%m-%d")')
 since30=$(jq -nr '(now - 30 * 86400) | strftime("%Y-%m-%dT%H:%M:%SZ")')
 since14=$(jq -nr '(now - 14 * 86400) | strftime("%Y-%m-%d")')

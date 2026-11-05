@@ -4,14 +4,14 @@
 
 ## Checklist
 
-Tick each item that applies, or write "n/a" after it. The full rules are in [CONTRIBUTING.md](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/main/CONTRIBUTING.md).
+Tick each item that applies, or write "n/a" after it. The full rules are in [CONTRIBUTING.md](https://github.com/wesammustafa/Claude-Code-Quest/blob/main/CONTRIBUTING.md).
 
-- [ ] Facts that can go stale, such as versions, dates, prices, limits, model names, command or setting names, stability labels and counts, link their Tier 1 source inline at first mention on each page. Date-sensitive ones name a version (`v2.1.x`) or a full date. See [Sources and citations](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/main/CONTRIBUTING.md#sources-and-citations).
+- [ ] Facts that can go stale, such as versions, dates, prices, limits, model names, command or setting names, stability labels and counts, link their Tier 1 source inline at first mention on each page. Date-sensitive ones name a version (`v2.1.x`) or a full date. See [Sources and citations](https://github.com/wesammustafa/Claude-Code-Quest/blob/main/CONTRIBUTING.md#sources-and-citations).
 - [ ] No unsourced numbers: every number, other than a lesson's time estimate, has a dated, linked source, or it is cut.
 - [ ] Renamed or removed headings keep an `<a id="old-slug"></a>` compatibility anchor.
-- [ ] Any new listing (an external tool, MCP server, skill, plugin, course or article for readers to use) links the accepted resource suggestion issue, or the content-review PR, that approved it: #___. No issue yet? [Suggest the resource](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=suggest-resource.yml) instead. See [Listing policy](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/main/CONTRIBUTING.md#listing-policy).
+- [ ] Any new listing (an external tool, MCP server, skill, plugin, course or article for readers to use) links the accepted resource suggestion issue, or the content-review PR, that approved it: #___. No issue yet? [Suggest the resource](https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=suggest-resource.yml) instead. See [Listing policy](https://github.com/wesammustafa/Claude-Code-Quest/blob/main/CONTRIBUTING.md#listing-policy).
 - [ ] Tested in Claude Code vX.Y.Z on <OS>, or "smoke test only". Required when this PR touches `examples/` or `.claude/`.
-- [ ] Captures are taken in Claude Code Quest, in a Practice copy, cropped, scrubbed of personal details and captioned with the version and date. See [Diagrams and images](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/main/CONTRIBUTING.md#diagrams-and-images).
+- [ ] Captures are taken in Claude Code Quest, in a Practice copy, cropped, scrubbed of personal details and captioned with the version and date. See [Diagrams and images](https://github.com/wesammustafa/Claude-Code-Quest/blob/main/CONTRIBUTING.md#diagrams-and-images).
 - [ ] Text in new diagrams and images reaches 4.5:1 contrast in GitHub's light and dark themes, and other marks 3:1.
 - [ ] I have personally verified any AI-assisted content in this PR.
 

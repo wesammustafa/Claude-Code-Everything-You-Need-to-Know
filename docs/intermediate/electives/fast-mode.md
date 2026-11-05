@@ -54,4 +54,4 @@ If `/fast` says `Fast mode has been disabled by your organization`, an Owner has
 
 <sub>Sources: [Speed up responses with fast mode](https://code.claude.com/docs/en/fast-mode)</sub>
 
-<sub>Back to the [Intermediate index](../README.md) · Topic: [Models, effort and cost](../../topics/models-effort-and-cost.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=i-fast-mode)</sub>
+<sub>Back to the [Intermediate index](../README.md) · Topic: [Models, effort and cost](../../topics/models-effort-and-cost.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=lesson-feedback.yml&lesson=i-fast-mode)</sub>

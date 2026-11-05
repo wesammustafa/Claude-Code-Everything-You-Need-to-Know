@@ -59,5 +59,5 @@ If the first item fails, the one most likely cause and how to fix it.
 
 <sub>Sources: [Official page](https://code.claude.com/docs/en/overview)</sub>
 
-<sub>← [Previous lesson](README.md) · [Beginner index](README.md) · [Next lesson](README.md) → · Topic: [Topic](../topics/README.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=b-1)</sub>
+<sub>← [Previous lesson](README.md) · [Beginner index](README.md) · [Next lesson](README.md) → · Topic: [Topic](../topics/README.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=lesson-feedback.yml&lesson=b-1)</sub>
 ````

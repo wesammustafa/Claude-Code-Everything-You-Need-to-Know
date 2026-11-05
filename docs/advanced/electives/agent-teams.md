@@ -32,7 +32,7 @@ Teams "use significantly more tokens than a single session" ([Token usage](https
    ```bash
    mkdir -p .claude/agents
    for a in security-reviewer test-reviewer; do
-     curl -fsSL "https://raw.githubusercontent.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/main/examples/advanced/electives/agent-teams/dot-claude/agents/$a.md" -o ".claude/agents/$a.md"
+     curl -fsSL "https://raw.githubusercontent.com/wesammustafa/Claude-Code-Quest/main/examples/advanced/electives/agent-teams/dot-claude/agents/$a.md" -o ".claude/agents/$a.md"
    done
    grep -H '^tools:' .claude/agents/security-reviewer.md .claude/agents/test-reviewer.md
    ```
@@ -138,4 +138,4 @@ If the teammates log is missing, no team formed: start the lead with the step 4 
 
 <sub>Sources: [Orchestrate teams of Claude Code sessions](https://code.claude.com/docs/en/agent-teams) · [Run agents in parallel](https://code.claude.com/docs/en/agents) · [Create custom subagents](https://code.claude.com/docs/en/sub-agents) · [Hooks reference](https://code.claude.com/docs/en/hooks) · [Tools reference](https://code.claude.com/docs/en/tools-reference) · [All settings](https://code.claude.com/docs/en/settings-reference) · [CLI reference](https://code.claude.com/docs/en/cli-reference) · [Commands](https://code.claude.com/docs/en/commands) · [Debug your configuration](https://code.claude.com/docs/en/debug-your-config) · [Manage costs effectively](https://code.claude.com/docs/en/costs)</sub>
 
-<sub>Back to the [Advanced index](../README.md) · Topic: [Subagents and parallel work](../../topics/subagents-and-parallel-work.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=a-agent-teams)</sub>
+<sub>Back to the [Advanced index](../README.md) · Topic: [Subagents and parallel work](../../topics/subagents-and-parallel-work.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=lesson-feedback.yml&lesson=a-agent-teams)</sub>

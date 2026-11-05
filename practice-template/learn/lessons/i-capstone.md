@@ -4,8 +4,8 @@ title: "Intermediate capstone: get a repository ready for a new teammate"
 source: docs/intermediate/capstone.md
 source-commit: 676831f
 stamp: "Verified against Claude Code v2.1.309 (stable) on 2026-11-02"
-page: https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/main/docs/intermediate/capstone.md
-stuck: https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=i-capstone
+page: https://github.com/wesammustafa/Claude-Code-Quest/blob/main/docs/intermediate/capstone.md
+stuck: https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=lesson-feedback.yml&lesson=i-capstone
 next: a-1
 badge: Intermediate
 folder: copy

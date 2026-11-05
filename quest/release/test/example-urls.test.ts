@@ -24,7 +24,7 @@ afterAll(removeTemp);
 describe("rewriteExampleUrls", () => {
   test("moves the prefix at main to the ref and nothing else", () => {
     const blob =
-      "https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/main/x.md";
+      "https://github.com/wesammustafa/Claude-Code-Quest/blob/main/x.md";
     const other =
       "https://raw.githubusercontent.com/anthropics/claude-code/main/x.json";
     expect(

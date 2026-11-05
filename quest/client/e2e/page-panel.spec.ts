@@ -15,8 +15,7 @@ import {
   watching,
 } from "./snapshots.ts";
 
-const GUIDE =
-  "https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know";
+const GUIDE = "https://github.com/wesammustafa/Claude-Code-Quest";
 const MCP = "Connect a tool with MCP";
 
 const titleOf = (path: string) =>

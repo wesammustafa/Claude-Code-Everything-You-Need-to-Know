@@ -136,7 +136,7 @@ Three levels take you from your first session to a setup your team shares. Start
 </details>
 
 <a id="how-the-guide-stays-current"></a>
-[![Verified against Claude Code v2.1.308 (stable)](https://img.shields.io/badge/verified-v2.1.308_stable-2e6e57)](CHANGELOG.md#v202612---2026-11-01) [![Edition release date](https://img.shields.io/github/release-date/wesammustafa/Claude-Code-Everything-You-Need-to-Know?label=edition&color=2e6e57)](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/releases/latest) [![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/license-PolyForm_Noncommercial_1.0.0-5b6470)](LICENSE) [![Mentioned in Awesome Claude Code](https://awesome.re/mentioned-badge.svg)](https://github.com/hesreallyhim/awesome-claude-code)
+[![Verified against Claude Code v2.1.308 (stable)](https://img.shields.io/badge/verified-v2.1.308_stable-2e6e57)](CHANGELOG.md#v202612---2026-11-01) [![Edition release date](https://img.shields.io/github/release-date/wesammustafa/Claude-Code-Quest?label=edition&color=2e6e57)](https://github.com/wesammustafa/Claude-Code-Quest/releases/latest) [![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/license-PolyForm_Noncommercial_1.0.0-5b6470)](LICENSE) [![Mentioned in Awesome Claude Code](https://awesome.re/mentioned-badge.svg)](https://github.com/hesreallyhim/awesome-claude-code)
 
 <details>
 <summary>How the guide stays current</summary>
@@ -157,7 +157,7 @@ Three levels take you from your first session to a setup your team shares. Start
 
 <sub>Leave Pip be for a few minutes and he dozes off. He's up the moment you're back.</sub>
 
-Found something stale? [Report it with a source](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=stale-content.yml). Stuck on a lesson? Use the link at the bottom of that lesson.
+Found something stale? [Report it with a source](https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=stale-content.yml). Stuck on a lesson? Use the link at the bottom of that lesson.
 
 **If Claude Code Quest helped you, a star helps other learners find it.**
 

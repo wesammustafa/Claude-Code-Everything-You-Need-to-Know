@@ -72,4 +72,4 @@ When every box on this page is ticked, you're ready for the [Advanced level](../
 
 <sub>Sources: [Advanced setup](https://code.claude.com/docs/en/setup) · [All settings](https://code.claude.com/docs/en/settings-reference) · [Choose a permission mode](https://code.claude.com/docs/en/permission-modes) · [Automate actions with hooks](https://code.claude.com/docs/en/hooks-guide) · [Hooks reference](https://code.claude.com/docs/en/hooks) · the [Intermediate lessons](README.md), which cite the official pages for each step.</sub>
 
-<sub>← [Install and manage plugins](08-plugins.md) · [Intermediate index](README.md) · [Advanced index](../advanced/README.md) → · [Stuck on this capstone?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=i-capstone)</sub>
+<sub>← [Install and manage plugins](08-plugins.md) · [Intermediate index](README.md) · [Advanced index](../advanced/README.md) → · [Stuck on this capstone?](https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=lesson-feedback.yml&lesson=i-capstone)</sub>

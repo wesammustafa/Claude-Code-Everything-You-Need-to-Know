@@ -2,7 +2,7 @@
 
 # Claude Code practice
 
-Your practice copy for [Claude Code Quest](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know). The lessons live in the guide. This copy holds the web learning app that takes you through every core lesson and capstone one step at a time, the small project you practise on, and a check for every core lesson and capstone.
+Your practice copy for [Claude Code Quest](https://github.com/wesammustafa/Claude-Code-Quest). The lessons live in the guide. This copy holds the web learning app that takes you through every core lesson and capstone one step at a time, the small project you practise on, and a check for every core lesson and capstone.
 
 An independent educational project. Not affiliated with or endorsed by Anthropic.
 
@@ -63,7 +63,7 @@ Each core lesson and capstone has a reference solution at the release this copy 
 
 ## Already have an older copy?
 
-To bring an older practice copy up to this release, follow [Already have a practice copy?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know#already-have-a-practice-copy) in the guide's README.
+To bring an older practice copy up to this release, follow [Already have a practice copy?](https://github.com/wesammustafa/Claude-Code-Quest#already-have-a-practice-copy) in the guide's README.
 
 ## License
 

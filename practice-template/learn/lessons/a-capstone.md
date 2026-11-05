@@ -4,8 +4,8 @@ title: "Advanced capstone: add CI review your team can share"
 source: docs/advanced/capstone.md
 source-commit: 676831f
 stamp: "Verified against Claude Code v2.1.309 (stable) on 2026-11-02"
-page: https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/blob/main/docs/advanced/capstone.md
-stuck: https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=a-capstone
+page: https://github.com/wesammustafa/Claude-Code-Quest/blob/main/docs/advanced/capstone.md
+stuck: https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=lesson-feedback.yml&lesson=a-capstone
 badge: Advanced
 folder: new copy
 needs: [jq gh]

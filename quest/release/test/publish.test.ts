@@ -25,8 +25,7 @@ import { removeTemp, tempDir } from "./pages-fixture";
 
 afterAll(removeTemp);
 
-const REPO =
-  "https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know";
+const REPO = "https://github.com/wesammustafa/Claude-Code-Quest";
 
 // Only file remotes, and nothing from the machine's git config.
 const GIT_ENV = {

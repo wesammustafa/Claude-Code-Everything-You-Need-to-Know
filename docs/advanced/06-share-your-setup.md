@@ -28,7 +28,7 @@ Your teammates keep asking how the repository's Claude Code setup works. Share a
 1. In your repository (in a Practice copy, `project/`), download this guide's [example marketplace](../../examples/advanced/06-share-your-setup/README.md) into `team-marketplace/`. Read each file before you commit it:
 
    ```bash
-   base=https://raw.githubusercontent.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/main/examples/advanced/06-share-your-setup
+   base=https://raw.githubusercontent.com/wesammustafa/Claude-Code-Quest/main/examples/advanced/06-share-your-setup
    curl -fsSL --create-dirs "$base/dot-claude-plugin/marketplace.json" -o team-marketplace/.claude-plugin/marketplace.json
    for f in plugins/team-kit/.claude-plugin/plugin.json plugins/team-kit/skills/onboard/SKILL.md plugins/team-kit/agents/config-reviewer.md; do
      curl -fsSL --create-dirs "$base/$f" -o "team-marketplace/$f"
@@ -120,4 +120,4 @@ If the first item fails, run `claude plugin validate ./team-marketplace` and com
 
 <sub>Sources: [Settings files and precedence](https://code.claude.com/docs/en/settings) · [Explore the .claude directory](https://code.claude.com/docs/en/claude-directory) · [Create a Claude Code plugin](https://code.claude.com/docs/en/plugins/create) · [Manage Claude Code plugins for your organization](https://code.claude.com/docs/en/plugins/org) · [Plugin loading reference](https://code.claude.com/docs/en/plugins/loading) · [Create a marketplace](https://code.claude.com/docs/en/plugins/create-marketplace) · [Plugin commands reference](https://code.claude.com/docs/en/plugins/cli-reference) · [All settings](https://code.claude.com/docs/en/settings-reference) · [Add components to a plugin](https://code.claude.com/docs/en/plugins/components) · [Plugin security and trust](https://code.claude.com/docs/en/plugins/security) · [Configure permissions](https://code.claude.com/docs/en/permissions)</sub>
 
-<sub>← [GitHub Actions](05-github-actions.md) · [Advanced index](README.md) · [Put bounds on autonomous runs](07-bounded-runs.md) → · Topic: [Plugins](../topics/plugins.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=a-6)</sub>
+<sub>← [GitHub Actions](05-github-actions.md) · [Advanced index](README.md) · [Put bounds on autonomous runs](07-bounded-runs.md) → · Topic: [Plugins](../topics/plugins.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=lesson-feedback.yml&lesson=a-6)</sub>

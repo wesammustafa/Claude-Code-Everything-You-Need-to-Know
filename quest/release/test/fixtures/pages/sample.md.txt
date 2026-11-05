@@ -11,7 +11,7 @@ Verified against nothing: this page is the renderer's reviewed fixture.
 1. Download an example:
 
    ```bash
-   curl -fsSL https://raw.githubusercontent.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/main/examples/intermediate/05-hooks/dot-claude/hooks/protect-files.sh -o protect.sh
+   curl -fsSL https://raw.githubusercontent.com/wesammustafa/Claude-Code-Quest/main/examples/intermediate/05-hooks/dot-claude/hooks/protect-files.sh -o protect.sh
    echo "<script>alert(1)</script>"
    ```
 

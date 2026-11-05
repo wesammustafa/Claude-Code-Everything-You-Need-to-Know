@@ -74,4 +74,4 @@ If Claude doesn't use the browser, start the session with `--chrome`, or run `/c
 
 <sub>Sources: [Use Claude Code with Chrome](https://code.claude.com/docs/en/chrome)</sub>
 
-<sub>Back to the [Intermediate index](../README.md) · Topic: [MCP](../../topics/mcp.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=i-chrome)</sub>
+<sub>Back to the [Intermediate index](../README.md) · Topic: [MCP](../../topics/mcp.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=lesson-feedback.yml&lesson=i-chrome)</sub>

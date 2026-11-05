@@ -38,7 +38,7 @@ flowchart LR
 
    ```bash
    mkdir -p .claude/skills/five-whys
-   curl -fsSL https://raw.githubusercontent.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/main/examples/intermediate/01-first-skill/dot-claude/skills/five-whys/SKILL.md -o .claude/skills/five-whys/SKILL.md
+   curl -fsSL https://raw.githubusercontent.com/wesammustafa/Claude-Code-Quest/main/examples/intermediate/01-first-skill/dot-claude/skills/five-whys/SKILL.md -o .claude/skills/five-whys/SKILL.md
    ```
 
    Without its header comments, it starts:
@@ -78,7 +78,7 @@ The team wants a test-first workflow for requested features, while explanation-o
 
    ```bash
    mkdir -p .claude/skills/tdd
-   curl -fsSL https://raw.githubusercontent.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/main/examples/intermediate/01-first-skill/dot-claude/skills/tdd/SKILL.md -o .claude/skills/tdd/SKILL.md
+   curl -fsSL https://raw.githubusercontent.com/wesammustafa/Claude-Code-Quest/main/examples/intermediate/01-first-skill/dot-claude/skills/tdd/SKILL.md -o .claude/skills/tdd/SKILL.md
    ```
 
    The frontmatter has `description: TODO` and `disable-model-invocation: true`, and the Green and Refactor steps are unfinished. The skill ends by showing the diff, not by committing.
@@ -136,4 +136,4 @@ If the skill isn't committed, run `git check-ignore -v .claude/skills/tdd/SKILL.
 
 <sub>Sources: [Extend Claude with skills](https://code.claude.com/docs/en/skills) · [Extend Claude Code](https://code.claude.com/docs/en/features-overview) · [Advanced setup](https://code.claude.com/docs/en/setup) · [Commands](https://code.claude.com/docs/en/commands) · [Security](https://code.claude.com/docs/en/security) · [Tools reference](https://code.claude.com/docs/en/tools-reference) · [Interactive mode](https://code.claude.com/docs/en/interactive-mode) · [git-status](https://git-scm.com/docs/git-status) · [git-add](https://git-scm.com/docs/git-add) · [git-commit](https://git-scm.com/docs/git-commit) · [git-rev-parse](https://git-scm.com/docs/git-rev-parse)</sub>
 
-<sub>← [Intermediate index](README.md) · [Organize project memory and see what loaded](02-organize-memory.md) → · Topic: [Skills](../topics/skills.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know/issues/new?template=lesson-feedback.yml&lesson=i-1)</sub>
+<sub>← [Intermediate index](README.md) · [Organize project memory and see what loaded](02-organize-memory.md) → · Topic: [Skills](../topics/skills.md) · [Stuck on this lesson?](https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=lesson-feedback.yml&lesson=i-1)</sub>
