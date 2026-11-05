@@ -159,6 +159,10 @@ export interface BeatState {
   idle: boolean;
   unlocked: boolean;
   explicit: boolean;
+  // The learner acted on the beat since it opened: Check again, its button,
+  // or a change the watcher saw. Until then a tree not clean yet waits
+  // (ticket 344); a Check's FAIL waits on its baseline instead.
+  acted?: boolean;
   ended: boolean;
   opened: number;
   eased: boolean;
@@ -172,6 +176,9 @@ export interface BeatState {
   // The first answer the beat started from: undefined until there is one.
   baseline?: string | null | undefined;
   slowWait?: boolean;
+  // The latest real result of each slow item this beat visit ran: a poll
+  // leaves them out, so the card keeps these (ticket 344).
+  slowRan?: CheckItem[];
   // The folder the beat's last result ran in (ticket 285).
   ranIn?: string | null;
   // s.asks when the beat opened: an r numbered at or below it is older.

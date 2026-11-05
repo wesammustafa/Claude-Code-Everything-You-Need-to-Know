@@ -119,12 +119,15 @@ test("Pip's mode follows b-1's step states on a real play: rest, checking, Not y
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(heading(page)).toHaveText("Correct one claim");
 
-    // The card at rest: once the step's opening look has its answer (Pip
-    // thinks while it runs), Pip holds Idle.
-    await expect(card(page)).toHaveAttribute("data-state", "not-yet", {
+    // The card at rest: until the learner runs the Check, its line is
+    // waiting, not Not yet (344). Once the step's opening look has its
+    // answer (Pip thinks while it runs), Pip holds Idle.
+    await expect(card(page)).toHaveAttribute("data-state", "waiting", {
       timeout: 30_000,
     });
-    await expect(pip(page)).toHaveAttribute("data-pip-mode", "idle");
+    await expect(pip(page)).toHaveAttribute("data-pip-mode", "idle", {
+      timeout: 30_000,
+    });
 
     await checkTo(page, "not-yet", checkAgain(page));
 

@@ -4,6 +4,7 @@
 // corrects against the code in Your turn.
 import { runCommand, shellNotFound } from '../command.mjs';
 /** @import { Item } from './index.mjs' */
+/** @import { Repo } from '../repo.mjs' */
 
 export const title = 'Install, sign in and look around';
 
@@ -98,6 +99,22 @@ export function exitClaim(claim) {
   return right ? 'right' : null;
 }
 
+// Whether the note reads as it did in the copy's first commit, line ends and
+// trailing space aside: false when that commit lacks it or git can't say.
+/**
+ * @param {Repo} repo
+ * @param {string} text
+ */
+function untouched(repo, text) {
+  const plain = (/** @type {string} */ s) => s.replace(/\r\n/g, '\n').replace(/\s+$/, '');
+  try {
+    return repo.gitLocal('rev-list', '--max-parents=0', 'HEAD').split('\n').filter(Boolean)
+      .some((root) => plain(repo.gitLocal('show', `${root}:./${NOTE}`)) === plain(text));
+  } catch {
+    return false;
+  }
+}
+
 /** @type {Item} */
 export const noteCorrected = {
   text: 'the claim in `practice/b-1/onboarding.md` that the code contradicts is corrected',
@@ -109,6 +126,10 @@ export const noteCorrected = {
     }
     const exits = claims(text).filter((claim) => EXIT.test(claim) || CANT_FAIL.test(claim));
     const stale = exits.find((claim) => exitClaim(claim) === 'stale');
+    // Untouched, the note gets no quote: Your turn asks the Learner to find
+    // the claim from the code, and only a failed edit earns the narrower help.
+    // A note that is already right passes, whatever its first commit holds.
+    if (stale && untouched(repo, text)) return `\`${NOTE}\` hasn't changed yet. Find the claim the code contradicts, as Your turn step 2 describes, and correct that line in your editor.`;
     if (stale) return `The note still says "${stale.replace(/^[-*+]\s+/, '').replace(/[.\s]+$/, '').slice(0, 120)}". Ask Claude which file decides how linkcheck exits, open that line yourself, and write what the code does.`;
     if (!exits.some((claim) => exitClaim(claim) === 'right')) return 'No line in the note says which exit code linkcheck gives for a broken link. Open the line Claude cites for it and write that code into the claim: CI depends on it.';
     return true;

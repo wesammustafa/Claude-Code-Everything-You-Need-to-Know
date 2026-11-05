@@ -251,8 +251,9 @@ describe("the Intermediate solutions on an assembled copy", () => {
   const done = order.slice(0, first);
   const intermediate = order.slice(first, order.indexOf("i-capstone") + 1);
 
-  // b-3's last-commit item holds only while a commit with a test is the
-  // latest, so the earlier levels are checked again once, at the end.
+  // A later Lesson's commit must not undo an earlier Check (b-3 reads the
+  // history for its Your turn commit), so the earlier levels are checked
+  // again once, at the end.
   test("each Check fails before its Lesson's solution and passes after it, with every earlier one", async () => {
     const copy = await assembledCopy();
     for (const id of done) applyLesson({ repoRoot, copy, id });

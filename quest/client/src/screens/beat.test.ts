@@ -188,10 +188,55 @@ describe("statusOf", () => {
       "Watching your Practice copy.",
     ],
     [
-      "waiting for a session",
+      "a beat its button decides watches the copy, never a session (ticket 344)",
       { status: "waiting", decidedBy: "session" },
       "watching",
-      "Waiting for the session to end.",
+      "Watching your Practice copy.",
+    ],
+    [
+      "a beat its button decides, in a work folder",
+      { status: "waiting", decidedBy: "session", watches: "/home/ali/work" },
+      "watching",
+      "Watching your work folder: /home/ali/work.",
+    ],
+    [
+      "only slow lines, which only Check again runs (ticket 344)",
+      {
+        status: "waiting",
+        decidedBy: "check",
+        verification: [
+          { text: "the tests pass", pass: false, pending: true },
+          { text: "your tests catch it", pass: false, pending: true },
+        ],
+      },
+      "watching",
+      "Check again runs these lines.",
+    ],
+    [
+      "slow lines left, the rest passing",
+      {
+        status: "waiting",
+        decidedBy: "check",
+        verification: [
+          { text: "it is committed", pass: true },
+          { text: "the tests pass", pass: false, pending: true },
+        ],
+      },
+      "watching",
+      "Everything else passes. Check again runs the slow part.",
+    ],
+    [
+      "slow lines left while another line fails: it watches",
+      {
+        status: "waiting",
+        decidedBy: "check",
+        verification: [
+          { text: "it is committed", pass: false },
+          { text: "the tests pass", pass: false, pending: true },
+        ],
+      },
+      "watching",
+      "Watching your Practice copy.",
     ],
     [
       "already done",
@@ -253,9 +298,25 @@ describe("statusOf", () => {
     ),
     [
       "not yet",
-      { status: "fail" },
+      { status: "fail", decidedBy: "watch" },
       "notYet",
       "Not yet. The lines below say what the check saw.",
+    ],
+    [
+      "a git-clean Not yet its button decided lists its lines (ticket 344)",
+      {
+        status: "fail",
+        decidedBy: "session",
+        fail: "git status lists 1 change: scratch.txt",
+      },
+      "notYet",
+      "Not yet. The lines below say what the check saw.",
+    ],
+    [
+      "not yet, with no line to point at",
+      { status: "fail", decidedBy: "check", verification: [] },
+      "notYet",
+      "Not yet.",
     ],
   ])("%s", (_name, over, tone, words) => {
     const said = statusOf(beat(over));
@@ -273,6 +334,25 @@ describe("statusOf", () => {
     expect(statusOf(beat({ status: "fail" })).key).not.toBe(
       statusOf(beat({ status: "fail", stale: true })).key,
     );
+  });
+
+  test("the Check step also says a terminal run needs Check again (ticket 344)", () => {
+    const check = beat({ status: "waiting", decidedBy: "check" });
+    expect(statusOf(check, true).words).toBe(
+      "Watching your Practice copy. After the check runs in your terminal, choose Check again.",
+    );
+    expect(statusOf(check, true).key).not.toBe(statusOf(check).key);
+    expect(statusOf(check).words).toBe("Watching your Practice copy.");
+    expect(
+      statusOf(beat({ ...check, watches: "/home/ali/work" }), true).words,
+    ).toBe(
+      "Watching your work folder: /home/ali/work. After the check runs in your terminal, choose Check again.",
+    );
+    // Its Not yet and its slow wait keep their own words.
+    expect(
+      statusOf(beat({ ...check, status: "waiting", slowWait: true }), true)
+        .words,
+    ).toBe("Everything else passes. Check again runs the slow part.");
   });
 });
 
@@ -318,6 +398,26 @@ describe("checkLines", () => {
       { text: "slow", state: "pending" },
       { text: "one", state: "pass" },
       { text: "two", state: "notYet", fail: "Not there" },
+    ]);
+  });
+
+  test("a checked beat that waits: an item not met is watched, not Not yet (ticket 344)", () => {
+    expect(
+      checkLines(
+        beat({
+          decidedBy: "check",
+          verification: [
+            ...items,
+            { text: "slow", pass: false, pending: true },
+          ],
+          status: "waiting",
+        }),
+      ),
+    ).toEqual([
+      { text: "one", state: "pass" },
+      { text: "two", state: "waiting" },
+      { text: "three", state: "waiting" },
+      { text: "slow", state: "pending" },
     ]);
   });
 
@@ -399,13 +499,34 @@ describe("checkLines", () => {
     );
   });
 
-  test("the Learner's beats, a session and a question show no line", () => {
-    for (const by of ["learner", "session", "answer"] as const)
+  test("the Learner's beats and a question show no line", () => {
+    for (const by of ["learner", "answer"] as const)
       expect(
         checkLines(
           beat({ decidedBy: by, verification: items, status: "fail" }),
         ),
       ).toEqual([]);
+  });
+
+  test("a beat its button decides shows its line only on a Not yet (ticket 344)", () => {
+    const pressed = { decidedBy: "session" as const, lines: [doneWhen] };
+    for (const status of ["waiting", "checking", "done", "already"] as const)
+      expect(checkLines(beat({ ...pressed, status }))).toEqual([]);
+    expect(
+      checkLines(
+        beat({
+          ...pressed,
+          status: "fail",
+          fail: "git status lists 2 changes: src/a.js, test/a.test.js",
+        }),
+      ),
+    ).toEqual([
+      {
+        text: doneWhen.text,
+        state: "notYet",
+        fail: "git status lists 2 changes: src/a.js, test/a.test.js",
+      },
+    ]);
   });
 });
 

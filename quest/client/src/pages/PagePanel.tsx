@@ -120,6 +120,32 @@ function paintDiagrams(root: HTMLElement, theme: Theme): void {
   }
 }
 
+/**
+ * A code block wider than the page is a named tab stop, so the keyboard can
+ * scroll it sideways; one that fits is neither. A group, not a region, so a
+ * page of them adds no landmarks. One that fits while it has focus keeps its
+ * stop until focus leaves, so focus never falls out of the panel.
+ */
+function markScroller(pre: HTMLElement): void {
+  if (pre.scrollWidth > pre.clientWidth) {
+    pre.setAttribute("tabindex", "0");
+    pre.setAttribute("role", "group");
+    pre.setAttribute("aria-label", "Code block");
+  } else if (pre === document.activeElement) {
+    pre.addEventListener(
+      "blur",
+      () => {
+        markScroller(pre);
+      },
+      { once: true },
+    );
+  } else {
+    pre.removeAttribute("tabindex");
+    pre.removeAttribute("role");
+    pre.removeAttribute("aria-label");
+  }
+}
+
 function byId(root: HTMLElement, id: string): HTMLElement | null {
   for (const el of root.querySelectorAll<HTMLElement>("[id]"))
     if (el.id === id) return el;
@@ -180,6 +206,41 @@ function PageBody({
   useLayoutEffect(() => {
     if (root.current) paintDiagrams(root.current, theme);
   }, [html, theme]);
+
+  // Each code block is marked as it renders, again whenever it resizes (as
+  // the panel or the window narrows or widens), and again when a font loads:
+  // the code font arrives lazily and changes a block's width, not its box.
+  useLayoutEffect(() => {
+    const el = root.current;
+    if (!el) return;
+    const pres = [...el.querySelectorAll<HTMLElement>("pre")];
+    const markAll = () => {
+      for (const pre of pres) markScroller(pre);
+    };
+    markAll();
+    // jsdom has no FontFaceSet or ResizeObserver; every browser the app
+    // supports has both.
+    const fonts = "fonts" in document ? document.fonts : undefined;
+    let live = true;
+    void fonts?.ready.then(() => {
+      if (live) markAll();
+    });
+    fonts?.addEventListener("loadingdone", markAll);
+    const resize =
+      typeof ResizeObserver === "function"
+        ? new ResizeObserver((entries) => {
+            for (const entry of entries)
+              if (entry.target instanceof HTMLElement)
+                markScroller(entry.target);
+          })
+        : undefined;
+    for (const pre of pres) resize?.observe(pre);
+    return () => {
+      live = false;
+      fonts?.removeEventListener("loadingdone", markAll);
+      resize?.disconnect();
+    };
+  }, [html]);
 
   useEffect(() => {
     const el = root.current;

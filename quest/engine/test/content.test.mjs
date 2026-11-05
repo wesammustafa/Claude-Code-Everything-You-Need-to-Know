@@ -2903,3 +2903,59 @@ test("b-2 W7 warns about the session-wide edit choice where it warns about auto 
     ),
   );
 });
+
+// Claude Code's own dialogs a Beginner meets (345): a signed-in learner sees
+// no login prompt, so b-1's sign-in line is conditional and the trust line
+// says to accept it for the practice copy, with no claim about which choice
+// the dialog highlights; b-2 W1 says what folder the header
+// should show; and where Claude first edits a file in b-2 and the capstone,
+// a note says to decline the LSP plugin recommendation.
+test("Beginner steps prepare for Claude Code's own dialogs (345)", () => {
+  const beatsOf = (id, step) =>
+    contents
+      .find((c) => c?.lesson === id)
+      .steps.find((s) => s.id === step)
+      .beats.map((b) => [...b.lines.map((l) => l.text), ...b.hints]);
+  const w3 = beatsOf("b-1", "W3").flat();
+  assert.ok(
+    w3.some((t) => t.startsWith("If Claude Code asks you to sign in,")),
+    "b-1 W3's sign-in line is conditional",
+  );
+  assert.ok(
+    !w3.some((t) => t.startsWith("At the login prompt")),
+    "no unconditional login line",
+  );
+  assert.ok(
+    w3.some((t) =>
+      t.endsWith("read the dialog and accept it to trust the folder."),
+    ),
+    "b-1 W3's trust line",
+  );
+  assert.ok(
+    !w3.some((t) => t.includes("highlighted")),
+    "no claim about the trust dialog's highlighted choice",
+  );
+  const w1 = beatsOf("b-2", "W1").flat();
+  assert.ok(
+    w1.some((t) => t.includes("it should be your copy's `project/` folder")),
+    "b-2 W1 says which folder the header shows",
+  );
+  assert.ok(
+    w1.some((t) => t.startsWith("If it isn't, type `/exit`")),
+    "b-2 W1 says what to do in the wrong folder",
+  );
+  for (const [id, step] of [
+    ["b-2", "W7"],
+    ["b-capstone", "T6"],
+  ]) {
+    const texts = beatsOf(id, step).flat();
+    assert.ok(
+      texts.some((t) => t.includes("**LSP plugin recommendation**")),
+      `${id} ${step} names the dialog`,
+    );
+    assert.ok(
+      texts.some((t) => t.includes("choose **No, not now**")),
+      `${id} ${step} says to decline it`,
+    );
+  }
+});
