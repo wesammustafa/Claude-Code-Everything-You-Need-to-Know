@@ -41,7 +41,7 @@ How to read it:
 | [Status line](https://code.claude.com/docs/en/statusline); taught in [The status line](../intermediate/electives/status-line.md) | – | Every provider |
 | [`/goal`](https://code.claude.com/docs/en/goal); taught in [Run and save a dynamic workflow](../advanced/03-dynamic-workflows.md) | – | Every provider |
 | [`/powerup`](https://code.claude.com/docs/en/commands); taught in [the built-in teachers](../beginner/electives/built-in-teachers.md) | – | The docs state no limit |
-| [Fast mode](https://code.claude.com/docs/en/fast-mode); taught in [Fast mode](../intermediate/electives/fast-mode.md) | "Fast mode is in research preview." | A Claude subscription, paid for with usage credits (an Owner turns it on for Team and Enterprise), and Console organizations with access provisioned; not Claude Platform on AWS, Bedrock, Agent Platform or Foundry |
+| [Fast mode](https://code.claude.com/docs/en/fast-mode); taught in [Fast mode](../intermediate/electives/fast-mode.md) | "Fast mode for Claude Opus 5.5 is available, and fast mode for Claude Opus 5 and Claude Opus 4.8 is in research preview." | A Claude subscription, paid for with usage credits (an Owner turns it on for Team and Enterprise), and Console organizations with access provisioned; not Claude Platform on AWS, Bedrock, Agent Platform or Foundry |
 | [Advisor](https://code.claude.com/docs/en/advisor) | "The advisor tool is experimental and requires the Anthropic API." | A Claude subscription and the Console |
 | [Web search](https://code.claude.com/docs/en/tools-reference#websearch-tool-behavior) | – | A Claude subscription, the Console, Claude Platform on AWS and Foundry; on Agent Platform with Opus 4, Sonnet 4, Haiku 4.5 and later models; not Bedrock |
 

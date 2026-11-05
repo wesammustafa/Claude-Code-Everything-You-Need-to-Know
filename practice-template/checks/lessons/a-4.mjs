@@ -402,10 +402,11 @@ export function scriptBehavior(script, fallback = RESULT) {
   };
 }
 
-// A real run the Learner saved. Its turn count may be one above the cap:
-// the cap counts only the turns that use tools, and `num_turns` counts the
-// final answer too (How the agent loop works). The lesson's dry-run confirms
-// the bound.
+// A real run the Learner saved. Its turn count may be one above the cap.
+// How the agent loop works counts the final text-only answer within the cap,
+// but no dry-run has yet confirmed that `num_turns` counts the same way, so
+// the bound stays loose by one turn rather than fail a run that obeyed its
+// cap. Tighten it to the cap once a dry-run confirms the count.
 /**
  * @param {string} result
  * @param {string} script

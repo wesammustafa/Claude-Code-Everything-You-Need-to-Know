@@ -18,7 +18,7 @@ By the end of this lesson you can run Claude Code unattended in a GitHub Actions
   ```
 
   `--template` bases the new repository on the template, and `--clone` clones it ([gh repo create](https://cli.github.com/manual/gh_repo_create)). The check runs in this copy, with Node.js LTS, without `--dir`. At the end, you take the workflows and the secret out of it.
-- A credential: a Claude Console API key made for this lesson, recommended because the teardown deletes it, or, on a Pro, Max, Team or Enterprise plan, a token from `claude setup-token` ([Manual setup](https://code.claude.com/docs/en/github-actions#manual-setup)).
+- A credential: a Claude Console API key made for this lesson, recommended because the teardown deletes it, or, on a Pro, Max, Ultra, Team or Enterprise plan, a token from `claude setup-token` ([Manual setup](https://code.claude.com/docs/en/github-actions#manual-setup)).
 - Usage: light. Each run is short, and also uses GitHub Actions minutes (see Watch out).
 
 ## The idea

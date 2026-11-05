@@ -62,7 +62,7 @@ In your repository:
    jq '{subtype, has_result: has("result")}' .practice/a-4-capped.json
    ```
 
-   It prints a non-zero exit code, then `"subtype": "error_max_turns"` and `"has_result": false`: a run that stops at the cap has no `result`. `--max-turns` counts only the turns that call tools ([Turns and messages](https://code.claude.com/docs/en/agent-sdk/agent-loop#turns-and-messages)), so if the run finished, give it a task with more steps.
+   It prints a non-zero exit code, then `"subtype": "error_max_turns"` and `"has_result": false`: a run that stops at the cap has no `result`. `--max-turns` counts each turn that calls tools, plus one for the final text-only response ([Turns and messages](https://code.claude.com/docs/en/agent-sdk/agent-loop#turns-and-messages)), so if the run finished, give it a task with more steps.
 
 ## Your turn
 
