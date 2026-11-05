@@ -8,7 +8,7 @@ By the end of this lesson you can install Claude Code, start it safely in a repo
 
 ## You need
 
-- A terminal and git, plus a Claude subscription (Pro, Max, Team or Enterprise; the free plan doesn't include Claude Code), a Claude Console account, or access through a supported cloud provider ([Quickstart](https://code.claude.com/docs/en/quickstart), [Advanced setup](https://code.claude.com/docs/en/setup)).
+- A terminal and git, plus a Claude subscription (Pro, Max, Ultra, Team or Enterprise; the free plan doesn't include Claude Code), a Claude Console account, or access through a supported cloud provider ([Quickstart](https://code.claude.com/docs/en/quickstart), [Advanced setup](https://code.claude.com/docs/en/setup)).
 - Your copy of the practice template, cloned, as the [Beginner index](README.md#practice) describes, and Node.js LTS for its checks. In a Codespace on your copy, Claude Code is already installed: start at step 3.
 - Usage: light, meaning a few short prompts in one session. Inside Claude Code, `/usage` shows your session cost and plan usage limits ([Commands](https://code.claude.com/docs/en/commands)).
 
