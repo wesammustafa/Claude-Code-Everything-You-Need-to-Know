@@ -59,14 +59,14 @@ Effort controls how much the model reasons on each step. Lower effort answers so
 ## Gotchas
 
 - `max` applies to the current session only, unless you set it with `CLAUDE_CODE_EFFORT_LEVEL`. The `effortLevel` and `modelSettings` settings don't accept it.
-- `ultrathink` in a prompt asks for deeper reasoning on that turn only and leaves the effort level unchanged. Phrases such as "think hard" are ordinary text ([Use ultrathink](https://code.claude.com/docs/en/model-config#use-ultrathink-for-one-off-deep-reasoning)).
+- `ultrathink` in a prompt asks for deeper reasoning on that turn only, without changing your session effort setting. From v2.1.311, typed in the terminal prompt, it can also raise that turn to `xhigh` effort, and it shows in rainbow colors when it can. Phrases such as "think hard" are ordinary text ([Use ultrathink](https://code.claude.com/docs/en/model-config#use-ultrathink-for-one-off-deep-reasoning)).
 - Ultracode is a setting, not an effort level: with it on, Claude plans a [dynamic workflow](https://code.claude.com/docs/en/workflows) for each substantive task, at whatever level the session runs ([Model configuration](https://code.claude.com/docs/en/model-config#adjust-effort-level)).
 - Switching models in the middle of a session recomputes the whole request, and on most models so does changing effort, so Claude Code may ask you to confirm first ([Prompt caching](https://code.claude.com/docs/en/prompt-caching)).
 
 <a id="fast-mode"></a>
 ## Related pages
 
-- Fast mode, which the docs mark "in research preview": a faster configuration of supported Opus models that subscription plans pay for with usage credits only. See [Fast mode](https://code.claude.com/docs/en/fast-mode), and the [Fast mode](../intermediate/electives/fast-mode.md) Elective.
+- Fast mode, which the docs mark "in research preview" for Claude Opus 5 and Claude Opus 4.8 but not for Claude Opus 5.5: a faster configuration of supported Opus models that subscription plans pay for with usage credits only. See [Fast mode](https://code.claude.com/docs/en/fast-mode), and the [Fast mode](../intermediate/electives/fast-mode.md) Elective.
 - Choosing a model and effort for a task: Anthropic's [Choosing a Claude model and effort level in Claude Code](https://claude.com/blog/claude-model-and-effort-level-in-claude-code).
 - Retirement dates: [Model deprecations](https://platform.claude.com/docs/en/about-claude/model-deprecations).
 

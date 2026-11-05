@@ -50,7 +50,7 @@ flowchart TD
 
    By default, an interactive session runs subagents in the background, so your prompt stays free ([Run subagents in foreground or background](https://code.claude.com/docs/en/sub-agents#run-subagents-in-foreground-or-background)).
 4. While they work, run `/tasks`. It lists each item running in the background and lets you check on, attach to, or stop it ([Check on running work](https://code.claude.com/docs/en/agents#check-on-running-work)). Claude may start [built-in](https://code.claude.com/docs/en/sub-agents#built-in-subagents) `Explore` or `general-purpose` subagents, or forks of your conversation, so your rows will differ.
-5. When the summaries arrive, run `/usage` to see what that cost. On a Pro, Max, Team or Enterprise plan, it attributes your recent usage to skills, subagents, plugins and MCP servers, and recommends changes ([Plan usage breakdown](https://code.claude.com/docs/en/costs#plan-usage-breakdown)). The figures are estimates.
+5. When the summaries arrive, run `/usage` to see what that cost. On a Pro, Max, Ultra, Team or Enterprise plan, it attributes your recent usage to skills, subagents, plugins and MCP servers, and recommends changes ([Plan usage breakdown](https://code.claude.com/docs/en/costs#plan-usage-breakdown)). The figures are estimates.
 
 ## Your turn
 
