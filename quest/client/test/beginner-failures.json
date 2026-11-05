@@ -229,21 +229,33 @@
   },
   {
     "lesson": "b-3",
-    "item": "your last commit changes a test file and at least one other file",
+    "item": "the commit that adds the patch's test, `test/external.test.js`, also holds your fix in `src/`",
     "name": "no learner commit",
     "message": "There is no commit of yours yet. Once the fix and its test are in, ask Claude to commit them together."
   },
   {
     "lesson": "b-3",
-    "item": "your last commit changes a test file and at least one other file",
-    "name": "last commit has no test",
-    "message": "Your last commit changes no test file (src/x.js): none is in a test/ folder or named like links.test.js. Add one, then `git commit --amend`."
+    "item": "the commit that adds the patch's test, `test/external.test.js`, also holds your fix in `src/`",
+    "name": "last commit is the Worked example",
+    "message": "Your last commit is still the Worked example's (src/links.js, test/links.test.js). Ask Claude to commit the fix, its test and the patch's test together (Your turn, step 5)."
   },
   {
     "lesson": "b-3",
-    "item": "your last commit changes a test file and at least one other file",
-    "name": "last commit has tests alone",
-    "message": "Your last commit changes only tests (test/x.test.js). If the code change is in the commit before it, ask Claude to combine the two commits into one."
+    "item": "the commit that adds the patch's test, `test/external.test.js`, also holds your fix in `src/`",
+    "name": "no commit has the patch test",
+    "message": "No commit adds the patch's test, `test/external.test.js`, yet; your last commit changes src/x.js. Ask Claude to commit the fix, its test and the patch's test together (Your turn, step 5)."
+  },
+  {
+    "lesson": "b-3",
+    "item": "the commit that adds the patch's test, `test/external.test.js`, also holds your fix in `src/`",
+    "name": "patch test in an earlier commit",
+    "message": "The patch's test is in an earlier commit than your fix: the commit that adds `test/external.test.js` leaves out `src/` (test/external.test.js). Ask Claude to combine the two commits into one."
+  },
+  {
+    "lesson": "b-3",
+    "item": "the commit that adds the patch's test, `test/external.test.js`, also holds your fix in `src/`",
+    "name": "patch test commit has no source",
+    "message": "The commit that adds the patch's test changes nothing in `src/` (test/external.test.js), so your fix isn't in it. If the fix is in the commit before it, ask Claude to combine the two commits into one."
   },
   {
     "lesson": "b-3",

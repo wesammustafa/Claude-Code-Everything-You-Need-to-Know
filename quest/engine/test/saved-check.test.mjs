@@ -117,9 +117,22 @@ test("a slow item the run left out is pending, waiting for Check again, not miss
   const items = checkItems(d.state, true).map((it) =>
     it.index === slowAt ? { ...it, pass: false, slow: true } : it,
   );
-  d.send(checkResult(pending(d, "check"), items));
+  // b-1's slow beat checks only slow items, so its arrival run runs them: a
+  // poll that leaves one out and lands first is no answer (ticket 344).
+  const eff = pending(d, "check");
+  d.send(checkResult(eff, items));
+  assert.equal(beatView(d).status, "checking");
+  // The arrival run's FAIL waits for Check again: pending, not Not yet.
+  d.send(
+    checkResult(
+      eff,
+      checkItems(d.state, true).map((it) =>
+        it.index === slowAt ? { ...it, pass: false, hint: "not yet" } : it,
+      ),
+    ),
+  );
   const view = beatView(d);
-  assert.equal(view.slowWait, true);
+  assert.equal(view.status, "waiting");
   const slow = lessonOf("b-1").items[slowAt];
   assert.deepEqual(
     view.verification.find((line) => line.text === slow),

@@ -439,7 +439,101 @@ test("the matrix has a row for every verify kind the course uses", () => {
   expect(usedKinds().filter((kind) => !rows.has(kind))).toEqual([]);
 });
 
-test('session: b-2 "Confirm no edit yet" waits for the session, says Not yet, then passes', async ({
+/** Records every status the step card's beat shows, in order. */
+async function recordStatuses(page: Page) {
+  await page.addInitScript(() => {
+    const seen: string[] = [];
+    (window as unknown as { seenStatuses: string[] }).seenStatuses = seen;
+    const look = () => {
+      const card = document.querySelector("main [data-step-card]");
+      const status = card?.getAttribute("data-beat-status");
+      if (status && seen.at(-1) !== status) seen.push(status);
+    };
+    new MutationObserver(look).observe(document, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ["data-beat-status"],
+    });
+  });
+  return () =>
+    page.evaluate(
+      () => (window as unknown as { seenStatuses: string[] }).seenStatuses,
+    );
+}
+
+test('git-clean: b-3 "Explore the parser" watches a dirty tree on arrival, and says Not yet only after Check again (344)', async ({
+  page,
+}) => {
+  const copy = practiceCopy({ through: "b-3" });
+  try {
+    copy.write(".practice/learn.json", saveAt("b-3", "W1", 0));
+    write(copy, "scratch.txt", "left over\n");
+    const statuses = await recordStatuses(page);
+    await copy.start();
+    await openAt(page, copy);
+    await expect(heading(page)).toHaveText("Explore the parser");
+    // The first look comes back, and a poll or two after it: the learner has
+    // done nothing yet, so the dirty tree is where the beat starts.
+    await expect.poll(statuses, { timeout: 30_000 }).toContain("waiting");
+    await page.waitForTimeout(5_000);
+    expect(await statuses()).not.toContain("fail");
+    await expect(page.locator("[data-says-words]")).toHaveText(
+      "Watching your Practice copy.",
+    );
+    await expect(page.locator("main [data-state=not-yet]")).toHaveCount(0);
+
+    // Check again is the learner acting: now the paths it saw show.
+    await checkAgainOn(page, "b-3:W1:0", "waiting", 30_000);
+    await expect(page.locator("[data-says-words]")).toHaveText(
+      "Not yet. The lines below say what the check saw.",
+      { timeout: 30_000 },
+    );
+    await expect(page.locator("main [data-state=not-yet]")).toContainText(
+      "scratch.txt",
+    );
+    await namesNoKey(page);
+  } finally {
+    await copy.dispose();
+  }
+});
+
+test('fresh check: b-2 "Record the plan moment" watches on arrival with its file missing, and passes once it is saved (344)', async ({
+  page,
+}) => {
+  const copy = practiceCopy({ through: "b-2" });
+  try {
+    copy.write(".practice/learn.json", saveAt("b-2", "Y4", 0));
+    // The copy holds b-2's solution: take its saved status away, so the
+    // beat opens on a missing file.
+    remove(copy, ".practice/b-2-before.txt");
+    const statuses = await recordStatuses(page);
+    await copy.start();
+    await openAt(page, copy);
+    await expect(heading(page)).toHaveText("Record the plan moment");
+    // The arrival run and the polls after it fail on the missing file: the
+    // learner has done nothing yet, so nothing says Not yet.
+    await expect.poll(statuses, { timeout: 30_000 }).toContain("waiting");
+    await page.waitForTimeout(5_000);
+    expect(await statuses()).not.toContain("fail");
+    await expect(page.locator("[data-says-words]")).toHaveText(
+      "Watching your Practice copy.",
+    );
+    await expect(lines(page).first()).toHaveAttribute("data-state", "waiting");
+    await expect(page.locator("main [data-state=not-yet]")).toHaveCount(0);
+    await namesNoKey(page);
+
+    // The learner saves a clean status: the watcher sees it, and it passes.
+    write(copy, ".practice/b-2-before.txt", "");
+    await expect(lines(page).first()).toHaveAttribute("data-state", "ok", {
+      timeout: 30_000,
+    });
+  } finally {
+    await copy.dispose();
+  }
+});
+
+test('session: b-2 "Confirm no edit yet" watches the copy, lists what it saw on Not yet, then passes (344)', async ({
   page,
 }) => {
   const copy = practiceCopy({ through: "b-2" });
@@ -453,17 +547,25 @@ test('session: b-2 "Confirm no edit yet" waits for the session, says Not yet, th
     const ended = bar(page).getByRole("button", {
       name: "it says nothing to commit",
     });
+    // No session needs to end here: the plan stays on screen.
     await expect(page.locator("[data-says-words]")).toHaveText(
-      "Waiting for the session to end.",
+      "Watching your Practice copy.",
+      { timeout: 30_000 },
     );
+    await expect(page.locator("main")).not.toContainText("session to end");
     await namesNoKey(page);
     const count = (type: string) => sent.filter((a) => a.type === type).length;
     const before = count("session.ended");
 
     await ended.click();
-    await expect(page.locator("[data-says-words]")).toContainText("Not yet", {
-      timeout: 30_000,
-    });
+    await expect(page.locator("[data-says-words]")).toHaveText(
+      "Not yet. The lines below say what the check saw.",
+      { timeout: 30_000 },
+    );
+    // The lines it names are there: the path the tree still lists.
+    await expect(page.locator("main [data-state=not-yet]")).toContainText(
+      "scratch.txt",
+    );
     expect(count("session.ended") - before).toBe(1);
     await namesNoKey(page);
 
@@ -511,9 +613,10 @@ test('slow check: i-5 "Commit the hooks" runs its gate item on arrival', async (
     };
     expect(reply.snapshot?.lesson?.beat?.status).toBe("checking");
     await expect(heading(page)).toHaveText("Commit the hooks");
+    // A gate item that fails on arrival waits for Check again (344).
     await expect(lines(page).last()).toHaveAttribute(
       "data-state",
-      /^(ok|not-yet)$/,
+      /^(ok|pending)$/,
       { timeout: 60_000 },
     );
     await expect(page.locator("main")).not.toContainText(
@@ -527,9 +630,65 @@ test('slow check: i-5 "Commit the hooks" runs its gate item on arrival', async (
     );
     await expect(lines(page).last()).toHaveAttribute(
       "data-state",
-      /^(ok|not-yet)$/,
+      /^(ok|pending)$/,
     );
     expect(sent.filter((a) => a.type === "check.run")).toHaveLength(0);
+  } finally {
+    await copy.dispose();
+  }
+});
+
+const ONE_EXTERNAL_TEST = `import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { isExternal } from '../src/links.js';
+
+test('protocol-relative links point to another site', () => {
+  assert.equal(isExternal('//cdn.example.com/app.js'), true);
+});
+`;
+
+test('slow check: b-3 "Write the request" says its slow lines run on Check again, and a change leaves them to it (344)', async ({
+  page,
+}) => {
+  // Both of the beat's items are slow: the first look runs them, a poll
+  // never does. Without the regression test, the planted-flaw item fails.
+  test.setTimeout(300_000);
+  const copy = practiceCopy({ through: "b-3" });
+  try {
+    copy.write(".practice/learn.json", saveAt("b-3", "Y3", 0));
+    write(copy, "test/external.test.js", ONE_EXTERNAL_TEST);
+    await copy.start();
+    await openAt(page, copy);
+    await expect(heading(page)).toHaveText("Write the request");
+    // Its arrival run runs the tests twice: it can take a while.
+    await expect(lines(page).first()).toHaveAttribute("data-state", "ok", {
+      timeout: 120_000,
+    });
+    await expect(lines(page).last()).toHaveAttribute("data-state", "pending");
+    const says = page.locator("[data-says-words]");
+    await expect(says).toHaveText(
+      "Everything else passes. Check again runs the slow part.",
+    );
+    await expect(page.locator("main [data-state=not-yet]")).toHaveCount(0);
+    await namesNoKey(page);
+
+    // The fix lands: past a couple of polls the card still says Check
+    // again runs the line, which is true, and Check again passes it.
+    write(
+      copy,
+      "test/external.test.js",
+      `${ONE_EXTERNAL_TEST}
+test('a link with one leading slash remains a project link', () => {
+  assert.equal(isExternal('/docs/setup.md'), false);
+});
+`,
+    );
+    await page.waitForTimeout(5_000);
+    await expect(lines(page).last()).toHaveAttribute("data-state", "pending");
+    await checkAgainOn(page, "b-3:Y3:0", "waiting", 30_000);
+    await expect(
+      bar(page).getByRole("button", { name: "Next step" }),
+    ).toBeVisible({ timeout: 90_000 });
   } finally {
     await copy.dispose();
   }

@@ -2,14 +2,15 @@
 // Your first change, from request to commit (Beginner, lesson 3). The check
 // gathers its own evidence: it runs the practice app's link checker on
 // Markdown it writes to a temporary folder, runs the Learner's tests against
-// the planted patch's flaw, and reads the last commit and the working tree.
+// the planted patch's flaw, and reads the commit that adds the patch's test
+// and the working tree.
 import { spawnSync } from 'node:child_process';
 import { runCommand } from '../command.mjs';
 import { cpSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
-import { isTestFile, statusPaths } from '../paths.mjs';
+import { statusPaths } from '../paths.mjs';
 /** @import { Repo } from '../repo.mjs' */
 /** @import { Item } from './index.mjs' */
 
@@ -78,16 +79,59 @@ function brokenIn(repo, files) {
   }
 }
 
+// The test the patch adds, which Your turn commits with the fix.
+const PATCH_TEST = 'test/external.test.js';
+
 // Whether the last commit holds the patch's test: the Learner committed their
 // fix, so a flaw that is still there gets a more specific hint.
 /** @param {Repo} repo */
 function patchCommitted(repo) {
   try {
-    repo.gitLocal('cat-file', '-e', 'HEAD:./test/external.test.js');
+    repo.gitLocal('cat-file', '-e', `HEAD:./${PATCH_TEST}`);
     return true;
   } catch {
     return false;
   }
+}
+
+// isExternal as the template ships it, before the patch or any Your turn fix.
+const ORIGINAL_IS_EXTERNAL = 'export function isExternal(target) {\n  return /^[a-z][a-z0-9+.-]*:/i.test(target);\n}';
+
+// Whether the last commit is the Worked example's: it changes
+// test/links.test.js, its isExternal is still the template's, and the Your
+// turn change to src/ waits uncommitted. A Your turn commit that leaves the
+// patch's test out has its fix in src/ and doesn't match.
+/**
+ * @param {Repo} repo
+ * @param {string[]} files the last commit's files
+ */
+function isWorkedExampleCommit(repo, files) {
+  if (!files.includes('test/links.test.js')) return false;
+  if (!statusPaths(repo.git('status', '--porcelain'), repo.prefix).some((p) => p.startsWith('src/'))) return false;
+  let committed;
+  try {
+    committed = repo.gitLocal('show', 'HEAD:./src/links.js');
+  } catch {
+    return false;
+  }
+  const squash = (/** @type {string} */ text) => text.replace(/\s+/g, '');
+  return squash(committed).includes(squash(ORIGINAL_IS_EXTERNAL));
+}
+
+// Whether `rev`'s src/links.js has an isExternal changed from the template's.
+/**
+ * @param {Repo} repo
+ * @param {string} rev
+ */
+function hasFix(repo, rev) {
+  let text;
+  try {
+    text = repo.gitLocal('show', `${rev}:./src/links.js`);
+  } catch {
+    return false;
+  }
+  const squash = (/** @type {string} */ t) => t.replace(/\s+/g, '');
+  return !squash(text).includes(squash(ORIGINAL_IS_EXTERNAL));
 }
 
 // isExternal as the patch practice/b-3/protocol-relative.patch writes it.
@@ -193,19 +237,36 @@ export const items = [
     },
   },
   {
-    text: 'your last commit changes a test file and at least one other file',
+    text: 'the commit that adds the patch\'s test, `test/external.test.js`, also holds your fix in `src/`',
     check(repo) {
       try {
         repo.git('rev-parse', '--verify', '--quiet', 'HEAD^');
       } catch {
         return 'There is no commit of yours yet. Once the fix and its test are in, ask Claude to commit them together.';
       }
-      // A merge's combined diff can omit files changed by only one parent.
-      const files = repo.git('diff', '--name-only', 'HEAD^', 'HEAD').split('\n').filter(Boolean).map(repo.local);
-      const tests = files.filter(isTestFile);
-      if (!tests.length) return `Your last commit changes no test file (${files.join(', ') || 'no files'}): none is in a test/ folder or named like links.test.js. Add one, then \`git commit --amend\`.`;
-      if (tests.length === files.length) return `Your last commit changes only tests (${files.join(', ')}). If the code change is in the commit before it, ask Claude to combine the two commits into one.`;
-      return true;
+      // Diff each commit against its first parent: a merge's combined diff
+      // can omit files changed by only one parent.
+      /** @param {string} rev */
+      const changed = (rev) => repo.git('diff', '--name-only', `${rev}^`, rev).split('\n').filter(Boolean).map(repo.local);
+      // Your turn's commit adds the patch's test with the fix. Later Lessons
+      // commit on top of it, and may edit that test, so it is the commit that
+      // adds the test, found in the history rather than at HEAD.
+      const yourTurn = repo.git('log', '-1', '--min-parents=1', '--diff-filter=A', '--format=%H', '--', PATCH_TEST);
+      if (!yourTurn) {
+        const files = changed('HEAD');
+        const shown = files.join(', ') || 'no files';
+        const commitAll = 'Ask Claude to commit the fix, its test and the patch\'s test together (Your turn, step 5).';
+        if (isWorkedExampleCommit(repo, files)) return `Your last commit is still the Worked example's (${shown}). ${commitAll}`;
+        return `No commit adds the patch's test, \`${PATCH_TEST}\`, yet; your last commit changes ${shown}. ${commitAll}`;
+      }
+      const files = changed(yourTurn);
+      if (files.some((f) => f.startsWith('src/'))) return true;
+      const shown = files.join(', ');
+      // The test came before the fix only if the fix is not in that commit's
+      // tree yet and a later commit changes src/. When the tree already has
+      // it, the fix is in an earlier commit, whatever later Lessons change.
+      if (!hasFix(repo, yourTurn) && repo.git('log', '-1', '--format=%H', `${yourTurn}..HEAD`, '--', 'src')) return `The patch's test is in an earlier commit than your fix: the commit that adds \`${PATCH_TEST}\` leaves out \`src/\` (${shown}). Ask Claude to combine the two commits into one.`;
+      return `The commit that adds the patch's test changes nothing in \`src/\` (${shown}), so your fix isn't in it. If the fix is in the commit before it, ask Claude to combine the two commits into one.`;
     },
   },
   testsPass,
