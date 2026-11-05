@@ -4,9 +4,8 @@
 <!-- Rendered on 2026-11-05 from Pip's rig (quest/client/pip/pip.riv) in Claude Code Quest's web runtime: his Greeting, then a look down at the button below. -->
 <img src="assets/readme/pip-hello.gif" width="640" alt="Pip, Claude Code Quest's mascot, a small blocky orange robot with two antennas, waves hello under floating pixel crosses, then looks down at the Try it now button below him." />
 
-<sub><b>CLAUDE CODE QUEST</b></sub>
-
-# Claude Code: Everything You Need to Know
+<a id="claude-code-everything-you-need-to-know"></a>
+# Claude Code Quest
 
 **Learn Claude Code by doing it, one small step at a time, with Pip cheering you on.**
 

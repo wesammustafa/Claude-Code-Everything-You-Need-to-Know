@@ -1,7 +1,7 @@
 {
   "name": "claude-code-practice",
   "version": "1.0.0",
-  "description": "Practice repository for Claude Code: Everything You Need to Know, with a check for every core lesson and capstone",
+  "description": "Practice repository for Claude Code Quest, with a check for every core lesson and capstone",
   "private": true,
   "type": "module",
   "bin": {

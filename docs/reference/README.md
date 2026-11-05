@@ -16,4 +16,4 @@ For Claude Code's own terms, see the official [Glossary](https://code.claude.com
 
 <sub>Sources: [Glossary](https://code.claude.com/docs/en/glossary)</sub>
 
-<sub>Up: [Claude Code: Everything You Need to Know](../../README.md)</sub>
+<sub>Up: [Claude Code Quest](../../README.md)</sub>

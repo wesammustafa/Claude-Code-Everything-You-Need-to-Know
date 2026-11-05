@@ -11,7 +11,7 @@ The words this guide uses for its own parts. For Claude Code's terms, such as ho
 - **Check:** the last required part of a lesson: observable state, such as files, git history, exit codes or settings, that shows your exercise worked. It never depends on how Claude words a reply.
 - **Exit:** the list of things you can do unaided at the end of a level. Each level's Exit is the next level's "You're ready for this level if you can" list.
 - **Practice copy:** your own repository made from the [practice template](../beginner/README.md#practice), where you run Claude Code, each lesson's check and Claude Code Quest.
-- **Claude Code Quest:** the web learning app you start with `npm run learn` in your practice copy. It opens in your browser (in a Codespace, it prints the address to open), shows one step at a time while you work in your own terminal, and reports each check as it passes.
+- **Claude Code Quest:** the web learning app you start with `npm run learn` in your practice copy. It opens in your browser (in a Codespace, it prints the address to open), shows one step at a time while you work in your own terminal, and reports each check as it passes. It is also this guide's title.
 - **Step:** one unit of a lesson that Claude Code Quest shows at a time. It ends when the app sees your work or your answer.
 
 ---
