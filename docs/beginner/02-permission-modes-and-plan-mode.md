@@ -9,7 +9,7 @@ By the end of this lesson you can pick a permission mode for a task, decide whet
 ## You need
 
 - Your copy of the practice template, cloned, with no uncommitted changes, and Node.js LTS for its checks (a Codespace on your copy has both).
-- A second terminal open in the same folder, for git.
+- A second terminal open in your copy's `project/` folder, for git.
 - Usage: light.
 
 > [!NOTE]
@@ -28,7 +28,7 @@ Plan when you're unsure of the approach, the change touches several files, or yo
 
 ## Worked example
 
-1. Start `claude` in your practice copy. The status bar usually reads `⏵⏵ auto mode on` ([Which mode a session starts in](https://code.claude.com/docs/en/permission-modes#which-mode-a-session-starts-in)).
+1. Start `claude` in your copy's `project/` folder. The status bar usually reads `⏵⏵ auto mode on` ([Which mode a session starts in](https://code.claude.com/docs/en/permission-modes#which-mode-a-session-starts-in)).
 2. The change makes `parseConfig` in `src/config.js` reject an empty file, with a test: two files, in code you haven't read, so plan it. Press `Shift+Tab` until the status bar reads `⏸ plan mode on`. Each press moves to the next mode, and the status bar names it.
 3. Ask for the change:
 
@@ -65,10 +65,10 @@ Plan when you're unsure of the approach, the change touches several files, or yo
 
 ## Your turn
 
-Work a teammate's ticket so that nothing ships you'd reject in review. The ticket is `practice/b-2/ticket.md` in your practice copy.
+Work a teammate's ticket so that nothing ships you'd reject in review. The ticket is `practice/b-2/ticket.md` in your copy's `project/` folder.
 
 1. Read the ticket yourself first.
-2. Start a fresh conversation for the new task: type `/exit`, then start `claude` again. To enter plan mode and start the task in one step, type `/plan` before it ([Commands](https://code.claude.com/docs/en/commands)):
+2. Start a fresh conversation for the new task: type `/exit`, then start `claude` again. Press `Shift+Tab` until the status bar reads `⏸ plan mode on`, then ask for the task: `Work the ticket in practice/b-2/ticket.md`. To enter plan mode and start the task in one step, type `/plan` before it ([Commands](https://code.claude.com/docs/en/commands)):
 
    ```text
    /plan Work the ticket in practice/b-2/ticket.md
@@ -76,7 +76,7 @@ Work a teammate's ticket so that nothing ships you'd reject in review. The ticke
 
    Check that the status bar reads `⏸ plan mode on`, and answer any question Claude asks.
 3. Read the plan as its reviewer. For each change, ask whether you would merge it as part of this ticket. If the plan includes a request you wouldn't merge, use the plan menu to send it back, in your own words, with your reason. If the plan already leaves one out, read Claude's reason and decide whether you agree. Revise until the plan is one you would approve.
-4. While the final plan is on screen, save what git sees, and the files the plan says it will change, in the other terminal. Write each path the way `git status` shows it: relative to the repository root, with forward slashes, one per line. For a plan that changed `src/links.js` and `test/links.test.js`, it would be:
+4. While the final plan is on screen, save what git sees, in the other terminal. Then save the files the plan says it will change: write each path the way `git status` shows it, relative to the repository root, with forward slashes, one per line. For a plan that changed `src/links.js` and `test/links.test.js`, it would be:
 
    ```bash
    mkdir -p .practice

@@ -10,7 +10,7 @@ By the end of this lesson you can take a change from request to commit, and revi
 
 - Your copy of the practice template, and Node.js LTS (a Codespace on your copy has it).
 - No uncommitted changes: `git status` reads `nothing to commit, working tree clean`.
-- A second terminal open in the same folder, for git.
+- A second terminal open in your copy's `project/` folder, for git.
 - Usage: light.
 
 ## The idea
@@ -30,7 +30,7 @@ A precise request needs fewer corrections: it names the file, the case to handle
 
 The practice app checks Markdown links, but it skips any link with a title, such as `[setup](setup.md "Setup guide")`. You'll fix that.
 
-1. Start `claude` in your practice copy and enter plan mode, as in lesson 2: the status bar reads `⏸ plan mode on`. Explore:
+1. Start `claude` in your copy's `project/` folder and enter plan mode, as in lesson 2: the status bar reads `⏸ plan mode on`. Explore:
 
    ```text
    How does this app find links in a Markdown file? Which kinds of links would it miss?
