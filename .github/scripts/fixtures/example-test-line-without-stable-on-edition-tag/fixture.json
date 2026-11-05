@@ -1,0 +1,14 @@
+{
+  "rule": "edition-gate",
+  "mode": "release",
+  "tag": "v2026.11",
+  "tags": {
+    "v2026.11": "head"
+  },
+  "today": "2026-11-05",
+  "expect": "fail",
+  "about": "On an edition tag an example's test line names the edition's version but leaves out \" (stable)\", so it is reported as malformed rather than passed over.",
+  "output": [
+    "examples/intermediate/05-hooks/README\\.md:5: test line names v2\\.1\\.309 without \" \\(stable\\)\""
+  ]
+}

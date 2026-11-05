@@ -1,13 +1,14 @@
 // On a release tag, the stamped pages match the release.
 // - Edition tag vYYYY.MM: every stamped page's Stamp names the version that
-//   the tag's CHANGELOG entry was verified against.
+//   the tag's CHANGELOG entry was verified against, and every example test
+//   line names it too.
 // - Correction tag vYYYY.MM.N: every stamped page changed since the previous
 //   tag carries a Stamp dated after that tag's CHANGELOG entry.
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { readText } from '../lib/tree.mjs';
 import { changedBetween, previousTag } from '../lib/git.mjs';
-import { editions, isStamped, readStamp } from '../lib/stamps.mjs';
+import { TEST_LINE, editions, isStamped, readStamp } from '../lib/stamps.mjs';
 
 export const id = 'edition-gate';
 export const modes = ['release'];
@@ -30,7 +31,18 @@ export function run(ctx) {
       if (stamp.error) problems.push(`${page}: ${stamp.error}`);
       else if (stamp.version !== entry.version) problems.push(`${page}: stamped v${stamp.version}, but edition ${ctx.tag} is verified against v${entry.version}; re-verify and re-stamp it`);
     }
-    return problems.length ? fail(...problems) : { status: 'pass', summary: `${pages.length} stamped pages carry v${entry.version}` };
+    const testLine = new RegExp(TEST_LINE.source, 'g');
+    let testLines = 0;
+    for (const file of ctx.files.filter((f) => f.startsWith('examples/'))) {
+      readText(ctx.root, file).split(/\r?\n/).forEach((line, i) => {
+        for (const [, version, stable] of line.matchAll(testLine)) {
+          testLines++;
+          if (!stable) problems.push(`${file}:${i + 1}: test line names v${version} without " (stable)"; write it as "Tested in Claude Code vX.Y.Z (stable) on <OS>, YYYY-MM-DD" (CONTRIBUTING.md#adding-a-skill)`);
+          else if (version !== entry.version) problems.push(`${file}:${i + 1}: tested in v${version}, but edition ${ctx.tag} is verified against v${entry.version}; re-test it, or write "Not yet tested in a session at this edition's version"`);
+        }
+      });
+    }
+    return problems.length ? fail(...problems) : { status: 'pass', summary: `${pages.length} stamped pages and ${testLines} example test lines carry v${entry.version}` };
   }
 
   const prev = previousTag(ctx.root, ctx.tag);

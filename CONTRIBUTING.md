@@ -114,7 +114,7 @@ Each release has an entry in [CHANGELOG.md](CHANGELOG.md), newest first:
 - an edition: `## vYYYY.MM - YYYY-MM-DD`, with the line `Verified against Claude Code vX.Y.Z (stable).` under it;
 - a correction: `## vYYYY.MM.N - YYYY-MM-DD`.
 
-Pushing a `v*` tag runs the edition gate. On an edition tag, every stamped page's Stamp must name the edition's version. On a correction tag, every stamped page changed since the previous tag must carry a Stamp dated after that tag's entry.
+Pushing a `v*` tag runs the edition gate. On an edition tag, every stamped page's Stamp must name the edition's version, and so must every example test line of the form `Tested in Claude Code vX.Y.Z (stable)` (the other form, `Not yet tested in a session at this edition's version`, names none; both are under [Adding a skill](#adding-a-skill)). On a correction tag, every stamped page changed since the previous tag must carry a Stamp dated after that tag's entry.
 
 Not every merge is a release. After a pull request merges, decide which of these it is:
 
@@ -225,7 +225,7 @@ It needs Node.js LTS, git, Ruby (for YAML), jq (for the examples' smoke tests), 
 | `anchor-diff` | An anchor in `anchors.txt`, or on the base branch, is gone |
 | `stub-paths` | A page path in `paths.txt` is gone |
 | `stamps` | A stamped page's Stamp is missing or malformed, or the trust strip disagrees with the CHANGELOG |
-| `edition-gate` | On a release tag only: a stamped page does not match the release |
+| `edition-gate` | On a release tag only: a stamped page does not match the release, or, on an edition tag, an example's test line names another version or leaves out `(stable)` |
 | `expiry` | Never on a pull request, where it warns about markers due within 30 days |
 | `em-dash` | An added line in a Markdown, YAML or text file has an em dash outside code and double quotes, or an added line in the `quest/` source (TypeScript, TSX, CSS, JSON or HTML) has one anywhere, strings included |
 | `images` | An image lacks alt text, a Mermaid block lacks its accessibility lines, or a file under `assets/` breaks the naming, reference or size rules |
