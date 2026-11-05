@@ -212,7 +212,7 @@ function Play({
 
   const runKey = useRunKey(beat.status);
   const seconds = useCheckClock(beat.status);
-  const status = statusOf(beat);
+  const status = statusOf(beat, step.part === "Check");
   const at = lesson.steps.findIndex((s) => s.id === step.id);
   const hints = lesson.hints.shown.map((hint) =>
     hintRung(hint, step.where?.kind ?? null),

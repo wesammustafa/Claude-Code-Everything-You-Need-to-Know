@@ -1711,6 +1711,17 @@ function onCheck(
   if (beat.verify.kind !== "check") return;
   const st = s.beat;
   if (["done", "already"].includes(st.status)) return;
+  // A run that ran slow items: the card shows their results until another
+  // such run, where a later poll would put "Runs on Check again" back.
+  const slow = lessonIn(s).slow ?? [];
+  const ran = ev.items.filter((it) => !it.slow && slow.includes(it.index));
+  if (ran.length)
+    st.slowRan = [
+      ...(st.slowRan ?? []).filter(
+        (it) => !ran.some((r) => r.index === it.index),
+      ),
+      ...ran,
+    ];
   const indexes = beat.verify.all
     ? lessonIn(s).items.map((_, i) => i)
     : beat.verify.items;
@@ -1724,9 +1735,16 @@ function onCheck(
   if (!failing && wanted.some((it) => it.slow)) {
     // A beat of only slow items ran them on arrival (openBeat): a later poll
     // without them can't add to that answer, so it and its rows stay.
+    // The same while the arrival run that runs them is still going: a poll
+    // that lands first is no first answer (ticket 344).
+    const arriving =
+      st.status === "opening" &&
+      !st.asked &&
+      !beat.verify.all &&
+      beat.verify.items.every((i) => slow.includes(i));
     if (
       wanted.every((it) => it.slow) &&
-      st.status === "waiting" &&
+      (st.status === "waiting" || arriving) &&
       !st.slowWait
     ) {
       if (before) s.checks[ev.lesson] = before;
@@ -1947,6 +1965,16 @@ function onGit(
     st.rung = -1;
     st.confirm = false;
     effects.push({ type: "save" });
+    return;
+  }
+  // A tree not clean yet, before the learner acts, is where the beat
+  // starts (ticket 344). Another list than the first look's is a change,
+  // as a Check's other FAIL is, should the watcher miss it.
+  const seen = listed.join("\n");
+  if (st.baseline === undefined) st.baseline = seen;
+  else if (st.baseline !== seen) st.acted = true;
+  if (!st.explicit && !st.acted) {
+    st.status = "waiting";
     return;
   }
   st.status = "fail";
@@ -2233,6 +2261,7 @@ const ACTIONS: ActionHandlers = {
     const st = beatState(s);
     st.ended = true;
     st.explicit = true;
+    st.acted = true;
     effects.push(gitAsk(must(watching(s), "a git-clean beat watches git")));
     return true;
   },
@@ -2244,6 +2273,7 @@ const ACTIONS: ActionHandlers = {
     const beat = currentBeat(s);
     const st = beatState(s);
     st.explicit = true;
+    st.acted = true;
     // Asking for a check is a try, whatever the check says.
     st.unlocked = true;
     if (w.git && beat.doneLabel) st.ended = st.ended || st.status === "fail";
@@ -2483,6 +2513,8 @@ function apply(
         if (!s.beat.run) s.beat.quiet = asked;
         break;
       }
+      // A run for a change the watcher saw: the learner is acting.
+      if (ev.changed) s.beat.acted = true;
       if (s.beat.run) s.beat.run.asked = asked;
       else
         s.beat.run =
@@ -2600,6 +2632,8 @@ function apply(
       // A file changed or git moved: the learner is working, so no "stuck?" offer.
       s.lastActivity = s.now;
       if (s.beat) s.beat.idle = false;
+      // A change in what the beat watches is the learner acting on it.
+      if (watching(s) && s.beat) s.beat.acted = true;
       if (s.beat?.quiet !== undefined && !s.beat.run)
         s.beat.run = { asked: s.beat.quiet, changed: true };
       // A change moments.ts says (work.changed): the look it brings says

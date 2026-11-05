@@ -77,6 +77,8 @@ const APP_WORDS: readonly RegExp[] = [
   /^(Guided|Hinted|Challenge|Every command shown|With hints|On your own)$/,
   /^(Start|Resume|Start with less help|Read the full lesson)$/,
   /^(Watching your Practice copy\.|Checking your work\.|That step is done\.)$/,
+  /^(Watching your Practice copy\.|Watching your work folder: .+\.) After the check runs in your terminal, choose Check again\.$/,
+  /^(Check again runs these lines\.|Not yet\.)$/,
   /^Not yet\. The lines below say what the check saw\.$/,
   /^(Passes|Not yet|Checking): $/,
   /^(Check again|I've done it|Next step|Back|Skip|Show a hint|Another hint|Copy|Copied)$/,
@@ -131,7 +133,7 @@ const APP_WORDS: readonly RegExp[] = [
   /^Nothing has changed there since this step opened\.$/,
   /^Everything else passes\. Check again runs the slow part\.$/,
   /^Checking( item \d+ of \d+| .+)?…$/,
-  /^(Waiting for the session to end\.|Already done, so this step counts\.)$/,
+  /^Already done, so this step counts\.$/,
   /^What the step asks for$/,
   /^(Back to |: |Why: |You should see |Found |\.)$/,
   /^(The commands are in the hints\.|More help on this step\.|You ran this|Copy the code|explained line: )$/,
@@ -1132,7 +1134,7 @@ describe("Lesson workspace, every step (246)", () => {
     ["items running", checkRunning, "Checking item 2 of 5…"],
     ["a watched path", watchChecking, "Checking notes.md…"],
     ["watching", watchWaiting, "Watching your Practice copy."],
-    ["a session", sessionBeat, "Waiting for the session to end."],
+    ["a beat its button decides", sessionBeat, "Watching your Practice copy."],
     ["already done", alreadyCodespace, "Already done, so this step counts."],
   ] as const;
 
