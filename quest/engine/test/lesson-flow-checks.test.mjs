@@ -35,7 +35,7 @@ import {
   keyOf,
 } from "./drive.mjs";
 import { midway } from "./flow-places.mjs";
-import { project } from "../src/index.ts";
+import { introAsks, project } from "../src/index.ts";
 import { fingerprint } from "../src/content.ts";
 
 // A saved place in lesson 1, opened.
@@ -362,6 +362,31 @@ test("a Codespace is credited for the install steps", () => {
   assert.equal(d.state.beat.status, "already");
   d.cont();
   assert.equal(d.state.beat.status, "already");
+});
+
+// A step with `installed: <command>` opens already done when the host finds
+// the command on the PATH, whether the answer came at the intro or lands
+// while the step waits.
+test("a command on the PATH is credited for a step that names it with installed", () => {
+  const d = driver({ saved: save() });
+  assert.deepEqual(
+    introAsks(d.state).find((e) => e.type === "commands")?.names,
+    ["claude"],
+    "the intro looks the command up",
+  );
+  d.send({ type: "commands", found: { claude: true } });
+  d.start();
+  assert.equal(d.state.beat.status, "already");
+  assert.equal(d.state.beat.installed, true);
+  assert.equal(project(d.state).lesson.beat.installed, "claude");
+
+  const e = driver({ saved: save() });
+  e.send({ type: "commands", found: { claude: false } });
+  e.start();
+  assert.equal(e.state.beat.status, "waiting");
+  assert.equal(project(e.state).lesson.beat.installed, null);
+  e.send({ type: "commands", found: { claude: true } });
+  assert.equal(e.state.beat.status, "already");
 });
 
 // was learn-flow:237. Since ticket 213 a save started under other steps
