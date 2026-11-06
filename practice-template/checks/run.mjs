@@ -47,7 +47,10 @@ if (values.assert && !['pass', 'fail'].includes(values.assert)) usage('--assert 
 // folder it was typed in, which npm passes as INIT_CWD, so a relative path
 // typed at the copy's root means the same as anywhere else.
 const typedIn = process.env.npm_lifecycle_event === 'check' ? process.env.INIT_CWD : undefined;
-const dir = values.dir === undefined ? resolve('.') : resolve(typedIn ?? '.', values.dir);
+// Run by hand at the copy's root, as `node checks/run.mjs <id>`, the check
+// means project/ too: the root holds the course's folders, never the work.
+const atRoot = values.dir === undefined && existsSync(resolve('project')) && existsSync(resolve('checks/run.mjs'));
+const dir = values.dir === undefined ? resolve(atRoot ? 'project' : '.') : resolve(typedIn ?? '.', values.dir);
 if (!existsSync(dir)) usage(`no such folder: ${dir}`);
 
 const repo = openRepo(dir);
