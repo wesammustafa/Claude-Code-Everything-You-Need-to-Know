@@ -1,7 +1,7 @@
 // Shared by the checks' tests: a throwaway git repository to point a check at,
 // and the check command run the way a Learner runs it.
 import { execFileSync, spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, rmdirSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, rmdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -97,4 +97,42 @@ export function withRepo(make, fn) {
   } finally {
     rmSync(nested ? dirname(dir) : dir, { recursive: true, force: true });
   }
+}
+
+// What the lessons' scripts need from the machine, found once: bash and jq on
+// the PATH, and leave to make a symlink (on Windows a privilege). A test that
+// needs one skips itself where it is missing, with the reason, so a plain
+// Windows PC still runs the rest; in CI nothing skips, so a runner that lacks
+// a tool fails the test as before. Never by platform: the platform legs run
+// these tests on macOS and Windows.
+const found = new Map();
+function has(name) {
+  if (found.has(name)) return found.get(name);
+  let ok;
+  if (name === 'symlink') {
+    const dir = mkdtempSync(join(tmpdir(), 'checks-symlink-'));
+    try {
+      writeFileSync(join(dir, 'a'), '');
+      symlinkSync('a', join(dir, 'b'));
+      ok = true;
+    } catch {
+      ok = false;
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  } else {
+    ok = spawnSync(name, ['--version'], { stdio: 'ignore', shell: process.platform === 'win32' }).status === 0;
+  }
+  found.set(name, ok);
+  return ok;
+}
+/**
+ * node:test options for a test that needs `names` (bash, jq, symlink): skipped
+ * with the reason where one is missing, unless CI is set.
+ * @param {...string} names
+ */
+export function needs(...names) {
+  if (process.env.CI) return {};
+  const missing = names.filter((name) => !has(name));
+  return missing.length ? { skip: `needs ${missing.join(', ')}` } : {};
 }

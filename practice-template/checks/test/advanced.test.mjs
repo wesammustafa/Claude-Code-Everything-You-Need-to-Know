@@ -20,7 +20,7 @@ import { openRepo } from '../repo.mjs';
 import { findBash, notRun, runStubbed, scratchPath, scrubbed, STUB_SESSION, stubText, within } from '../stub-claude.mjs';
 import { findWorkflows, readWorkflow } from '../workflow-script.mjs';
 import { parseWorktrees } from '../worktrees.mjs';
-import { check, commit, repo, rootWrite, setMode, withRepo, write } from './helpers.mjs';
+import { check, commit, needs, repo, rootWrite, setMode, withRepo, write } from './helpers.mjs';
 
 const git = (dir, ...args) => execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', ...args], { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 
@@ -468,7 +468,7 @@ test('a-2 passes for the five patterns that fit and a log with three subagents a
   });
 });
 
-test('a-2 reads the log lesson 6\'s hook writes, leaving out lesson 6\'s test-gaps', () => {
+test('a-2 reads the log lesson 6\'s hook writes, leaving out lesson 6\'s test-gaps', needs('bash', 'jq', 'symlink'), () => {
   withRepo(patternRepo({ log: null }), (dir) => {
     const hook = (type) => execFileSync('sh', ['-c', LOG_HOOK], {
       cwd: dir,
@@ -1135,7 +1135,7 @@ const callHint = (dir) => scriptCall(SCRIPT).check(openRepo(dir));
 const behaviorHint = (dir) => scriptBehavior(SCRIPT).check(openRepo(dir));
 const runHint = (dir) => savedRun(RESULT, SCRIPT).check(openRepo(dir));
 
-test('a-4 passes for the lesson\'s script, committed and executable, and a real run saved', () => {
+test('a-4 passes for the lesson\'s script, committed and executable, and a real run saved', needs('bash', 'jq', 'symlink'), () => {
   withRepo(reviewRepo(), (dir) => {
     const { code, out } = a4(dir);
     assert.equal(code, 0, out);
@@ -1143,7 +1143,7 @@ test('a-4 passes for the lesson\'s script, committed and executable, and a real 
   });
 });
 
-test('a-4 says to write the script, commit it or make it executable', () => {
+test('a-4 says to write the script, commit it or make it executable', needs('bash', 'jq', 'symlink'), () => {
   withRepo(reviewRepo({ script: null }), (dir) => {
     const { code, out } = a4(dir);
     assert.equal(code, 1, out);
@@ -1297,7 +1297,7 @@ test('a-4 fails a script that runs claude without -p, or never runs it, and says
   });
 });
 
-test('a-4 checks that the script pipes in the staged diff and nothing else', () => {
+test('a-4 checks that the script pipes in the staged diff and nothing else', needs('bash', 'jq', 'symlink'), () => {
   for (const [script, hint] of [
     [edited([`git diff --cached | ${CALL}`, `git diff | ${CALL}`]), /What it piped into `claude -p` doesn't hold the staged change\. Pipe the staged diff in: `git diff --cached \| claude -p "<prompt>" \.\.\.`\./],
     [edited([`git diff --cached | ${CALL}`, `git diff HEAD | ${CALL}`]), /The diff it piped into `claude -p` also holds a change that isn't staged\. Pipe `git diff --cached`/],
@@ -1309,7 +1309,7 @@ test('a-4 checks that the script pipes in the staged diff and nothing else', () 
   }
 });
 
-test('a-4 checks where the script saves the JSON, and that it prints the review', () => {
+test('a-4 checks where the script saves the JSON, and that it prints the review', needs('bash', 'jq', 'symlink'), () => {
   withRepo(reviewRepo({ script: edited(['out="${1:-.practice/a-4-result.json}"', 'out=".practice/a-4-result.json"']) }), (dir) => {
     assert.match(String(behaviorHint(dir)), /It saved the JSON to `\.practice\/a-4-result\.json`, though its first argument named another path\. Use the argument when there is one: `out="\$\{1:-\.practice\/a-4-result\.json\}"`\./);
   });
@@ -1324,7 +1324,7 @@ test('a-4 checks where the script saves the JSON, and that it prints the review'
   });
 });
 
-test('a-4 checks both exit rules apart: claude exiting non-zero, and is_error', () => {
+test('a-4 checks both exit rules apart: claude exiting non-zero, and is_error', needs('bash', 'jq', 'symlink'), () => {
   withRepo(reviewRepo({ script: edited(['> "$out"\nstatus=$?', '> "$out" || true\nstatus=$?'], ['if [ "$status" -ne 0 ] || [ "$(jq -r \'.is_error\' "$out")" != "false" ]; then', 'if [ "$(jq -r \'.is_error\' "$out")" = "true" ]; then']) }), (dir) => {
     const hint = String(behaviorHint(dir));
     assert.match(hint, /When `claude -p` exits non-zero and prints no JSON, as it does for a flag it can't read, it exited 0\. Exit non-zero whenever `claude -p` does\./);
@@ -1337,7 +1337,7 @@ test('a-4 checks both exit rules apart: claude exiting non-zero, and is_error', 
   });
 });
 
-test('a-4 fails a script that calls Claude, exits 0 or says nothing when nothing is staged', () => {
+test('a-4 fails a script that calls Claude, exits 0 or says nothing when nothing is staged', needs('bash', 'jq', 'symlink'), () => {
   withRepo(reviewRepo({ script: edited(['if git diff --cached --quiet; then echo "Nothing is staged." >&2; exit 2; fi\n', '']) }), (dir) => {
     const hint = String(behaviorHint(dir));
     assert.match(hint, /With nothing staged, it still ran `claude -p`\. Test for a staged change first, as `git diff --cached --quiet` does/);
@@ -1354,7 +1354,7 @@ test('a-4 fails a script that calls Claude, exits 0 or says nothing when nothing
   });
 });
 
-test('a-4 wants one claude -p call, and lets the script ask for the version first', () => {
+test('a-4 wants one claude -p call, and lets the script ask for the version first', needs('bash', 'jq', 'symlink'), () => {
   withRepo(reviewRepo({ script: edited(['status=$?\n', `status=$?\ngit diff --cached | ${CALL} > /dev/null\n`]) }), (dir) => {
     assert.match(String(behaviorHint(dir)), /With one staged change, it ran `claude -p` 2 times\. Run it once/);
   });
@@ -1408,7 +1408,7 @@ test('a-4 refuses to run a script that could reach the real Claude Code, and run
   });
 });
 
-test('a-4 runs the script without an argument in a copy that has no .practice/ yet, and wants it to create the folder', () => {
+test('a-4 runs the script without an argument in a copy that has no .practice/ yet, and wants it to create the folder', needs('bash', 'jq', 'symlink'), () => {
   withRepo(reviewRepo({ script: edited(['mkdir -p "$(dirname "$out")"\n', '']) }), (dir) => {
     assert.equal(behaviorHint(dir), 'Run without an argument in a fresh copy, where `.practice/` doesn\'t exist yet, it couldn\'t write `.practice/a-4-result.json`. Create the folder first, as `mkdir -p "$(dirname "$out")"` does.');
   });
@@ -1612,7 +1612,7 @@ test('the argv reader takes values and lists as Claude Code does', () => {
   assert.deepEqual(ruleList(['Read, Grep', 'Bash(git diff *) Glob', ' ']), ['Read', 'Grep', 'Bash(git diff *)', 'Glob']);
 });
 
-test('a-4 fails on an unsolved repository and passes on a solved one, as the template\'s assertions expect', () => {
+test('a-4 fails on an unsolved repository and passes on a solved one, as the template\'s assertions expect', needs('bash', 'jq', 'symlink'), () => {
   withRepo(reviewRepo({ script: null, result: null }), (dir) => {
     const { code, out } = check(['a-4', '--assert', 'fail', '--dir', dir]);
     assert.equal(code, 0, out);
@@ -2775,7 +2775,7 @@ test('a-7 runs the committed runner, not the working copy, and points out uncomm
   });
 });
 
-test('a-7 accepts the call written in other ways', () => {
+test('a-7 accepts the call written in other ways', needs('bash', 'jq', 'symlink'), () => {
   const inline = `'${JSON.stringify(BOUNDS)}'`;
   for (const script of [
     // --flag=value, and the flags in another order.
@@ -3312,7 +3312,7 @@ const capstoneHint = (dir, pattern) => {
 };
 const CI_ITEM = /^a committed workflow runs `anthropics\/claude-code-action` on `pull_request`/;
 
-test('the Advanced capstone passes for everything the brief asks for, committed, with the worktree listing and one run saved', () => {
+test('the Advanced capstone passes for everything the brief asks for, committed, with the worktree listing and one run saved', needs('bash', 'jq', 'symlink'), () => {
   withRepo(capstoneRepo(), (dir) => {
     const { code, out } = aCapstone(dir);
     assert.equal(code, 0, out);
@@ -3320,7 +3320,7 @@ test('the Advanced capstone passes for everything the brief asks for, committed,
   });
 });
 
-test('the Advanced capstone still passes after the teardown deletes the review workflow, since it reads the history', () => {
+test('the Advanced capstone still passes after the teardown deletes the review workflow, since it reads the history', needs('bash', 'jq', 'symlink'), () => {
   withRepo(capstoneRepo({ teardown: true }), (dir) => {
     assert.equal(existsSync(join(dir, REVIEW_WORKFLOW)), false);
     const { code, out } = aCapstone(dir);
@@ -3366,7 +3366,7 @@ test('the Advanced capstone wants the saved record of CI\'s review run: a comple
   assert.match(String(hint([CI_RUN], { ci: null })), /without a committed review workflow/);
 });
 
-test('the Advanced capstone reads its own saved files, not the ones the lessons save', () => {
+test('the Advanced capstone reads its own saved files, not the ones the lessons save', needs('bash', 'jq', 'symlink'), () => {
   const lessonPaths = (dir) => {
     renameSync(join(dir, CAPSTONE_LISTING), join(dir, LISTING));
     renameSync(join(dir, CAPSTONE_RUN), join(dir, RESULT));
@@ -3723,7 +3723,7 @@ test('the capstone brief names the files the Advanced capstone\'s check reads', 
   assert.doesNotMatch(brief, /\u2014/, 'the brief has an em dash');
 });
 
-test('the Advanced capstone fails on an unsolved repository and passes on a solved one, as the template\'s assertions expect', () => {
+test('the Advanced capstone fails on an unsolved repository and passes on a solved one, as the template\'s assertions expect', needs('bash', 'jq', 'symlink'), () => {
   withRepo(() => {
     const dir = repo({ '.gitignore': '.practice/\nnode_modules/\n', ...CAPSTONE_START });
     commit(dir, 'Start');

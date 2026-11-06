@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, realpathSync, utimesSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { check, commit, repo, rootWrite, setMode, withRepo, write } from './helpers.mjs';
+import { check, commit, needs, repo, rootWrite, setMode, withRepo, write } from './helpers.mjs';
 import { buggyApp, fixedApp } from './fixtures/intermediate-app.mjs';
 import { editWriteScripts, matchesEditWrite } from '../hooks.mjs';
 import { lessons } from '../lessons/index.mjs';
@@ -463,7 +463,7 @@ function hookRepo({ gate = GATE, mode = 0o755, settings = REGISTERED, protect = 
   };
 }
 
-test('i-5 passes for both hooks committed, executable and registered, with a gate that works', () => {
+test('i-5 passes for both hooks committed, executable and registered, with a gate that works', needs('bash', 'jq', 'symlink'), () => {
   withRepo(hookRepo(), (dir) => {
     const { code, out } = check(['i-5', '--dir', dir]);
     assert.equal(code, 0, out);
@@ -548,7 +548,7 @@ test('i-5 fails when the protection hook is not registered for Edit and Write be
   }
 });
 
-test('i-5 passes the protection hook for every matcher form that matches Edit and Write', () => {
+test('i-5 passes the protection hook for every matcher form that matches Edit and Write', needs('bash', 'jq', 'symlink'), () => {
   for (const matcher of ['Edit, Write', '^(Edit|Write)$', undefined]) {
     const group = { ...REGISTERED.hooks.PreToolUse[0], matcher };
     withRepo(hookRepo({ settings: { hooks: { ...REGISTERED.hooks, PreToolUse: [group] } } }), (dir) => {
@@ -603,7 +603,7 @@ test('i-5 fails for the skeleton, which runs no test command', () => {
   });
 });
 
-test('i-5 names the case a gate gets wrong: exit 1, no reason, blocking a passing run, no loop guard, or test output on stderr', () => {
+test('i-5 names the case a gate gets wrong: exit 1, no reason, blocking a passing run, no loop guard, or test output on stderr', needs('bash', 'jq', 'symlink'), () => {
   for (const [gate, hint] of [
     [GATE.replace('  exit 2', '  exit 1'), /While the tests fail, the gate exits 1/],
     [GATE.replace('npm test 2>&1', 'npm test').replace('  echo "Blocked: the tests fail. Fix them before you finish." >&2\n', ''), /without a reason on stderr/],
@@ -632,7 +632,7 @@ test('i-5 runs the committed gate, not an uncommitted fix', () => {
   });
 });
 
-test('i-5 runs a gate that uses another test command by name, such as pytest', () => {
+test('i-5 runs a gate that uses another test command by name, such as pytest', needs('bash', 'jq', 'symlink'), () => {
   withRepo(hookRepo({ gate: GATE.replace('npm test', 'pytest') }), (dir) => {
     const { code, out } = check(['i-5', '--dir', dir]);
     assert.equal(code, 0, out);
@@ -986,7 +986,7 @@ test('the Intermediate capstone rejects skipping malformed targets or breaking e
   });
 });
 
-test('the Intermediate capstone passes when everything in the brief is committed', () => {
+test('the Intermediate capstone passes when everything in the brief is committed', needs('bash', 'jq', 'symlink'), () => {
   withRepo(capstoneRepo(), (dir) => {
     const { code, out } = check(['i-capstone', '--dir', dir]);
     assert.equal(code, 0, out);
@@ -1066,7 +1066,7 @@ test('the Intermediate capstone does not count lesson leftovers as the brief\'s 
   });
 });
 
-test('the Intermediate capstone finds the hook script in args or behind a quoted project path', () => {
+test('the Intermediate capstone finds the hook script in args or behind a quoted project path', needs('bash', 'jq', 'symlink'), () => {
   for (const entry of [
     { type: 'command', command: 'bash', args: ['.claude/hooks/protect-samples.sh'], onFailure: 'block' },
     { type: 'command', command: '"$CLAUDE_PROJECT_DIR"/.claude/hooks/protect-samples.sh', onFailure: 'block' },
@@ -1099,7 +1099,7 @@ test('the Intermediate capstone accepts a committed Edit deny rule for samples/ 
   }
 });
 
-test('the Intermediate capstone wants a samples/ hook to fail closed', () => {
+test('the Intermediate capstone wants a samples/ hook to fail closed', needs('bash', 'jq', 'symlink'), () => {
   const settings = { hooks: { PreToolUse: [{ matcher: 'Edit|Write', hooks: [{ type: 'command', command: '${CLAUDE_PROJECT_DIR}/.claude/hooks/protect-samples.sh', args: [] }] }] } };
   withRepo(capstoneRepo({ settings }), (dir) => {
     const { code, out } = check(['i-capstone', '--dir', dir]);

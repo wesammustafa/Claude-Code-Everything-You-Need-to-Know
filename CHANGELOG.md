@@ -14,7 +14,7 @@ Every change in the next edition is verified against this version, the `stable` 
 - On Windows, the course loader reads the compiled course in development too (it compared a file URL's pathname with a path), and the lesson overview's badge no longer sits inside a paragraph. Development mode serves the rendered Guide pages once they are built.
 - The b-1 note check states the rule it applies in its FAIL messages; `node checks/run.mjs <id>` run by hand at the copy's root checks `project/`, as the root script does; Beginner lesson 1 names `Esc` where it said "Press it".
 - [examples/beginner/quest-companion](examples/beginner/quest-companion/README.md): the `quest` skill, which reads the app's saved progress and course and says where you are.
-- A `windows-latest` job runs the engine, client, host and server suites and the bundle's smoke test; a test in those packages that needs a symlink, a file mode, a POSIX path or a signal skips itself on native Windows.
+- A `windows-latest` job runs the engine, client, host and server suites and the bundle's smoke test; a test in those packages that needs a symlink, a file mode, a POSIX path or a signal skips itself on native Windows. A Checks' test that needs `bash`, `jq` or a symlink skips itself with the reason where the machine lacks one, except in CI.
 
 ## v2026.12 - 2026-11-01
 
