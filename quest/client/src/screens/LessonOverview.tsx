@@ -137,11 +137,12 @@ export function LessonOverview() {
       {/* Pip's one line: the `can` line the Lesson builds to, quoted. */}
       <Says>
         {intro?.payoff ? (
-          <>
+          // One span: the bubble lays its children out as rows.
+          <span>
             {"By the end, you can "}
             <InlineText text={intro.payoff} />
             {"."}
-          </>
+          </span>
         ) : (
           "Ready when you are."
         )}
