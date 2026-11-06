@@ -703,6 +703,46 @@ describe("Lesson workspace", () => {
     ).not.toBeInTheDocument();
   });
 
+  test("the keys: Enter goes on from a done beat, a digit picks an answer and Enter sends it, ? opens a hint", async () => {
+    const user = userEvent.setup();
+    const beat = playing.beat;
+    if (beat === null) throw new Error("the fixture has a beat");
+    const done = {
+      ...playing,
+      beat: { ...beat, status: "done" as const, fail: null },
+    };
+    const page = renderConnected("/lesson/b-1/step", snapshotOf(done));
+    await user.keyboard("{Enter}");
+    expect(page.posts).toEqual([{ type: "step.continue" }]);
+    const asking = {
+      ...playing,
+      beat: {
+        ...beat,
+        kind: "ask" as const,
+        decidedBy: "answer" as const,
+        status: "waiting" as const,
+        verification: [],
+        fail: null,
+        ask: "Which one?",
+        options: [{ text: "This" }, { text: "That" }],
+        answer: { ...beat.answer, picked: null, feedback: null },
+      },
+    };
+    page.send(snapshotOf(asking, { revision: 2 }));
+    await user.keyboard("2");
+    expect(screen.getByRole("radio", { name: /That/ })).toBeChecked();
+    await user.keyboard("{Enter}");
+    expect(page.posts.at(-1)).toEqual({ type: "answer.pick", option: 1 });
+    const hinted = {
+      ...playing,
+      beat: { ...beat, status: "waiting" as const, fail: null },
+      hints: { ...playing.hints, available: true },
+    };
+    page.send(snapshotOf(hinted, { revision: 3 }));
+    await user.keyboard("?");
+    expect(page.posts.at(-1)).toEqual({ type: "hint.next" });
+  });
+
   test("a hint opens through hint.next and shows the engine's words", async () => {
     const user = userEvent.setup();
     const page = renderConnected("/lesson/b-1/step", snapshotOf(playing));

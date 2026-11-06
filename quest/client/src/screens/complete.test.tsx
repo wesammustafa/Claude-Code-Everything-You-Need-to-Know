@@ -7,6 +7,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { Milestone } from "@quest/contract";
 import {
+  cardEntries,
   beginnerDone,
   complete,
   completeCapstone,
@@ -284,6 +285,26 @@ describe("Level complete", () => {
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(celebrated()).toEqual([]);
     expect(page.posts).toEqual([]);
+  });
+
+  test("the recap lists the level's card entries with a Print button, and nothing without them", () => {
+    const snapshot = capstoneAt();
+    renderConnected("/level/b/complete", {
+      ...snapshot,
+      learner: { ...snapshot.learner, card: cardEntries },
+    });
+    const recap = screen.getByRole("region", {
+      name: "Your card from this level",
+    });
+    expect(recap.textContent).toContain("claude --version");
+    expect(
+      within(recap).getByRole("button", { name: "Print this page" }),
+    ).toBeInTheDocument();
+    cleanup();
+    renderConnected("/level/b/complete", capstoneAt());
+    expect(
+      screen.queryByRole("region", { name: "Your card from this level" }),
+    ).toBeNull();
   });
 
   test("a Level not complete says so", () => {
