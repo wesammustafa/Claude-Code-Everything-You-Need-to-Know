@@ -23,6 +23,7 @@ test("each ladder test file runs its own lesson", () => {
       new URL(`${id}.test.mjs`, import.meta.url),
       "utf8",
     );
-    assert.match(text, new RegExp(`ladderTest\\("${id}"\\)`));
+    // With or without its options, such as { posix: true }.
+    assert.match(text, new RegExp(`ladderTest\\("${id}"(, \\{[^}]*\\})?\\)`));
   }
 });
