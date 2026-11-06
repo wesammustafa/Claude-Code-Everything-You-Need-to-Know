@@ -8,6 +8,14 @@ Baseline: Claude Code v2.1.309 (stable), frozen on 2026-11-02.
 
 Every change in the next edition is verified against this version, the `stable` dist-tag of [`@anthropic-ai/claude-code`](https://www.npmjs.com/package/@anthropic-ai/claude-code?activeTab=versions) on 2026-11-02. It stays frozen until the edition ships, unless a later `stable` release removes, renames or changes the default of something a lesson teaches. It moved earlier from v2.1.292 because v2.1.302 changed the permission mode a `claude -p` run starts in when nothing sets one ([CHANGELOG](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md#21302)). It moved from v2.1.308 to the then-current `stable` for the cutover edition, which re-verifies every stamped page.
 
+### Changed
+
+- Claude Code Quest, the app: a step may carry `installed: <command>` and opens already done when the command is on the PATH (Beginner lesson 1's installer step does); the Steps panel offers Read it again on a finished step; Enter, a digit and `?` drive a step from the keyboard; Level complete lists the level's card with a Print button; reasons quoted from a page open with a capital and close with a full stop on screen, and a reveal that repeats a shown reason is left out; the Progress page names skills in words; a self-check's button says "Yes, I can"; Pip's overview line reads "By the end, you can ...".
+- On Windows, the course loader reads the compiled course in development too (it compared a file URL's pathname with a path), and the lesson overview's badge no longer sits inside a paragraph. Development mode serves the rendered Guide pages once they are built.
+- The b-1 note check states the rule it applies in its FAIL messages, and Beginner lesson 1 names `Esc` where it said "Press it".
+- [examples/beginner/quest-companion](examples/beginner/quest-companion/README.md): the `quest` skill, which reads the app's saved progress and course and says where you are.
+- Tests that need symlinks, file modes, POSIX paths, signals or bash skip themselves on native Windows, and a `windows-latest` job runs the suites there.
+
 ## v2026.12 - 2026-11-01
 
 Verified against Claude Code v2.1.308 (stable).

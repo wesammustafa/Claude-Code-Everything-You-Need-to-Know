@@ -25,6 +25,8 @@ You need Node.js 22 or later and git. There is nothing to install with npm.
 
    The lessons happen in `project/`, and the course's own folders stay outside it.
 
+On a step, Enter goes on, a digit picks an answer, and `?` opens a hint, so your hands can stay on the keyboard between the two windows. The Steps panel in the top bar lists the lesson's steps, and a finished one offers to read its part of the lesson page again.
+
 Claude Code Quest runs each check with the PATH of the terminal that started it. If you install Claude Code or another tool, or change your PATH, while it runs, close that terminal and run `npm run learn` again from a new terminal window at the root of your copy. Your progress is saved in `.practice/`.
 
 In a Codespace, `npm run learn` prints the forwarded address to open instead. Keep that port private: the app is for you alone.
