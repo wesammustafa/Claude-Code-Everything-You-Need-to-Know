@@ -18,6 +18,9 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { checkFolder, gitTop, homeOf, type GitTop } from "../src/folders.ts";
 import { actionKit, at } from "./action-kit.ts";
 
+// POSIX only: these read the symlinks above, which Windows does not make.
+const posix = test.skipIf(process.platform === "win32");
+
 let home: string;
 let outside: string;
 const ceiling = process.env.GIT_CEILING_DIRECTORIES;
@@ -38,8 +41,11 @@ beforeAll(() => {
   mkdirSync(join(home, "plain"));
   writeFileSync(join(home, "file.txt"), "a file");
   repo(join(outside, "elsewhere"));
-  symlinkSync(join(outside, "elsewhere"), join(home, "out"));
-  symlinkSync(join(home, "repo"), join(home, "link"));
+  // Symlinks need a privilege on Windows: the tests that read them skip.
+  if (process.platform !== "win32") {
+    symlinkSync(join(outside, "elsewhere"), join(home, "out"));
+    symlinkSync(join(home, "repo"), join(home, "link"));
+  }
 });
 afterAll(() => {
   if (ceiling === undefined) delete process.env.GIT_CEILING_DIRECTORIES;
@@ -69,13 +75,17 @@ const check = (path: string, root = join(home, "copy")) => {
 };
 
 describe("a refused path", () => {
-  test("traversal out of home is outside-home, and git never runs", async () => {
-    const { result, calls } = await check(
-      join(home, "repo/../../", outside.split("/").pop() ?? ""),
-    );
-    expect(result).toEqual({ refused: "outside-home" });
-    expect(calls).toEqual([]);
-  });
+  // POSIX only: it splits the folder on "/".
+  posix(
+    "traversal out of home is outside-home, and git never runs",
+    async () => {
+      const { result, calls } = await check(
+        join(home, "repo/../../", outside.split("/").pop() ?? ""),
+      );
+      expect(result).toEqual({ refused: "outside-home" });
+      expect(calls).toEqual([]);
+    },
+  );
 
   test("traversal to the root is outside-home", async () => {
     const { result, calls } = await check(`${home}/../../../../../../..`);
@@ -83,11 +93,14 @@ describe("a refused path", () => {
     expect(calls).toEqual([]);
   });
 
-  test("a symlink out of home is outside-home, and git never runs", async () => {
-    const { result, calls } = await check(join(home, "out"));
-    expect(result).toEqual({ refused: "outside-home" });
-    expect(calls).toEqual([]);
-  });
+  posix(
+    "a symlink out of home is outside-home, and git never runs",
+    async () => {
+      const { result, calls } = await check(join(home, "out"));
+      expect(result).toEqual({ refused: "outside-home" });
+      expect(calls).toEqual([]);
+    },
+  );
 
   test("a folder that is not a repository is not-repo-root", async () => {
     expect((await check(join(home, "plain"))).result).toEqual({
@@ -153,7 +166,7 @@ describe("an accepted path", () => {
     expect(calls).toEqual([join(home, "repo")]);
   });
 
-  test("a repository reached through a symlink is its real path", async () => {
+  posix("a repository reached through a symlink is its real path", async () => {
     expect((await check(join(home, "link"))).result).toEqual({
       path: join(home, "repo"),
     });
@@ -172,24 +185,27 @@ describe("through the app", () => {
     to: { path },
   });
 
-  test("a refused folder is a 400 with its reason, never dispatched", async () => {
-    const kit = await actionKit({
-      checkFolder: (path) =>
-        checkFolder(path, { home, root: join(home, "copy") }),
-    });
-    for (const [path, reason] of [
-      [join(home, "out"), "outside-home"],
-      [join(home, "plain"), "not-repo-root"],
-      [join(home, "copy"), "is-copy"],
-    ] as const) {
-      const response = await kit.post(at(kit.host, choose(path)));
-      expect(response.status).toBe(400);
-      expect(await response.json()).toEqual({ error: "folder", reason });
-    }
-    expect(kit.dispatched).toEqual([]);
-  });
+  posix(
+    "a refused folder is a 400 with its reason, never dispatched",
+    async () => {
+      const kit = await actionKit({
+        checkFolder: (path) =>
+          checkFolder(path, { home, root: join(home, "copy") }),
+      });
+      for (const [path, reason] of [
+        [join(home, "out"), "outside-home"],
+        [join(home, "plain"), "not-repo-root"],
+        [join(home, "copy"), "is-copy"],
+      ] as const) {
+        const response = await kit.post(at(kit.host, choose(path)));
+        expect(response.status).toBe(400);
+        expect(await response.json()).toEqual({ error: "folder", reason });
+      }
+      expect(kit.dispatched).toEqual([]);
+    },
+  );
 
-  test("an accepted folder is dispatched as its real path", async () => {
+  posix("an accepted folder is dispatched as its real path", async () => {
     const kit = await actionKit({
       checkFolder: (path) =>
         checkFolder(path, { home, root: join(home, "copy") }),

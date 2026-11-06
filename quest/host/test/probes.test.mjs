@@ -18,10 +18,6 @@ import {
 } from "../../../practice-template/checks/test/helpers.mjs";
 import { realAdapters } from "../src/real.ts";
 
-// POSIX only: these need symlinks, file modes, POSIX paths, signals or a bash
-// script that native Windows lacks, so they are skipped there.
-const posix = test.skipIf(process.platform === "win32");
-
 vitest(
   "the host runs every probe in the engine's table, and its registry is that table",
   () => {
@@ -32,6 +28,10 @@ vitest(
 
 // Each makes git repositories: more time than Vitest's default.
 const test = (name, fn) => vitest(name, fn, 60_000);
+// POSIX only: it needs symlinks, file modes, POSIX paths, signals or a bash
+// script that native Windows lacks, so it is skipped there.
+const posix = (name, fn) =>
+  vitest.skipIf(process.platform === "win32")(name, fn, 60_000);
 const { probes } = realAdapters({ root: "/nowhere" });
 
 const git = (dir, ...args) =>
