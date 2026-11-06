@@ -3,6 +3,7 @@ import type { Snapshot } from "@quest/contract";
 import { ButtonLink } from "../components/Button";
 import { InlineText } from "../components/InlineText";
 import { Tier } from "../components/Tier";
+import { skillLabel } from "../lib/words";
 import { LessonBadge } from "../components/badges";
 import { LEVEL_NAMES, lessonLabel } from "../course/labels";
 import { Pip } from "../pip/Pip";
@@ -83,7 +84,9 @@ function ProgressBody({ snapshot }: { snapshot: Snapshot }) {
                   key={skill}
                   className="flex min-w-0 flex-wrap items-center justify-between gap-2"
                 >
-                  <span className="min-w-0 font-semibold">{skill}</span>
+                  <span className="min-w-0 font-semibold">
+                    {skillLabel(skill)}
+                  </span>
                   <Tier mastery={mastery.used} />
                 </li>
               ))}

@@ -5,6 +5,7 @@ import type {
   StepView,
 } from "@quest/contract";
 import type { SaysTone } from "../components/Says";
+import { sentence } from "../lib/words";
 
 export type { DecidedBy };
 
@@ -54,13 +55,17 @@ export function primaryAction(beat: BeatView): PrimaryAction | null {
     case "session":
       return {
         type: "session.ended",
-        label: beat.doneLabel ?? "The session has ended",
+        label: sentence(beat.doneLabel ?? "The session has ended"),
         variant: "primary",
       };
     case "learner":
       return {
         type: "step.markDone",
-        label: beat.doneLabel ?? "I've done it",
+        // A self-check asks whether the Learner can; a do beat whether they did.
+        label: sentence(
+          beat.doneLabel ??
+            (beat.kind === "self" ? "Yes, I can" : "I've done it"),
+        ),
         variant: "primary",
       };
     case "answer":

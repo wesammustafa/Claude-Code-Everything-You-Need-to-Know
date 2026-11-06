@@ -81,7 +81,7 @@ const APP_WORDS: readonly RegExp[] = [
   /^(Check again runs these lines\.|Not yet\.)$/,
   /^Not yet\. The lines below say what the check saw\.$/,
   /^(Passes|Not yet|Checking): $/,
-  /^(Check again|I've done it|Next step|Back|Skip|Show a hint|Another hint|Copy|Copied)$/,
+  /^(Check again|I've done it|Yes, I can|Next step|Back|Skip|Show a hint|Another hint|Copy|Copied)$/,
   /^Less help from here$/,
   /^(Go on with hints|Go on on your own|Keep every command shown)$/,
   /^to$/,
@@ -135,7 +135,7 @@ const APP_WORDS: readonly RegExp[] = [
   /^Checking( item \d+ of \d+| .+)?…$/,
   /^Already done, so this step counts\.$/,
   /^What the step asks for$/,
-  /^(Back to |: |Why: |You should see |Found |\.)$/,
+  /^(Back to |: |Why: |You should see: |Found |\.)$/,
   /^(The commands are in the hints\.|More help on this step\.|You ran this|Copy the code|explained line: )$/,
   /^The Check passed\. These steps put things back as they were\.$/,
   /^Run it in your practice copy too: you will see the same result\.$/,
@@ -689,7 +689,7 @@ describe("Lesson workspace", () => {
       },
     };
     page.send(snapshotOf(self, { revision: 2 }));
-    await user.click(screen.getByRole("button", { name: "I've done it" }));
+    await user.click(screen.getByRole("button", { name: "Yes, I can" }));
     expect(page.posts).toEqual([
       { type: "step.continue" },
       { type: "step.markDone" },
@@ -953,9 +953,9 @@ describe("Progress", () => {
     renderConnected("/progress", at(someMastery));
     const rows = within(skills()).getAllByRole("listitem");
     expect(rows.map((row) => row.textContent)).toEqual([
-      "installEvery command shown",
-      "askOn your own",
-      "exitWith hints",
+      "InstallEvery command shown",
+      "AskOn your own",
+      "ExitWith hints",
     ]);
     expect(skills().textContent).not.toMatch(/\d/);
     expect(screen.getByText("3 of 23")).toBeInTheDocument();

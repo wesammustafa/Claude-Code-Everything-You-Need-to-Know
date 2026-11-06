@@ -68,7 +68,7 @@ The header Claude Code shows when it starts gives the version and the model. The
    what does this project do?
    ```
 
-   While Claude is still answering, press `Esc`. Claude stops and waits for your next instruction, and keeps the work done so far ([How Claude Code works](https://code.claude.com/docs/en/how-claude-code-works#interrupt-and-steer), [Interactive mode](https://code.claude.com/docs/en/interactive-mode#general-controls)). Press it whenever Claude heads the wrong way, then say what you want instead. Send the question again and let it finish, then ask:
+   While Claude is still answering, press `Esc`. Claude stops and waits for your next instruction, and keeps the work done so far ([How Claude Code works](https://code.claude.com/docs/en/how-claude-code-works#interrupt-and-steer), [Interactive mode](https://code.claude.com/docs/en/interactive-mode#general-controls)). Press `Esc` whenever Claude heads the wrong way, then say what you want instead. Send the question again and let it finish, then ask:
 
    ```text
    which file parses linkcheck.json, and how do I run the tests?

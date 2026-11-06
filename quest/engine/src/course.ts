@@ -6,6 +6,7 @@
 // its first call.
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import manifestJson from "../../../course/manifest.json" with { type: "json" };
 import {
   coursePath,
@@ -153,9 +154,13 @@ export function loadCourse(
   compiledCourse ??= JSON.parse(
     readFileSync(new URL("../dist/course.json", import.meta.url), "utf8"),
   ) as CompiledCourse;
+  // fileURLToPath, not the URL's pathname: on Windows the pathname keeps a
+  // leading slash before the drive, which resolve() would never match.
   const useCompiled =
     resolve(root) ===
-    resolve(new URL("../../../practice-template", import.meta.url).pathname);
+    resolve(
+      fileURLToPath(new URL("../../../practice-template", import.meta.url)),
+    );
   if (useCompiled) return courseFrom(compiledCourse, path);
   const byId = new Map(
     compiledCourse.lessons.map((lesson) => [lesson.id, lesson]),

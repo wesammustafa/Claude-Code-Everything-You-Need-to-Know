@@ -154,10 +154,11 @@ export function LessonOverview() {
           <InlineText text={lesson.title} />
         </PageTitle>
         {summary && (
-          <p className="flex items-center gap-3 text-sm text-muted">
+          <div className="flex items-center gap-3 text-sm text-muted">
             {/* The time estimate and the page's Stamp, quoted word for word
                 and joined as the page's own line joins them; the pair wraps
-                beside the Badge on a narrow screen. */}
+                beside the Badge on a narrow screen. A div, not a p: the Badge
+                is a figure, which HTML does not allow inside a paragraph. */}
             <span className="min-w-0">
               <span>{summary.minutes}</span>
               {summary.stamp ? (
@@ -173,7 +174,7 @@ export function LessonOverview() {
               earned={summary.complete}
               size="xs"
             />
-          </p>
+          </div>
         )}
       </header>
 

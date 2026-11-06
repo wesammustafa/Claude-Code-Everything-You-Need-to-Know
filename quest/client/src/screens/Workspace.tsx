@@ -24,6 +24,7 @@ import { StepDots } from "../components/StepDots";
 import { Tier } from "../components/Tier";
 import { Where } from "../components/Where";
 import { LEVEL_NAMES, lessonEyebrow } from "../course/labels";
+import { sentence } from "../lib/words";
 import { useAct, useActionsEnabled } from "../live/LiveProvider";
 import { useActionProps, useSend } from "../live/useAction";
 import { ReadLesson } from "../pages/ReadLesson";
@@ -494,7 +495,7 @@ function Line({
   if (line.kind === "expect")
     return (
       <p>
-        <span className="font-semibold">You should see </span>
+        <span className="font-semibold">You should see: </span>
         <InlineText text={line.text} />
       </p>
     );
@@ -567,6 +568,17 @@ function BeatBody({ beat, where }: { beat: BeatView; where: string | null }) {
       const underAnswer = marked.some(
         (i) => beat.options[i]?.because !== undefined,
       );
+      // The reasons already on screen, under a marked answer or as the
+      // beat's own: a reveal that repeats one word for word is left out.
+      const reasons = new Set([
+        ...marked.flatMap((i) => {
+          const because = beat.options[i]?.because;
+          return because === undefined ? [] : [because];
+        }),
+        ...(answer.because && !underAnswer ? [answer.because] : []),
+      ]);
+      const reveal =
+        answer.reveal && !reasons.has(answer.reveal) ? answer.reveal : null;
       return (
         <div className="grid justify-items-start gap-3.5 [&>*]:max-w-full">
           {lines}
@@ -577,7 +589,7 @@ function BeatBody({ beat, where }: { beat: BeatView; where: string | null }) {
           )}
           {answer.because && !underAnswer && (
             <p data-answer-because="">
-              <InlineText text={answer.because} />
+              <InlineText text={sentence(answer.because)} />
             </p>
           )}
           {answer.point && (
@@ -590,9 +602,9 @@ function BeatBody({ beat, where }: { beat: BeatView; where: string | null }) {
               <InlineText text={answer.recall} />
             </p>
           )}
-          {answer.reveal && (
+          {reveal && (
             <p>
-              <InlineText text={answer.reveal} />
+              <InlineText text={sentence(reveal)} />
             </p>
           )}
           {why}
@@ -639,7 +651,7 @@ function Question({ beat }: { beat: BeatView }) {
             id: String(i),
             text: <InlineText text={option.text} />,
             ...(option.because
-              ? { because: <InlineText text={option.because} /> }
+              ? { because: <InlineText text={sentence(option.because)} /> }
               : {}),
           }))}
           value={done && picked !== null ? String(picked) : selected}
