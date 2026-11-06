@@ -48,7 +48,6 @@ const STEP_STATE: Record<StepSummary["state"], string> = {
   todo: "to do",
 };
 
-/** The active Lesson's steps in play order, each with its state in words. */
 // The lesson page's section a step's part is written up in, by its heading.
 const PART_SECTION: Record<string, string> = {
   "Worked example": "worked-example",
@@ -57,9 +56,9 @@ const PART_SECTION: Record<string, string> = {
 };
 
 /**
- * The steps in order. A done step offers to read its part of the lesson
- * page again: the app moves forward only, so the page is where a finished
- * step's words stay.
+ * The active Lesson's steps in play order, each with its state in words. A
+ * done step offers to read its part of the lesson page again: the app moves
+ * forward only, so the page is where a finished step's words stay.
  */
 function StepOutline({
   steps,

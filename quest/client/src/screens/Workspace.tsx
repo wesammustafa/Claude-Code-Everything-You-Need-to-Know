@@ -202,11 +202,11 @@ function Play({
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.ctrlKey || event.metaKey || event.altKey) return;
+      // An open panel owns the keys while it is up.
+      if (document.querySelector("[role=dialog]")) return;
       const target = event.target as HTMLElement | null;
       if (
-        target?.closest(
-          "input, textarea, select, [contenteditable], button, a, [role=dialog]",
-        )
+        target?.closest("input, textarea, select, [contenteditable], button, a")
       )
         return;
       const handlers = keys.current();
@@ -710,6 +710,7 @@ function Question({ beat }: { beat: BeatView }) {
     if (done || !enabled) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.ctrlKey || event.metaKey || event.altKey) return;
+      if (document.querySelector("[role=dialog]")) return;
       const target = event.target as HTMLElement | null;
       // A focused answer radio still takes Enter and the digits.
       if (
