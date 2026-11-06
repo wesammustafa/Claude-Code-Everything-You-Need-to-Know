@@ -13,7 +13,7 @@ By the end of this lesson you can write a short, true project CLAUDE.md, show th
 
 ## The idea
 
-Each session starts with a fresh context window. Your instruction files load at the start of each one, and where you write an instruction decides who gets it ([How Claude remembers your project](https://code.claude.com/docs/en/memory#choose-where-to-put-claude-md-files)):
+Each session starts with a fresh context window. Your instruction files load at the start of each session, and where you write an instruction decides who gets it ([How Claude remembers your project](https://code.claude.com/docs/en/memory#choose-where-to-put-claude-md-files)):
 
 | Where | What goes in it | Who gets it |
 |---|---|---|
@@ -37,15 +37,16 @@ Each session starts with a fresh context window. Your instruction files load at 
 
    Claude reads the code and writes a `CLAUDE.md` with the commands and conventions it found. In a second terminal, read the file with `cat CLAUDE.md`.
 2. Edit it as you would before your team sees it. Open `CLAUDE.md` in your editor, or type `/memory` and select the project's `./CLAUDE.md` ([View and edit with `/memory`](https://code.claude.com/docs/en/memory#view-and-edit-with-%2Fmemory)).
-   - Cut what Claude can learn by reading the code, such as a tour of each file, and what describes the course rather than linkcheck: every line only the course uses. Course lines include anything about `checks/`, `learn/`, `capstone/`, `.github/` or `.devcontainer/`, any `npm run check`, `npm run learn` or `npm run test:checks` line, and any rule to keep your work off `main` (that rule is for the template repository).
+   - Cut what Claude can learn by reading the code, such as a tour of each file, and what describes the course rather than linkcheck: every line only the course uses. Course lines include anything about `checks/`, `learn/`, `capstone/`, `.github/` or `.devcontainer/`, any `npm run check`, `npm run learn` or `npm run test:checks` line, and any rule to keep your work off `main` (that rule is for the template repository). A tour of what `src/links.js` and `src/cli.js` do goes: Claude can read those files. A line about `npm run learn` goes too: it runs the course, not linkcheck.
    - Compare each command that's left with the `scripts` in `package.json`. Keep `npm test`, which the [capstone](capstone.md) checks for.
-   - Add a convention that shows up in files. Put it under a `## Conventions` heading, and add that heading at the end of the file if `/init` didn't write one:
 
-     ```markdown
-     - Every new JavaScript file in `src/` starts with the line `// SPDX-License-Identifier: MIT`.
-     ```
+   Add a convention that shows up in files. Put it under a `## Conventions` heading, and add that heading at the end of the file if `/init` didn't write one:
 
-     A license header is a common project rule, and no linkcheck file has one yet, so you'll see whether a session follows it. The rule names the files it covers: a `//` line at the top of a shell script or a JSON file would break either one, and every session reads this file.
+   ```markdown
+   - Every new JavaScript file in `src/` starts with the line `// SPDX-License-Identifier: MIT`.
+   ```
+
+   A license header is a common project rule, and no linkcheck file has one yet, so you'll see whether a session follows it. The rule names the files it covers: a `//` line at the top of a shell script or a JSON file would break either one, and every session reads this file.
 3. Save `CLAUDE.md`, then commit it in the second terminal:
 
    ```bash
@@ -53,7 +54,7 @@ Each session starts with a fresh context window. Your instruction files load at 
    git commit -m "Add project instructions for Claude Code"
    ```
 
-4. Type `/exit`, then start a new session with `claude`, so it loads CLAUDE.md with your rule. Type `/context all` and find `CLAUDE.md` under **Memory files**: the session has loaded it. Plain `/context` can collapse that list, and `all` expands it ([Commands](https://code.claude.com/docs/en/commands)).
+4. Type `/exit`. Start a new session with `claude` in your copy's `project/` folder, so it loads CLAUDE.md with your rule. Type `/context all` and find `CLAUDE.md` under **Memory files**: the session has loaded it. Plain `/context` can collapse that list, and `all` expands it ([Commands](https://code.claude.com/docs/en/commands)).
 5. Ask for a change that creates a new file. The request doesn't mention the header:
 
    ```text
@@ -69,7 +70,7 @@ Each session starts with a fresh context window. Your instruction files load at 
 
    **Windows:** `Get-Content src/stats.js -TotalCount 1` replaces `head -1`.
 
-   The first line should read `// SPDX-License-Identifier: MIT`, though you never asked for it in this session. `git status` ([git status](https://git-scm.com/docs/git-status)) should read `nothing to commit, working tree clean`. If it lists `src/stats.js`, Claude hasn't committed yet: ask it to.
+   You should see `// SPDX-License-Identifier: MIT` as the first line, though you never asked for it in this session, and `git status` reading `nothing to commit, working tree clean` ([git status](https://git-scm.com/docs/git-status)). If it lists `src/stats.js`, Claude hasn't committed yet: ask it to.
 
 ## Your turn
 
@@ -86,7 +87,7 @@ Decide where each line goes before you write anything:
 
 1. For each line, choose the project's `CLAUDE.md`, a `CLAUDE.local.md`, your user file, or nowhere. A line that goes in a committed file must be true: compare it with `package.json` and `src/cli.js`, because every session, and every teammate's, will read it.
 2. Tell Claude in a session what goes in the project's file: `Add this to CLAUDE.md:` and the line. Edit the file yourself if you prefer.
-3. Put what is yours alone for this project in a `CLAUDE.local.md` at the project root, and add the line `CLAUDE.local.md` to `.gitignore`.
+3. Put what is yours alone for this project in a `CLAUDE.local.md` in your copy's `project/` folder, next to `CLAUDE.md`, and add the line `CLAUDE.local.md` to `project/.gitignore`. Your copy has a second `.gitignore` in the folder above `project/`: leave that one as it is.
 4. A habit you want in every project goes in your user file, `~/.claude/CLAUDE.md`, which `/memory` lists too. That file reaches every session you start, in every project, so this step is up to you.
 5. Commit `CLAUDE.md` and `.gitignore`. `git status` should be clean, since git now ignores `CLAUDE.local.md`.
 

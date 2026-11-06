@@ -30,13 +30,13 @@ A precise request needs fewer corrections: it names the file, the case to handle
 
 The practice app checks Markdown links, but it skips any link with a title, such as `[setup](setup.md "Setup guide")`. You'll fix that.
 
-1. Start `claude` in your copy's `project/` folder and enter plan mode, as in lesson 2: the status bar reads `⏸ plan mode on`. Explore:
+1. Start `claude` in your copy's `project/` folder and enter plan mode, as in lesson 2: the status bar reads `⏸ plan mode on`. Explore first. Ask Claude how the app finds links in a Markdown file, and which kinds it would miss:
 
    ```text
    How does this app find links in a Markdown file? Which kinds of links would it miss?
    ```
 
-   Your wording will differ, but Claude should point to `src/links.js` and mention links with a title.
+   You should see Claude point to `src/links.js` and mention links with a title, though your wording will differ.
 2. Plan:
 
    ```text
@@ -66,7 +66,7 @@ The practice app checks Markdown links, but it skips any link with a title, such
    - A panel beside the conversation. Its list leaves test files and generated files out and counts them on a line of their own: click that line to see the test. The panel may already be open: read it there, because typing `/diff` closes it ([Diff panel](https://code.claude.com/docs/en/interactive-mode#diff-panel)).
    - A dialog above the prompt. Select a file with the arrow keys, press `Enter` to read its diff, and press `Esc` to go back.
 
-   Read each line, the test included, and ask: does the test cover both kinds of quotes, and does the code leave the title out of the target? To read the diff in the second terminal instead, run `git diff` ([git diff](https://git-scm.com/docs/git-diff)). It leaves out a file git doesn't track yet until you run `git add -N <file>` ([git add](https://git-scm.com/docs/git-add#Documentation/git-add.txt--N)).
+   Read each line, the test included, and ask: does the test cover both kinds of quotes, and does the code leave the title out of the target? Running the tests again only repeats what they already told you. A pass says nothing about a case no test covers. To read the diff in the second terminal instead, run `git diff` ([git diff](https://git-scm.com/docs/git-diff)). It leaves out a file git doesn't track yet until you run `git add -N <file>` ([git add](https://git-scm.com/docs/git-add#Documentation/git-add.txt--N)).
 6. Correct what the review found, in plain words. For example, if the test covers only double quotes:
 
    ```text

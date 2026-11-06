@@ -142,6 +142,24 @@ test('nested: b-2 reads its snapshots from project/', () => {
   });
 });
 
+// A plan file may name paths relative to project/, as the page asks, or from
+// the git root, as `git status --porcelain` prints them there (349).
+for (const plan of ['src/config.js\n', 'project/src/config.js\n', './project/src/config.js\n']) {
+  test(`nested: b-2 accepts the plan path ${JSON.stringify(plan.trim())}, and still flags an unplanned file`, () => {
+    withRepo(() => repo({ 'package.json': pkg, 'src/config.js': 'export const a = 1;\n', 'src/cli.js': 'export {};\n' }, { nested: true }), (dir) => {
+      commit(dir, 'Start');
+      write(dir, { '.practice/b-2-before.txt': runGit(dir, 'status', '--porcelain'), '.practice/b-2-plan.txt': plan });
+      write(dir, { 'src/config.js': 'export const a = 2;\n' });
+      write(dir, { '.practice/b-2-after.txt': runGit(dir, 'status', '--porcelain') });
+      assert.match(readFileSync(`${dir}/.practice/b-2-after.txt`, 'utf8'), /project\/src\/config\.js/);
+      assert.equal(outcomes('b-2', dir, [1])[0], true);
+      write(dir, { 'src/cli.js': 'export const b = 1;\n' });
+      write(dir, { '.practice/b-2-after.txt': runGit(dir, 'status', '--porcelain') });
+      assert.match(outcomes('b-2', dir, [1])[0], /Changed but not in the plan: src\/cli\.js\./);
+    });
+  });
+}
+
 test('nested: b-3 reads the last commit and the tree from project/', () => {
   withRepo(() => repo({ 'package.json': pkg, 'src/a.js': 'export const a = 1;\n' }, { nested: true }), (dir) => {
     commit(dir, 'Start');
@@ -206,6 +224,22 @@ test('nested: b-capstone runs the tests without the fix from the clone\'s projec
     }
   });
 });
+
+for (const plan of ['src/fix.js\ntest/fix.test.js\n', 'project/src/fix.js\nproject/test/fix.test.js\n']) {
+  test(`nested: b-capstone accepts the plan paths ${JSON.stringify(plan.trim().split('\n'))}, and still flags an unplanned file (349)`, () => {
+    const files = { 'package.json': pkg, 'src/fix.js': 'export const fixed = false;\n', 'src/cli.js': 'export {};\n' };
+    withRepo(() => repo(files, { nested: true }), (dir) => {
+      commit(dir, 'Start');
+      write(dir, { '.practice/capstone-plan.txt': plan });
+      write(dir, { 'src/fix.js': 'export const fixed = true;\n', 'test/fix.test.js': 'import "../src/fix.js";\n' });
+      write(dir, { '.practice/capstone-commit.txt': `${commit(dir, 'Fix')}\n` });
+      assert.equal(outcomes('b-capstone', dir, [1])[0], true);
+      write(dir, { 'src/cli.js': 'export const b = 1;\n' });
+      write(dir, { '.practice/capstone-commit.txt': `${commit(dir, 'Also cli')}\n` });
+      assert.match(outcomes('b-capstone', dir, [1])[0], /The commit changes files the plan didn't name: src\/cli\.js\./);
+    });
+  });
+}
 
 test('every HEAD: read in the checks is cwd-relative', () => {
   const root = new URL('../', import.meta.url);

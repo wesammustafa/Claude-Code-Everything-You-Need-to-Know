@@ -90,7 +90,8 @@ badge: Beginner
 - beat: do
 - verify: file .practice/capstone-plan.txt fresh since T3
 - goal: "Save the files the plan will change, every test file included, to `.practice/capstone-plan.txt`"
-- note: "one path per line, relative to the repository root, with forward slashes, such as `src/cli.js`."
+- note: "Write one path per line, relative to `project/`, with forward slashes, such as `src/cli.js`."
+- note: "In a Practice copy, `git status --porcelain` prints each path from the root of the repository, the folder above `project/`, such as `project/src/cli.js`: the check accepts either form."
 - hint: "The commit in `.practice/capstone-commit.txt` changes only files listed in `.practice/capstone-plan.txt`, including a test file."
 
 ### T6 | The task step 6 of 8 | Watch red become green

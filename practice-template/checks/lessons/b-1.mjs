@@ -12,10 +12,10 @@ export const title = 'Install, sign in and look around';
 export const VERSION_LIMIT = 30_000;
 
 const VERSION = /^\d+\.\d+\.\d+ \(Claude Code\)/m;
-const FIX_PATH = 'Open a new terminal. If it still fails, use lesson 1, Worked example step 2 to fix PATH, then retry.';
+const FIX_PATH = 'Open a new terminal. If it still fails, fix PATH as Troubleshoot installation describes (lesson 1\'s Guide page links it under Check the install), then retry.';
 // The check runs with the PATH of the terminal that started it, so a new
 // window can find `claude` while a check started before the install can't.
-const NOT_FOUND = "The check couldn't find `claude` on the PATH of the shell it ran in. Run `claude --version` in a new terminal window, outside any editor. If it prints a version there, the check ran with an older PATH: close the terminal where Claude Code Quest runs, start `npm run learn` again from the new window at the root of your copy (your progress is saved), and check again. If it fails there too, use lesson 1, Worked example step 2 to fix PATH, then retry.";
+const NOT_FOUND = "The check couldn't find `claude` on the PATH of the shell it ran in. Run `claude --version` in a new terminal window, outside any editor. If it prints a version there, the check ran with an older PATH: close the terminal where Claude Code Quest runs, start `npm run learn` again from the new window at the root of your copy (your progress is saved), and check again. If it fails there too, fix PATH as Troubleshoot installation describes (lesson 1's Guide page links it under Check the install), then retry.";
 
 /** @type {Item} */
 export const claudeVersion = {
