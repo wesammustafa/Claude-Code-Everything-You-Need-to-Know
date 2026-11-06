@@ -94,6 +94,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run test:quest
+      - run: npm run test:checks
       - run: npm run test:starter
       - run: npm run build
       - run: node quest/server/test/smoke.mjs
