@@ -5,6 +5,7 @@ import { CODE, InlineText } from "../components/InlineText";
 import { Says } from "../components/Says";
 import { Tier } from "../components/Tier";
 import { LessonBadge } from "../components/badges";
+import { afterLeadIn } from "../lib/words";
 import { lessonEyebrow } from "../course/labels";
 import { useActionProps } from "../live/useAction";
 import { ReadLesson } from "../pages/ReadLesson";
@@ -140,7 +141,7 @@ export function LessonOverview() {
           // One span: the bubble lays its children out as rows.
           <span>
             {"By the end, you can "}
-            <InlineText text={intro.payoff} />
+            <InlineText text={afterLeadIn(intro.payoff)} />
             {"."}
           </span>
         ) : (

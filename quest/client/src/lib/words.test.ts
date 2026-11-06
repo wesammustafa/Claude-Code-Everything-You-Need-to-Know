@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { sentence, skillLabel } from "./words";
+import { afterLeadIn, sentence, skillLabel } from "./words";
 
 describe("sentence", () => {
   test("capitalizes a lowercase first letter, plain or in bold", () => {
@@ -29,6 +29,24 @@ describe("sentence", () => {
     );
     expect(sentence("Already a sentence")).toBe("Already a sentence");
     expect(sentence("")).toBe("");
+  });
+});
+
+describe("afterLeadIn", () => {
+  test("lowers a capital that only started the line and drops a closing full stop", () => {
+    expect(afterLeadIn("Bound a real task from your backlog")).toBe(
+      "bound a real task from your backlog",
+    );
+    expect(afterLeadIn("give a routine skill its own settings.")).toBe(
+      "give a routine skill its own settings",
+    );
+  });
+  test("keeps a proper name, an initialism and a code span", () => {
+    expect(afterLeadIn("Claude reads it first")).toBe("Claude reads it first");
+    expect(afterLeadIn("MCP servers at the right scope")).toBe(
+      "MCP servers at the right scope",
+    );
+    expect(afterLeadIn("`/plan` starts it")).toBe("`/plan` starts it");
   });
 });
 

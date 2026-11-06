@@ -20,6 +20,28 @@ export function sentence(text: string): string {
     .replace(OPEN_END, ".");
 }
 
+// Names a line may open with that keep their capital after a lead-in.
+const PROPER = new Set([
+  "Claude",
+  "GitHub",
+  "Chrome",
+  "Codespaces",
+  "Git",
+  "Node",
+]);
+
+/**
+ * The text as the rest of a sentence that a lead-in such as "you can" opens:
+ * a capital that only started the line is lowered, a proper name or an
+ * initialism keeps it, and a full stop at the end is dropped for the lead-in's own.
+ */
+export function afterLeadIn(text: string): string {
+  const trimmed = text.replace(/\.\s*$/, "");
+  const first = /^([A-Z][a-z]+)(?![A-Za-z])/.exec(trimmed)?.[1];
+  if (first === undefined || PROPER.has(first)) return trimmed;
+  return trimmed.charAt(0).toLowerCase() + trimmed.slice(1);
+}
+
 // Skill ids are kebab-case keys in the step files; a few are initialisms.
 const INITIALISMS: Record<string, string> = {
   ci: "CI",
