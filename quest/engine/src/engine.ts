@@ -1190,6 +1190,11 @@ function openBeat(s: EngineState, effects: Effect[]) {
     kept?.step === step.id &&
     kept.beat === s.pos.beat;
   if (kept && !keeps) delete p.passedCheck;
+  // An `installed` command no lookup has answered yet, as when a resume
+  // opens the step with no intro: ask now, and the answer marks the beat
+  // already done if the command is there.
+  if (beat.installed && s.commands[beat.installed] === undefined)
+    effects.push({ type: "commands", names: [beat.installed] });
   if (keeps) {
     st.status = "done";
     st.baseline = null;

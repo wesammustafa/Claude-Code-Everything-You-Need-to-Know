@@ -20,6 +20,7 @@ import {
   normalize,
   parseLesson,
   pending,
+  respond,
   FACTS,
   PROJECT,
   READS,
@@ -387,6 +388,14 @@ test("a command on the PATH is credited for a step that names it with installed"
   assert.equal(project(e.state).lesson.beat.installed, null);
   e.send({ type: "commands", found: { claude: true } });
   assert.equal(e.state.beat.status, "already");
+
+  // Opened with no answer yet: the beat asks for one.
+  const f = driver({ saved: save() });
+  const asked = f.start().effects.find((eff) => eff.type === "commands");
+  assert.deepEqual(asked?.names, ["claude"], "the step asks on its own");
+  assert.equal(f.state.beat.status, "waiting");
+  respond(f, asked);
+  assert.equal(f.state.beat.status, "already");
 });
 
 // was learn-flow:237. Since ticket 213 a save started under other steps
