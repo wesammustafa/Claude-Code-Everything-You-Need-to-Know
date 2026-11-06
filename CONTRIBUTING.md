@@ -236,6 +236,8 @@ It needs Node.js LTS, git, Ruby (for YAML), jq (for the examples' smoke tests), 
 
 Step-file quotes are checked by the lesson test, `npm run test:lessons`, which the quest job runs on every pull request.
 
+On your own Windows machine, `npm run test:checks` and the release tests need Git Bash on the PATH, `jq`, and the privilege to make symlinks (Developer Mode, or an elevated terminal): without them, the tests of the lessons that run bash scripts or make symlinks fail locally although they pass on the Windows runners in CI.
+
 Each rule has known-bad fixtures under `.github/scripts/fixtures/`, one folder per case: `fixture.json` names the rule, the expected result and, optionally, `output` patterns the check's output must match, `tree/` holds the files, `base/` the state before a change, and `generate.mjs` writes anything that would be live Claude Code config if committed. If you change a rule, run the self-test too:
 
 ```bash

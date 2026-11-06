@@ -38,10 +38,6 @@ import {
   stubNotices,
 } from "./template-fixture";
 
-// POSIX only: these need symlinks, file modes, POSIX paths, signals or a bash
-// script that native Windows lacks, so they are skipped there.
-const posix = test.skipIf(process.platform === "win32");
-
 afterAll(removeTemp);
 
 const manifest = JSON.parse(
@@ -427,14 +423,11 @@ describe("assembleTemplate", () => {
     );
   });
 
-  posix(
-    "a copied file keeps its mode: project/src/cli.js stays executable",
-    () => {
-      const mode = statSync(join(a, "project/src/cli.js")).mode;
-      expect(mode & 0o111).toBe(0o111);
-      expect(statSync(join(a, "project/src/config.js")).mode & 0o111).toBe(0);
-    },
-  );
+  test("a copied file keeps its mode: project/src/cli.js stays executable", () => {
+    const mode = statSync(join(a, "project/src/cli.js")).mode;
+    expect(mode & 0o111).toBe(0o111);
+    expect(statSync(join(a, "project/src/config.js")).mode & 0o111).toBe(0);
+  });
 
   test("refuses an output folder that is not empty", async () => {
     await expect(

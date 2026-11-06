@@ -29,10 +29,6 @@ import {
   tempDir,
 } from "./pages-fixture";
 
-// POSIX only: these need symlinks, file modes, POSIX paths, signals or a bash
-// script that native Windows lacks, so they are skipped there.
-const posix = test.skipIf(process.platform === "win32");
-
 afterAll(removeTemp);
 
 const docs = classifyDocs(repoRoot);
@@ -288,7 +284,7 @@ describe("the build", () => {
     expect(tree(build().outDir)).toEqual(tree(first.outDir));
   });
 
-  posix("writes each page, each diagram in both themes, and the index", () => {
+  test("writes each page, each diagram in both themes, and the index", () => {
     const files = Object.keys(tree(first.outDir));
     expect(files.filter((f) => f.endsWith(".html"))).toHaveLength(53);
     expect(files.filter((f) => f.endsWith(".svg")).sort()).toEqual(

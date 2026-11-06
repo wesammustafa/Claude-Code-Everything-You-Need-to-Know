@@ -79,9 +79,12 @@ jobs:
           node-version: 22
       - run: node quest/server/test/smoke.mjs
 
-  # The app on native Windows, where learners run it from PowerShell: the
-  # unit suites, the type build and the bundle's smoke test. Tests that need
-  # symlinks, file modes, POSIX paths or signals skip themselves there.
+  # The app's own packages on native Windows, where learners run it from
+  # PowerShell: the engine, client, host and server suites, the type build
+  # and the bundle's smoke test. The Checks' tests and the template already
+  # run on Windows in the platforms and template jobs; the release tests
+  # stay on Ubuntu, where the proof runs. A test in these four packages that
+  # needs a symlink, a file mode, a POSIX path or a signal skips itself here.
   quest-windows:
     needs: changes
     if: needs.changes.outputs.code == 'true'
@@ -93,8 +96,8 @@ jobs:
           node-version-file: .nvmrc
       - run: npm ci
       - run: npm run typecheck
-      - run: npm run test:quest
-      - run: npm run test:checks
+      - run: npm run course:compile
+      - run: npx vitest run --project engine --project client --project host --project server
       - run: npm run test:starter
       - run: npm run build
       - run: node quest/server/test/smoke.mjs

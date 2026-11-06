@@ -14,7 +14,7 @@ Every change in the next edition is verified against this version, the `stable` 
 - On Windows, the course loader reads the compiled course in development too (it compared a file URL's pathname with a path), and the lesson overview's badge no longer sits inside a paragraph. Development mode serves the rendered Guide pages once they are built.
 - The b-1 note check states the rule it applies in its FAIL messages, and Beginner lesson 1 names `Esc` where it said "Press it".
 - [examples/beginner/quest-companion](examples/beginner/quest-companion/README.md): the `quest` skill, which reads the app's saved progress and course and says where you are.
-- Tests that need symlinks, file modes, POSIX paths, signals or bash skip themselves on native Windows, and a `windows-latest` job runs the suites there.
+- A `windows-latest` job runs the engine, client, host and server suites and the bundle's smoke test; a test in those packages that needs a symlink, a file mode, a POSIX path or a signal skips itself on native Windows.
 
 ## v2026.12 - 2026-11-01
 

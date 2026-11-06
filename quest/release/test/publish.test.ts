@@ -23,10 +23,6 @@ import {
 } from "../src/publish.mjs";
 import { removeTemp, tempDir } from "./pages-fixture";
 
-// POSIX only: these need symlinks, file modes, POSIX paths, signals or a bash
-// script that native Windows lacks, so they are skipped there.
-const posix = test.skipIf(process.platform === "win32");
-
 afterAll(removeTemp);
 
 const REPO = "https://github.com/wesammustafa/Claude-Code-Quest";
@@ -285,42 +281,39 @@ describe("against a local bare template", GIT_TIMEOUT, () => {
     expect(refs(remote)).toBe(before);
   });
 
-  posix(
-    "a file the build no longer makes is deleted; the tag lands on the new commit; cli.js is 100755",
-    async () => {
-      const remote = bareRemote();
-      const last = seed(
-        remote,
-        { "README.md": "old\n", "old.txt": "gone\n" },
-        "v2099.01.1",
-      );
-      const r = await run({
-        guide: guideRepo("v2099.01.2"),
-        remote,
-        tag: "v2099.01.2",
-        push: true,
-      });
-      expect(r.code, r.out).toBe(0);
-      expect(r.out).toMatch(/delete mode 100644 old\.txt/);
-      const main = git(remote, "rev-parse", "refs/heads/main");
-      expect(git(remote, "rev-parse", "v2099.01.2^{commit}")).toBe(main);
-      expect(r.out).toContain(`commit ${main}`);
-      expect(git(remote, "rev-parse", `${main}^`)).toBe(last);
-      expect(
-        git(remote, "ls-tree", "-r", "--name-only", main).split("\n"),
-      ).toEqual(["README.md", "learn/app.mjs", "project/src/cli.js"]);
-      expect(git(remote, "ls-tree", main, "project/src/cli.js")).toMatch(
-        /^100755 /,
-      );
-      expect(git(remote, "cat-file", "-t", "v2099.01.2")).toBe("tag");
-      expect(git(remote, "cat-file", "-p", "v2099.01.2")).toContain(
-        `Release: ${REPO}/releases/tag/v2099.01.2`,
-      );
-      expect(git(remote, "log", "-1", "--format=%B", main)).toContain(
-        "Publish the Practice template at v2099.01.2",
-      );
-    },
-  );
+  test("a file the build no longer makes is deleted; the tag lands on the new commit; cli.js is 100755", async () => {
+    const remote = bareRemote();
+    const last = seed(
+      remote,
+      { "README.md": "old\n", "old.txt": "gone\n" },
+      "v2099.01.1",
+    );
+    const r = await run({
+      guide: guideRepo("v2099.01.2"),
+      remote,
+      tag: "v2099.01.2",
+      push: true,
+    });
+    expect(r.code, r.out).toBe(0);
+    expect(r.out).toMatch(/delete mode 100644 old\.txt/);
+    const main = git(remote, "rev-parse", "refs/heads/main");
+    expect(git(remote, "rev-parse", "v2099.01.2^{commit}")).toBe(main);
+    expect(r.out).toContain(`commit ${main}`);
+    expect(git(remote, "rev-parse", `${main}^`)).toBe(last);
+    expect(
+      git(remote, "ls-tree", "-r", "--name-only", main).split("\n"),
+    ).toEqual(["README.md", "learn/app.mjs", "project/src/cli.js"]);
+    expect(git(remote, "ls-tree", main, "project/src/cli.js")).toMatch(
+      /^100755 /,
+    );
+    expect(git(remote, "cat-file", "-t", "v2099.01.2")).toBe("tag");
+    expect(git(remote, "cat-file", "-p", "v2099.01.2")).toContain(
+      `Release: ${REPO}/releases/tag/v2099.01.2`,
+    );
+    expect(git(remote, "log", "-1", "--format=%B", main)).toContain(
+      "Publish the Practice template at v2099.01.2",
+    );
+  });
 
   test("without --push nothing reaches the template, and the stat is shown", async () => {
     const remote = bareRemote();
