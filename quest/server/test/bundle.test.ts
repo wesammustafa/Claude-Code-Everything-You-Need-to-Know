@@ -24,6 +24,10 @@ import { STAMP, inputsDigest } from "../../client/build/inputs.ts";
 import { checksSpecifier, runCheckBuild } from "../vite.run-check.config.ts";
 import { repoRoot, serverBuild, serverRoot } from "../vite.config.ts";
 
+// POSIX only: these need symlinks, file modes, POSIX paths, signals or a bash
+// script that native Windows lacks, so they are skipped there.
+const posix = test.skipIf(process.platform === "win32");
+
 const MB = 1024 * 1024;
 
 // Every temporary folder a test makes, removed in afterAll.
@@ -233,7 +237,7 @@ test("the build refuses a missing pages folder", () => {
   }).not.toThrow();
 });
 
-test("QUEST_BASE_PORT must be a port", () => {
+posix("QUEST_BASE_PORT must be a port", () => {
   for (const value of ["99999", "65527", "-1", "4747x", "127.0.0.1"]) {
     const run = spawnSync(process.execPath, [join(outDir, "app.mjs")], {
       encoding: "utf8",

@@ -32,7 +32,13 @@ cpSync(built, join(copy, "learn"), { recursive: true });
 const fail = (message) => {
   console.error(`smoke: ${message}`);
   child.kill("SIGKILL");
-  rmSync(copy, { recursive: true, force: true });
+  // Retries: on Windows the child's handles can outlive its exit by a moment.
+  rmSync(copy, {
+    recursive: true,
+    force: true,
+    maxRetries: 10,
+    retryDelay: 200,
+  });
   process.exit(1);
 };
 
@@ -103,7 +109,10 @@ if (process.platform !== "win32") {
   )
     fail(`no stop line naming the copy:\n${stdout}`);
 } else {
+  // Windows has no SIGTERM: end the child and wait for it, so its handles on
+  // the copy are closed before the copy is removed.
   child.kill();
+  await exited;
 }
 clearTimeout(deadline);
 rmSync(copy, { recursive: true, force: true });

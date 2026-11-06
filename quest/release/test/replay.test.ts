@@ -30,6 +30,10 @@ import {
   stubNotices,
 } from "./template-fixture";
 
+// POSIX only: these need symlinks, file modes, POSIX paths, signals or a bash
+// script that native Windows lacks, so they are skipped there.
+const posix = test.skipIf(process.platform === "win32");
+
 afterAll(removeTemp);
 
 const order = lessonOrder(repoRoot);
@@ -90,48 +94,53 @@ describe("the replay's contract", () => {
     }).toThrow(/no project\/ folder/);
   });
 
-  test("steps.sh runs in project/ with SOLUTION restored, COPY set and the fixed git author", () => {
-    const solutionsDir = fixtureSolutions({
-      x: [
-        'pwd -P > "$COPY/where.txt"',
-        'echo "$COPY" > "$COPY/copy.txt"',
-        'git var GIT_AUTHOR_IDENT | sed "s/>.*/>/" > "$COPY/name.txt"',
-        'find "$SOLUTION" -mindepth 1 | sed "s#^$SOLUTION/##" | sort > "$COPY/files.txt"',
-        "",
-      ].join("\n"),
-    });
-    mkdirSync(join(solutionsDir, "x/dot-claude/skills/dot-claude"), {
-      recursive: true,
-    });
-    for (const file of [
-      "dot-claude/skills/dot-claude/AGENTS.example.md",
-      "CLAUDE.example.md",
-      "CLAUDE.local.example.md",
-      "dot-mcp.json",
-    ])
-      writeFileSync(join(solutionsDir, "x", file), "x\n");
-    const copy = fakeCopy();
-    prepareCopy(copy);
-    applyLesson({ repoRoot, copy, id: "x", solutionsDir });
-    const read = (name: string) =>
-      readFileSync(join(copy, name), "utf8").trim();
-    expect(read("where.txt")).toBe(
-      execFileSync("pwd", ["-P"], { cwd: join(copy, "project") })
-        .toString()
-        .trim(),
-    );
-    expect(read("copy.txt")).toBe(copy);
-    expect(read("name.txt")).toBe("Practice Learner <learner@example.invalid>");
-    expect(read("files.txt").split("\n")).toEqual([
-      ".claude",
-      ".claude/skills",
-      ".claude/skills/.claude",
-      ".claude/skills/.claude/AGENTS.md",
-      ".mcp.json",
-      "CLAUDE.local.md",
-      "CLAUDE.md",
-    ]);
-  });
+  posix(
+    "steps.sh runs in project/ with SOLUTION restored, COPY set and the fixed git author",
+    () => {
+      const solutionsDir = fixtureSolutions({
+        x: [
+          'pwd -P > "$COPY/where.txt"',
+          'echo "$COPY" > "$COPY/copy.txt"',
+          'git var GIT_AUTHOR_IDENT | sed "s/>.*/>/" > "$COPY/name.txt"',
+          'find "$SOLUTION" -mindepth 1 | sed "s#^$SOLUTION/##" | sort > "$COPY/files.txt"',
+          "",
+        ].join("\n"),
+      });
+      mkdirSync(join(solutionsDir, "x/dot-claude/skills/dot-claude"), {
+        recursive: true,
+      });
+      for (const file of [
+        "dot-claude/skills/dot-claude/AGENTS.example.md",
+        "CLAUDE.example.md",
+        "CLAUDE.local.example.md",
+        "dot-mcp.json",
+      ])
+        writeFileSync(join(solutionsDir, "x", file), "x\n");
+      const copy = fakeCopy();
+      prepareCopy(copy);
+      applyLesson({ repoRoot, copy, id: "x", solutionsDir });
+      const read = (name: string) =>
+        readFileSync(join(copy, name), "utf8").trim();
+      expect(read("where.txt")).toBe(
+        execFileSync("pwd", ["-P"], { cwd: join(copy, "project") })
+          .toString()
+          .trim(),
+      );
+      expect(read("copy.txt")).toBe(copy);
+      expect(read("name.txt")).toBe(
+        "Practice Learner <learner@example.invalid>",
+      );
+      expect(read("files.txt").split("\n")).toEqual([
+        ".claude",
+        ".claude/skills",
+        ".claude/skills/.claude",
+        ".claude/skills/.claude/AGENTS.md",
+        ".mcp.json",
+        "CLAUDE.local.md",
+        "CLAUDE.md",
+      ]);
+    },
+  );
 
   test("a missing solution and a failing steps.sh name the Lesson", () => {
     const solutionsDir = fixtureSolutions({
@@ -233,17 +242,21 @@ async function assembledCopy(): Promise<string> {
 describe("the Beginner solutions on an assembled copy", () => {
   const beginner = order.slice(0, order.indexOf("b-capstone") + 1);
 
-  test("each Check fails before its Lesson's solution and passes after it, with every earlier one", async () => {
-    const copy = await assembledCopy();
-    for (const [i, id] of beginner.entries()) {
-      expect(check(copy, id).status, `${id} before its solution`).toBe(1);
-      applyLesson({ repoRoot, copy, id });
-      for (const done of beginner.slice(0, i + 1)) {
-        const run = check(copy, done);
-        expect(run.status, `${done} after ${id}:\n${run.stdout}`).toBe(0);
+  posix(
+    "each Check fails before its Lesson's solution and passes after it, with every earlier one",
+    async () => {
+      const copy = await assembledCopy();
+      for (const [i, id] of beginner.entries()) {
+        expect(check(copy, id).status, `${id} before its solution`).toBe(1);
+        applyLesson({ repoRoot, copy, id });
+        for (const done of beginner.slice(0, i + 1)) {
+          const run = check(copy, done);
+          expect(run.status, `${done} after ${id}:\n${run.stdout}`).toBe(0);
+        }
       }
-    }
-  }, 300_000);
+    },
+    300_000,
+  );
 });
 
 describe("the Intermediate solutions on an assembled copy", () => {
@@ -254,22 +267,26 @@ describe("the Intermediate solutions on an assembled copy", () => {
   // A later Lesson's commit must not undo an earlier Check (b-3 reads the
   // history for its Your turn commit), so the earlier levels are checked
   // again once, at the end.
-  test("each Check fails before its Lesson's solution and passes after it, with every earlier one", async () => {
-    const copy = await assembledCopy();
-    for (const id of done) applyLesson({ repoRoot, copy, id });
-    for (const [i, id] of intermediate.entries()) {
-      expect(check(copy, id).status, `${id} before its solution`).toBe(1);
-      applyLesson({ repoRoot, copy, id });
-      for (const earlier of intermediate.slice(0, i + 1)) {
-        const run = check(copy, earlier);
-        expect(run.status, `${earlier} after ${id}:\n${run.stdout}`).toBe(0);
+  posix(
+    "each Check fails before its Lesson's solution and passes after it, with every earlier one",
+    async () => {
+      const copy = await assembledCopy();
+      for (const id of done) applyLesson({ repoRoot, copy, id });
+      for (const [i, id] of intermediate.entries()) {
+        expect(check(copy, id).status, `${id} before its solution`).toBe(1);
+        applyLesson({ repoRoot, copy, id });
+        for (const earlier of intermediate.slice(0, i + 1)) {
+          const run = check(copy, earlier);
+          expect(run.status, `${earlier} after ${id}:\n${run.stdout}`).toBe(0);
+        }
       }
-    }
-    for (const id of [...done, ...intermediate]) {
-      const run = check(copy, id);
-      expect(run.status, `${id} at the end:\n${run.stdout}`).toBe(0);
-    }
-  }, 600_000);
+      for (const id of [...done, ...intermediate]) {
+        const run = check(copy, id);
+        expect(run.status, `${id} at the end:\n${run.stdout}`).toBe(0);
+      }
+    },
+    600_000,
+  );
 });
 
 // b-5's solution writes CLAUDE.md with no @ import, so i-2's first step
@@ -412,34 +429,38 @@ describe("the Advanced solutions on an assembled copy", () => {
   // The Advanced solutions run with the network tools shadowed (b-3's runs
   // `npm test`, so the earlier levels run as before); the Checks keep their
   // own `claude` stand-in.
-  test("each Check fails before its Lesson's solution and passes after it, with every earlier one, and no solution reaches the network", async () => {
-    const { bin, log } = guardedPath();
-    const apply = (copy: string, id: string) => {
-      const path = process.env.PATH;
-      process.env.PATH = `${bin}${delimiter}${path ?? ""}`;
-      try {
-        applyLesson({ repoRoot, copy, id });
-      } finally {
-        if (path === undefined) delete process.env.PATH;
-        else process.env.PATH = path;
+  posix(
+    "each Check fails before its Lesson's solution and passes after it, with every earlier one, and no solution reaches the network",
+    async () => {
+      const { bin, log } = guardedPath();
+      const apply = (copy: string, id: string) => {
+        const path = process.env.PATH;
+        process.env.PATH = `${bin}${delimiter}${path ?? ""}`;
+        try {
+          applyLesson({ repoRoot, copy, id });
+        } finally {
+          if (path === undefined) delete process.env.PATH;
+          else process.env.PATH = path;
+        }
+      };
+      const copy = await assembledCopy();
+      for (const id of done) applyLesson({ repoRoot, copy, id });
+      for (const [i, id] of advanced.entries()) {
+        expect(check(copy, id).status, `${id} before its solution`).toBe(1);
+        apply(copy, id);
+        for (const earlier of advanced.slice(0, i + 1)) {
+          const run = check(copy, earlier);
+          expect(run.status, `${earlier} after ${id}:\n${run.stdout}`).toBe(0);
+        }
       }
-    };
-    const copy = await assembledCopy();
-    for (const id of done) applyLesson({ repoRoot, copy, id });
-    for (const [i, id] of advanced.entries()) {
-      expect(check(copy, id).status, `${id} before its solution`).toBe(1);
-      apply(copy, id);
-      for (const earlier of advanced.slice(0, i + 1)) {
-        const run = check(copy, earlier);
-        expect(run.status, `${earlier} after ${id}:\n${run.stdout}`).toBe(0);
+      for (const id of order) {
+        const run = check(copy, id);
+        expect(run.status, `${id} at the end:\n${run.stdout}`).toBe(0);
       }
-    }
-    for (const id of order) {
-      const run = check(copy, id);
-      expect(run.status, `${id} at the end:\n${run.stdout}`).toBe(0);
-    }
-    expect(existsSync(log) ? readFileSync(log, "utf8") : "").toBe("");
-  }, 900_000);
+      expect(existsSync(log) ? readFileSync(log, "utf8") : "").toBe("");
+    },
+    900_000,
+  );
 });
 
 /** Every file under `dir`, relative to it. */

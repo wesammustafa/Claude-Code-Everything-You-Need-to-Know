@@ -5,6 +5,10 @@ import type { FolderLook } from "@quest/host";
 import { describe, expect, test } from "vitest";
 import { BEGINNER_LINE, dirAhead, type DirOptions } from "../src/dir.ts";
 
+// POSIX only: these need symlinks, file modes, POSIX paths, signals or a bash
+// script that native Windows lacks, so they are skipped there.
+const posix = test.skipIf(process.platform === "win32");
+
 const TEMPLATE = fileURLToPath(
   new URL("../../../practice-template", import.meta.url),
 );
@@ -55,13 +59,16 @@ function given(over: Partial<DirOptions> = {}) {
 }
 
 describe("dirAhead", () => {
-  test("a folder the checks pass is looked at and handed to the host", async () => {
-    const { options, looked } = given();
-    expect(await dirAhead(options)).toEqual({ ahead: found(MINE) });
-    expect(looked).toEqual([MINE]);
-  });
+  posix(
+    "a folder the checks pass is looked at and handed to the host",
+    async () => {
+      const { options, looked } = given();
+      expect(await dirAhead(options)).toEqual({ ahead: found(MINE) });
+      expect(looked).toEqual([MINE]);
+    },
+  );
 
-  test("a relative path is from the folder npm run learn ran in", async () => {
+  posix("a relative path is from the folder npm run learn ran in", async () => {
     const { options, checked } = given({ dir: "code/app", cwd: "/home/ali" });
     await dirAhead(options);
     expect(checked).toEqual(["/home/ali/code/app"]);
@@ -75,7 +82,7 @@ describe("dirAhead", () => {
     }
   });
 
-  test("each refusal says why and starts without it", async () => {
+  posix("each refusal says why and starts without it", async () => {
     const lines: Record<FolderRefusal, string> = {
       missing: "there is no folder there",
       "too-long": "that path is longer than 1,024 characters",
@@ -95,11 +102,14 @@ describe("dirAhead", () => {
     }
   });
 
-  test("the real checks run by default: a folder outside home is refused", async () => {
-    const options: DirOptions = { ...given({ dir: "/" }).options };
-    delete options.check;
-    expect(await dirAhead(options)).toEqual({
-      refused: `--dir /: that folder is outside your home folder: starting without it.`,
-    });
-  });
+  posix(
+    "the real checks run by default: a folder outside home is refused",
+    async () => {
+      const options: DirOptions = { ...given({ dir: "/" }).options };
+      delete options.check;
+      expect(await dirAhead(options)).toEqual({
+        refused: `--dir /: that folder is outside your home folder: starting without it.`,
+      });
+    },
+  );
 });

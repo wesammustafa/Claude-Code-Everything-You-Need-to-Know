@@ -18,6 +18,10 @@ import {
 } from "../src/budgets.mjs";
 import { removeTemp, tempDir } from "./pages-fixture";
 
+// POSIX only: these need symlinks, file modes, POSIX paths, signals or a bash
+// script that native Windows lacks, so they are skipped there.
+const posix = test.skipIf(process.platform === "win32");
+
 const KIB = 1024;
 // The planted app starts with node: npm's own start-up under load is not tested.
 const node = [process.execPath, "learn/app.mjs"];
@@ -229,11 +233,15 @@ describe("what the budgets refuse", () => {
 });
 
 describe("start-up", () => {
-  test("passes a quick start and prints all three times", async () => {
-    const startup = await measureStartup(dir, { command: node });
-    expect(budgetProblems([startup])).toEqual([]);
-    expect(startup.detail?.split(", ")).toHaveLength(3);
-  }, 30_000);
+  posix(
+    "passes a quick start and prints all three times",
+    async () => {
+      const startup = await measureStartup(dir, { command: node });
+      expect(budgetProblems([startup])).toEqual([]);
+      expect(startup.detail?.split(", ")).toHaveLength(3);
+    },
+    30_000,
+  );
 
   test("fails a start that listens after 1500 ms", async () => {
     put("learn/app.mjs", appMjs(1500));
@@ -242,12 +250,16 @@ describe("start-up", () => {
     ]);
   }, 30_000);
 
-  test("fails an app that exits before listening", async () => {
-    put("learn/app.mjs", appMjs(0, true));
-    expect(
-      budgetProblems([await measureStartup(dir, { command: node })])[0],
-    ).toMatch(/exited 3 before listening/);
-  }, 30_000);
+  posix(
+    "fails an app that exits before listening",
+    async () => {
+      put("learn/app.mjs", appMjs(0, true));
+      expect(
+        budgetProblems([await measureStartup(dir, { command: node })])[0],
+      ).toMatch(/exited 3 before listening/);
+    },
+    30_000,
+  );
 });
 
 describe("npm run budgets", () => {
@@ -273,12 +285,16 @@ describe("npm run budgets", () => {
     expect(result.stderr).toMatch(/^Usage: npm run budgets/);
   });
 
-  test("exits 0 on the planted tree, printing to stdout only", () => {
-    const result = run([dir, "--manifest", manifestFile]);
-    expect(result.status).toBe(0);
-    expect(result.stdout).toMatch(/^Budget +Measured +Limit +Result/);
-    expect(result.stdout).not.toMatch(/### Size budgets/);
-  }, 30_000);
+  posix(
+    "exits 0 on the planted tree, printing to stdout only",
+    () => {
+      const result = run([dir, "--manifest", manifestFile]);
+      expect(result.status).toBe(0);
+      expect(result.stdout).toMatch(/^Budget +Measured +Limit +Result/);
+      expect(result.stdout).not.toMatch(/### Size budgets/);
+    },
+    30_000,
+  );
 
   test("exits 1 over budget and appends the table to the CI summary", () => {
     put("learn/app.mjs", Buffer.alloc(1024 * KIB + 1));
@@ -301,36 +317,40 @@ describe("npm run budgets", () => {
   // On Linux npm's child is dash, which dies on SIGTERM without passing it on
   // (run 41230844036 hung after its table). This wrapper does the same on
   // every platform: it starts the server and leaves it running when ended.
-  test("exits and leaves no server when a wrapper does not pass SIGTERM on", () => {
-    put(
-      "learn/app.mjs",
-      `import { appendFileSync } from "node:fs";\nappendFileSync("pids", \`\${String(process.pid)}\\n\`);\n${appMjs()}`,
-    );
-    put(
-      "wrapper.mjs",
-      `import { spawn } from "node:child_process";\nspawn(process.execPath, ["learn/app.mjs"], { stdio: "inherit" });\nprocess.on("SIGTERM", () => process.exit(0));\n`,
-    );
-    const wrapper = [process.execPath, "wrapper.mjs"];
-    const result = run([dir, "--manifest", manifestFile], {
-      QUEST_BUDGETS_START_COMMAND: JSON.stringify(wrapper),
-    });
-    const pids = readFileSync(join(dir, "pids"), "utf8")
-      .split("\n")
-      .filter(Boolean)
-      .map(Number);
-    const alive = pids.filter((pid) => {
-      try {
-        process.kill(pid, 0);
-      } catch {
-        return false;
-      }
-      process.kill(pid, "SIGKILL");
-      return true;
-    });
-    // It ended by itself; 0 or 1 hangs on the machine's speed, not on this.
-    expect(result.error).toBeUndefined();
-    expect(result.stdout).toMatch(/Start-up \(median of 3\) +\d+ ms/);
-    expect(pids).toHaveLength(3);
-    expect(alive).toEqual([]);
-  }, 30_000);
+  posix(
+    "exits and leaves no server when a wrapper does not pass SIGTERM on",
+    () => {
+      put(
+        "learn/app.mjs",
+        `import { appendFileSync } from "node:fs";\nappendFileSync("pids", \`\${String(process.pid)}\\n\`);\n${appMjs()}`,
+      );
+      put(
+        "wrapper.mjs",
+        `import { spawn } from "node:child_process";\nspawn(process.execPath, ["learn/app.mjs"], { stdio: "inherit" });\nprocess.on("SIGTERM", () => process.exit(0));\n`,
+      );
+      const wrapper = [process.execPath, "wrapper.mjs"];
+      const result = run([dir, "--manifest", manifestFile], {
+        QUEST_BUDGETS_START_COMMAND: JSON.stringify(wrapper),
+      });
+      const pids = readFileSync(join(dir, "pids"), "utf8")
+        .split("\n")
+        .filter(Boolean)
+        .map(Number);
+      const alive = pids.filter((pid) => {
+        try {
+          process.kill(pid, 0);
+        } catch {
+          return false;
+        }
+        process.kill(pid, "SIGKILL");
+        return true;
+      });
+      // It ended by itself; 0 or 1 hangs on the machine's speed, not on this.
+      expect(result.error).toBeUndefined();
+      expect(result.stdout).toMatch(/Start-up \(median of 3\) +\d+ ms/);
+      expect(pids).toHaveLength(3);
+      expect(alive).toEqual([]);
+    },
+    30_000,
+  );
 });

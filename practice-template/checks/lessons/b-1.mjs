@@ -34,6 +34,9 @@ export const claudeVersion = {
 };
 
 export const NOTE = 'practice/b-1/onboarding.md';
+// The one rule the check applies, in words, so a learner fixes the claim
+// rather than their wording.
+const RULE = "The rule: a claim is stale while it gives broken links exit code 0 or says linkcheck can't fail CI, and corrected once it gives them 1 or a non-zero code.";
 
 // The note's one wrong claim: src/cli.js exits with 1 when it finds a broken
 // link (and 2 on a bad linkcheck.json), so linkcheck can fail a CI job. A
@@ -109,8 +112,8 @@ export const noteCorrected = {
     }
     const exits = claims(text).filter((claim) => EXIT.test(claim) || CANT_FAIL.test(claim));
     const stale = exits.find((claim) => exitClaim(claim) === 'stale');
-    if (stale) return `The note still says "${stale.replace(/^[-*+]\s+/, '').replace(/[.\s]+$/, '').slice(0, 120)}". Ask Claude which file decides how linkcheck exits, open that line yourself, and write what the code does.`;
-    if (!exits.some((claim) => exitClaim(claim) === 'right')) return 'No line in the note says which exit code linkcheck gives for a broken link. Open the line Claude cites for it and write that code into the claim: CI depends on it.';
+    if (stale) return `The note still says "${stale.replace(/^[-*+]\s+/, '').replace(/[.\s]+$/, '').slice(0, 120)}". Ask Claude which file decides how linkcheck exits, open that line yourself, and write what the code does. ${RULE}`;
+    if (!exits.some((claim) => exitClaim(claim) === 'right')) return `No line in the note says which exit code linkcheck gives for a broken link. Open the line Claude cites for it and write that code into the claim: CI depends on it. ${RULE}`;
     return true;
   },
 };

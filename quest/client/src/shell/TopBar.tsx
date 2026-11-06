@@ -49,25 +49,61 @@ const STEP_STATE: Record<StepSummary["state"], string> = {
 };
 
 /** The active Lesson's steps in play order, each with its state in words. */
-function StepOutline({ steps }: { steps: StepSummary[] }) {
+// The lesson page's section a step's part is written up in, by its heading.
+const PART_SECTION: Record<string, string> = {
+  "Worked example": "worked-example",
+  "Your turn": "your-turn",
+  Check: "check",
+};
+
+/**
+ * The steps in order. A done step offers to read its part of the lesson
+ * page again: the app moves forward only, so the page is where a finished
+ * step's words stay.
+ */
+function StepOutline({
+  steps,
+  onReread,
+}: {
+  steps: StepSummary[];
+  onReread?: (section: string) => void;
+}) {
   return (
     <ol className="grid gap-2" data-step-outline="">
-      {steps.map((step) => (
-        <li
-          key={step.id}
-          {...(step.state === "current" ? { "aria-current": "step" } : {})}
-          className="grid gap-0.5 rounded-md border border-line px-3 py-2 aria-[current=step]:border-accent-mark"
-        >
-          <span className="font-semibold">
-            <InlineText text={step.title} />
-          </span>
-          <span className="flex flex-wrap gap-2 text-sm text-muted">
-            <span>{step.part}</span>
-            {step.optional && <span>optional</span>}
-            <span>{STEP_STATE[step.state]}</span>
-          </span>
-        </li>
-      ))}
+      {steps.map((step) => {
+        const section = PART_SECTION[step.part];
+        const reread =
+          step.state === "done" && section !== undefined && onReread;
+        return (
+          <li
+            key={step.id}
+            {...(step.state === "current" ? { "aria-current": "step" } : {})}
+            className="grid gap-0.5 rounded-md border border-line px-3 py-2 aria-[current=step]:border-accent-mark"
+          >
+            <span className="font-semibold">
+              <InlineText text={step.title} />
+            </span>
+            <span className="flex flex-wrap items-center gap-2 text-sm text-muted">
+              <span>{step.part}</span>
+              {step.optional && <span>optional</span>}
+              <span>{STEP_STATE[step.state]}</span>
+              {reread && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ml-auto"
+                  aria-haspopup="dialog"
+                  onClick={() => {
+                    onReread(section);
+                  }}
+                >
+                  Read it again
+                </Button>
+              )}
+            </span>
+          </li>
+        );
+      })}
     </ol>
   );
 }
@@ -216,7 +252,17 @@ export function TopBar() {
           </p>
         )}
         {steps ? (
-          <StepOutline steps={steps} />
+          <StepOutline
+            steps={steps}
+            {...(lesson?.page
+              ? {
+                  onReread: (section: string) => {
+                    setPanel(null);
+                    pages.open(lesson.page, section);
+                  },
+                }
+              : {})}
+          />
         ) : (
           <p className="text-sm text-muted">No step outline for this Lesson.</p>
         )}

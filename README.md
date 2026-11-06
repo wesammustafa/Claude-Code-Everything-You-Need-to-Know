@@ -44,6 +44,8 @@ You need a Claude subscription (Pro, Max, Ultra, Team or Enterprise), a Claude C
 
 3. **Keep a terminal beside it.** Claude Code Quest opens in your browser (in a Codespace, open the address it prints). It tells you what to type in the terminal and checks each step.
 
+   If `npm run learn` opens in the terminal instead, with arrow keys and `h` for a hint, your copy was made before the browser app shipped to the template. The lessons and checks are the same; the browser app arrives with the next edition, and [Already have a practice copy?](#already-have-a-practice-copy) brings it over once it is there.
+
 Claude Code Quest has no AI in it and changes none of your work. Prefer to read? Every lesson works from its page alone.
 
 <a id="already-have-a-practice-copy"></a>

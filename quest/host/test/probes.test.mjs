@@ -18,6 +18,10 @@ import {
 } from "../../../practice-template/checks/test/helpers.mjs";
 import { realAdapters } from "../src/real.ts";
 
+// POSIX only: these need symlinks, file modes, POSIX paths, signals or a bash
+// script that native Windows lacks, so they are skipped there.
+const posix = test.skipIf(process.platform === "win32");
+
 vitest(
   "the host runs every probe in the engine's table, and its registry is that table",
   () => {
@@ -76,80 +80,89 @@ test("probes: each takes its arguments, and nothing else", () => {
   }
 });
 
-test("probes: worktrees counts the live ones under .claude/worktrees/, and gone says when one is removed", () =>
-  withRepo(started, (dir) => {
-    assert.equal(probe(dir, "worktrees", "1").pass, false);
-    assert.match(
-      probe(dir, "worktrees", "1").hint,
-      /no worktree under \.claude\/worktrees\//,
-    );
-    git(
-      dir,
-      "worktree",
-      "add",
-      "-q",
-      "-b",
-      "docs-pass",
-      ".claude/worktrees/docs-pass",
-    );
-    git(
-      dir,
-      "worktree",
-      "add",
-      "-q",
-      "-b",
-      "elsewhere",
-      join(dir, "..", `${dir.split("/").pop()}-out`),
-    );
-    const one = probe(dir, "worktrees", "2");
-    assert.equal(
-      one.pass,
-      false,
-      "a worktree outside .claude/worktrees/ does not count",
-    );
-    assert.match(
-      one.hint,
-      /1 worktree under \.claude\/worktrees\/ \(docs-pass\); this step needs 2/,
-    );
-    git(
-      dir,
-      "worktree",
-      "add",
-      "-q",
-      "-b",
-      "test-pass",
-      ".claude/worktrees/test-pass",
-    );
-    const two = probe(dir, "worktrees", "2");
-    assert.deepEqual(
-      [two.pass, two.evidence],
-      [true, "Worktrees under .claude/worktrees/: docs-pass, test-pass"],
-    );
-    assert.notEqual(two.state, one.state, "the state follows the worktrees");
-    assert.equal(probe(dir, "gone", ".claude/worktrees/docs-pass").pass, false);
-    assert.match(
-      probe(dir, "gone", ".claude/worktrees/docs-pass").hint,
-      /still shows \.claude\/worktrees\/docs-pass/,
-    );
-    git(dir, "worktree", "remove", ".claude/worktrees/docs-pass");
-    assert.deepEqual(
-      [
+posix(
+  "probes: worktrees counts the live ones under .claude/worktrees/, and gone says when one is removed",
+  () =>
+    withRepo(started, (dir) => {
+      assert.equal(probe(dir, "worktrees", "1").pass, false);
+      assert.match(
+        probe(dir, "worktrees", "1").hint,
+        /no worktree under \.claude\/worktrees\//,
+      );
+      git(
+        dir,
+        "worktree",
+        "add",
+        "-q",
+        "-b",
+        "docs-pass",
+        ".claude/worktrees/docs-pass",
+      );
+      git(
+        dir,
+        "worktree",
+        "add",
+        "-q",
+        "-b",
+        "elsewhere",
+        join(dir, "..", `${dir.split("/").pop()}-out`),
+      );
+      const one = probe(dir, "worktrees", "2");
+      assert.equal(
+        one.pass,
+        false,
+        "a worktree outside .claude/worktrees/ does not count",
+      );
+      assert.match(
+        one.hint,
+        /1 worktree under \.claude\/worktrees\/ \(docs-pass\); this step needs 2/,
+      );
+      git(
+        dir,
+        "worktree",
+        "add",
+        "-q",
+        "-b",
+        "test-pass",
+        ".claude/worktrees/test-pass",
+      );
+      const two = probe(dir, "worktrees", "2");
+      assert.deepEqual(
+        [two.pass, two.evidence],
+        [true, "Worktrees under .claude/worktrees/: docs-pass, test-pass"],
+      );
+      assert.notEqual(two.state, one.state, "the state follows the worktrees");
+      assert.equal(
         probe(dir, "gone", ".claude/worktrees/docs-pass").pass,
-        probe(dir, "worktrees", "2").pass,
-      ],
-      [true, false],
-    );
-    // A folder deleted by hand leaves a prunable record: no live worktree.
-    rmSync(join(dir, ".claude/worktrees/test-pass"), {
-      recursive: true,
-      force: true,
-    });
-    assert.equal(probe(dir, "gone", ".claude/worktrees/test-pass").pass, true);
-    rmSync(join(dir, "..", `${dir.split("/").pop()}-out`), {
-      recursive: true,
-      force: true,
-    });
-  }));
+        false,
+      );
+      assert.match(
+        probe(dir, "gone", ".claude/worktrees/docs-pass").hint,
+        /still shows \.claude\/worktrees\/docs-pass/,
+      );
+      git(dir, "worktree", "remove", ".claude/worktrees/docs-pass");
+      assert.deepEqual(
+        [
+          probe(dir, "gone", ".claude/worktrees/docs-pass").pass,
+          probe(dir, "worktrees", "2").pass,
+        ],
+        [true, false],
+      );
+      // A folder deleted by hand leaves a prunable record: no live worktree.
+      rmSync(join(dir, ".claude/worktrees/test-pass"), {
+        recursive: true,
+        force: true,
+      });
+      assert.equal(
+        probe(dir, "gone", ".claude/worktrees/test-pass").pass,
+        true,
+      );
+      rmSync(join(dir, "..", `${dir.split("/").pop()}-out`), {
+        recursive: true,
+        force: true,
+      });
+    }),
+);
 
 test("probes: branch-ahead finds the branch and its state is its commit; merged wants each branch in HEAD", () =>
   withRepo(started, (dir) => {

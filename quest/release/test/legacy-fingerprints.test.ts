@@ -6,6 +6,10 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { legacyFingerprints } from "../src/legacy-fingerprints.mjs";
 
+// POSIX only: these need symlinks, file modes, POSIX paths, signals or a bash
+// script that native Windows lacks, so they are skipped there.
+const posix = test.skipIf(process.platform === "win32");
+
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const read = (path: string) => readFileSync(`${root}${path}`, "utf8");
 const manifest: unknown = JSON.parse(read("course/manifest.json"));
@@ -42,7 +46,7 @@ describe("legacy fingerprints", () => {
     expect(Object.keys(now.lessons)).toEqual(Object.keys(data.lessons));
   });
 
-  test("a missing Lesson file throws with its path", () => {
+  posix("a missing Lesson file throws with its path", () => {
     expect(() =>
       legacyFingerprints(`${root}quest/release/test`, manifest, data.commit),
     ).toThrow(/quest\/release\/test\/b-1\.md: no such Lesson file/);

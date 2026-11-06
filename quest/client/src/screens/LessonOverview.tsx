@@ -137,7 +137,11 @@ export function LessonOverview() {
       {/* Pip's one line: the `can` line the Lesson builds to, quoted. */}
       <Says>
         {intro?.payoff ? (
-          <InlineText text={intro.payoff} />
+          <>
+            {"By the end, you can "}
+            <InlineText text={intro.payoff} />
+            {"."}
+          </>
         ) : (
           "Ready when you are."
         )}

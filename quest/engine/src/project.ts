@@ -596,6 +596,7 @@ function beatView(s: EngineState): BeatView {
     },
     winNote: win32 && beat.winNote ? beat.winNote : null,
     codespace: st.codespace ? (beat.codespace ?? null) : null,
+    installed: st.installed ? (beat.installed ?? null) : null,
     // A typed beat's options are its known wrong answers: never shown.
     options:
       beat.kind === "type"

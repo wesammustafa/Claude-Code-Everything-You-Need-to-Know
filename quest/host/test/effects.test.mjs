@@ -21,6 +21,10 @@ import {
   checkRun,
 } from "./scripted.mjs";
 
+// POSIX only: these need symlinks, file modes, POSIX paths, signals or a bash
+// script that native Windows lacks, so they are skipped there.
+const posix = test.skipIf(process.platform === "win32");
+
 const MINE = "/home/ali/mine";
 const inputs = (heard, type) =>
   heard.filter((h) => h.input.type === type).map((h) => h.input);
@@ -244,22 +248,25 @@ test("a file read: after the input that asked, the glob's match, its bytes and s
   });
 });
 
-test("a folder answer: the typed path read from home or the copy, looked at, and the look sent with its key and ask", async () => {
-  const { ask, adapters, heard } = await asking([
-    { type: "folder", key: "intermediate", text: " '~/mine' ", asked: 3 },
-    { type: "folder", key: "intermediate", text: "project", asked: 4 },
-  ]);
-  ask();
-  await turn();
-  assert.deepEqual(adapters.folders.looked, [MINE, `${ROOT}/project`]);
-  assert.deepEqual(
-    inputs(heard, "probed").map((i) => [i.key, i.asked, i.path, i.missing]),
-    [
-      ["intermediate", 3, MINE, true],
-      ["intermediate", 4, `${ROOT}/project`, true],
-    ],
-  );
-});
+posix(
+  "a folder answer: the typed path read from home or the copy, looked at, and the look sent with its key and ask",
+  async () => {
+    const { ask, adapters, heard } = await asking([
+      { type: "folder", key: "intermediate", text: " '~/mine' ", asked: 3 },
+      { type: "folder", key: "intermediate", text: "project", asked: 4 },
+    ]);
+    ask();
+    await turn();
+    assert.deepEqual(adapters.folders.looked, [MINE, `${ROOT}/project`]);
+    assert.deepEqual(
+      inputs(heard, "probed").map((i) => [i.key, i.asked, i.path, i.missing]),
+      [
+        ["intermediate", 3, MINE, true],
+        ["intermediate", 4, `${ROOT}/project`, true],
+      ],
+    );
+  },
+);
 
 test("prerequisites of each kind, in the lesson's folder: a check item through the check child, a file read with no process, a probe", async () => {
   const skill = ".claude/skills/five-whys/SKILL.md";

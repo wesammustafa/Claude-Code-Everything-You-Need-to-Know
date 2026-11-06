@@ -73,6 +73,7 @@ const APP_WORDS: readonly RegExp[] = [
   /^Step \d+, .+: (done|current|to do)$/,
   /^(Beginner|Intermediate|Advanced) · (Lesson \d+|Capstone)( · (Step|Tear down, step) \d+ of \d+)?$/,
   /^After this lesson you can$/,
+  /^By the end, you can $/,
   /^Help by part of the lesson$/,
   /^(Guided|Hinted|Challenge|Every command shown|With hints|On your own)$/,
   /^(Start|Resume|Start with less help|Read the full lesson)$/,

@@ -813,9 +813,20 @@ const needsHere = (s: EngineState) =>
   (contentOf(s)?.needs ?? []).filter((n) => !n.linux || s.facts.linux);
 // What the intro on screen asks the host to look at: the commands it needs,
 // and, once its folder question has an answer, its prerequisites there.
+// The commands the lesson's `installed` lines name: looked up with the
+// page's needs, so a step they mark opens already done when one is there.
+const installedHere = (s: EngineState) =>
+  (contentOf(s)?.steps ?? []).flatMap((step) =>
+    step.beats.flatMap((b) => (b.installed ? [b.installed] : [])),
+  );
 export function introAsks(s: EngineState): Effect[] {
   if (!inOverview(s)) return [];
-  const names = needsHere(s).flatMap((n) => n.commands);
+  const names = [
+    ...new Set([
+      ...needsHere(s).flatMap((n) => n.commands),
+      ...installedHere(s),
+    ]),
+  ];
   const requires = contentOf(s)?.requires ?? [];
   const dir = folderOf(s);
   return [
@@ -1186,6 +1197,9 @@ function openBeat(s: EngineState, effects: Effect[]) {
   } else if (beat.codespace && s.facts.codespace) {
     st.status = "already";
     st.codespace = true;
+  } else if (beat.installed && s.commands[beat.installed] === true) {
+    st.status = "already";
+    st.installed = true;
   } else if (beat.verify.kind === "check") {
     st.status = "opening";
     // A beat that checks only slow items runs them on arrival; mixed beats
@@ -2624,6 +2638,14 @@ function apply(
       break;
     case "commands":
       Object.assign(s.commands, ev.found);
+      // A beat waiting on an `installed` command the host has now found.
+      if (onCard(s) && s.beat.status === "waiting") {
+        const name = currentBeat(s).installed;
+        if (name && ev.found[name] === true) {
+          s.beat.status = "already";
+          s.beat.installed = true;
+        }
+      }
       break;
     case "prereq":
       onPrereq(s, ev);

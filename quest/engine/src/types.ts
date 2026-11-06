@@ -173,6 +173,8 @@ export interface BeatState {
   touched: boolean;
   whileRuns?: { id: StepId; answer: number | null; at: string };
   codespace?: boolean;
+  // The beat's `installed` command was on the PATH, so it opened already done.
+  installed?: boolean;
   // The first answer the beat started from: undefined until there is one.
   baseline?: string | null | undefined;
   slowWait?: boolean;

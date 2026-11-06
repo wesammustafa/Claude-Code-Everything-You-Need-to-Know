@@ -18,6 +18,10 @@ import {
   WORK,
 } from "./scripted.mjs";
 
+// POSIX only: these need symlinks, file modes, POSIX paths, signals or a bash
+// script that native Windows lacks, so they are skipped there.
+const posix = test.skipIf(process.platform === "win32");
+
 const MINE = "/home/ali/mine";
 const OTHER = "/home/ali/other";
 const fine = (path) => ({
@@ -156,62 +160,68 @@ test("an effect the host doesn't run is an error", async () => {
   host.dispatch({ type: "step.continue" });
 });
 
-test("open: git's answers and the copy make the facts, and the client's facts go over the host's", async () => {
-  const { host, adapters, state } = fakeHost({
-    saved: AT_W3,
-    git: { ask: ["this folder is not a git repository", "Ana"] },
-    env: { CODESPACES: "true" },
-    facts: { win32: true, clipboard: true },
-  });
-  const s = await host.open();
-  assert.deepEqual(adapters.git.asked, [ROOT]);
-  assert.deepEqual([s.learner.name, s.learner.windows], ["Ana", true]);
-  assert.deepEqual(state().facts, {
-    root: ROOT,
-    name: "Ana",
-    gitError: "this folder is not a git repository",
-    practiceDir: true,
-    codespace: true,
-    win32: true,
-    linux: true,
-    saveKept: false,
-    clipboard: true,
-  });
-  // Root .practice/ is made on open; where it can't be, nothing saves.
-  const made = fakeHost({ saved: AT_W3, tree: {} });
-  await made.host.open();
-  assert.equal(made.state().facts.practiceDir, true);
-  assert.ok(made.adapters.files.isFolder(PRACTICE));
-  const none = fakeHost({ saved: AT_W3, tree: {} });
-  none.adapters.files.fail(PRACTICE, "EACCES");
-  await none.host.open();
-  assert.equal(none.state().facts.practiceDir, false);
-});
+posix(
+  "open: git's answers and the copy make the facts, and the client's facts go over the host's",
+  async () => {
+    const { host, adapters, state } = fakeHost({
+      saved: AT_W3,
+      git: { ask: ["this folder is not a git repository", "Ana"] },
+      env: { CODESPACES: "true" },
+      facts: { win32: true, clipboard: true },
+    });
+    const s = await host.open();
+    assert.deepEqual(adapters.git.asked, [ROOT]);
+    assert.deepEqual([s.learner.name, s.learner.windows], ["Ana", true]);
+    assert.deepEqual(state().facts, {
+      root: ROOT,
+      name: "Ana",
+      gitError: "this folder is not a git repository",
+      practiceDir: true,
+      codespace: true,
+      win32: true,
+      linux: true,
+      saveKept: false,
+      clipboard: true,
+    });
+    // Root .practice/ is made on open; where it can't be, nothing saves.
+    const made = fakeHost({ saved: AT_W3, tree: {} });
+    await made.host.open();
+    assert.equal(made.state().facts.practiceDir, true);
+    assert.ok(made.adapters.files.isFolder(PRACTICE));
+    const none = fakeHost({ saved: AT_W3, tree: {} });
+    none.adapters.files.fail(PRACTICE, "EACCES");
+    await none.host.open();
+    assert.equal(none.state().facts.practiceDir, false);
+  },
+);
 
 // Ticket 291: a file named .practice is not the folder progress saves in.
-test("a file named .practice is no .practice/: progress is not saving, on open and on a change", async () => {
-  const { host, adapters, clock, heard, state } = fakeHost({ saved: AT_W3 });
-  adapters.files.remove(PRACTICE);
-  adapters.files.write(PRACTICE, "not a folder");
-  const s = await host.open();
-  assert.equal(state().facts.practiceDir, false);
-  assert.equal(s.learner.saving, false);
-  host.start();
-  adapters.files.folder(PRACTICE);
-  clock.spend(400);
-  adapters.fire(ROOT);
-  assert.equal(state().facts.practiceDir, true);
-  adapters.files.remove(PRACTICE);
-  adapters.files.write(PRACTICE, "not a folder");
-  clock.spend(400);
-  const from = heard.length;
-  adapters.fire(ROOT);
-  assert.deepEqual(heard[from]?.input, {
-    type: "facts",
-    facts: { practiceDir: false },
-  });
-  assert.equal(state().facts.practiceDir, false);
-});
+posix(
+  "a file named .practice is no .practice/: progress is not saving, on open and on a change",
+  async () => {
+    const { host, adapters, clock, heard, state } = fakeHost({ saved: AT_W3 });
+    adapters.files.remove(PRACTICE);
+    adapters.files.write(PRACTICE, "not a folder");
+    const s = await host.open();
+    assert.equal(state().facts.practiceDir, false);
+    assert.equal(s.learner.saving, false);
+    host.start();
+    adapters.files.folder(PRACTICE);
+    clock.spend(400);
+    adapters.fire(ROOT);
+    assert.equal(state().facts.practiceDir, true);
+    adapters.files.remove(PRACTICE);
+    adapters.files.write(PRACTICE, "not a folder");
+    clock.spend(400);
+    const from = heard.length;
+    adapters.fire(ROOT);
+    assert.deepEqual(heard[from]?.input, {
+      type: "facts",
+      facts: { practiceDir: false },
+    });
+    assert.equal(state().facts.practiceDir, false);
+  },
+);
 
 test("start arms the copy's watcher, then the tick, then the poll; saves the folder --dir gave and looks at every saved work folder", async () => {
   const { host, adapters, clock, heard, state } = fakeHost({

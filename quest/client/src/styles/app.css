@@ -9,6 +9,19 @@
 @import "./tokens.css";
 
 @layer base {
+  /* Printing a moment (Level complete's recap): the page's own content,
+     without the top bar, the action bar, Pip or any button. */
+  @media print {
+    header,
+    [data-action-bar],
+    [data-pip],
+    button {
+      display: none !important;
+    }
+    html {
+      background-color: white;
+    }
+  }
   html {
     background-color: var(--color-bg);
     -webkit-text-size-adjust: 100%;

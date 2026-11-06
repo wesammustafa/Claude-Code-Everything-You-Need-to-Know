@@ -20,6 +20,10 @@ import {
   relativeOf,
 } from "./read-only.mjs";
 
+// POSIX only: these need symlinks, file modes, POSIX paths, signals or a bash
+// script that native Windows lacks, so they are skipped there.
+const posix = test.skipIf(process.platform === "win32");
+
 const ROOT = resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
 const at = (path) => join(ROOT, path);
 // The Checks' side: Guard B (learn-io) covers it, and the walk stops there.
@@ -54,39 +58,42 @@ function scope() {
 const rel = (file) => relative(ROOT, file).split("\\").join("/");
 
 // spec: never-runs-claude
-test("the engine and the host make no network call, start only the Check child and read-only git, and write only through the store", () => {
-  const sources = scope();
-  const paths = sources.map((s) => s.path);
-  // The scope can't shrink unseen: the files that run each kind of effect.
-  for (const must of [
-    "quest/host/src/host.ts",
-    "quest/host/src/check-child.ts",
-    "quest/host/src/git.ts",
-    "quest/host/src/store.ts",
-    "quest/host/src/run-check.ts",
-    "quest/host/src/probes.ts",
-    "quest/engine/src/probes.ts",
-    "quest/engine/src/engine.ts",
-    "quest/engine/src/course.ts",
-    "quest/engine/src/holds.ts",
-    "quest/engine/src/status.ts",
-  ])
-    assert.ok(paths.includes(must), `the guard reads ${must}`);
-  // Every host source, whatever its extension, is read.
-  for (const file of readdirSync(at("quest/host/src")))
-    assert.ok(
-      paths.includes(`quest/host/src/${file}`),
-      `the guard reads quest/host/src/${file}`,
-    );
-  // Every engine source, whatever its extension, is read.
-  for (const file of readdirSync(at("quest/engine/src")))
-    assert.ok(
-      paths.includes(`quest/engine/src/${file}`),
-      `the guard reads quest/engine/src/${file}`,
-    );
-  assert.ok(!paths.some((p) => p.startsWith("practice-template/checks/")));
-  assert.deepEqual(readOnlyFindings(sources), []);
-});
+posix(
+  "the engine and the host make no network call, start only the Check child and read-only git, and write only through the store",
+  () => {
+    const sources = scope();
+    const paths = sources.map((s) => s.path);
+    // The scope can't shrink unseen: the files that run each kind of effect.
+    for (const must of [
+      "quest/host/src/host.ts",
+      "quest/host/src/check-child.ts",
+      "quest/host/src/git.ts",
+      "quest/host/src/store.ts",
+      "quest/host/src/run-check.ts",
+      "quest/host/src/probes.ts",
+      "quest/engine/src/probes.ts",
+      "quest/engine/src/engine.ts",
+      "quest/engine/src/course.ts",
+      "quest/engine/src/holds.ts",
+      "quest/engine/src/status.ts",
+    ])
+      assert.ok(paths.includes(must), `the guard reads ${must}`);
+    // Every host source, whatever its extension, is read.
+    for (const file of readdirSync(at("quest/host/src")))
+      assert.ok(
+        paths.includes(`quest/host/src/${file}`),
+        `the guard reads quest/host/src/${file}`,
+      );
+    // Every engine source, whatever its extension, is read.
+    for (const file of readdirSync(at("quest/engine/src")))
+      assert.ok(
+        paths.includes(`quest/engine/src/${file}`),
+        `the guard reads quest/engine/src/${file}`,
+      );
+    assert.ok(!paths.some((p) => p.startsWith("practice-template/checks/")));
+    assert.deepEqual(readOnlyFindings(sources), []);
+  },
+);
 
 const planted = (text, path = "quest/host/src/planted.mjs") =>
   readOnlyFindings([{ path, text }]);

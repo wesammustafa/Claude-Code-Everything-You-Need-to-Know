@@ -7,6 +7,10 @@ import { fakeClock } from "../src/fake.ts";
 import { course } from "../../engine/test/drive.mjs";
 import { fakeHost } from "./scripted.mjs";
 
+// POSIX only: these need symlinks, file modes, POSIX paths, signals or a bash
+// script that native Windows lacks, so they are skipped there.
+const posix = test.skipIf(process.platform === "win32");
+
 const b1 = course.find((l) => l.id === "b-1");
 // b-1 saved at its last beat, a self beat: one step.markDone finishes it.
 const AT_END = {
@@ -27,31 +31,34 @@ for (const [unreadable, kind] of [
   ["moved", "unreadable"],
   ["kept", "unreadable-kept"],
 ]) {
-  test(`a save the store ${unreadable === "moved" ? "moved aside" : "could not move"} is a notice in the first snapshot, kept past a lesson's start until a tab shows it`, async () => {
-    const { host, adapters } = fakeHost({
-      instance: "i1",
-      saved: { unreadable },
-    });
-    const first = await host.open();
-    assert.equal(first.revision, 2);
-    assert.deepEqual(notices(first), [kind]);
-    // A save left in place is never written over: the snapshot says so.
-    assert.equal(first.learner.saving, unreadable === "moved");
-    assert.equal(first.learner.welcomed, false, "the app starts fresh");
-    host.dispatch({ type: "welcome.finish" });
-    host.dispatch({ type: "lesson.start", help: "planned" });
-    const playing = host.snapshot();
-    assert.equal(playing.lesson.phase, "playing");
-    assert.deepEqual(notices(playing), [kind]);
-    const [id] = playing.milestones.map((m) => m.id);
-    host.dispatch({ type: "milestone.shown", id });
-    assert.deepEqual(host.snapshot().milestones, []);
-    // The marker is never saved: what is saved is the fresh place. A save
-    // left in place gets no save at all, whatever the store would do.
-    assert.ok(adapters.store.saves.every((s) => !("unreadable" in s)));
-    if (unreadable === "kept") assert.deepEqual(adapters.store.saves, []);
-    else assert.ok(adapters.store.saves.length > 0);
-  });
+  posix(
+    `a save the store ${unreadable === "moved" ? "moved aside" : "could not move"} is a notice in the first snapshot, kept past a lesson's start until a tab shows it`,
+    async () => {
+      const { host, adapters } = fakeHost({
+        instance: "i1",
+        saved: { unreadable },
+      });
+      const first = await host.open();
+      assert.equal(first.revision, 2);
+      assert.deepEqual(notices(first), [kind]);
+      // A save left in place is never written over: the snapshot says so.
+      assert.equal(first.learner.saving, unreadable === "moved");
+      assert.equal(first.learner.welcomed, false, "the app starts fresh");
+      host.dispatch({ type: "welcome.finish" });
+      host.dispatch({ type: "lesson.start", help: "planned" });
+      const playing = host.snapshot();
+      assert.equal(playing.lesson.phase, "playing");
+      assert.deepEqual(notices(playing), [kind]);
+      const [id] = playing.milestones.map((m) => m.id);
+      host.dispatch({ type: "milestone.shown", id });
+      assert.deepEqual(host.snapshot().milestones, []);
+      // The marker is never saved: what is saved is the fresh place. A save
+      // left in place gets no save at all, whatever the store would do.
+      assert.ok(adapters.store.saves.every((s) => !("unreadable" in s)));
+      if (unreadable === "kept") assert.deepEqual(adapters.store.saves, []);
+      else assert.ok(adapters.store.saves.length > 0);
+    },
+  );
 }
 
 test("a readable save, or none, opens with no notice at revision 1", async () => {

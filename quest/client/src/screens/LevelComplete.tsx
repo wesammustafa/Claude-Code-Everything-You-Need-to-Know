@@ -1,6 +1,8 @@
 import { Link, useParams } from "react-router";
 import type { LevelId, Snapshot } from "@quest/contract";
-import { ButtonLink } from "../components/Button";
+import { Button, ButtonLink } from "../components/Button";
+import { Command } from "../components/Command";
+import { InlineText } from "../components/InlineText";
 import { LessonBadge } from "../components/badges";
 import { LEVEL_NAMES } from "../course/labels";
 import { Pip } from "../pip/Pip";
@@ -82,9 +84,66 @@ export function LevelComplete() {
           </li>
         ))}
       </ul>
+      <LevelRecap snapshot={snapshot} level={level} />
       <LevelNext snapshot={snapshot} next={moment.next?.id ?? null} />
       <BackToJourney />
     </main>
+  );
+}
+
+/**
+ * The recap: every command the Level's lessons put on the skills card, in
+ * the order they were earned, with a Print button. The printed page is this
+ * screen in the browser's print layout: a keepsake and a cheat sheet in one.
+ */
+function LevelRecap({
+  snapshot,
+  level,
+}: {
+  snapshot: Snapshot;
+  level: LevelId;
+}) {
+  const lessons = new Set(
+    snapshot.course.levels
+      .find((view) => view.id === level)
+      ?.lessons.map((lesson) => lesson.id) ?? [],
+  );
+  const entries = snapshot.learner.card.filter((entry) =>
+    lessons.has(entry.lesson),
+  );
+  if (entries.length === 0) return null;
+  return (
+    <section
+      aria-labelledby="level-recap"
+      className="grid w-full max-w-moment gap-3 text-left"
+      data-level-recap=""
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 id="level-recap" className="text-sm text-muted">
+          Your card from this level
+        </h2>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="print:hidden"
+          onClick={() => {
+            window.print();
+          }}
+        >
+          Print this page
+        </Button>
+      </div>
+      <ul className="grid gap-2">
+        {entries.map((entry) => (
+          <li key={`${entry.lesson} ${entry.show}`} className="grid gap-1">
+            <Command text={entry.show} />
+            <span className="text-sm text-muted">
+              <InlineText text={entry.does} />
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

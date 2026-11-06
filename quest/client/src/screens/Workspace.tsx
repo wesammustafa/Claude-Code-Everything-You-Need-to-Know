@@ -192,6 +192,37 @@ function Play({
   const { pending } = useAct();
   const actionsOn = useActionsEnabled();
   const lockUntil = useRef(0);
+  // The keyboard flow (the Learner's hands are on the keys for the terminal
+  // beside the app): Enter is the main action, ? the next hint. A key typed
+  // into a field, or with a modifier, or on a focused control, is left to it.
+  const keys = useRef<() => { enter: () => void; hint: () => void }>(() => ({
+    enter: () => undefined,
+    hint: () => undefined,
+  }));
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (
+        target?.closest(
+          "input, textarea, select, [contenteditable], button, a, [role=dialog]",
+        )
+      )
+        return;
+      const handlers = keys.current();
+      if (event.key === "Enter") {
+        event.preventDefault();
+        handlers.enter();
+      } else if (event.key === "?") {
+        event.preventDefault();
+        handlers.hint();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
   // True, and the lock starts, when no ask came within the last HINT_LOCK_MS.
   const unlocked = () => {
     const now = Date.now();
@@ -232,6 +263,23 @@ function Play({
     if (!take) lockUntil.current = 0;
     send("hint.takeExact", { type: "hint.takeExact", take });
   };
+  useEffect(() => {
+    keys.current = () => ({
+      enter: () => {
+        const action = primaryAction(beat);
+        if (!action || !actionsOn) return;
+        if (action.type === "check.run")
+          send("check.run", {
+            type: "check.run",
+            beat: beatKey(lesson.id, step.id, beat.index),
+          });
+        else send(action.type, { type: action.type });
+      },
+      hint: () => {
+        if (available) showNextHint();
+      },
+    });
+  });
   const tearDown = isTearDown(step);
   const tearDowns = lesson.steps.filter(isTearDown);
   const firstTearDown = tearDown && tearDowns[0]?.id === step.id;
@@ -342,6 +390,13 @@ function Play({
           {beat.status === "already" && beat.codespace && (
             <p data-codespace="">
               <InlineText text={beat.codespace} />
+            </p>
+          )}
+          {beat.status === "already" && beat.installed && (
+            <p data-installed="">
+              <InlineText
+                text={`\`${beat.installed}\` is already installed here, so this step counts.`}
+              />
             </p>
           )}
           <BeatBody beat={beat} where={step.where?.kind ?? null} />
@@ -642,6 +697,23 @@ function Question({ beat }: { beat: BeatView }) {
   const marks = answerMarks(beat);
   const picked = beat.answer.picked;
   const reveal = useActionProps("answer.reveal", { type: "answer.reveal" });
+  // A digit picks that answer, as the letters beside them suggest.
+  const count = beat.options.length;
+  useEffect(() => {
+    if (done || !enabled) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable]")) return;
+      const n = Number(event.key);
+      if (!Number.isInteger(n) || n < 1 || n > count) return;
+      setSelected(String(n - 1));
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [done, enabled, count]);
   return (
     <div className="grid w-full justify-items-start gap-2.5">
       <div className="w-full">

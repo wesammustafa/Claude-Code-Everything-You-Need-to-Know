@@ -336,6 +336,8 @@ export interface BeatView {
   winNote: string | null;
   /** In a Codespace the step is already done: the page's words. */
   codespace: string | null;
+  /** The command on the PATH that made the step already done, or null. */
+  installed?: string | null;
   /** The options; `kind` and `because` only once answered or revealed. */
   options: {
     text: string;

@@ -13,6 +13,10 @@ import {
   type AllowedPackage,
 } from "./shipped-packages";
 
+// POSIX only: these need symlinks, file modes, POSIX paths, signals or a bash
+// script that native Windows lacks, so they are skipped there.
+const posix = test.skipIf(process.platform === "win32");
+
 // Fixture projects live under quest/client/dist (build output, never
 // tracked), so `@import "tailwindcss"` resolves from the repo's node_modules
 // while each fixture's own node_modules holds its fake packages.
@@ -129,28 +133,31 @@ describe("the build's shipped-packages check", () => {
     ).toContain(".gplstyle");
   });
 
-  test("fails on a second installed copy of a shipped package's name", async () => {
-    // The shipped fakecss is the copy nested under ok-lib; the stylesheet
-    // pulls in the other one, hoisted to the top, which nothing counted.
-    const root = project({
-      ...page,
-      "app.css": '@import "tailwindcss";\n@import "fakecss/style.css";\n',
-      ...fakePackage("fakecss", ".hoisted { color: red; }\n"),
-      ...fakePackage(
-        "fakecss",
-        ".nested { color: red; }\n",
-        "node_modules/ok-lib/node_modules/fakecss",
-      ),
-    });
-    await expect(
-      bundle(root, [
-        tailwind,
-        installed(root, "node_modules/ok-lib/node_modules/fakecss"),
-      ]),
-    ).rejects.toThrow(
-      /outside quest\/client's dependencies: fakecss \(node_modules\/fakecss\)/,
-    );
-  });
+  posix(
+    "fails on a second installed copy of a shipped package's name",
+    async () => {
+      // The shipped fakecss is the copy nested under ok-lib; the stylesheet
+      // pulls in the other one, hoisted to the top, which nothing counted.
+      const root = project({
+        ...page,
+        "app.css": '@import "tailwindcss";\n@import "fakecss/style.css";\n',
+        ...fakePackage("fakecss", ".hoisted { color: red; }\n"),
+        ...fakePackage(
+          "fakecss",
+          ".nested { color: red; }\n",
+          "node_modules/ok-lib/node_modules/fakecss",
+        ),
+      });
+      await expect(
+        bundle(root, [
+          tailwind,
+          installed(root, "node_modules/ok-lib/node_modules/fakecss"),
+        ]),
+      ).rejects.toThrow(
+        /outside quest\/client's dependencies: fakecss \(node_modules\/fakecss\)/,
+      );
+    },
+  );
 });
 
 describe("reading the build's sources", () => {

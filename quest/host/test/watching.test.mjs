@@ -29,6 +29,10 @@ import {
   WORK,
 } from "./scripted.mjs";
 
+// POSIX only: these need symlinks, file modes, POSIX paths, signals or a bash
+// script that native Windows lacks, so they are skipped there.
+const posix = test.skipIf(process.platform === "win32");
+
 const MINE = "/home/ali/mine";
 const fine = (path) => ({
   path,
@@ -149,39 +153,42 @@ test("a change in the app's first 400 ms counts on a clock that starts at 0, as 
 });
 
 // spec: watching
-test("a change says the copy's .practice/ appeared only when it did, then that the Learner is working, then asks again", async () => {
-  const { host, clock, adapters, heard, state } = fakeHost({
-    saved: AT_W3,
-    tree: {},
-  });
-  // A copy where root .practice/ can't be made at first.
-  adapters.files.fail(PRACTICE, "EACCES");
-  await host.open();
-  host.start();
-  host.dispatch({ type: "lesson.open", lesson: "b-1" });
-  await turn();
-  adapters.checks.calls[0].resolve(w3(false));
-  await turn();
-  clock.spend(400);
-  const from = heard.length;
-  adapters.fire(ROOT);
-  assert.deepEqual(typesOf(heard.slice(from)), ["activity"]);
-  adapters.files.fail(PRACTICE, null);
-  adapters.files.folder(PRACTICE);
-  adapters.files.write(`${WORK}/${VERSION}`, "2.1.285 (Claude Code)\n");
-  const next = heard.length;
-  adapters.fire(ROOT);
-  assert.deepEqual(
-    heard.slice(next).map((h) => h.input),
-    [{ type: "facts", facts: { practiceDir: true } }, { type: "activity" }],
-  );
-  assert.equal(state().facts.practiceDir, true);
-  assert.equal(
-    adapters.checks.calls.length,
-    2,
-    "the beat's check is asked again",
-  );
-});
+posix(
+  "a change says the copy's .practice/ appeared only when it did, then that the Learner is working, then asks again",
+  async () => {
+    const { host, clock, adapters, heard, state } = fakeHost({
+      saved: AT_W3,
+      tree: {},
+    });
+    // A copy where root .practice/ can't be made at first.
+    adapters.files.fail(PRACTICE, "EACCES");
+    await host.open();
+    host.start();
+    host.dispatch({ type: "lesson.open", lesson: "b-1" });
+    await turn();
+    adapters.checks.calls[0].resolve(w3(false));
+    await turn();
+    clock.spend(400);
+    const from = heard.length;
+    adapters.fire(ROOT);
+    assert.deepEqual(typesOf(heard.slice(from)), ["activity"]);
+    adapters.files.fail(PRACTICE, null);
+    adapters.files.folder(PRACTICE);
+    adapters.files.write(`${WORK}/${VERSION}`, "2.1.285 (Claude Code)\n");
+    const next = heard.length;
+    adapters.fire(ROOT);
+    assert.deepEqual(
+      heard.slice(next).map((h) => h.input),
+      [{ type: "facts", facts: { practiceDir: true } }, { type: "activity" }],
+    );
+    assert.equal(state().facts.practiceDir, true);
+    assert.equal(
+      adapters.checks.calls.length,
+      2,
+      "the beat's check is asked again",
+    );
+  },
+);
 
 // spec: watching
 test("a work folder that was wrong is looked at again on a change and on the poll, one look at a time; a folder that was fine is left alone", async () => {

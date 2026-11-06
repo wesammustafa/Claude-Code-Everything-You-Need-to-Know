@@ -130,6 +130,9 @@ export interface Beat {
   revealAt?: string;
   recall?: string;
   codespace?: string;
+  // `installed: <command>`: the step is already done where the host finds
+  // that command on the PATH, as a Codespace does for `codespace`.
+  installed?: string;
   winNote?: string;
   point?: string;
   reveal?: string;
@@ -426,6 +429,7 @@ export const BEAT_KEYS: Readonly<Record<string, boolean | null>> = {
   after: true,
   why: true,
   codespace: true,
+  installed: false,
   "win-note": true,
   hint: true,
   bottom: true,

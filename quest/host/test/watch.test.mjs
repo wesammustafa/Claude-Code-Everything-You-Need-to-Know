@@ -8,6 +8,10 @@ import { repo } from "../../../practice-template/checks/test/helpers.mjs";
 import { fakeClock } from "../src/fake.ts";
 import { watchDirs } from "../src/watch.ts";
 
+// POSIX only: these need symlinks, file modes, POSIX paths, signals or a bash
+// script that native Windows lacks, so they are skipped there.
+const posix = test.skipIf(process.platform === "win32");
+
 // spec: watching
 test("the watcher arms a .practice folder made after it started", async () => {
   // Events only speed things up: they can lag or never come (WSL on
@@ -30,53 +34,56 @@ test("the watcher arms a .practice folder made after it started", async () => {
 });
 
 // spec: watching
-test("the watcher watches .claude/ and the folders right in it, when they exist, and arms ones made later", async () => {
-  const dir = repo({
-    ".claude/skills/five-whys/SKILL.md": "s\n",
-    ".claude/settings.json": "{}\n",
-  });
-  const w = watchDirs(dir, () => {}, { debounceMs: 20 });
-  const rel = () =>
-    w
-      .dirs()
-      .map((d) => d.slice(dir.length + 1))
-      .filter(Boolean)
-      .sort();
-  try {
-    assert.deepEqual(
-      rel(),
-      [".claude", ".claude/skills", ".git"],
-      "a folder deeper in, and a file, are not watched",
-    );
-    mkdirSync(join(dir, ".claude", "agents"));
-    w.arm();
-    assert.deepEqual(rel(), [
-      ".claude",
-      ".claude/agents",
-      ".claude/skills",
-      ".git",
-    ]);
-  } finally {
-    w.close();
-    rmSync(dir, { recursive: true, force: true });
-  }
-  // A .claude/ made after the watcher started.
-  const later = repo();
-  const v = watchDirs(later, () => {}, { debounceMs: 20 });
-  try {
-    assert.ok(!v.dirs().some((d) => d.endsWith(".claude")));
-    mkdirSync(join(later, ".claude", "skills"), { recursive: true });
-    v.arm();
-    assert.ok(
-      v.dirs().some((d) => d.endsWith(".claude")) &&
-        v.dirs().some((d) => d.endsWith(join(".claude", "skills"))),
-      `${v.dirs()}`,
-    );
-  } finally {
-    v.close();
-    rmSync(later, { recursive: true, force: true });
-  }
-});
+posix(
+  "the watcher watches .claude/ and the folders right in it, when they exist, and arms ones made later",
+  async () => {
+    const dir = repo({
+      ".claude/skills/five-whys/SKILL.md": "s\n",
+      ".claude/settings.json": "{}\n",
+    });
+    const w = watchDirs(dir, () => {}, { debounceMs: 20 });
+    const rel = () =>
+      w
+        .dirs()
+        .map((d) => d.slice(dir.length + 1))
+        .filter(Boolean)
+        .sort();
+    try {
+      assert.deepEqual(
+        rel(),
+        [".claude", ".claude/skills", ".git"],
+        "a folder deeper in, and a file, are not watched",
+      );
+      mkdirSync(join(dir, ".claude", "agents"));
+      w.arm();
+      assert.deepEqual(rel(), [
+        ".claude",
+        ".claude/agents",
+        ".claude/skills",
+        ".git",
+      ]);
+    } finally {
+      w.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
+    // A .claude/ made after the watcher started.
+    const later = repo();
+    const v = watchDirs(later, () => {}, { debounceMs: 20 });
+    try {
+      assert.ok(!v.dirs().some((d) => d.endsWith(".claude")));
+      mkdirSync(join(later, ".claude", "skills"), { recursive: true });
+      v.arm();
+      assert.ok(
+        v.dirs().some((d) => d.endsWith(".claude")) &&
+          v.dirs().some((d) => d.endsWith(join(".claude", "skills"))),
+        `${v.dirs()}`,
+      );
+    } finally {
+      v.close();
+      rmSync(later, { recursive: true, force: true });
+    }
+  },
+);
 
 // spec: watching
 test("the watcher calls back once a burst of changes has been quiet for 150 ms, by default", async () => {

@@ -117,10 +117,14 @@ function climbToCheck(lesson, step, index, targets, sc, hint) {
   return rungsOf(d.state)[d.state.beat.rung];
 }
 
-/** The ladder test of the manifest lesson `id`. */
-export function ladderTest(id) {
+/**
+ * The ladder test of the manifest lesson `id`. `posix` marks a lesson whose
+ * scenarios need symlinks or file modes: skipped on native Windows.
+ */
+export function ladderTest(id, { posix = false } = {}) {
   const { steps } = manifest.lessons.find((l) => l.id === id);
-  test(
+  const run = posix ? test.skipIf(process.platform === "win32") : test;
+  run(
     `${id}: every FAIL message has its own first hint, and real failures reach "The check says:" at every check beat`,
     { timeout: 1_800_000 },
     async () => {

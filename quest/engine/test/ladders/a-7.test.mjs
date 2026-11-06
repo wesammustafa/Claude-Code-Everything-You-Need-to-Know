@@ -1,3 +1,4 @@
 import { ladderTest } from "./ladder.mjs";
 
-ladderTest("a-7");
+// Its scenarios make symlinks and set file modes.
+ladderTest("a-7", { posix: true });

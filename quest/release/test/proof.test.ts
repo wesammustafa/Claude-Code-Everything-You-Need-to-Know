@@ -31,6 +31,10 @@ import {
   stubNotices,
 } from "./template-fixture";
 
+// POSIX only: these need symlinks, file modes, POSIX paths, signals or a bash
+// script that native Windows lacks, so they are skipped there.
+const posix = test.skipIf(process.platform === "win32");
+
 afterAll(removeTemp);
 
 const BASELINE = baselineVersion(
@@ -129,7 +133,7 @@ describe("step 5: treeProblems", () => {
 });
 
 describe("step 6: sameBytes", () => {
-  test("two snapshots of one tree agree; a byte or a mode differs", () => {
+  posix("two snapshots of one tree agree; a byte or a mode differs", () => {
     const tree = { "a.txt": "a\n", "b/c.txt": "c\n" };
     const one = files(tempDir("quest-proof-a-"), tree);
     const two = files(tempDir("quest-proof-b-"), tree);
@@ -192,7 +196,7 @@ describe("step 1: starterTests and checksTests", () => {
   ];
   const pass = [process.execPath, "-e", ""];
 
-  test("a failing command fails its step, with its output", () => {
+  posix("a failing command fails its step, with its output", () => {
     const copy = files(tempDir("quest-proof-s-"), { "project/x": "" });
     const starter = starterTests(copy, { command: fail });
     expect(starter.ok).toBe(false);
@@ -200,7 +204,7 @@ describe("step 1: starterTests and checksTests", () => {
     expect(checksTests(repoRoot, { command: fail }).ok).toBe(false);
   });
 
-  test("a passing command passes", () => {
+  posix("a passing command passes", () => {
     const copy = files(tempDir("quest-proof-s-"), { "project/x": "" });
     expect(starterTests(copy, { command: pass }).ok).toBe(true);
     expect(checksTests(repoRoot, { command: pass }).ok).toBe(true);
@@ -244,7 +248,7 @@ describe("step 3: replayPasses", () => {
       "b-1/steps.sh": "echo planted >&2\nexit 3\n",
     });
 
-  test("the wrong Claude Code fails it before any solution runs", async () => {
+  posix("the wrong Claude Code fails it before any solution runs", async () => {
     const result = replayPasses({
       repoRoot,
       copy: await prepared(),
@@ -258,7 +262,7 @@ describe("step 3: replayPasses", () => {
     });
   });
 
-  test("no Claude Code fails it", async () => {
+  posix("no Claude Code fails it", async () => {
     const result = replayPasses({
       repoRoot,
       copy: await prepared(),
@@ -269,7 +273,7 @@ describe("step 3: replayPasses", () => {
     ]);
   });
 
-  test("a failing solution fails it", async () => {
+  posix("a failing solution fails it", async () => {
     const result = replayPasses({
       repoRoot,
       copy: await prepared(),
@@ -282,19 +286,22 @@ describe("step 3: replayPasses", () => {
     );
   });
 
-  test("a --help that lists a subset of SPEC lets the replay run", async () => {
-    const result = replayPasses({
-      repoRoot,
-      copy: await prepared(),
-      solutionsDir: failing(),
-      claude: claudeShim(BASELINE),
-    });
-    expect(result.note).toBeUndefined();
-    expect(result.problems).toHaveLength(1);
-    expect(result.problems[0]).toMatch(/^b-1: /);
-  });
+  posix(
+    "a --help that lists a subset of SPEC lets the replay run",
+    async () => {
+      const result = replayPasses({
+        repoRoot,
+        copy: await prepared(),
+        solutionsDir: failing(),
+        claude: claudeShim(BASELINE),
+      });
+      expect(result.note).toBeUndefined();
+      expect(result.problems).toHaveLength(1);
+      expect(result.problems[0]).toMatch(/^b-1: /);
+    },
+  );
 
-  test.each([
+  posix.each([
     ["an option SPEC lacks", "  --new-flag <x>                        New"],
     [
       "a known flag with another value form",
@@ -319,7 +326,7 @@ describe("step 3: replayPasses", () => {
     });
   });
 
-  test("an Options: section with no option it can read fails it", async () => {
+  posix("an Options: section with no option it can read fails it", async () => {
     const reshaped = [
       "Usage: claude [options]",
       "",
@@ -342,7 +349,7 @@ describe("step 3: replayPasses", () => {
     });
   });
 
-  test("a failing --help fails it", async () => {
+  posix("a failing --help fails it", async () => {
     const result = replayPasses({
       repoRoot,
       copy: await prepared(),
@@ -356,7 +363,7 @@ describe("step 3: replayPasses", () => {
     });
   });
 
-  test("anyClaude turns each --help problem into a note", async () => {
+  posix("anyClaude turns each --help problem into a note", async () => {
     const copy = await prepared();
     const listed = replayPasses({
       repoRoot,
@@ -391,7 +398,7 @@ describe("step 3: replayPasses", () => {
     expect(failed.problems[0]).toMatch(/^b-1: /);
   });
 
-  test("anyClaude turns a mismatch into a note", async () => {
+  posix("anyClaude turns a mismatch into a note", async () => {
     const result = replayPasses({
       repoRoot,
       copy: await prepared(),
@@ -442,37 +449,44 @@ describe("step 4: serves, without Chromium", () => {
     expect(result.note).toMatch(/^listening at http:\/\/127\.0\.0\.1:\d+/);
   });
 
-  test("an app that dies on SIGTERM without its stop line fails it", async () => {
-    const result = await serves(
-      learnTree(
-        good.replace(
-          /process\.on\("SIGTERM"[\s\S]*$/,
-          'process.on("SIGTERM", () => process.exit(1));\n',
+  posix(
+    "an app that dies on SIGTERM without its stop line fails it",
+    async () => {
+      const result = await serves(
+        learnTree(
+          good.replace(
+            /process\.on\("SIGTERM"[\s\S]*$/,
+            'process.on("SIGTERM", () => process.exit(1));\n',
+          ),
         ),
-      ),
-      { chromium: false },
-    );
-    expect(result.ok).toBe(false);
-    expect(result.problems).toContain(
-      "npm run learn printed no stop line on SIGTERM",
-    );
-  });
+        { chromium: false },
+      );
+      expect(result.ok).toBe(false);
+      expect(result.problems).toContain(
+        "npm run learn printed no stop line on SIGTERM",
+      );
+    },
+  );
 
-  test("an app that ignores SIGTERM fails it and is ended", async () => {
-    const result = await serves(
-      learnTree(
-        good.replace(
-          /process\.on\("SIGTERM"[\s\S]*$/,
-          'process.on("SIGTERM", () => {});\n',
+  posix(
+    "an app that ignores SIGTERM fails it and is ended",
+    async () => {
+      const result = await serves(
+        learnTree(
+          good.replace(
+            /process\.on\("SIGTERM"[\s\S]*$/,
+            'process.on("SIGTERM", () => {});\n',
+          ),
         ),
-      ),
-      { chromium: false },
-    );
-    expect(result.ok).toBe(false);
-    expect(result.problems).toContain(
-      "npm run learn left a process running after SIGTERM",
-    );
-  }, 30_000);
+        { chromium: false },
+      );
+      expect(result.ok).toBe(false);
+      expect(result.problems).toContain(
+        "npm run learn left a process running after SIGTERM",
+      );
+    },
+    30_000,
+  );
 
   test("an app that exits at once fails it", async () => {
     const result = await serves(learnTree("process.exit(0);\n"), {
@@ -595,7 +609,7 @@ describe("runProof", () => {
     expect(lines.at(-1)).toBe("proof: FAILED (steps 6)");
   });
 
-  test("step 6 assembles the second copy after a second build", async () => {
+  posix("step 6 assembles the second copy after a second build", async () => {
     const order: string[] = [];
     await proof({
       steps: {
