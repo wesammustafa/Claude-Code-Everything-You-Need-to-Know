@@ -126,6 +126,10 @@ export function SettingsBody({
         >
           Glossary
         </Button>
+        <p className="text-sm text-muted" data-settings="keys">
+          Keys on a step: Enter goes on, a digit picks an answer, and ? opens a
+          hint.
+        </p>
         <p className="text-sm text-muted">
           An independent educational project. Not affiliated with or endorsed by
           Anthropic.
