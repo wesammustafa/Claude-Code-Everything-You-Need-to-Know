@@ -5,13 +5,19 @@
 // that opens with a `code` span, a link or a capital stays as written.
 const FIRST = /^(\*\*)?([a-z])/;
 
-/** The text with its first letter capitalized, so a fragment the Guide wrote to follow a lead-in reads as a line of its own. */
+// A quote cut where the page's sentence went on: a colon or semicolon at
+// its end, which a line of its own closes with a full stop.
+const OPEN_END = /\s*[:;]$/;
+
+/** The text with its first letter capitalized and an open end closed, so a fragment the Guide wrote to follow a lead-in reads as a line of its own. */
 export function sentence(text: string): string {
-  return text.replace(
-    FIRST,
-    (_, bold: string | undefined, letter: string) =>
-      `${bold ?? ""}${letter.toUpperCase()}`,
-  );
+  return text
+    .replace(
+      FIRST,
+      (_, bold: string | undefined, letter: string) =>
+        `${bold ?? ""}${letter.toUpperCase()}`,
+    )
+    .replace(OPEN_END, ".");
 }
 
 // Skill ids are kebab-case keys in the step files; a few are initialisms.
