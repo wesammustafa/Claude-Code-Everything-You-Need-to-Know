@@ -12,7 +12,7 @@ import { PageTitle } from "../shell/PageTitle";
 import { BOX, COLUMN, EYEBROW } from "./layout";
 import { OpenLessonButton } from "./OpenLessonButton";
 import { pathOf, useCourseSnapshot } from "./lesson";
-import { courseCounts, journeyPlace, levelOf } from "./place";
+import { courseCounts, journeyPlace, levelOf, stepPlace } from "./place";
 
 /** Once the screen has settled in, Pip glances toward the next goal. */
 const GLANCE_AFTER_MS = 600;
@@ -145,10 +145,17 @@ function NextGoal({ snapshot }: { snapshot: Snapshot }) {
           Next goal
         </h2>
         {current ? (
-          <b>
-            {`${LEVEL_NAMES[levelOf(snapshot, current)]}, ${lessonLabel(current.number, current.capstone)}: `}
-            <InlineText text={current.title} />
-          </b>
+          <>
+            <b>
+              {`${LEVEL_NAMES[levelOf(snapshot, current)]}, ${lessonLabel(current.number, current.capstone)}: `}
+              <InlineText text={current.title} />
+            </b>
+            {snapshot.lesson.id === current.id && stepPlace(snapshot) && (
+              <span className="text-sm text-muted" data-step-place="">
+                {stepPlace(snapshot)}
+              </span>
+            )}
+          </>
         ) : (
           <b>Every lesson is complete</b>
         )}

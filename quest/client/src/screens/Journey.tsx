@@ -17,7 +17,13 @@ import { PageTitle } from "../shell/PageTitle";
 import { EYEBROW, WIDE } from "./layout";
 import { OpenLessonButton } from "./OpenLessonButton";
 import { pathOf, useCourseSnapshot } from "./lesson";
-import { journeyPlace, levelOf, nodeState, type JourneyPlace } from "./place";
+import {
+  journeyPlace,
+  levelOf,
+  nodeState,
+  stepPlace,
+  type JourneyPlace,
+} from "./place";
 
 type ElectiveList =
   | { state: "closed" | "loading" | "failed" }
@@ -371,6 +377,11 @@ function NextBand({
                 {`${LEVEL_NAMES[levelOf(snapshot, current)]}, ${lessonLabel(current.number, current.capstone)}: `}
                 <InlineText text={current.title} />
               </b>
+              {snapshot.lesson.id === current.id && stepPlace(snapshot) && (
+                <span className="text-sm text-muted" data-step-place="">
+                  {stepPlace(snapshot)}
+                </span>
+              )}
             </div>
             {snapshot.lesson.id === current.id ? (
               <ButtonLink

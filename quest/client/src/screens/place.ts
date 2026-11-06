@@ -25,6 +25,19 @@ export function journeyPlace(snapshot: Snapshot): JourneyPlace {
     : { current: null, label: null };
 }
 
+/**
+ * Where a lesson in play stands, as "Step 4 of 11", for the Next card: the
+ * step on screen among the lesson's steps. Null outside play, or while a
+ * resume waits with no step open.
+ */
+export function stepPlace(snapshot: Snapshot): string | null {
+  const { lesson } = snapshot;
+  if (lesson.phase !== "playing" || lesson.step === null) return null;
+  const at = lesson.steps.findIndex((step) => step.id === lesson.step?.id);
+  if (at < 0) return null;
+  return `Step ${String(at + 1)} of ${String(lesson.steps.length)}`;
+}
+
 export type NodeState = "done" | "current" | "to do";
 
 /** A Lesson's state on the journey: current wins over done. */
