@@ -711,7 +711,13 @@ function Question({ beat }: { beat: BeatView }) {
     const onKey = (event: KeyboardEvent) => {
       if (event.ctrlKey || event.metaKey || event.altKey) return;
       const target = event.target as HTMLElement | null;
-      if (target?.closest("input, textarea, select, [contenteditable]")) return;
+      // A focused answer radio still takes Enter and the digits.
+      if (
+        target?.closest(
+          "input:not([type=radio]), textarea, select, [contenteditable]",
+        )
+      )
+        return;
       if (event.key === "Enter") {
         if (selected === null || pending("answer.pick")) return;
         if (target?.closest("button, a")) return;
