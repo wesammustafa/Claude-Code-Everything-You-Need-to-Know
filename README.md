@@ -28,7 +28,7 @@ Claude Code Quest opens in your browser, beside your terminal. Read a step, try 
   <sub><b>Do a step, and when it passes, Pip cheers with you.</b></sub>
 </p>
 
-Miss one, and he encourages you to try again. The help fades as you get the hang of each skill, from every command, to hints, to only the goal, until you do it on your own.
+Miss one, and he encourages you to try again. The help fades as you get the hang of each skill, from every command, to hints, to only the goal, until you do it on your own. Your hands can stay on the keyboard: Enter goes on, a digit picks an answer, and `?` opens a hint.
 
 <a id="install"></a>
 ## Try it now
