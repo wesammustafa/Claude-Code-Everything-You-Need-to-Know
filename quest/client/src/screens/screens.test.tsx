@@ -133,6 +133,7 @@ const APP_WORDS: readonly RegExp[] = [
   /^The check saw the same as last time\. The cause may be in an earlier step\.$/,
   /^Nothing has changed there since this step opened\.$/,
   /^Everything else passes\. Check again runs the slow part\.$/,
+  /^Check again runs it here too, on the same files\.$/,
   /^Checking( item \d+ of \d+| .+)?…$/,
   /^Already done, so this step counts\.$/,
   /^What the step asks for$/,

@@ -400,6 +400,13 @@ function Play({
             </p>
           )}
           <BeatBody beat={beat} where={step.where?.kind ?? null} />
+          {step.part === "Check" &&
+            decidedByOf(beat) === "check" &&
+            !isDone(beat) && (
+              <p data-check-here="" className="text-sm text-muted">
+                Check again runs it here too, on the same files.
+              </p>
+            )}
           <WaitQuestion lesson={lesson} step={step} />
           {lines.length > 0 && (
             <CheckLines
@@ -705,6 +712,13 @@ function Question({ beat }: { beat: BeatView }) {
       if (event.ctrlKey || event.metaKey || event.altKey) return;
       const target = event.target as HTMLElement | null;
       if (target?.closest("input, textarea, select, [contenteditable]")) return;
+      if (event.key === "Enter") {
+        if (selected === null || pending("answer.pick")) return;
+        if (target?.closest("button, a")) return;
+        event.preventDefault();
+        send("answer.pick", { type: "answer.pick", option: Number(selected) });
+        return;
+      }
       const n = Number(event.key);
       if (!Number.isInteger(n) || n < 1 || n > count) return;
       setSelected(String(n - 1));
@@ -713,7 +727,7 @@ function Question({ beat }: { beat: BeatView }) {
     return () => {
       document.removeEventListener("keydown", onKey);
     };
-  }, [done, enabled, count]);
+  }, [done, enabled, count, selected, pending, send]);
   return (
     <div className="grid w-full justify-items-start gap-2.5">
       <div className="w-full">
@@ -1008,7 +1022,12 @@ function Actions({
             {action.label}
           </Button>
         ) : (
-          <Button variant="primary" iconEnd="arrow" {...props[action.type]}>
+          <Button
+            variant="primary"
+            iconEnd="arrow"
+            aria-keyshortcuts="Enter"
+            {...props[action.type]}
+          >
             {action.label}
           </Button>
         ))}
