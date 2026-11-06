@@ -5,9 +5,9 @@
 // that opens with a `code` span, a link or a capital stays as written.
 const FIRST = /^(\*\*)?([a-z])/;
 
-// A quote cut where the page's sentence went on: a colon or semicolon at
-// its end, which a line of its own closes with a full stop.
-const OPEN_END = /\s*[:;]$/;
+// A quote cut where the page's sentence went on: a colon, semicolon or
+// comma at its end, which a line of its own closes with a full stop.
+const OPEN_END = /\s*[:;,]$/;
 
 /** The text with its first letter capitalized and an open end closed, so a fragment the Guide wrote to follow a lead-in reads as a line of its own. */
 export function sentence(text: string): string {

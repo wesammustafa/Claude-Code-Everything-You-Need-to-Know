@@ -8,6 +8,18 @@ describe("sentence", () => {
     );
     expect(sentence("**the account** matters")).toBe("**The account** matters");
   });
+  test("closes a quote cut at a colon, semicolon or comma with a full stop", () => {
+    expect(sentence("it should change only `src/links.js`;")).toBe(
+      "It should change only `src/links.js`.",
+    );
+    expect(sentence("tell it to keep to the plan:")).toBe(
+      "Tell it to keep to the plan.",
+    );
+    expect(sentence("cut what Claude can learn by reading the code,")).toBe(
+      "Cut what Claude can learn by reading the code.",
+    );
+    expect(sentence("the plan menu: ask")).toBe("The plan menu: ask");
+  });
   test("leaves code spans, links, capitals and empty text alone", () => {
     expect(sentence("`claude --version` prints a version")).toBe(
       "`claude --version` prints a version",
